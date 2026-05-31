@@ -26,6 +26,7 @@
 | 題目名稱 | 程式連結 | 時間複雜度 | 詳細筆記 | 難度 | 核心觀念 | 狀態 |
 | :--- | :--- | :---: | :---: | :---: | :--- | :---: |
 | **a001. 哈囉** | [C++](./a001_hello.cpp) | $O(1)$ | [📝 Notion](https://www.notion.so/a001-36a43be958cd80c48115f59d68f70a5f?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | ★ ☆ ☆ ☆ ☆ | `基礎輸入輸出` `字串處理` | ✅ 已過關 |
+| **c315. 座標移動** | [Py](./c315_IRobotPrequel.py) | $O(N)$ | [📝 Notion](https://www.notion.so/c315-I-ROBOT-36a43be958cd804ba58adaf8849c51cc?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | ★ ☆ ☆ ☆ ☆ | `基礎輸入輸出` `條件判斷` | ✅ 已過關 |
 <!-- L2_END -->
 
 <br>
