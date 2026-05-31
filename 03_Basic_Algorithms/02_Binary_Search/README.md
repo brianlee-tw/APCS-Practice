@@ -10,7 +10,7 @@
 
 <br>
 
-## 📌 學習目標 (Objectives)
+##  學習目標 (Objectives)
 - **基礎鞏固**：掌握線性搜尋與二分搜尋 (Binary Search)。
 - **效率優化**：利用單調性將 $O(N)$ 降低至 $O(\log N)$。
 - **邊界案例**：處理二分搜尋中的死循環（區間閉合與 middle 計算）。
@@ -19,7 +19,7 @@
 
 ---
 
-## 📝 題目索引 (Problem Index)
+##  題目索引 (Problem Index)
 
 <!-- L2_START -->
 | 題目名稱 | 程式連結 | 時間複雜度 | 詳細筆記 | 難度 | 核心觀念 | 狀態 |
@@ -32,7 +32,7 @@
 
 <br>
 
-## 💡 解題筆記 (Key Notes)
+##  解題筆記 (Key Notes)
 - **核心重點**：二分搜尋的變形（如 `lower_bound`, `upper_bound`）是解題神器。
 - **常見陷阱**：`mid = (l + r) / 2` 導致溢位（應寫 `l + (r - l) / 2`）。
 - **進階思考**：二分答案 (Binary Search on Answer) 是處理最大化最小問題的必備技巧。

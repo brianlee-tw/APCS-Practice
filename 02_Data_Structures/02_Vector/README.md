@@ -10,7 +10,7 @@
 
 <br>
 
-## 📌 學習目標 (Objectives)
+##  學習目標 (Objectives)
 - **基礎鞏固**：熟練 `vector` 的新增、刪除、插入與容量調整 (`resize`, `reserve`)。
 - **效率優化**：理解動態配置記憶體與「倍增策略 (Geometric Expansion)」的平攤複雜度。
 - **邊界案例**：處理指標失效 (Iterator Invalidation) 問題。
@@ -21,7 +21,7 @@
 
 <br>
 
-## 📝 題目索引 (Problem Index)
+##  題目索引 (Problem Index)
 
 <!-- L2_START -->
 | 題目名稱 | 程式連結 | 時間複雜度 | 詳細筆記 | 難度 | 核心觀念 | 狀態 |
@@ -34,7 +34,7 @@
 
 <br>
 
-## 💡 解題筆記 (Key Notes)
+##  解題筆記 (Key Notes)
 - **核心重點**：`reserve()` 可預先配置記憶體，避免頻繁的記憶體重新分配導致效能下降。
 - **常見陷阱**：在遍歷 `vector` 時進行刪除操作，導致 iterator 指向錯誤位置。
 - **進階思考**：當陣列大小在執行期才確定，或需要頻繁進行動態插入時，`vector` 是首選。

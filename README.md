@@ -21,7 +21,7 @@
 
 <br>
 
-## 📊 開發紀錄儀表板 (Development Dashboard)
+##  開發紀錄儀表板 (Development Dashboard)
 | 資源 | 連結 |
 | :--- | :--- |
 | **刷題總表 (Notion)** | [點擊查看我的刷題進度與筆記](https://www.notion.so/36a43be958cd80528db4df429506892f?v=36a43be958cd8075b3ac000c2c628f5d) |
@@ -34,7 +34,7 @@
 
 
 
-## 📈 題庫整體進度
+##  題庫整體進度
 <!-- ROOT_START -->
 | 階段大分類 | 完成度 | 完成率 |
 | :--- | :---: | :---: |
@@ -51,7 +51,7 @@
 
 <br>
 
-## 🏆 重點解題里程碑 (Core Milestones)
+##  重點解題里程碑 (Core Milestones)
 *這裡收錄最具代表性的挑戰題目，涵蓋演算法優化與複雜度分析。*
 
 | 年份/來源 | 題目名稱 | 複雜度 (Complexity) | 核心關鍵與優化點 |

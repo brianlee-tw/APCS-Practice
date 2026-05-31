@@ -10,7 +10,7 @@
 
 <br>
 
-## 📌 學習目標 (Objectives)
+##  學習目標 (Objectives)
 - **基礎鞏固**：理解陣列的記憶體配置與隨機存取 (Random Access) 特性。
 - **效率優化**：掌握前綴和 (Prefix Sum) 與差分陣列 (Difference Array) 以優化區間操作。
 - **邊界案例**：防範陣列索引越界 (Out of Bounds) 與處理靜態陣列大小限制。
@@ -21,7 +21,7 @@
 
 <br>
 
-## 📝 題目索引 (Problem Index)
+##  題目索引 (Problem Index)
 
 <!-- L2_START -->
 | 題目名稱 | 程式連結 | 時間複雜度 | 詳細筆記 | 難度 | 核心觀念 | 狀態 |
@@ -34,7 +34,7 @@
 
 <br>
 
-## 💡 解題筆記 (Key Notes)
+##  解題筆記 (Key Notes)
 - **核心重點**：陣列存取時間為 $O(1)$，適合讀取頻繁的操作；區間查詢可透過預處理達成 $O(1)$。
 - **常見陷阱**：全域陣列宣告大小不足導致 Runtime Error；初始化時未考慮數據範圍。
 - **進階思考**：利用分塊 (Square Root Decomposition) 處理複雜的區間修改與查詢問題。
