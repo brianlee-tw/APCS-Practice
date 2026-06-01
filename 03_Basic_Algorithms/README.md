@@ -45,10 +45,10 @@
 | :--- | :---: | :---: | :--- |
 | [01_Sorting](./01_Sorting/) | 0/5 | 0% | 🔥 |
 | [02_Binary_Search](./02_Binary_Search/) | 0/6 | 0% | 🔥 |
-| [03_Greedy](./03_Greedy/) | 0/8 | 0% | 🔥 |
+| [03_Greedy](./03_Greedy/) | 1/8 | 12% | 🔥 |
 | [04_Brute_Force](./04_Brute_Force/) | 0/5 | 0% | 🔥 |
 | [05_Two_Pointers](./05_Two_Pointers/) | 0/7 | 0% | 🔥 |
-| [06_Math_Theory](./06_Math_Theory/) | 7/5 | 140% | ✅ |
+| [06_Math_Theory](./06_Math_Theory/) | 6/5 | 120% | ✅ |
 <!-- L1_END -->
 <br>
 
