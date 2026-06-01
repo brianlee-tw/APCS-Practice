@@ -88,7 +88,7 @@
 
 <br>
 
-## 📄 授權 
+##  授權 
 本專案內容僅供學習交流使用，遵循 [MIT License](https://opensource.org/licenses/MIT) 規範。
 
 <br>
