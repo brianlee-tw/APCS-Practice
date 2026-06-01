@@ -1,6 +1,6 @@
 # APCS Title: a686. 蝸牛往上爬
 # APCS Complexity: O(1)
-# APCS Tag: 數學與數論, 條件判斷
+# APCS Tag: Greedy, Loops
 # APCS Difficulty: 2
 # APCS Note: https://www.notion.so/a686-36a43be958cd8027842ac5abc1629bdb?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
 
