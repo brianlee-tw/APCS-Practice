@@ -31,6 +31,7 @@
 | **a248. 除法練習** | [Py](./a248_division_pricision.py) | $O(N)$ | [📝 Notion](https://www.notion.so/a248-36a43be958cd80caa5c6cd956b53148a?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | ★ ★ ☆ ☆ ☆ | `Math_Theory` `IO_Optimization` | ✅ 已過關 |
 | **a453. TOI2010 <br> 第一題：一元二次方程式** | [Py](./a453_QuadraticEquationRationalRoot.py) | $O(M)$ | [📝 Notion](https://www.notion.so/a453-TOI2010-36a43be958cd80ef8219fcaf13eec7d1?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | ★ ☆ ☆ ☆ ☆ | `Math_Theory` `Conditionals` | 🚧 進行中 |
 | **a686. 蝸牛往上爬** | [Py](./a686_Snail_Climbing.py) | $O(1)$ | [📝 Notion](https://www.notion.so/a686-36a43be958cd8027842ac5abc1629bdb?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | ★ ★ ☆ ☆ ☆ | `數學與數論` `條件判斷` | ✅ 已過關 |
+| **a695. 找出最大質因數** | [Py](./a695_Find_Largest_Prime_Factor.py) | $O(\sqrt{N})$ | [📝 Notion](https://www.notion.so/a695-NOIP-2012-1-36a43be958cd80b6909dce9a7c837921?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | ★ ★ ☆ ☆ ☆ | `Math_Theory` `Loops` | ✅ 已過關 |
 <!-- L2_END -->
 
 <br>
