@@ -26,7 +26,7 @@
 
 | 題目名稱 | 程式連結 | 時間複雜度 | 難度 | 核心觀念 | 狀態 |
 | :--- | :---: | :--- | :--- | :--- | :---: |
-| [**a686. 蝸牛往上爬**](https://www.notion.so/a686-36a43be958cd8027842ac5abc1629bdb?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a686_Snail_Climbing.py) | $O(1)$ | ★ ★ ☆ ☆ ☆ | `Greedy`<br>`Loops` | ✅ 已過關 |
+| [**a686. 蝸牛往上爬**](https://www.notion.so/a686-36a43be958cd8027842ac5abc1629bdb?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a686_Snail_Climbing.py) | $O(1)$ | ★ ★ ☆ ☆ ☆ | `Greedy`<br>`Loops` | ✅ Accepted |
 <!-- L2_END -->
 
 <br>
