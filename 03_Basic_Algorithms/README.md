@@ -48,7 +48,7 @@
 | [03_Greedy](./03_Greedy/) | 1/8 | 12% | 🔥 |
 | [04_Brute_Force](./04_Brute_Force/) | 0/5 | 0% | 🔥 |
 | [05_Two_Pointers](./05_Two_Pointers/) | 0/7 | 0% | 🔥 |
-| [06_Math_Theory](./06_Math_Theory/) | 6/5 | 120% | ✅ |
+| [06_Math_Theory](./06_Math_Theory/) | 7/5 | 140% | ✅ |
 <!-- L1_END -->
 <br>
 
