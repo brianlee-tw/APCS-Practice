@@ -1,5 +1,5 @@
 # APCS Title: a059. 完全平方和
-# APCS Complexity: O(sqrt(N))
+# APCS Complexity: O(\sqrt{b})
 # APCS Tag: Math Theory, Loops
 # APCS Difficulty: 1
 # APCS Note: https://www.notion.so/ZJ-A059-36a43be958cd800ca7f7e72ae7600618?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link

@@ -115,10 +115,10 @@ def update_l2_topic(path, sub_name):
     
     for name, info in data.items():
         header = info.get("head_content", "").lower()
-        if not info["links"]: status_text = "⏳ 待挑戰"
-        elif "# apcs status: in progress" in header: status_text = "🚧 進行中"
-        elif info["notion"] == "請在此處貼上連結": status_text = "✍️ 補筆記"
-        else: status_text = "✅ 已過關"
+        if not info["links"]: status_text = "⏳ Todo"
+        elif "# apcs status: in progress" in header: status_text = "✅ Accepted"
+        elif info["notion"] == "請在此處貼上連結": status_text = "✍️ Documenting"
+        else: status_text = "✅ Accepted"
         
         # 2. 核心邏輯：判斷是否有筆記。如果有，將題目名稱做成 Notion 超連結；沒有則維持粗體
         if info["notion"] != "請在此處貼上連結":

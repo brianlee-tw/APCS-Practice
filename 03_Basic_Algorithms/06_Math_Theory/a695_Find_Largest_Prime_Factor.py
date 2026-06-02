@@ -1,5 +1,5 @@
 # APCS Title: a695. 找出最大質因數
-# APCS Complexity: O(sqrt(N))
+# APCS Complexity: O(\sqrt{n})
 # APCS Tag: Math Theory, Loops
 # APCS Difficulty: 2
 # APCS Note: https://www.notion.so/a695-NOIP-2012-1-36a43be958cd80b6909dce9a7c837921?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
