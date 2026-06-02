@@ -1,5 +1,5 @@
 # APCS Title: a740. 質因數之和
-# APCS Complexity: O(sqrt(n)) with dynamic bound
+# APCS Complexity: O(sqrt(n))
 # APCS Tag: Math Theory, Python I/O Optimization
 # APCS Difficulty: 2
 # APCS Note: https://www.notion.so/a740-36a43be958cd80c1af62cde1c3eb1e24?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
