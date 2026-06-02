@@ -12,9 +12,9 @@
 
 
 ##  學習目標 (Objectives)
-- **基礎鞏固**：掌握輾轉相除法（求 GCD）與 $O(\sqrt{N})$ 質數判定等基礎數論。
+- **基礎鞏固**：深入探討歐幾里得演算法（Euclidean Algorithm） 之時間複雜度上界，並實作 試除法（Trial Division） 進行 $O(\sqrt{n})$ 的質數判定與質因數分解。
 - **效率優化**：理解高效關聯容器（如 Map/Set/Priority Queue）對數學統計的優化。
-- **邊界案例**：防範數值計算過程中的整數溢位（溢出時須全面改用 `long long`）。
+- **邊界案例**：分析大數運算時的邊界條件（Boundary Conditions），防範 Integer Overflow（整數溢位） 對評測結果造成的影響。
 
 <br>
 
