@@ -27,8 +27,7 @@
 
 | 題目名稱 | 程式連結 | 時間複雜度 | 難度 | 核心觀念 | 狀態 |
 | :--- | :---: | :--- | :--- | :--- | :---: |
-| [**a010. 因數分解**](https://www.notion.so/a010-36a43be958cd80d7a665d58550e2e017?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a010_Prime_Factor.cpp) | $O(\sqrt{n})$ | ★ ★ ☆ ☆ ☆ | `Math Theory`<br>`Loops` | ✅ Accepted |
-| [**a010. 因數分解**](https://www.notion.so/a010-36a43be958cd80d7a665d58550e2e017?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a010_prime_factor.py) | $O(\sqrt{n})$ | ★ ★ ☆ ☆ ☆ | `Math Theory`<br>`Loops` | ✅ Accepted |
+| [**a010. 因數分解**](https://www.notion.so/a010-36a43be958cd80d7a665d58550e2e017?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a010_Prime_Factor.cpp) [Py](./a010_Prime_Factor.py) | $O(\sqrt{n})$ | ★ ★ ☆ ☆ ☆ | `Math Theory`<br>`Loops` | ✅ Accepted |
 | [**a034. 二進位制轉換**](https://www.notion.so/a034-36a43be958cd80a49057f8b8925ed00d?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a034_Binary_Conversion_String.cpp) [Py](./a034_Binary_Conversion_String.py) | $O(\\log  n)$ | ★ ★ ☆ ☆ ☆ | `Basic Syntax`<br>`Loops`<br>`Math Theory` | ✅ Accepted |
 | [**a059. 完全平方和**](https://www.notion.so/a059-36a43be958cd800ca7f7e72ae7600618?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a059_Perfect_Squares_Sum.cpp) [Py](./a059_Perfect_Squares_Sum.py) | $O(\sqrt{b})$ | ★ ☆ ☆ ☆ ☆ | `Math Theory`<br>`Loops` | ✅ Accepted |
 | [**a248. 除法練習**](https://www.notion.so/a248-36a43be958cd80caa5c6cd956b53148a?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a248_Division_Pricision.py) | $O(n)$ | ★ ★ ☆ ☆ ☆ | `Math Theory`<br>`I/O Optimization` | ✅ Accepted |
