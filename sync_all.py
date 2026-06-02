@@ -111,7 +111,7 @@ def update_l2_topic(path, sub_name):
         elif info["notion"] == "請在此處貼上連結": status_text = "✍️ 補筆記中"
         else: status_text = "✅ 已過關"
             
-        table.append(f"| **{info['title']}** | {' '.join(info['links'])} | {info['complexity']} | [📝 Notion]({info['notion']}) | {info['difficulty']} | {info['tag']} | {status_text} |")
+        table.append(f"| **{info['title']}** | {' '.join(info['links'])} | {info['complexity']} | [Notion]({info['notion']}) | {info['difficulty']} | {info['tag']} | {status_text} |")
 
     # 寫回 README
     if os.path.exists(readme_path):
