@@ -27,8 +27,7 @@
 
 | 題目名稱 | 程式連結 | 時間複雜度 | 難度 | 核心觀念 | 狀態 |
 | :--- | :---: | :--- | :--- | :--- | :---: |
-| [**a244. for + if**](https://www.notion.so/a244-for-if-36a43be958cd8081aa57f6377251a74d?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a244_For_If_Practice.cpp) | $O(1)$ | ★ ☆ ☆ ☆ ☆ | `Basic Syntax`<br>`Conditionals` | ✅ Accepted |
-| [**a244. for + if**](https://www.notion.so/a244-for-if-36a43be958cd8081aa57f6377251a74d?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a244_for_if_practice.py) | $O(1)$ | ★ ☆ ☆ ☆ ☆ | `Basic Syntax`<br>`Conditionals` | ✅ Accepted |
+| [**a244. for + if**](https://www.notion.so/a244-for-if-36a43be958cd8081aa57f6377251a74d?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a244_For_If_Practice.cpp) [Py](./a244_For_If_Practice.py) | $O(1)$ | ★ ☆ ☆ ☆ ☆ | `Basic Syntax`<br>`Conditionals` | ✅ Accepted |
 <!-- L2_END -->
 
 <br>

@@ -42,7 +42,7 @@
 | 子主題 | 進度 | 完成率 | 狀態 |
 | :--- | :---: | :---: | :--- |
 | [01_IO_Optimization](./01_IO_Optimization/) | 2/3 | 66% | 🔥 |
-| [02_Conditionals](./02_Conditionals/) | 2/2 | 100% | ✅ |
+| [02_Conditionals](./02_Conditionals/) | 1/2 | 50% | 🔥 |
 | [03_Loops](./03_Loops/) | 0/3 | 0% | 🔥 |
 | [04_Functions](./04_Functions/) | 0/3 | 0% | 🔥 |
 <!-- L1_END -->
