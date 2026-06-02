@@ -23,10 +23,10 @@
 ##  題目索引 (Problem Index)
 
 <!-- L2_START -->
-*使用說明：點擊「題目名稱」可直接連結至該題的 Notion 詳細筆記。*
+> 💡 **使用說明**：點擊 **「題目名稱」** 的藍色超連結，可直接跳轉至該題的 Notion 詳細筆記頁面。
 
-| 題目名稱 | 程式連結 | $O$ 複雜度 | 難度 | 核心觀念 | 狀態 |
-| :--- | :---: | :---: | :---: | :--- | :---: |
+| 題目名稱 | 程式連結 | 時間複雜度 | 難度 | 核心觀念 | 狀態 |
+| :--- | :---: | :---: | :--- | :--- | :---: |
 | [**a010. 因數分解**](https://www.notion.so/a010-36a43be958cd80d7a665d58550e2e017?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a010_prime_factor.cpp) [Py](./a010_prime_factor.py) | $O(\sqrt{N})$ | ★ ★ ☆ ☆ ☆ | `Math Theory`<br>`Loops` | ✅ 已過關 |
 | [**a034. 二進位制轉換**](https://www.notion.so/a034-36a43be958cd80a49057f8b8925ed00d?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a034_Binary_Conversion_String.cpp) [Py](./a034_Binary_Conversion_String.py) | $O(\log  N)$ | ★ ★ ☆ ☆ ☆ | `Basic Syntax`<br>`Loops`<br>`Math Theory` | ✅ 已過關 |
 | [**a059. 完全平方和**](https://www.notion.so/a059-36a43be958cd800ca7f7e72ae7600618?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a059_Perfect_Squares_Sum.cpp) [Py](./a059_Perfect_Squares_Sum.py) | $O(\sqrt{b})$ | ★ ☆ ☆ ☆ ☆ | `Math Theory`<br>`Loops` | ✅ 已過關 |
