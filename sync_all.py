@@ -84,7 +84,7 @@ def update_l2_topic(path, sub_name):
                 if tag_match:
                     raw_tag = tag_match.group(1).strip()
                     tags = [f"`{t.strip()}`" for t in raw_tag.split(",") if t.strip()]
-                    tag = " ".join(tags) if tags else "`未標記`"
+                    tag = "<br>".join(tags) if tags else "`未標記`"
 
                 diff_match = re.search(r"(?://|#)\s*APCS Difficulty:\s*(\d+)", head_content)
                 if diff_match:
@@ -109,7 +109,7 @@ def update_l2_topic(path, sub_name):
     table = [
         "*使用說明：點擊「題目名稱」可直接連結至該題的 Notion 詳細筆記。*",
         "",
-        "| 題目名稱 | 程式連結 | 時間複雜度 | 難度 | 核心觀念 | 狀態 |", 
+        "| 題目名稱 | 程式連結 | $O$ 複雜度 | 難度 | 核心觀念 | 狀態 |", 
         "| :--- | :---: | :---: | :---: | :--- | :---: |"
     ]
     
