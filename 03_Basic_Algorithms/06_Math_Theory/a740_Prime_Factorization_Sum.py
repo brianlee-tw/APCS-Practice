@@ -1,25 +1,38 @@
-import math
+# APCS Title: a740. 質因數之和
+# APCS Complexity: O(sqrt(n)) with dynamic bound
+# APCS Tag: Math Theory, Python I/O Optimization
+# APCS Difficulty: 2
+# APCS Note: https://www.notion.so/a740-36a43be958cd80c1af62cde1c3eb1e24?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
 
-while True:
-    try:
-        n = int(input())
+import sys
+
+def main():
+    input_data = sys.stdin.read().split()
+    if not input_data:
+        return
+    
+    results = []
+    for s in input_data:
+        n = int(s)
         cnt = 0
 
-        if n % 2 == 0:
-            while n % 2 == 0:
-                cnt += 2
-                n //= 2
+        while n % 2 == 0:
+            cnt += 2
+            n //= 2
 
-        for i in range(3, math.isqrt(n) + 1, 2):
+        i = 3                     # 處理 3 開始的奇數
+        while i * i <= n:         # 使用 while 條件動態判斷，隨 n 變小而縮減運算範圍
             while n % i == 0:
                 cnt += i
                 n //= i
+            i += 2
 
-        if n != 1:
+        if n > 1:                 # 若剩餘的 n > 1，則該數為質數
             cnt += n
 
-        print(cnt)
+        results.append(str(cnt))
 
+    sys.stdout.write("\n".join(results) + "\n")
 
-    except EOFError:
-        break
+if __name__ == '__main__':
+    main()
