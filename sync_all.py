@@ -103,15 +103,31 @@ def update_l2_topic(path, sub_name):
         data[name]["links"].append(f"[{'C++' if ext == '.cpp' else 'Py'}](./{f})")
 
     # 生成表格
-    table = ["| 題目名稱 | 程式連結 | 時間複雜度 | 詳細筆記 | 難度 | 核心觀念 | 狀態 |", "| :--- | :--- | :---: | :---: | :---: | :--- | :---: |"]
+    # === 替換這段：生成表格與寫回 README ===
+    
+    # 1. 精簡欄位標題，刪除「詳細筆記」，釋放橫向空間
+    table = [
+        "*使用說明：點擊「題目名稱」可直接連結至該題的 Notion 詳細筆記。*",
+        "",
+        "| 題目名稱 | 程式連結 | 時間複雜度 | 難度 | 核心觀念 | 狀態 |", 
+        "| :--- | :---: | :---: | :---: | :--- | :---: |"
+    ]
+    
     for name, info in data.items():
         header = info.get("head_content", "").lower()
         if not info["links"]: status_text = "⏳ 待挑戰"
         elif "# apcs status: in progress" in header: status_text = "🚧 進行中"
-        elif info["notion"] == "請在此處貼上連結": status_text = "✍️ 補筆記中"
+        elif info["notion"] == "請在此處貼上連結": status_text = "✍️ 補筆記"
         else: status_text = "✅ 已過關"
+        
+        # 2. 核心邏輯：判斷是否有筆記。如果有，將題目名稱做成 Notion 超連結；沒有則維持粗體
+        if info["notion"] != "請在此處貼上連結":
+            title_cell = f"[**{info['title']}**]({info['notion']})"
+        else:
+            title_cell = f"**{info['title']}**"
             
-        table.append(f"| **{info['title']}** | {' '.join(info['links'])} | {info['complexity']} | [Notion]({info['notion']}) | {info['difficulty']} | {info['tag']} | {status_text} |")
+        # 3. 重新組合表格欄位（已拿掉原本的詳細筆記欄位）
+        table.append(f"| {title_cell} | {' '.join(info['links'])} | {info['complexity']} | {info['difficulty']} | {info['tag']} | {status_text} |")
 
     # 寫回 README
     if os.path.exists(readme_path):
@@ -122,7 +138,6 @@ def update_l2_topic(path, sub_name):
             if old_block_match:
                 new_content = content.replace(old_block_match.group(0), f"{L2_START}\n{'\n'.join(table)}\n{L2_END}")
                 with open(readme_path, "w", encoding="utf-8") as f: f.write(new_content)
-
 
 def update_l1_chapter(path, cat_name):
     readme_path = os.path.join(path, "README.md")
