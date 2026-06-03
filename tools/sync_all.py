@@ -184,49 +184,76 @@ def update_l1_readme(category_name):
 
 
 def update_l0_root():
-    """更新全專案根目錄的 README，包含統計數據與進度條"""
+    """更新全專案根目錄的 README，包含統計數據、進度條與複習清單"""
     readme_path = "README.md"
-    
+    if not os.path.exists(readme_path): return
+
     # 1. 蒐集全域數據
-    all_problems = []
     category_rows = []
-    total_done = 0
-    total_all = 0
-    
+    total_done, total_all = 0, 0
+    need_review_list = []  # 用來存放待複習題目
+
     for cat, info in CONFIG.items():
         if not os.path.exists(cat): continue
         
         # 讀取該分類下的題目
-        files = [f for f in os.listdir(cat) if f.endswith((".cpp", ".py"))]
-        unique_probs = {parse_file_metadata(os.path.join(cat, f), f)["prob_id"] for f in files}
+        files = [f for f in os.listdir(cat) if f.endswith((".cpp", ".py")) and "tempCodeRunner" not in f]
+        unique_probs = set()
+        
+        for f in files:
+            file_path = os.path.join(cat, f)
+            meta = parse_file_metadata(file_path, f)
+            unique_probs.add(meta["prob_id"])
+            
+            # 檢查是否需要複習
+            if "Need Review" in meta["status"]:
+                need_review_list.append(f"[{meta['prob_id']}](./{cat}/{f})")
         
         count = len(unique_probs)
         pct = int((count / info["total"]) * 100) if info["total"] > 0 else 0
-        
-        # 建立進度條 HTML
         html_progress = f'<progress value="{count}" max="{info["total"]}"></progress> {pct}%'
+        
         category_rows.append(f"| [{cat}](./{cat}/) | {count}/{info['total']} | {html_progress} |")
         
         total_done += count
         total_all += info["total"]
 
-    # 2. 生成儀表板內容
-    overall_pct = int((total_done / total_all) * 100)
-    dashboard = f"""
-### 📊 題庫整體進度
-| 階段大分類 | 完成度 | 完成率 |
-| :--- | :---: | :---: |
-{chr(10).join(category_rows)}
+    # 2. 處理複習清單字串
+    review_display = ", ".join(need_review_list) if need_review_list else "目前無待複習題目"
+    review_count = len(need_review_list)
+    overall_pct = int((total_done / total_all) * 100) if total_all > 0 else 0
 
-### 📈 全域學習儀表板
-| 總覽指標 | 數據統計 |
-| :--- | :--- |
-| **總題目數** | `{total_done} / {total_all}` |
-| **目前進度** | <progress value="{total_done}" max="{total_all}"></progress> {overall_pct}% |
-| **待複習** | `(開發中...)` |
-"""
-    # 3. 寫入檔案 (保持原本的 ROOT_START/END 邏輯)
-    # ...
+    # 3. 生成儀表板與進度表內容
+    dashboard_content = f"""
+    ### 📈 全域學習儀表板
+    | 總覽指標 | 數據統計 |
+    | :--- | :--- |
+    | **總題目數** | `{total_done} / {total_all}` |
+    | **目前進度** | <progress value="{total_done}" max="{total_all}"></progress> {overall_pct}% |
+    | **待複習 (超過{REVIEW_THRESHOLD_DAYS}天)** | `{review_count} 題` |
+    | **複習清單** | {review_display} |
+
+    ### 📊 題庫整體進度
+    | 階段大分類 | 完成度 | 完成率 |
+    | :--- | :---: | :---: |
+    {chr(10).join(category_rows)}
+    """
+
+    # 4. 讀取並防呆寫入
+    with open(readme_path, "r", encoding="utf-8") as f:
+        content = f.read()
+        
+    if ROOT_START not in content or ROOT_END not in content:
+        content += f"\n\n{ROOT_START}\n{ROOT_END}\n"
+
+    # 用字串切片相加，精準繞過 re.sub 的 Bug
+    parts_start = content.split(ROOT_START)
+    parts_end = parts_start[1].split(ROOT_END)
+    new_content = f"{parts_start[0]}{ROOT_START}\n{dashboard_content}\n{ROOT_END}{parts_end[1]}"
+    
+    with open(readme_path, "w", encoding="utf-8") as f:
+        f.write(new_content)
+    print("✅ 已成功更新全專案根目錄 README (含儀表板與複習清單)！")
 
 
 if __name__ == "__main__":
