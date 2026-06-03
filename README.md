@@ -6,8 +6,6 @@
 
 <br>
 
-
-
 <br>
 
 ##  目標與願景
@@ -17,8 +15,6 @@
 
 <br>
 
-
-
 <br>
 
 ##  開發紀錄儀表板 
@@ -27,8 +23,6 @@
 | **刷題總表 (Notion)** | [點擊查看我的刷題進度與筆記](https://www.notion.so/36a43be958cd80528db4df429506892f?v=36a43be958cd8075b3ac000c2c628f5d) |
 
 <br>
-
-
 
 <br>
 
@@ -40,6 +34,10 @@
 | **目前進度** | <progress value="11" max="113"></progress> 9% |
 | **待複習 (超過90天)** | `0 題` |
 | **複習清單** | 目前無待複習題目 |
+
+<br>
+
+<br>
 
 ## 📊 題庫整體進度
 | 階段大分類 | 完成度 | 完成率 |
@@ -53,8 +51,6 @@
 
 <br>
 
-
-
 <br>
 
 ##  重點解題里程碑 
@@ -66,8 +62,6 @@
 
 <br>
 
-
-
 <br>
 
 ##  開發標準 
@@ -76,8 +70,6 @@
 - **Performance Optimization**：使用標準 `ios_base::sync_with_stdio(0)` 加速 I/O。
 
 <br>
-
-
 
 <br>
 
@@ -90,16 +82,12 @@
 
 <br>
 
-
-
 <br>
 
 ##  授權 
 本專案內容僅供學習交流使用，遵循 [MIT License](https://opensource.org/licenses/MIT) 規範。
 
 <br>
-
-
 
 <br>
 
