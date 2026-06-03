@@ -135,13 +135,13 @@ def update_l1_readme(category_name):
     with open(readme_path, "r", encoding="utf-8") as f:
         content = f.read()
         
-    if L1_START_TXT not in content or L1_END_TXT not in content:
-        content += f"\n\n{L1_START_TXT}\n{L1_END_TXT}\n"
+    if L1_START not in content or L1_END not in content:
+        content += f"\n\n{L1_START}\n{L1_END}\n"
 
     # 用字串切片相加，精準繞過 re.sub 的 Bug
-    parts_start = content.split(L1_START_TXT)
-    parts_end = parts_start[1].split(L1_END_TXT)
-    new_content = f"{parts_start[0]}{L1_START_TXT}\n{progress_header}\n\n{table_content}\n{L1_END_TXT}{parts_end[1]}"
+    parts_start = content.split(L1_START)
+    parts_end = parts_start[1].split(L1_END)
+    new_content = f"{parts_start[0]}{L1_START}\n{progress_header}\n\n{table_content}\n{L1_END}{parts_end[1]}"
     
     with open(readme_path, "w", encoding="utf-8") as f:
         f.write(new_content)
@@ -185,11 +185,15 @@ def update_l0_root():
 
 
 if __name__ == "__main__":
-    # 用於內部解析的實際 HTML 註解字串（防止被系統渲染吃掉的防禦寫法）
-    L1_START_TXT = "<!-- L1_START -->"
-    L1_END_TXT = "<!-- L1_END -->"
+    # 獲取當前腳本所在的目錄
+    script_dir = os.path.dirname(os.path.abspath(__file__))
+    # 獲取專案根目錄 (假設 tools 在根目錄下)
+    root_dir = os.path.dirname(script_dir)
     
-    print("🚀 開始進行全新規格化平鋪架構 README 同步...")
+    # 切換工作目錄到根目錄
+    os.chdir(root_dir)
+    
+    print(f"🚀 開始進行全新規格化平鋪架構 README 同步 (工作目錄: {root_dir})...")
     for cat in CONFIG.keys():
         update_l1_readme(cat)
     update_l0_root()
