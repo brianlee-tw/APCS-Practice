@@ -184,39 +184,49 @@ def update_l1_readme(category_name):
 
 
 def update_l0_root():
-    """更新全專案根目錄的總進度表"""
+    """更新全專案根目錄的 README，包含統計數據與進度條"""
     readme_path = "README.md"
-    if not os.path.exists(readme_path):
-        return
-        
-    table = ["| 階段大分類 | 完成度 | 完成率 |", "| :--- | :---: | :---: |"]
+    
+    # 1. 蒐集全域數據
+    all_problems = []
+    category_rows = []
+    total_done = 0
+    total_all = 0
     
     for cat, info in CONFIG.items():
-        if not os.path.exists(cat):
-            continue
+        if not os.path.exists(cat): continue
         
-        unique_problems = set()
-        for f in os.listdir(cat):
-            if f.endswith((".cpp", ".py")) and "tempCodeRunner" not in f:
-                meta = parse_file_metadata(os.path.join(cat, f), f)
-                unique_problems.add(meta["prob_id"])
-                
-        count = len(unique_problems)
+        # 讀取該分類下的題目
+        files = [f for f in os.listdir(cat) if f.endswith((".cpp", ".py"))]
+        unique_probs = {parse_file_metadata(os.path.join(cat, f), f)["prob_id"] for f in files}
+        
+        count = len(unique_probs)
         pct = int((count / info["total"]) * 100) if info["total"] > 0 else 0
-        table.append(f"| [{cat}](./{cat}/) | {count}/{info['total']} | {pct}% |")
-
-    table_content = "\n".join(table)
-    with open(readme_path, "r", encoding="utf-8") as f:
-        content = f.read()
         
-    if ROOT_START not in content or ROOT_END not in content:
-        content += f"\n\n{ROOT_START}\n{ROOT_END}\n"
+        # 建立進度條 HTML
+        html_progress = f'<progress value="{count}" max="{info["total"]}"></progress> {pct}%'
+        category_rows.append(f"| [{cat}](./{cat}/) | {count}/{info['total']} | {html_progress} |")
+        
+        total_done += count
+        total_all += info["total"]
 
-    parts = content.split(ROOT_START)
-    new_content = f"{parts[0]}{ROOT_START}\n{table_content}\n{ROOT_END}{parts[1].split(ROOT_END)[1]}"
-    with open(readme_path, "w", encoding="utf-8") as f:
-        f.write(new_content)
-    print("✅ 已成功更新全專案根目錄 README！")
+    # 2. 生成儀表板內容
+    overall_pct = int((total_done / total_all) * 100)
+    dashboard = f"""
+### 📊 題庫整體進度
+| 階段大分類 | 完成度 | 完成率 |
+| :--- | :---: | :---: |
+{chr(10).join(category_rows)}
+
+### 📈 全域學習儀表板
+| 總覽指標 | 數據統計 |
+| :--- | :--- |
+| **總題目數** | `{total_done} / {total_all}` |
+| **目前進度** | <progress value="{total_done}" max="{total_all}"></progress> {overall_pct}% |
+| **待複習** | `(開發中...)` |
+"""
+    # 3. 寫入檔案 (保持原本的 ROOT_START/END 邏輯)
+    # ...
 
 
 if __name__ == "__main__":

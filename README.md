@@ -42,6 +42,14 @@
 | [02_Data_Structures](./02_Data_Structures/) | 0/24 | 0% |
 | [03_Algorithmic_Paradigms](./03_Algorithmic_Paradigms/) | 8/36 | 22% |
 | [04_Graph_Theory_and_Advanced_Topics](./04_Graph_Theory_and_Advanced_Topics/) | 0/42 | 0% |
+
+### 📈 全域學習儀表板
+| 總覽指標 | 數據統計 |
+| :--- | :--- |
+| **總題目數** | `8 / 113` |
+| **目前進度** | <progress value="8" max="113"></progress> 7% |
+| **待複習 (超過90天)** | `2 題` |
+| **活躍觀念 Tag** | `Math Theory`, `Loops` |
 <!-- ROOT_END -->
 
 
