@@ -38,10 +38,10 @@
 <!-- ROOT_START -->
 | 階段大分類 | 完成度 | 完成率 |
 | :--- | :---: | :---: |
-| [01_Basic_Syntax](./01_Basic_Syntax/) | 3/11 | 27% |
+| [01_Basic_Syntax_Optimization](./01_Basic_Syntax_Optimization/) | 3/11 | 27% |
 | [02_Data_Structures](./02_Data_Structures/) | 0/24 | 0% |
-| [03_Basic_Algorithms](./03_Basic_Algorithms/) | 8/36 | 22% |
-| [04_Advanced_Topics](./04_Advanced_Topics/) | 0/42 | 0% |
+| [03_Algorithmic_Paradigms](./03_Algorithmic_Paradigms/) | 8/36 | 22% |
+| [04_Graph_Theory_and_Advanced_Topics](./04_Graph_Theory_and_Advanced_Topics/) | 0/42 | 0% |
 <!-- ROOT_END -->
 
 
