@@ -25,7 +25,7 @@
 
 | 題目名稱 | 程式連結 | 時間複雜度 | 難度 | 核心觀念 | 狀態 | 最後編輯 |
 | :--- | :---: | :--- | :--- | :--- | :---: | :---: |
-| [**a001_Hello_World**](https://www.notion.so/a001-36a43be958cd80c48115f59d68f70a5f?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a001_Hello_World.cpp) | — | ★ |  | ✅ Finished | 2026-06-02 |
+| [**a001_Hello_World**](https://www.notion.so/a001-36a43be958cd80c48115f59d68f70a5f?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a001_Hello_World.cpp) | — | ★ |  | ✅ Finished | 2026-06-03 |
 | [**a244_For_If_Practice**](https://www.notion.so/a244-for-if-36a43be958cd8081aa57f6377251a74d?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a244_For_If_Practice.py) [C++](./a244_For_If_Practice.cpp) | — | ★ |  | ✅ Finished | 2026-06-03 |
 | [**c315_IRobotPrequel**](https://www.notion.so/c315-I-ROBOT-36a43be958cd804ba58adaf8849c51cc?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c315_IRobotPrequel.py) | — | ★ |  | ✅ Finished | 2026-06-03 |
 <!-- L1_END -->
