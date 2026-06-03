@@ -1,8 +1,12 @@
 # 03_Algorithmic_Paradigms: 核心演算法典範
 本章節收錄了 APCS 考試中最核心的演算法思維，是提升解題效率與挑戰難題的關鍵。
 
+<br>
+
 ### 💡 學習策略
 重點在於「狀態轉移」與「規律挖掘」。透過暴力破解法 (Brute Force) 建立底層邏輯，並進一步轉換為貪心法 (Greedy) 或動態規劃 (DP) 的高效解法。
+
+<br>
 
 ### 關鍵術語
 - `bf`: 暴力破解
@@ -10,6 +14,8 @@
 - `sort`: 排序演算法
 - `bs`: 二分搜尋
 - `dp`: 動態規劃
+
+<br>
 
 <!-- L1_START -->
 ### 📊 當前章節複習進度：`8/36` (22%)
@@ -27,10 +33,6 @@
 | [**a695. 找出最大質因數**](https://www.notion.so/a695-NOIP-2012-1-36a43be958cd80b6909dce9a7c837921?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a695_Find_Largest_Prime_Factor.py) | $O(\sqrt{n})$ | ★★ | `Math Theory` `Loops` | ✅ Accepted |
 | [**a740. 質因數之和**](https://www.notion.so/a740-36a43be958cd80c1af62cde1c3eb1e24?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a740_Prime_Factorization_Sum.py) | $O(\sqrt{n})$ | ★★ | `Math Theory` `I/O Optimization` | ✅ Accepted |
 <!-- L1_END -->
-
-<br>
-
----
 
 <br>
 
