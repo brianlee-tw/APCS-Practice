@@ -1,0 +1,48 @@
+<br>
+
+# 06_Math_Theory: 數學與數論演算法
+
+本節探討常見的數學關係、數論特性，以及如何引入高效容器來處理動態數學問題。
+
+<br>
+
+---
+
+<br>
+
+
+##  學習目標 (Objectives)
+- **基礎鞏固**：深入探討歐幾里得演算法（Euclidean Algorithm） 之時間複雜度上界，並實作 試除法（Trial Division） 進行 $O(\sqrt{n})$ 的質數判定與質因數分解。
+- **效率優化**：理解高效關聯容器（如 Map/Set/Priority Queue）對數學統計的優化。
+- **邊界案例**：分析大數運算時的邊界條件（Boundary Conditions），防範 Integer Overflow（整數溢位） 對評測結果造成的影響。
+
+<br>
+
+---
+
+##  題目索引 (Problem Index)
+
+<!-- L2_START -->
+> 💡 **使用說明**：點擊 **「題目名稱」** 的藍色超連結，可直接跳轉至該題的 Notion 詳細筆記頁面。
+
+| 題目名稱 | 程式連結 | 時間複雜度 | 難度 | 核心觀念 | 狀態 |
+| :--- | :---: | :--- | :--- | :--- | :---: |
+| [**a010. 因數分解**](https://www.notion.so/a010-36a43be958cd80d7a665d58550e2e017?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a010_Prime_Factor.cpp) [Py](./a010_Prime_Factor.py) | $O(\sqrt{n})$ | ★ ★ ☆ ☆ ☆ | `Math Theory`<br>`Loops` | ✅ Accepted |
+| [**a034. 二進位制轉換**](https://www.notion.so/a034-36a43be958cd80a49057f8b8925ed00d?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a034_Binary_Conversion_String.cpp) [Py](./a034_Binary_Conversion_String.py) | $O(\\log  n)$ | ★ ★ ☆ ☆ ☆ | `Basic Syntax`<br>`Loops`<br>`Math Theory` | ✅ Accepted |
+| [**a059. 完全平方和**](https://www.notion.so/a059-36a43be958cd800ca7f7e72ae7600618?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a059_Perfect_Squares_Sum.cpp) [Py](./a059_Perfect_Squares_Sum.py) | $O(\sqrt{b})$ | ★ ☆ ☆ ☆ ☆ | `Math Theory`<br>`Loops` | ✅ Accepted |
+| [**a248. 除法練習**](https://www.notion.so/a248-36a43be958cd80caa5c6cd956b53148a?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a248_Division_Pricision.py) | $O(n)$ | ★ ★ ☆ ☆ ☆ | `Math Theory`<br>`I/O Optimization` | ✅ Accepted |
+| [**a453. TOI2010 <br> 第一題：一元二次方程式**](https://www.notion.so/a453-TOI2010-36a43be958cd80ef8219fcaf13eec7d1?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a453_QuadraticEquationRationalRoot.py) | $O(m)$ | ★ ☆ ☆ ☆ ☆ | `Math Theory`<br>`Conditionals` | ✅ Accepted |
+| [**a695. 找出最大質因數**](https://www.notion.so/a695-NOIP-2012-1-36a43be958cd80b6909dce9a7c837921?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a695_Find_Largest_Prime_Factor.py) | $O(\sqrt{n})$ | ★ ★ ☆ ☆ ☆ | `Math Theory`<br>`Loops` | ✅ Accepted |
+| [**a740. 質因數之和**](https://www.notion.so/a740-36a43be958cd80c1af62cde1c3eb1e24?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a740_Prime_Factorization_Sum.py) | $O(\sqrt{n})$ | ★ ★ ☆ ☆ ☆ | `Math Theory`<br>`I/O Optimization` | ✅ Accepted |
+<!-- L2_END -->
+
+<br>
+
+---
+
+<br>
+
+##  解題筆記 (Key Notes)
+- **核心重點**：數論演算法的核心是「利用數學規律降低計算複雜度」（例如從 $O(N)$ 降到 $O(\log N)$）。
+- **常見陷阱**：高頻率將資料丟入陣列重新排序（`sort`）會大幅超時，應善用 `priority_queue` 自動維持極值。
+- **進階思考**：許多看似複雜的模擬題目，只要推導出其背後的多項式或遞迴式，就能直接轉換為數學解。

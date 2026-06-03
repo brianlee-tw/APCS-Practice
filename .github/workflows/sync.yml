@@ -20,7 +20,7 @@ jobs:
           python-version: '3.x' 
 
       - name: Run sync script
-        run: python sync_all.py
+        run: python tools/sync_all.py
 
       - name: Commit and Push changes
         run: |
