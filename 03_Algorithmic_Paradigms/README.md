@@ -31,7 +31,7 @@
 | [**a059_Perfect_Squares_Sum**](https://www.notion.so/a059-36a43be958cd800ca7f7e72ae7600618?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a059_Perfect_Squares_Sum.py) [C++](./a059_Perfect_Squares_Sum.cpp) | — | ★ |  | ✅ Finished | 2026-06-03 |
 | [**a248_Division_Pricision**](https://www.notion.so/a248-36a43be958cd80caa5c6cd956b53148a?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a248_Division_Pricision.py) | — | ★ |  | ✅ Finished | 2026-06-03 |
 | [**a453_QuadraticEquationRationalRoot**](https://www.notion.so/a453-TOI2010-36a43be958cd80ef8219fcaf13eec7d1?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a453_QuadraticEquationRationalRoot.py) | — | ★ |  | 🚧 In Progress | 2026-06-03 |
-| [**a686_Snail_Climbing**](https://www.notion.so/a686-36a43be958cd8027842ac5abc1629bdb?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a686_Snail_Climbing.py) | — | ★ |  | ✅ Finished | 2026-06-02 |
+| [**a686_Snail_Climbing**](https://www.notion.so/a686-36a43be958cd8027842ac5abc1629bdb?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a686_Snail_Climbing.py) | — | ★ |  | ✅ Finished | 2026-06-03 |
 | [**a695_Find_Largest_Prime_Factor**](https://www.notion.so/a695-NOIP-2012-1-36a43be958cd80b6909dce9a7c837921?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a695_Find_Largest_Prime_Factor.py) | — | ★ |  | ✅ Finished | 2026-06-03 |
 | [**a740_Prime_Factorization_Sum**](https://www.notion.so/a740-36a43be958cd80c1af62cde1c3eb1e24?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a740_Prime_Factorization_Sum.py) | — | ★ |  | ✅ Finished | 2026-06-03 |
 <!-- L1_END -->
