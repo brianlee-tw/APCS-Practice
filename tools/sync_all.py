@@ -16,20 +16,19 @@ L1_START, L1_END = "<!-- L1_START -->", "<!-- L1_END -->"
 
 
 def parse_file_metadata(file_path, file_name):
-    """嚴格模式：解析檔案元數據，自動判斷題目生命週期與日期"""
+    """解析檔案元數據，並修正遺漏的解析指派邏輯"""
     name, ext = os.path.splitext(file_name)
     prob_id_match = re.match(r"([a-z]\d+)", file_name.lower())
     prob_id = prob_id_match.group(1) if prob_id_match else name.lower()
 
-    # 獲取檔案最後修改時間
     mtime = os.path.getmtime(file_path)
     last_mod = datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
 
     metadata = {
         "prob_id": prob_id, "title": name, "complexity": "—",
         "tags": [], "difficulty": "★", "notion": None, 
-        "status": "✅ Finished", "ext": ext.lower(),
-        "last_modified": last_mod # 新增此欄位
+        "status": "📝 Documenting", "ext": ext.lower(),
+        "last_modified": last_mod
     }
 
     try:
@@ -41,13 +40,24 @@ def parse_file_metadata(file_path, file_name):
             content = f.read()
             head_content = "\n".join(content.splitlines()[:15])
         
-        if "APCS Title:" not in head_content:
-            raise ValueError("Missing APCS Title Header")
+        # 1. 提取題目名稱 (允許無 APCS Title 標頭，但若有則優先使用)
+        title_match = re.search(r"(?://|#)\s*APCS Title:\s*(.*)", head_content)
+        if title_match: metadata["title"] = title_match.group(1).strip()
+        
+        # 2. 複雜度
+        comp_match = re.search(r"(?://|#)\s*APCS Complexity:\s*(.*)", head_content)
+        if comp_match: metadata["complexity"] = f"${comp_match.group(1).strip()}$"
 
-        # ... (後續解析邏輯如 title_match, comp_match, diff_match, tag_match 不變) ...
-        # (這裡請保留你原本的解析邏輯)
+        # 3. 難度
+        diff_match = re.search(r"(?://|#)\s*APCS Difficulty:\s*(\d+)", head_content)
+        if diff_match: metadata["difficulty"] = "★" * int(diff_match.group(1).strip())
 
-        # 4. 狀態判定與 Notion 連結解析
+        # 4. 標籤
+        tag_match = re.search(r"(?://|#)\s*APCS Tag:\s*(.*)", head_content)
+        if tag_match:
+            metadata["tags"] = [t.strip() for t in tag_match.group(1).split(",") if t.strip()]
+
+        # 5. 狀態判定與 Notion 連結
         status_match = re.search(r"(?://|#)\s*APCS Status:\s*(.*)", head_content, re.IGNORECASE)
         notion_match = re.search(r"(?://|#)\s*APCS Note:\s*(https?://[^\s]+)", head_content)
         
@@ -77,7 +87,7 @@ def update_l1_readme(category_name):
 
     # 如果 README 不存在，自動初始化一個
     if not os.path.exists(readme_path):
-        initial_content = f"# {category_name}: {CONFIG[category_name]['title_zh']}\n\n{L1_START_TXT}\n{L1_END_TXT}\n"
+        initial_content = f"# {category_name}: {CONFIG[category_name]['title_zh']}\n\n{L1_START}\n{L1_END}\n"
         with open(readme_path, "w", encoding="utf-8") as f:
             f.write(initial_content)
         print(f"ℹ️ 自動創建了缺失的 {readme_path}")
