@@ -15,67 +15,55 @@ L1_START, L1_END = "<!-- L1_START -->", "<!-- L1_END -->"
 
 
 def parse_file_metadata(file_path, file_name):
-    """精準解析單一檔案的標頭元數據 (Metadata)"""
+    """嚴格模式：解析檔案元數據，解析失敗會將錯誤寫入 status"""
     name, ext = os.path.splitext(file_name)
     prob_id_match = re.match(r"([a-z]\d+)", file_name.lower())
     prob_id = prob_id_match.group(1) if prob_id_match else name.lower()
 
+    # 預設結構：狀態預設為 AC (假設正確)
     metadata = {
-        "prob_id": prob_id,
-        "title": name,
-        "complexity": "—",
-        "tags": ["Uncategorized"],
-        "difficulty": "未標記",
-        "notion": "請在此處貼上連結",
-        "status": "⏳ Todo",
-        "ext": ext.lower()
+        "prob_id": prob_id, "title": name, "complexity": "—",
+        "tags": [], "difficulty": "★", "notion": None, 
+        "status": "✅ Accepted", "ext": ext.lower()
     }
 
     try:
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             head_content = "".join([f.readline() for _ in range(15)])
         
-        header_lower = head_content.lower()
+        # --- 嚴格解析區 ---
+        # 檢查是否有基本標頭，若無則拋出異常
+        if "APCS Title:" not in head_content:
+            raise ValueError("Missing APCS Title Header")
 
         # 1. 提取題目名稱
         title_match = re.search(r"(?://|#)\s*APCS Title:\s*(.*)", head_content)
-        if title_match: metadata["title"] = title_match.group(1).strip()
+        metadata["title"] = title_match.group(1).strip()
         
-        # 2. 提取並標準化時間複雜度
+        # 2. 複雜度 (保持 LaTeX 格式)
         comp_match = re.search(r"(?://|#)\s*APCS Complexity:\s*(.*)", head_content)
-        if comp_match:
-            val = comp_match.group(1).strip()
-            val = val.replace("N", "n").replace("M", "m")  
-            if "sqrt" in val: val = re.sub(r"sqrt\((.*?)\)", r"\\sqrt{\1}", val)
-            if "log" in val: val = val.replace("log", "\\log ")
-            metadata["complexity"] = f"${val}$" if not val.startswith("$") else val
+        if comp_match: metadata["complexity"] = f"${comp_match.group(1).strip()}$"
 
-        # 3. 提取 APCS Tag
-        tag_match = re.search(r"(?://|#)\s*APCS Tag:\s*(.*)", head_content)
-        if tag_match:
-            raw_tags = [t.strip().replace("_", " ") for t in tag_match.group(1).split(",") if t.strip()]
-            if raw_tags: metadata["tags"] = raw_tags
-
-        # 4. 提取難度星星
+        # 3. 難度 (僅顯示實心星星)
         diff_match = re.search(r"(?://|#)\s*APCS Difficulty:\s*(\d+)", head_content)
         if diff_match:
-            star_count = max(1, min(5, int(diff_match.group(1).strip())))
-            metadata["difficulty"] = "".join(["★"] * star_count + ["☆"] * (5 - star_count))
+            metadata["difficulty"] = "★" * int(diff_match.group(1).strip())
 
-        # 5. 提取 Notion 連結
+        # 4. 標籤 (移除頓號，改用 Markdown code block 獨立標籤)
+        tag_match = re.search(r"(?://|#)\s*APCS Tag:\s*(.*)", head_content)
+        if tag_match:
+            metadata["tags"] = [t.strip() for t in tag_match.group(1).split(",") if t.strip()]
+
+        # 5. Notion 連結
         notion_match = re.search(r"(?://|#)\s*APCS Note:\s*(https?://[^\s]+)", head_content)
-        if notion_match: metadata["notion"] = notion_match.group(1).strip()
-
-        # 6. 判斷狀態
-        if "# apcs status: in progress" in header_lower or "// apcs status: in progress" in header_lower:
-            metadata["status"] = "🚧 In Progress"
-        elif metadata["notion"] == "請在此處貼上連結":
-            metadata["status"] = "✍️ Documenting"
+        if notion_match: 
+            metadata["notion"] = notion_match.group(1).strip()
         else:
-            metadata["status"] = "✅ Accepted"
+            metadata["status"] = "✍️ Documenting" # 無連結則視為文件化中
 
     except Exception as e:
-        print(f"❌ 無法讀取 {file_name} 的標籤資料: {e}")
+        # 將錯誤資訊寫入 metadata，這樣 README 表格就會顯示出來
+        metadata["status"] = f"❌ Error: {str(e)}"
         
     return metadata
 
@@ -128,7 +116,7 @@ def update_l1_readme(category_name):
     
     for prob_id, info in sorted(prob_summary.items()):
         title_cell = f"[**{info['title']}**]({info['notion']})" if info["notion"] != "請在此處貼上連結" else f"**{info['title']}**"
-        formatted_tags = "、".join([f"`{t}`" for t in info["tags"]])
+        formatted_tags = " ".join([f"`{t}`" for t in info["tags"]])
         prog_links = " ".join(sorted(info["links"], reverse=True))
         
         markdown_lines.append(
