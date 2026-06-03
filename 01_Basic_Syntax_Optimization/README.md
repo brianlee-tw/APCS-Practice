@@ -1,4 +1,14 @@
+# 01_Basic_Syntax_Optimization: 語法特性與實作優化
+本章節聚焦於 C++ 與 Python 的基礎語法高效應用，重點在於 I/O 優化與基礎邏輯的簡潔實現。
 
+### 💡 學習策略
+這些題目雖然基礎，但卻是所有高階算法的基石。重點在於觀察題目限制，並使用最適合的語法結構來降低時間複雜度。
+
+### 關鍵術語
+- `io`: 輸入輸出優化
+- `cond`: 條件邏輯
+- `loop`: 迴圈結構
+- `func`: 函式封裝
 
 <!-- L1_START -->
 ### 📊 當前章節複習進度：`3/11` (27%)
@@ -11,3 +21,11 @@
 | [**a244. for + if**](https://www.notion.so/a244-for-if-36a43be958cd8081aa57f6377251a74d?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a244_For_If_Practice.py) [C++](./a244_For_If_Practice.cpp) | $O(1)$ | ★ | `Basic Syntax` `Conditionals` | ✅ Accepted |
 | [**c315. 座標移動**](https://www.notion.so/c315-I-ROBOT-36a43be958cd804ba58adaf8849c51cc?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c315_IRobotPrequel.py) | $O(n)$ | ★ | `Basic Syntax` `Conditionals` | ✅ Accepted |
 <!-- L1_END -->
+
+<br>
+
+---
+
+<br>
+
+*Back to [Main Repository](/README.md)*
