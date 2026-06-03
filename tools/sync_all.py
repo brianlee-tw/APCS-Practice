@@ -10,6 +10,8 @@ CONFIG = {
     "04_Graph_Theory_and_Advanced_Topics": {"title_zh": "圖論與進階專題", "total": 42},
 }
 
+REVIEW_THRESHOLD_DAYS = 90
+
 # --- 2. 標籤錨點設定 ---
 ROOT_START, ROOT_END = "<!-- ROOT_START -->", "<!-- ROOT_END -->"
 L1_START, L1_END = "<!-- L1_START -->", "<!-- L1_END -->"
@@ -61,12 +63,23 @@ def parse_file_metadata(file_path, file_name):
         status_match = re.search(r"(?://|#)\s*APCS Status:\s*(.*)", head_content, re.IGNORECASE)
         notion_match = re.search(r"(?://|#)\s*APCS Note:\s*(https?://[^\s]+)", head_content)
         
+        # 判斷基礎狀態
         if status_match and "in progress" in status_match.group(1).lower():
             metadata["status"] = "🚧 In Progress"
         elif notion_match:
             metadata["status"] = "✅ Finished"
         else:
             metadata["status"] = "📝 Documenting"
+            
+        # 新增：複習提醒邏輯
+        # 只有在狀態為 Finished 時才進行提醒
+        if metadata["status"] == "✅ Finished":
+            last_mod_date = datetime.datetime.strptime(metadata["last_modified"], '%Y-%m-%d')
+            today = datetime.datetime.now()
+            days_diff = (today - last_mod_date).days
+            
+            if days_diff >= REVIEW_THRESHOLD_DAYS:
+                metadata["status"] = "🔔 Need Review" # 或者改為 "✅ Finished 🔔"
             
         if notion_match:
             metadata["notion"] = notion_match.group(1).strip()
