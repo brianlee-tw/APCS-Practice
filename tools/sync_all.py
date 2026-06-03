@@ -225,7 +225,7 @@ def update_l0_root():
 
     # 3. 生成儀表板與進度表內容
     # 修改這裡，刪除 f""" 之後的所有縮排
-    dashboard_content = f"""## 📈 全域學習儀表板
+    dashboard_content = f"""## 全域學習儀表板
 | 總覽指標 | 數據統計 |
 | :--- | :--- |
 | **總題目數** | `{total_done} / {total_all}` |
@@ -237,7 +237,7 @@ def update_l0_root():
 
 <br>
 
-## 📊 題庫整體進度
+## 題庫整體進度
 | 階段大分類 | 完成度 | 完成率 |
 | :--- | :---: | :---: |
 {chr(10).join(category_rows)}"""
