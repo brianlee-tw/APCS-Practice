@@ -224,20 +224,19 @@ def update_l0_root():
     overall_pct = int((total_done / total_all) * 100) if total_all > 0 else 0
 
     # 3. 生成儀表板與進度表內容
-    dashboard_content = f"""
-    ### 📈 全域學習儀表板
-    | 總覽指標 | 數據統計 |
-    | :--- | :--- |
-    | **總題目數** | `{total_done} / {total_all}` |
-    | **目前進度** | <progress value="{total_done}" max="{total_all}"></progress> {overall_pct}% |
-    | **待複習 (超過{REVIEW_THRESHOLD_DAYS}天)** | `{review_count} 題` |
-    | **複習清單** | {review_display} |
+    # 修改這裡，刪除 f""" 之後的所有縮排
+    dashboard_content = f"""### 📈 全域學習儀表板
+| 總覽指標 | 數據統計 |
+| :--- | :--- |
+| **總題目數** | `{total_done} / {total_all}` |
+| **目前進度** | <progress value="{total_done}" max="{total_all}"></progress> {overall_pct}% |
+| **待複習 (超過{REVIEW_THRESHOLD_DAYS}天)** | `{review_count} 題` |
+| **複習清單** | {review_display} |
 
-    ### 📊 題庫整體進度
-    | 階段大分類 | 完成度 | 完成率 |
-    | :--- | :---: | :---: |
-    {chr(10).join(category_rows)}
-    """
+### 📊 題庫整體進度
+| 階段大分類 | 完成度 | 完成率 |
+| :--- | :---: | :---: |
+{chr(10).join(category_rows)}"""
 
     # 4. 讀取並防呆寫入
     with open(readme_path, "r", encoding="utf-8") as f:
