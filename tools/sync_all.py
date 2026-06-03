@@ -55,11 +55,29 @@ def parse_file_metadata(file_path, file_name):
             metadata["tags"] = [t.strip() for t in tag_match.group(1).split(",") if t.strip()]
 
         # 5. Notion 連結
+        # 5. Notion 連結與狀態判定
+        # 優先讀取 APCS Status
+        status_match = re.search(r"(?://|#)\s*APCS Status:\s*(.*)", head_content, re.IGNORECASE)
         notion_match = re.search(r"(?://|#)\s*APCS Note:\s*(https?://[^\s]+)", head_content)
-        if notion_match: 
-            metadata["notion"] = notion_match.group(1).strip()
+        
+        if status_match:
+            raw_status = status_match.group(1).strip().lower()
+            if "in progress" in raw_status:
+                metadata["status"] = "🚧 In Progress"
+            elif "accepted" in raw_status:
+                metadata["status"] = "✅ Accepted"
+            else:
+                metadata["status"] = "✍️ Documenting"
         else:
-            metadata["status"] = "✍️ Documenting" # 無連結則視為文件化中
+            # 若無 Status 標籤，則自動根據是否有 Notion 連結判斷
+            if notion_match:
+                metadata["status"] = "✅ Accepted"
+            else:
+                metadata["status"] = "✍️ Documenting"
+        
+        # 提取 Notion 連結
+        if notion_match:
+            metadata["notion"] = notion_match.group(1).strip()
 
     except Exception as e:
         # 將錯誤資訊寫入 metadata，這樣 README 表格就會顯示出來
