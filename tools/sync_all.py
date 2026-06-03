@@ -1,6 +1,7 @@
 import os
 import re
 import datetime
+import subprocess
 
 # --- 1. 規格化配置區：定義大分類與其預期的總目標題數 ---
 CONFIG = {
@@ -16,15 +17,25 @@ REVIEW_THRESHOLD_DAYS = 90
 ROOT_START, ROOT_END = "<!-- ROOT_START -->", "<!-- ROOT_END -->"
 L1_START, L1_END = "<!-- L1_START -->", "<!-- L1_END -->"
 
+def get_git_last_mod(file_path):
+    """透過 Git Log 取得檔案最後提交日期"""
+    try:
+        # 執行 git log 指令取得該檔案最後一次變更的日期
+        cmd = ["git", "log", "-1", "--format=%cd", "--date=short", file_path]
+        result = subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode('utf-8').strip()
+        return result
+    except:
+        # 如果該檔案尚未被 Git 追蹤，回傳今日日期作為保底
+        return datetime.datetime.now().strftime('%Y-%m-%d')
 
 def parse_file_metadata(file_path, file_name):
-    """解析檔案元數據，並修正遺漏的解析指派邏輯"""
+    """解析檔案元數據，改用 Git 時間取代系統檔案時間"""
     name, ext = os.path.splitext(file_name)
     prob_id_match = re.match(r"([a-z]\d+)", file_name.lower())
     prob_id = prob_id_match.group(1) if prob_id_match else name.lower()
 
-    mtime = os.path.getmtime(file_path)
-    last_mod = datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
+    # --- 修改點：這裡改為呼叫 Git 指令 ---
+    last_mod = get_git_last_mod(file_path)
 
     metadata = {
         "prob_id": prob_id, "title": name, "complexity": "—",
