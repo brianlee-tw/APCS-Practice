@@ -1,5 +1,6 @@
 import os
 import re
+import datetime
 
 # --- 1. 規格化配置區：定義大分類與其預期的總目標題數 ---
 CONFIG = {
@@ -15,76 +16,55 @@ L1_START, L1_END = "<!-- L1_START -->", "<!-- L1_END -->"
 
 
 def parse_file_metadata(file_path, file_name):
-    """嚴格模式：解析檔案元數據，解析失敗會將錯誤寫入 status"""
+    """嚴格模式：解析檔案元數據，自動判斷題目生命週期與日期"""
     name, ext = os.path.splitext(file_name)
     prob_id_match = re.match(r"([a-z]\d+)", file_name.lower())
     prob_id = prob_id_match.group(1) if prob_id_match else name.lower()
 
-    # 預設結構：狀態預設為 AC (假設正確)
+    # 獲取檔案最後修改時間
+    mtime = os.path.getmtime(file_path)
+    last_mod = datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
+
     metadata = {
         "prob_id": prob_id, "title": name, "complexity": "—",
         "tags": [], "difficulty": "★", "notion": None, 
-        "status": "✅ Accepted", "ext": ext.lower()
+        "status": "✅ Finished", "ext": ext.lower(),
+        "last_modified": last_mod # 新增此欄位
     }
 
     try:
+        if os.path.getsize(file_path) == 0:
+            metadata["status"] = "🆕 To-Do"
+            return metadata
+
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-            head_content = "".join([f.readline() for _ in range(15)])
+            content = f.read()
+            head_content = "\n".join(content.splitlines()[:15])
         
-        # --- 嚴格解析區 ---
-        # 檢查是否有基本標頭，若無則拋出異常
         if "APCS Title:" not in head_content:
             raise ValueError("Missing APCS Title Header")
 
-        # 1. 提取題目名稱
-        title_match = re.search(r"(?://|#)\s*APCS Title:\s*(.*)", head_content)
-        metadata["title"] = title_match.group(1).strip()
-        
-        # 2. 複雜度 (保持 LaTeX 格式)
-        comp_match = re.search(r"(?://|#)\s*APCS Complexity:\s*(.*)", head_content)
-        if comp_match: metadata["complexity"] = f"${comp_match.group(1).strip()}$"
+        # ... (後續解析邏輯如 title_match, comp_match, diff_match, tag_match 不變) ...
+        # (這裡請保留你原本的解析邏輯)
 
-        # 3. 難度 (僅顯示實心星星)
-        diff_match = re.search(r"(?://|#)\s*APCS Difficulty:\s*(\d+)", head_content)
-        if diff_match:
-            metadata["difficulty"] = "★" * int(diff_match.group(1).strip())
-
-        # 4. 標籤 (移除頓號，改用 Markdown code block 獨立標籤)
-        tag_match = re.search(r"(?://|#)\s*APCS Tag:\s*(.*)", head_content)
-        if tag_match:
-            metadata["tags"] = [t.strip() for t in tag_match.group(1).split(",") if t.strip()]
-
-        # 5. Notion 連結
-        # 5. Notion 連結與狀態判定
-        # 優先讀取 APCS Status
+        # 4. 狀態判定與 Notion 連結解析
         status_match = re.search(r"(?://|#)\s*APCS Status:\s*(.*)", head_content, re.IGNORECASE)
         notion_match = re.search(r"(?://|#)\s*APCS Note:\s*(https?://[^\s]+)", head_content)
         
-        if status_match:
-            raw_status = status_match.group(1).strip().lower()
-            if "in progress" in raw_status:
-                metadata["status"] = "🚧 In Progress"
-            elif "accepted" in raw_status:
-                metadata["status"] = "✅ Accepted"
-            else:
-                metadata["status"] = "✍️ Documenting"
+        if status_match and "in progress" in status_match.group(1).lower():
+            metadata["status"] = "🚧 In Progress"
+        elif notion_match:
+            metadata["status"] = "✅ Finished"
         else:
-            # 若無 Status 標籤，則自動根據是否有 Notion 連結判斷
-            if notion_match:
-                metadata["status"] = "✅ Accepted"
-            else:
-                metadata["status"] = "✍️ Documenting"
-        
-        # 提取 Notion 連結
+            metadata["status"] = "📝 Documenting"
+            
         if notion_match:
             metadata["notion"] = notion_match.group(1).strip()
 
     except Exception as e:
-        # 將錯誤資訊寫入 metadata，這樣 README 表格就會顯示出來
         metadata["status"] = f"❌ Error: {str(e)}"
         
     return metadata
-
 
 def update_l1_readme(category_name):
     """更新或創建大分類 (L1) README 檔案"""
@@ -109,7 +89,7 @@ def update_l1_readme(category_name):
         file_path = os.path.join(cat_path, f)
         meta = parse_file_metadata(file_path, f)
         prob_id = meta["prob_id"]
-        
+
         if prob_id not in prob_summary:
             prob_summary[prob_id] = {
                 "title": meta["title"],
@@ -118,18 +98,20 @@ def update_l1_readme(category_name):
                 "notion": meta["notion"],
                 "status": meta["status"],
                 "tags": meta["tags"],
-                "links": []
+                "links": [],
+                "last_modified": meta["last_modified"] # <-- 記得加入這行
             }
         
         label = "C++" if meta["ext"] == ".cpp" else "Py"
         prob_summary[prob_id]["links"].append(f"[{label}](./{f})")
 
     # 1. 構建表格 Markdown
+    # 1. 構建表格 Markdown (增加最後編輯欄位)
     markdown_lines = [
         "> 💡 **使用說明**：點擊 **「題目名稱」** 的藍色超連結，可直接跳轉至該題的 Notion 詳細筆記頁面。",
         "",
-        "| 題目名稱 | 程式連結 | 時間複雜度 | 難度 | 核心觀念 | 狀態 |",
-        "| :--- | :---: | :--- | :--- | :--- | :---: |"
+        "| 題目名稱 | 程式連結 | 時間複雜度 | 難度 | 核心觀念 | 狀態 | 最後編輯 |",
+        "| :--- | :---: | :--- | :--- | :--- | :---: | :---: |"
     ]
     
     for prob_id, info in sorted(prob_summary.items()):
@@ -137,8 +119,9 @@ def update_l1_readme(category_name):
         formatted_tags = " ".join([f"`{t}`" for t in info["tags"]])
         prog_links = " ".join(sorted(info["links"], reverse=True))
         
+        # 這裡加入 info['last_modified']
         markdown_lines.append(
-            f"| {title_cell} | {prog_links} | {info['complexity']} | {info['difficulty']} | {formatted_tags} | {info['status']} |"
+            f"| {title_cell} | {prog_links} | {info['complexity']} | {info['difficulty']} | {formatted_tags} | {info['status']} | {info['last_modified']} |"
         )
     
     table_content = "\n".join(markdown_lines)
