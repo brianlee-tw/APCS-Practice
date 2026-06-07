@@ -27,7 +27,7 @@
 | 題目名稱 | 程式連結 | 時間複雜度 | 難度 | 核心觀念 | 狀態 | 最後編輯 |
 | :--- | :---: | :--- | :--- | :--- | :---: | :---: |
 | [**a010. 因數分解**](https://www.notion.so/a010-36a43be958cd80d7a665d58550e2e017?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a010_Prime_Factor.py) [C++](./a010_Prime_Factor.cpp) | $O(\sqrt{n})$ | ★★ | `Math Theory` `Loops` | ✅ Finished | 2026-06-08 |
-| [**a034. 二進位制轉換**](https://www.notion.so/a034-36a43be958cd80a49057f8b8925ed00d?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a034_Binary_Conversion_String.py) [C++](./a034_Binary_Conversion_String.cpp) | $O(\log n)$ | ★★ | `Basic Syntax` `Loops` `Math Theory` | ✅ Finished | 2026-06-08 |
+| [**a034. 二進位制轉換**](https://www.notion.so/a034-36a43be958cd80a49057f8b8925ed00d?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a034_Binary_Conversion_String.py) [C++](./a034_Binary_Conversion_String.cpp) | $O(\log n)$ | ★★ | `Loops` `Math Theory` | ✅ Finished | 2026-06-08 |
 | [**a059. 完全平方和**](https://www.notion.so/a059-36a43be958cd800ca7f7e72ae7600618?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a059_Perfect_Squares_Sum.py) [C++](./a059_Perfect_Squares_Sum.cpp) | $O(\sqrt{b})$ | ★ | `Math Theory` `Loops` | ✅ Finished | 2026-06-08 |
 | [**a248. 除法練習**](https://www.notion.so/a248-36a43be958cd80caa5c6cd956b53148a?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a248_Division_Pricision.py) | $O(n)$ | ★★ | `Math Theory` `I/O Optimization` | ✅ Finished | 2026-06-08 |
 | [**a453. TOI2010 <br> 第一題：一元二次方程式**](https://www.notion.so/a453-TOI2010-36a43be958cd80ef8219fcaf13eec7d1?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a453_QuadraticEquationRationalRoot.py) | $O(m)$ | ★ | `Math Theory` `Conditionals` | ✅ Finished | 2026-06-08 |
