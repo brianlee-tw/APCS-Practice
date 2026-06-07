@@ -1,6 +1,6 @@
 # APCS Title: c079. 10346 - Peter's Smokes
 # APCS Complexity: O(1)
-# APCS Tag: Math Theory, Basic Syntax, I/O Optimization
+# APCS Tag: Math Theory, I/O Optimization
 # APCS Difficulty: 2
 # APCS Note: https://app.notion.com/p/c079-Peter-s-Smokes-36a43be958cd8066b805e54b3fed1e0b?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
 
