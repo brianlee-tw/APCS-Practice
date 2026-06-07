@@ -1,5 +1,7 @@
 {
   "python-envs.defaultEnvManager": "ms-python.python:system",
   "python-envs.defaultPackageManager": "ms-python.python:pip",
-  "python.REPL.enableREPLSmartSend": false
+  "python.REPL.enableREPLSmartSend": false,
+  "editor.tabCompletion": "onlySnippets",
+  "editor.tabMovesFocus": false
 }
