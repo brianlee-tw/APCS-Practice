@@ -25,7 +25,7 @@
 
 | 題目名稱 | 程式 | 複雜度 | 難度 | 核心觀念 | 狀態 | 最後編輯 |
 | :--- | :---: | :--- | :--- | :--- | :---: | :---: |
-| [**1621_Distinct_Values**](None) | [C++](./1621_Distinct_Values.cpp) | — | ★ |  | 📝 Documenting | 2026-06-14 |
+| [**1621_Distinct_Values**](None) | [C++](./1621_Distinct_Values.cpp) | — | ★ |  | 📝 Documenting | 2026-06-19 |
 <!-- L1_END -->
 
 <br>
