@@ -25,13 +25,13 @@
 
 | 題目名稱 | 程式 | 複雜度 | 難度 | 核心觀念 | 狀態 | 最後編輯 |
 | :--- | :---: | :--- | :--- | :--- | :---: | :---: |
-| [**a001. 哈囉**](https://www.notion.so/a001-36a43be958cd80c48115f59d68f70a5f?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a001_Hello_World.cpp) | $O(1)$ | ★ | `Basic Syntax` `IO Optimization` | ✅ Finished | 2026-06-19 |
-| [**a038_Number_Reverse**](None) | [C++](./a038_Number_Reverse.cpp) | — | ★ |  | 📝 Documenting | 2026-06-19 |
-| [**a244. for + if**](https://www.notion.so/a244-for-if-36a43be958cd8081aa57f6377251a74d?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a244_For_If_Practice.py) [C++](./a244_For_If_Practice.cpp) | $O(1)$ | ★ | `Basic Syntax` `Conditionals` | ✅ Finished | 2026-06-19 |
-| [**a861. Secure Perimeter**](None) | [Py](./a861_Secure_The_Parimeter.py) | $O(N)$ | ★ | `Basic Syntax` `I/O Optimization` | 📝 Documenting | 2026-06-19 |
-| [**c006. 10550 - Combination Lock**](https://app.notion.com/p/c006-Combination-Lock-36a43be958cd80a883afd8dc560bcb76?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c006_Combination_Lock.py) | $O(1) per testcase$ | ★★ | `Math Theory` `Basic Syntax` `I/O Optimization` | ✅ Finished | 2026-06-19 |
-| [**c276. 沒有手機的下課時間**](https://app.notion.com/p/c276-36a43be958cd80c8a553deb0e047aecf?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c276_Basic_Bulls_And_Cows.py) | $O(N)$ | ★★ | `Basic Syntax` `Loops` `Conditionals` | ✅ Finished | 2026-06-19 |
-| [**c315. 座標移動**](https://www.notion.so/c315-I-ROBOT-36a43be958cd804ba58adaf8849c51cc?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c315_IRobotPrequel.py) | $O(n)$ | ★ | `Basic Syntax` `Conditionals` | ✅ Finished | 2026-06-19 |
+| [**a001. 哈囉**](https://www.notion.so/a001-36a43be958cd80c48115f59d68f70a5f?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a001_Hello_World.cpp) | $O(1)$ | ★ | `Basic Syntax` `IO Optimization` | ✅ | 2026-06-19 |
+| [**a038_Number_Reverse**](None) | [C++](./a038_Number_Reverse.cpp) | — | ★ |  | 📝 | 2026-06-19 |
+| [**a244. for + if**](https://www.notion.so/a244-for-if-36a43be958cd8081aa57f6377251a74d?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a244_For_If_Practice.py) [C++](./a244_For_If_Practice.cpp) | $O(1)$ | ★ | `Basic Syntax` `Conditionals` | ✅ | 2026-06-19 |
+| [**a861. Secure Perimeter**](None) | [Py](./a861_Secure_The_Parimeter.py) | $O(N)$ | ★ | `Basic Syntax` `I/O Optimization` | 📝 | 2026-06-19 |
+| [**c006. 10550 - Combination Lock**](https://app.notion.com/p/c006-Combination-Lock-36a43be958cd80a883afd8dc560bcb76?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c006_Combination_Lock.py) | $O(1) per testcase$ | ★★ | `Math Theory` `Basic Syntax` `I/O Optimization` | ✅ | 2026-06-19 |
+| [**c276. 沒有手機的下課時間**](https://app.notion.com/p/c276-36a43be958cd80c8a553deb0e047aecf?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c276_Basic_Bulls_And_Cows.py) | $O(N)$ | ★★ | `Basic Syntax` `Loops` `Conditionals` | ✅ | 2026-06-19 |
+| [**c315. 座標移動**](https://www.notion.so/c315-I-ROBOT-36a43be958cd804ba58adaf8849c51cc?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c315_IRobotPrequel.py) | $O(n)$ | ★ | `Basic Syntax` `Conditionals` | ✅ | 2026-06-19 |
 <!-- L1_END -->
 
 <br>
