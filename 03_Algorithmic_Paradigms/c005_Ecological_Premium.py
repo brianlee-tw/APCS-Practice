@@ -1,5 +1,5 @@
 # APCS Title: c005. 10300 - Ecological Premium
-# APCS Complexity: O(N)
+# APCS Complexity: O(n)
 # APCS Tag: Math Theory, I/O Optimization
 # APCS Difficulty: 2
 # APCS Note: https://app.notion.com/p/c005-Ecological-Premium-Optimized-36a43be958cd80b99d7aff62c77cffe0?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link

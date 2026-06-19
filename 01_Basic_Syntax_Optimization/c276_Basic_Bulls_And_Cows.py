@@ -1,5 +1,5 @@
 # APCS Title: c276. 沒有手機的下課時間
-# APCS Complexity: O(N)
+# APCS Complexity: O(n)
 # APCS Tag: Basic Syntax, Loops, Conditionals
 # APCS Difficulty: 2
 # APCS Note: https://app.notion.com/p/c276-36a43be958cd80c8a553deb0e047aecf?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
