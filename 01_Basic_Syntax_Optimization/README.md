@@ -29,7 +29,7 @@
 | [**a038_Number_Reverse**](None) | [C++](./a038_Number_Reverse.cpp) | — | ★ |  | 📝 Documenting | 2026-06-14 |
 | [**a244. for + if**](https://www.notion.so/a244-for-if-36a43be958cd8081aa57f6377251a74d?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a244_For_If_Practice.py) [C++](./a244_For_If_Practice.cpp) | $O(1)$ | ★ | `Basic Syntax` `Conditionals` | ✅ Finished | 2026-06-14 |
 | [**a861. Secure Perimeter**](None) | [Py](./a861_Secure_The_Parimeter.py) | $O(N)$ | ★ | `Basic Syntax` `I/O Optimization` | 📝 Documenting | 2026-06-14 |
-| [**c006. 10550 - Combination Lock**](https://app.notion.com/p/c006-Combination-Lock-36a43be958cd80a883afd8dc560bcb76?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c006_Combination_Lock.py) | $O(1) per testcase$ | ★★ | `Math Theory` `Basic Syntax` `I/O Optimization` | ✅ Finished | 2026-06-14 |
+| [**c006. 10550 - Combination Lock**](https://app.notion.com/p/c006-Combination-Lock-36a43be958cd80a883afd8dc560bcb76?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c006_Combination_Lock.py) | $O(1)$ | ★★ | `Math Theory` `Basic Syntax` `I/O Optimization` | ✅ Finished | 2026-06-14 |
 | [**c276. 沒有手機的下課時間**](https://app.notion.com/p/c276-36a43be958cd80c8a553deb0e047aecf?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c276_Basic_Bulls_And_Cows.py) | $O(N)$ | ★★ | `Basic Syntax` `Loops` `Conditionals` | ✅ Finished | 2026-06-14 |
 | [**c315. 座標移動**](https://www.notion.so/c315-I-ROBOT-36a43be958cd804ba58adaf8849c51cc?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c315_IRobotPrequel.py) | $O(n)$ | ★ | `Basic Syntax` `Conditionals` | ✅ Finished | 2026-06-14 |
 <!-- L1_END -->
