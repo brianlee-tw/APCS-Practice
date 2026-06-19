@@ -3,5 +3,10 @@
   "python-envs.defaultPackageManager": "ms-python.python:pip",
   "python.REPL.enableREPLSmartSend": false,
   "editor.tabCompletion": "onlySnippets",
-  "editor.tabMovesFocus": false
+  "editor.tabMovesFocus": false,
+  "python.testing.pytestArgs": [
+    "."
+  ],
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestEnabled": true
 }

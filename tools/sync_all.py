@@ -76,21 +76,21 @@ def parse_file_metadata(file_path, file_name):
         
         # 判斷基礎狀態
         if status_match and "in progress" in status_match.group(1).lower():
-            metadata["status"] = "🚧 In Progress"
+            metadata["status"] = "🚧"
         elif notion_match:
-            metadata["status"] = "✅ Finished"
+            metadata["status"] = "✅"
         else:
-            metadata["status"] = "📝 Documenting"
+            metadata["status"] = "📝"
             
         # 新增：複習提醒邏輯
         # 只有在狀態為 Finished 時才進行提醒
-        if metadata["status"] == "✅ Finished":
+        if metadata["status"] == "✅":
             last_mod_date = datetime.datetime.strptime(metadata["last_modified"], '%Y-%m-%d')
             today = datetime.datetime.now()
             days_diff = (today - last_mod_date).days
             
             if days_diff >= REVIEW_THRESHOLD_DAYS:
-                metadata["status"] = "🔔 Need Review" # 或者改為 "✅ Finished 🔔"
+                metadata["status"] = "🔔" # 或者改為 "✅ Finished 🔔"
             
         if notion_match:
             metadata["notion"] = notion_match.group(1).strip()
