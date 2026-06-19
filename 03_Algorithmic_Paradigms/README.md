@@ -34,7 +34,7 @@
 | [**a686. 蝸牛往上爬**](https://www.notion.so/a686-36a43be958cd8027842ac5abc1629bdb?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a686_Snail_Climbing.py) | $O(1)$ | ★★ | `Greedy` `Loops` | ✅ | 2026-06-19 |
 | [**a695. 找出最大質因數**](https://www.notion.so/a695-NOIP-2012-1-36a43be958cd80b6909dce9a7c837921?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a695_Find_Largest_Prime_Factor.py) | $O(\sqrt{n})$ | ★★ | `Math Theory` `Loops` | ✅ | 2026-06-19 |
 | [**a740. 質因數之和**](https://www.notion.so/a740-36a43be958cd80c1af62cde1c3eb1e24?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a740_Prime_Factorization_Sum.py) | $O(\sqrt{n})$ | ★★ | `Math Theory` `I/O Optimization` | ✅ | 2026-06-19 |
-| [**c005. 10300 - Ecological Premium**](https://app.notion.com/p/c005-Ecological-Premium-Optimized-36a43be958cd80b99d7aff62c77cffe0?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c005_Ecological_Premium.py) | $O(N)$ | ★★ | `Math Theory` `I/O Optimization` | ✅ | 2026-06-19 |
+| [**c005. 10300 - Ecological Premium**](https://app.notion.com/p/c005-Ecological-Premium-Optimized-36a43be958cd80b99d7aff62c77cffe0?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c005_Ecological_Premium.py) | $O(n)$ | ★★ | `Math Theory` `I/O Optimization` | ✅ | 2026-06-19 |
 | [**c079. 10346 - Peter's Smokes**](https://app.notion.com/p/c079-Peter-s-Smokes-36a43be958cd8066b805e54b3fed1e0b?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c079_Peter's_Smokes.py) | $O(1)$ | ★★ | `Math Theory` `I/O Optimization` | ✅ | 2026-06-19 |
 <!-- L1_END -->
 
