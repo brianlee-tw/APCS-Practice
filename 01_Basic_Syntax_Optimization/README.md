@@ -19,7 +19,7 @@
 <br>
 
 <!-- L1_START -->
-### 📊 當前章節複習進度：`10/11` (90%)
+### 📊 當前章節複習進度：`12/11` (109%)
 
 > 💡 **使用說明**：點擊 **「題目名稱」** 的藍色超連結，可直接跳轉至該題的 Notion 詳細筆記頁面。
 
@@ -35,6 +35,8 @@
 | [**c379. 成為出題者**](None) | [C++](./c379_Become_Quetion_Setter.cpp) | $O(1)$ | ★ | `IO Optimization` | 📝 | 2026-06-30 |
 | [**d049. 中華民國萬歲**](None) | [C++](./d049_Republic_of_China.cpp) | $O(1)$ | ★ | `IO Optimization` | 📝 | 2026-06-30 |
 | [**d050. 妳那邊幾點**](None) | [C++](./d050_Time.cpp) | $O(1)$ | ★ | `IO Optimization` | 📝 | 2026-06-30 |
+| [**d073. 分組報告**](None) | [C++](./d073_Group_Project.cpp) | $O(1)$ | ★ | `IO Optimization` | 📝 | 2026-06-30 |
+| [**d827. 買鉛筆**](None) | [C++](./d827_Buy_Pencil.cpp) | $O(1)$ | ★ | `Math Theory` | 📝 | 2026-06-30 |
 <!-- L1_END -->
 
 <br>
