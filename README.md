@@ -30,8 +30,8 @@
 ## 全域學習儀表板
 | 總覽指標 | 數據統計 |
 | :--- | :--- |
-| **總題目數** | `20 / 113` |
-| **目前進度** | <progress value="20" max="113"></progress> 17% |
+| **總題目數** | `21 / 113` |
+| **目前進度** | <progress value="21" max="113"></progress> 18% |
 | **待複習 (超過90天)** | `0 題` |
 | **複習清單** | 目前無待複習題目 |
 
@@ -42,7 +42,7 @@
 ## 題庫整體進度
 | 階段大分類 | 完成度 | 完成率 |
 | :--- | :---: | :---: |
-| [01_Basic_Syntax_Optimization](./01_Basic_Syntax_Optimization/) | 9/11 | <progress value="9" max="11"></progress> 81% |
+| [01_Basic_Syntax_Optimization](./01_Basic_Syntax_Optimization/) | 10/11 | <progress value="10" max="11"></progress> 90% |
 | [02_Data_Structures](./02_Data_Structures/) | 1/24 | <progress value="1" max="24"></progress> 4% |
 | [03_Algorithmic_Paradigms](./03_Algorithmic_Paradigms/) | 10/36 | <progress value="10" max="36"></progress> 27% |
 | [04_Graph_Theory_and_Advanced_Topics](./04_Graph_Theory_and_Advanced_Topics/) | 0/42 | <progress value="0" max="42"></progress> 0% |
