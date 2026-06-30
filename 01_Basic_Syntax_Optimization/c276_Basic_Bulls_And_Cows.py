@@ -24,7 +24,6 @@ def main():
                 B_count = 0
                 digits = next(iterator)
 
-                # 優化：利用 zip 同步迭代，免去索引操作，效能更好
                 for c, d in zip(correct, digits):
                     if d == c:
                         A_count += 1
