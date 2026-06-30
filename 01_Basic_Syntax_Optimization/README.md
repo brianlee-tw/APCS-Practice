@@ -19,13 +19,14 @@
 <br>
 
 <!-- L1_START -->
-### 📊 當前章節複習進度：`13/11` (118%)
+### 📊 當前章節複習進度：`17/11` (154%)
 
 > 💡 **使用說明**：點擊 **「題目名稱」** 的藍色超連結，可直接跳轉至該題的 Notion 詳細筆記頁面。
 
 | 題目名稱 | 程式 | 複雜度 | 難度 | 核心觀念 | 狀態 | 最後編輯 |
 | :--- | :---: | :--- | :--- | :--- | :---: | :---: |
 | [**a001. 哈囉**](https://www.notion.so/a001-36a43be958cd80c48115f59d68f70a5f?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a001_Hello_World.cpp) | $O(1)$ | ★ | `Basic Syntax` `IO Optimization` | ✅ | 2026-06-30 |
+| [**a006. 一元二次方程式**](None) | [C++](./a006_One_Variable_Quadratic_Equation.cpp) | $O(1)$ | ★ | `Conditionals` `Math Theory` | 📝 | 2026-06-30 |
 | [**a038_Number_Reverse**](None) | [C++](./a038_Number_Reverse.cpp) | — | ★ |  | 📝 | 2026-06-30 |
 | [**a244. for + if**](https://www.notion.so/a244-for-if-36a43be958cd8081aa57f6377251a74d?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a244_For_If_Practice.py) [C++](./a244_For_If_Practice.cpp) | $O(1)$ | ★ | `Basic Syntax` `Conditionals` | ✅ | 2026-06-30 |
 | [**a861. Secure Perimeter**](None) | [Py](./a861_Secure_The_Parimeter.py) | $O(n)$ | ★ | `Basic Syntax` `I/O Optimization` | 📝 | 2026-06-30 |
@@ -36,6 +37,9 @@
 | [**d049. 中華民國萬歲**](None) | [C++](./d049_Republic_of_China.cpp) | $O(1)$ | ★ | `IO Optimization` | 📝 | 2026-06-30 |
 | [**d050. 妳那邊幾點**](None) | [C++](./d050_Time.cpp) | $O(1)$ | ★ | `IO Optimization` | 📝 | 2026-06-30 |
 | [**d065. 三人行必有我師**](None) | [C++](./d065_Three_People_One_Teacher.cpp) | $O(1)$ | ★ | `Conditionals` | 📝 | 2026-06-30 |
+| [**d066. 上學去吧！**](None) | [C++](./d066_Go_To_School.cpp) | $O(1)$ | ★ | `Conditionals` | 📝 | 2026-06-30 |
+| [**d067. 一個都不能少**](None) | [C++](./d067_Leap_Year.cpp) | $O(1)$ | ★ | `Conditionals` | 📝 | 2026-06-30 |
+| [**d068. 該減肥了！**](None) | [C++](./d068_Loss_Weight.cpp) | $O(1)$ | ★ | `Conditionals` | 📝 | 2026-06-30 |
 | [**d073. 分組報告**](None) | [C++](./d073_Group_Project.cpp) | $O(1)$ | ★ | `IO Optimization` | 📝 | 2026-06-30 |
 | [**d827. 買鉛筆**](None) | [C++](./d827_Buy_Pencil.cpp) | $O(1)$ | ★ | `Math Theory` | 📝 | 2026-06-30 |
 <!-- L1_END -->
