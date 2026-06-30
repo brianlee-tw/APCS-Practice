@@ -1,8 +1,8 @@
-# APCS Title: d049. 中華民國萬歲
-# APCS Complexity: O(1)
-# APCS Tag: IO_Optimization
-# APCS Difficulty: 1
-# APCS Note:
+// APCS Title: d049. 中華民國萬歲
+// APCS Complexity: O(1)
+// APCS Tag: IO Optimization
+// APCS Difficulty: 1
+// APCS Note:
 
 #include<bits/stdc++.h>
 using namespace std;
