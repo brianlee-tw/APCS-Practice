@@ -19,7 +19,7 @@
 <br>
 
 <!-- L1_START -->
-### 📊 當前章節複習進度：`8/11` (72%)
+### 📊 當前章節複習進度：`9/11` (81%)
 
 > 💡 **使用說明**：點擊 **「題目名稱」** 的藍色超連結，可直接跳轉至該題的 Notion 詳細筆記頁面。
 
@@ -32,7 +32,8 @@
 | [**c006. 10550 - Combination Lock**](https://app.notion.com/p/c006-Combination-Lock-36a43be958cd80a883afd8dc560bcb76?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c006_Combination_Lock.py) | $O(1)$ | ★★ | `Math Theory` `Basic Syntax` `I/O Optimization` | ✅ | 2026-06-30 |
 | [**c276. 沒有手機的下課時間**](https://app.notion.com/p/c276-36a43be958cd80c8a553deb0e047aecf?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c276_Basic_Bulls_And_Cows.py) | $O(n)$ | ★★ | `Basic Syntax` `Loops` `Conditionals` | ✅ | 2026-06-30 |
 | [**c315. 座標移動**](https://www.notion.so/c315-I-ROBOT-36a43be958cd804ba58adaf8849c51cc?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c315_IRobotPrequel.py) | $O(n)$ | ★ | `Basic Syntax` `Conditionals` | ✅ | 2026-06-30 |
-| [**c379_Become_Quetion_Setter**](None) | [C++](./c379_Become_Quetion_Setter.cpp) | — | ★ |  | 📝 | 2026-06-30 |
+| [**c379. 成為出題者**](None) | [C++](./c379_Become_Quetion_Setter.cpp) | $O(1)$ | ★ | `IO_Optimization` | 📝 | 2026-06-30 |
+| [**d049. 中華民國萬歲**](None) | [C++](./d049_Republic_of_China.cpp) | $O(1)$ | ★ | `IO_Optimization` | 📝 | 2026-06-30 |
 <!-- L1_END -->
 
 <br>
