@@ -42,11 +42,11 @@
 | [**d050. 妳那邊幾點**](None) | [C++](./d050_Time.cpp) | $O(1)$ | ★ | `IO Optimization` | 📝 | 2026-07-01 |
 | [**d065. 三人行必有我師**](None) | [C++](./d065_Three_People_One_Teacher.cpp) | $O(1)$ | ★ | `Conditionals` | 📝 | 2026-07-01 |
 | [**d066. 上學去吧！**](None) | [C++](./d066_Go_To_School.cpp) | $O(1)$ | ★ | `Conditionals` | 📝 | 2026-07-01 |
-| [**d067. Leap Year**](None) | [C++](./d067_Leap_Year.cpp) | $O(1)$ | ★ | `Conditionals` | 📝 | 2026-07-01 |
+| [**d067. 格瑞哥里的煩惱 (1 行版)**](None) | [C++](./d067_Leap_Year.cpp) | $O(1)$ | ★ | `Conditionals` | 📝 | 2026-07-01 |
 | [**d068. 該減肥了！**](None) | [C++](./d068_Loss_Weight.cpp) | $O(1)$ | ★ | `Conditionals` | 📝 | 2026-07-01 |
-| [**d070. Leap Year**](https://app.notion.com/p/d070-0-39043be958cd8076a5e4c79eb19f02a4?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d070_Leap_Year_0End.cpp) | $O(1)$ | ★ | `IO Optimization` `Conditionals` `Loops` | ✅ | 2026-07-01 |
-| [**d071. Leap Year**](https://app.notion.com/p/d071-EOF-39043be958cd805aacd7e907233cf4c2?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d071_Leap_Year_EOF.cpp) | $O(1)$ | ★ | `IO Optimization` `Conditionals` `Loops` | ✅ | 2026-07-01 |
-| [**d072. Leap Year**](https://app.notion.com/p/d071-EOF-39043be958cd805aacd7e907233cf4c2?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d072_Leap_Year_Case.cpp) | $O(1)$ | ★ | `IO Optimization` `Conditionals` `Loops` | ✅ | 2026-07-01 |
+| [**d070. 格瑞哥里的煩惱 (0 尾版)**](https://app.notion.com/p/d070-0-39043be958cd8076a5e4c79eb19f02a4?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d070_Leap_Year_0End.cpp) | $O(1)$ | ★ | `IO Optimization` `Conditionals` `Loops` | ✅ | 2026-07-01 |
+| [**d071. 格瑞哥里的煩惱 (EOF 版)**](https://app.notion.com/p/d071-EOF-39043be958cd805aacd7e907233cf4c2?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d071_Leap_Year_EOF.cpp) | $O(1)$ | ★ | `IO Optimization` `Conditionals` `Loops` | ✅ | 2026-07-01 |
+| [**d072. 格瑞哥里的煩惱 (Case 版)**](https://app.notion.com/p/d071-EOF-39043be958cd805aacd7e907233cf4c2?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d072_Leap_Year_Case.cpp) | $O(1)$ | ★ | `IO Optimization` `Conditionals` `Loops` | ✅ | 2026-07-01 |
 | [**d073. 分組報告**](None) | [C++](./d073_Group_Project.cpp) | $O(1)$ | ★ | `IO Optimization` | 📝 | 2026-07-01 |
 | [**d074. 電腦教室**](https://app.notion.com/p/d074-39043be958cd80b2b8cdea577aaaefaa?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d074_Computer.cpp) | $O(N)$ | ★ | `IO Optimization` `Loops` | ✅ | 2026-07-01 |
 | [**d669. Alarm Clock**](https://app.notion.com/p/d669-11677-Alarm-Clock-39043be958cd80769b6fc436b181a513?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d669_Alarm_Clock.cpp) | $O(1)$ | ★ | `IO Optimization` `Conditionals` `Math Theory` | ✅ | 2026-07-01 |
