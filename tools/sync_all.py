@@ -5,10 +5,10 @@ import subprocess
 
 # --- 1. 規格化配置區：定義大分類與其預期的總目標題數 ---
 CONFIG = {
-    "01_Basic_Syntax_Optimization": {"title_zh": "語法特性與實作優化", "total": 25},
-    "02_Data_Structures": {"title_zh": "線性與非線性資料結構", "total": 25},
-    "03_Algorithmic_Paradigms": {"title_zh": "核心演算法典範", "total": 30},
-    "04_Graph_Theory_and_Advanced_Topics": {"title_zh": "圖論與進階專題", "total": 40},
+    "01_Basic_Syntax_Optimization": {"title_zh": "語法特性與實作優化", "total": 50},
+    "02_Data_Structures": {"title_zh": "線性與非線性資料結構", "total": 50},
+    "03_Algorithmic_Paradigms": {"title_zh": "核心演算法典範", "total": 50},
+    "04_Graph_Theory_and_Advanced_Topics": {"title_zh": "圖論與進階專題", "total": 50},
 }
 
 REVIEW_THRESHOLD_DAYS = 90
