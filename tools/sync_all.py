@@ -18,15 +18,34 @@ ROOT_START, ROOT_END = "<!-- ROOT_START -->", "<!-- ROOT_END -->"
 L1_START, L1_END = "<!-- L1_START -->", "<!-- L1_END -->"
 
 def get_git_last_mod(file_path):
-    """透過 Git Log 取得檔案最後提交日期"""
+    """透過 Git Log 取得檔案最後提交日期（修正路徑版）"""
     try:
-        # 執行 git log 指令取得該檔案最後一次變更的日期
-        cmd = ["git", "log", "-1", "--format=%cd", "--date=short", file_path]
-        result = subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode('utf-8').strip()
+        # 1. 確保傳入的是絕對路徑
+        abs_path = os.path.abspath(file_path)
+        
+        # 2. 拆分出「檔案所在的目錄」與「純檔名」
+        file_dir = os.path.dirname(abs_path)
+        file_name = os.path.basename(abs_path)
+        
+        # 3. 讓 git log 只針對「純檔名」去查
+        cmd = ["git", "log", "-1", "--format=%cd", "--date=short", file_name]
+        
+        # 4. 關鍵：加入 cwd=file_dir，強制切換到該檔案目錄下執行 Git 指令
+        result = subprocess.check_output(
+            cmd, 
+            cwd=file_dir, 
+            stderr=subprocess.PIPE
+        ).decode('utf-8').strip()
+        
+        # 如果該檔案是新建立的、從未 commit 過，git log 會回傳空字串
+        if not result:
+            return datetime.datetime.now().strftime('%Y-%m-%d')
+            
         return result
+        
     except subprocess.CalledProcessError as e:
-        # 印出錯誤訊息，方便排查是指令壞了還是路徑錯了
-        print(f"Git 指令失敗: {e.stderr.decode('utf-8')}")
+        # 如果真的發生 Git 錯誤（例如該目錄根本不在 Git 專案內），印出 debug 訊息
+        print(f"[Debug] Git 執行失敗，原因: {e.stderr.decode('utf-8').strip()}")
         return datetime.datetime.now().strftime('%Y-%m-%d')
 
 def parse_file_metadata(file_path, file_name):
