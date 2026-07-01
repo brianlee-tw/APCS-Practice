@@ -1,4 +1,4 @@
-// APCS Title: d067. 一個都不能少
+// APCS Title: d067. Leap Year
 // APCS Complexity: O(1)
 // APCS Tag: Conditionals
 // APCS Difficulty: 1
