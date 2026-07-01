@@ -1,4 +1,4 @@
-# APCS Title: c006. 10550 - Combination Lock
+# APCS Title: c006. Combination Lock
 # APCS Complexity: O(1)
 # APCS Tag: Math Theory, Basic Syntax, I/O Optimization
 # APCS Difficulty: 2
