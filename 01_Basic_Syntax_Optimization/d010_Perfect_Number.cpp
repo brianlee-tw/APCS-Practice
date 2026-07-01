@@ -1,6 +1,6 @@
 // APCS Title: d010. 盈虧數
 // APCS Complexity: O(sqrt(n))
-// APCS Tag: Math Theory, Conditionals, Loops, IO Optimization
+// APCS Tag: Math Theory, Conditionals, Loops
 // APCS Difficulty: 2
 // APCS Note: https://app.notion.com/p/d010-39043be958cd801080ddc3a8929d2497?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
 
