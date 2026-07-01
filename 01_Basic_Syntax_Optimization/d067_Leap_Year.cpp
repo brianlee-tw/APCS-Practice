@@ -1,4 +1,4 @@
-// APCS Title: d067. Leap Year
+// APCS Title: d067. 格瑞哥里的煩惱 (1 行版)
 // APCS Complexity: O(1)
 // APCS Tag: Conditionals
 // APCS Difficulty: 1

@@ -1,4 +1,4 @@
-// APCS Title: d071. Leap Year
+// APCS Title: d071. 格瑞哥里的煩惱 (EOF 版)
 // APCS Complexity: O(1)
 // APCS Tag: IO Optimization, Conditionals, Loops
 // APCS Difficulty: 1

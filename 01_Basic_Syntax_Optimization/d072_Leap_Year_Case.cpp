@@ -1,4 +1,4 @@
-// APCS Title: d072. Leap Year
+// APCS Title: d072. 格瑞哥里的煩惱 (Case 版)
 // APCS Complexity: O(1)
 // APCS Tag: IO Optimization, Conditionals, Loops
 // APCS Difficulty: 1
@@ -13,7 +13,7 @@ int main() {
 
     int n, y, cnt = 0;
     cin>>n;
-    
+
     while (cin >> y) {
         cnt++;
 
