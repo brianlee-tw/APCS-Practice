@@ -37,7 +37,7 @@
 | [**c276. 沒有手機的下課時間**](https://app.notion.com/p/c276-36a43be958cd80c8a553deb0e047aecf?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c276_Basic_Bulls_And_Cows.py) | $O(n)$ | ★★ | `Basic Syntax` `Loops` `Conditionals` | ✅ | 2026-07-01 |
 | [**c315. 座標移動**](https://www.notion.so/c315-I-ROBOT-36a43be958cd804ba58adaf8849c51cc?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c315_IRobotPrequel.py) | $O(n)$ | ★ | `Basic Syntax` `Conditionals` | ✅ | 2026-07-01 |
 | [**c379. 成為出題者**](None) | [C++](./c379_Become_Quetion_Setter.cpp) | $O(1)$ | ★ | `IO Optimization` | 📝 | 2026-07-01 |
-| [**d010. 盈虧數**](https://app.notion.com/p/d010-39043be958cd801080ddc3a8929d2497?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d010_Perfect_Number.cpp) | $O(sqrt{n})$ | ★★ | `Math Theory` `Conditionals` `Loops` | ✅ | 2026-07-01 |
+| [**d010. 盈虧數**](https://app.notion.com/p/d010-39043be958cd801080ddc3a8929d2497?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d010_Perfect_Number.cpp) | $O(\sqrt{n})$ | ★★ | `Math Theory` `Conditionals` `Loops` | ✅ | 2026-07-01 |
 | [**d049. 中華民國萬歲**](None) | [C++](./d049_Republic_of_China.cpp) | $O(1)$ | ★ | `IO Optimization` | 📝 | 2026-07-01 |
 | [**d050. 妳那邊幾點**](None) | [C++](./d050_Time.cpp) | $O(1)$ | ★ | `IO Optimization` | 📝 | 2026-07-01 |
 | [**d065. 三人行必有我師**](None) | [C++](./d065_Three_People_One_Teacher.cpp) | $O(1)$ | ★ | `Conditionals` | 📝 | 2026-07-01 |
