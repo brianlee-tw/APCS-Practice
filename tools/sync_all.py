@@ -24,9 +24,10 @@ def get_git_last_mod(file_path):
         cmd = ["git", "log", "-1", "--format=%cd", "--date=short", file_path]
         result = subprocess.check_output(cmd, stderr=subprocess.DEVNULL).decode('utf-8').strip()
         return result
-    except:
-        # 如果該檔案尚未被 Git 追蹤，回傳今日日期作為保底
-        return 0;
+    except subprocess.CalledProcessError as e:
+        # 印出錯誤訊息，方便排查是指令壞了還是路徑錯了
+        print(f"Git 指令失敗: {e.stderr.decode('utf-8')}")
+        return datetime.datetime.now().strftime('%Y-%m-%d')
 
 def parse_file_metadata(file_path, file_name):
     """解析檔案元數據，改用 Git 時間取代系統檔案時間"""
