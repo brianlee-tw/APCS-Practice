@@ -2,7 +2,7 @@
 // APCS Complexity: O(1)
 // APCS Tag: IO Optimization, Conditionals, Math Theory
 // APCS Difficulty: 1
-// APCS Note: 
+// APCS Note: https://app.notion.com/p/d669-11677-Alarm-Clock-39043be958cd80769b6fc436b181a513?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
 
 #include <bits/stdc++.h>
 using namespace std;
