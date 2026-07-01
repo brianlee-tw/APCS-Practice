@@ -1,6 +1,6 @@
 // APCS Title: a148. You Cannot Pass?!
 // APCS Complexity: O(N)
-// APCS Tag: IO Optimization, Conditionals, Loops, Math Theory
+// APCS Tag: Conditionals, Loops, Math Theory
 // APCS Difficulty: 1
 // APCS Note: https://app.notion.com/p/a148-You-Cannot-Pass-39043be958cd808999dfdceb9a51a348?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
 
