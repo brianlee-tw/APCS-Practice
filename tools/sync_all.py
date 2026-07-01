@@ -26,7 +26,7 @@ def get_git_last_mod(file_path):
         return result
     except:
         # 如果該檔案尚未被 Git 追蹤，回傳今日日期作為保底
-        return datetime.datetime.now().strftime('%Y-%m-%d')
+        return 0;
 
 def parse_file_metadata(file_path, file_name):
     """解析檔案元數據，改用 Git 時間取代系統檔案時間"""
