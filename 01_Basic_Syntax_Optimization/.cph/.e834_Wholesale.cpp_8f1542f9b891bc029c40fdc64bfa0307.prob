@@ -1,0 +1,1 @@
+{"name":"Local: e834_Wholesale","url":"c:\\0_code\\APCS-Practice\\01_Basic_Syntax_Optimization\\e834_Wholesale.cpp","tests":[{"id":1782874963161,"input":"10\n100 50 9 0","output":"10\n5\n1"}],"interactive":false,"memoryLimit":1024,"timeLimit":3000,"srcPath":"c:\\0_code\\APCS-Practice\\01_Basic_Syntax_Optimization\\e834_Wholesale.cpp","group":"local","local":true}
