@@ -18,39 +18,34 @@ ROOT_START, ROOT_END = "<!-- ROOT_START -->", "<!-- ROOT_END -->"
 L1_START, L1_END = "<!-- L1_START -->", "<!-- L1_END -->"
 
 def get_file_last_mod_time(file_path):
-    """精準取得程式原始碼檔案的最後編輯日期 (YYYY-MM-DD)"""
+    """忽略本地修改，強行取得該檔案在 Git 倉庫中上一次 Commit 的日期"""
     try:
         abs_path = os.path.abspath(file_path)
         file_dir = os.path.dirname(abs_path)
         file_name = os.path.basename(abs_path)
         
-        # 1. 加入 --follow 參數，並指定標準日期格式 iso (只取前 10 碼 YYYY-MM-DD)
-        # 這樣就算檔案換過資料夾、改過名字，也能追溯到真正的編輯 commit 
-        cmd = ["git", "log", "-1", "--follow", "--format=%ci", file_name]
-        git_output = subprocess.check_output(
+        # 這裡不加任何參數，單純問這個檔案最後一次被 commit 的時間
+        cmd = ["git", "log", "-1", "--pretty=format:%cd", "--date=format:%Y-%m-%d", "--", file_name]
+        git_date = subprocess.check_output(
             cmd, 
             cwd=file_dir, 
             stderr=subprocess.PIPE
         ).decode('utf-8').strip()
         
-        # 如果 Git 有回傳長格式 (例如 2024-05-20 14:30:00 +0800)，切出前 10 碼
-        if git_output and len(git_output) >= 10:
-            git_date = git_output[:10]
-            if re.match(r"\d{4}-\d{2}-\d{2}", git_date):
-                return git_date
+        # 如果有抓到 commit 紀錄，就直接用它
+        if git_date and re.match(r"\d{4}-\d{2}-\d{2}", git_date):
+            return git_date
         
-        # 2. 如果 Git 沒有紀錄（例如全新剛建立、尚未 commit 的檔案），則回退使用本地檔案系統修改日期
+        # 如果是完全沒 commit 過的新檔案，才拿本地時間
         mtime = os.path.getmtime(file_path)
         return datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
         
     except Exception:
-        # 最終防呆
         try:
             mtime = os.path.getmtime(file_path)
             return datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
         except:
             return datetime.datetime.now().strftime('%Y-%m-%d')
-
 def parse_file_metadata(file_path, file_name):
     """解析檔案元數據，包含修正後的時間抓取"""
     name, ext = os.path.splitext(file_name)
