@@ -9,20 +9,22 @@ int main() {
     int n;
     while(cin >> n){
 
-        vector<int> v(n, 0);
+        set<int> s;
+        int num;
 
         for (int i = 0; i < n; i++){
-            cin >> v[i];
+            cin >> num;
+            s.insert(num);
         }
 
-        sort(v.begin(), v.end());
 
-        v.erase(unique(v.begin(), v.end()), v.end());
+        cout << s.size() << '\n';
 
-        cout << v.size() << '\n';
-        for (int i = 0; i < v.size(); i++){
-            if (i) cout << ' ';
-            cout << v[i];
+        auto it = s.begin();
+        while (it != s.end()){
+            cout << *it;
+            it++;
+            if (it != s.end()) cout << ' ';
         }
 
         cout << '\n';
