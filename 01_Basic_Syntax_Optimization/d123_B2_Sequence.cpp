@@ -1,6 +1,6 @@
 // APCS Title: d123. B2-Sequence
 // APCS Complexity: O(N^2)
-// APCS Tag: IO Optimization, Conditionals, Loops, Array, Vector
+// APCS Tag: IO Optimization, Conditionals, Vector
 // APCS Difficulty: 2
 // APCS Note: https://app.notion.com/p/d123-B2-Sequence-39a43be958cd80afa452f1cad1d030b8?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
 

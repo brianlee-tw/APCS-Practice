@@ -1,4 +1,4 @@
-// APCS Title: c085. Pseudo-Random Numbers
+// APCS Title: c085. Pseudo Randoms
 // APCS Complexity: O(M)
 // APCS Tag: Math Theory, Array
 // APCS Difficulty: 2
