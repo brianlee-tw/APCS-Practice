@@ -1,4 +1,4 @@
-// APCS Title: b130. 1.明明的隨機數
+// APCS Title: b130. 明明的隨機數
 // APCS Complexity: O(N log N)
 // APCS Tag: IO Optimization, Sorting
 // APCS Difficulty: 1

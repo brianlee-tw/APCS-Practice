@@ -1,4 +1,4 @@
-// APCS Title: d097. 10038 - Jolly Jumpers
+// APCS Title: d097. Jolly Jumpers
 // APCS Complexity: O(n)
 // APCS Tag: Array, String, IO Optimization
 // APCS Difficulty: 2

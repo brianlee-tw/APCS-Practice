@@ -17,63 +17,67 @@ REVIEW_THRESHOLD_DAYS = 90
 ROOT_START, ROOT_END = "<!-- ROOT_START -->", "<!-- ROOT_END -->"
 L1_START, L1_END = "<!-- L1_START -->", "<!-- L1_END -->"
 
-def get_git_last_mod(file_path):
-    """透過 Git Log 取得檔案最後提交日期（修正路徑版）"""
+def get_file_last_mod_time(file_path):
+    """結合 Git Log 與本機檔案系統，取得最精準的最後修改日期"""
     try:
-        # 1. 確保傳入的是絕對路徑
-        abs_path = os.path.abspath(file_path)
+        # 1. 取得本機檔案系統的最後修改時間 (最準確的實際編輯時間)
+        mtime = os.path.getmtime(file_path)
+        local_date = datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
         
-        # 2. 拆分出「檔案所在的目錄」與「純檔名」
+        # 2. 嘗試取得 Git 的最後提交時間
+        abs_path = os.path.abspath(file_path)
         file_dir = os.path.dirname(abs_path)
         file_name = os.path.basename(abs_path)
         
-        # 3. 讓 git log 只針對「純檔名」去查
         cmd = ["git", "log", "-1", "--format=%cd", "--date=short", file_name]
-        
-        # 4. 關鍵：加入 cwd=file_dir，強制切換到該檔案目錄下執行 Git 指令
-        result = subprocess.check_output(
+        git_date = subprocess.check_output(
             cmd, 
             cwd=file_dir, 
             stderr=subprocess.PIPE
         ).decode('utf-8').strip()
         
-        # 如果該檔案是新建立的、從未 commit 過，git log 會回傳空字串
-        if not result:
-            return datetime.datetime.now().strftime('%Y-%m-%d')
+        # 如果 Git 有紀錄，且本機時間跟 Git 差不多（或你想以最新修改為準）
+        # 這裡採取安全策略：如果檔案在本地被動過，local_date 會大於或等於 git_date
+        if git_date:
+            # 為了確保「最後編輯」能反應尚未 commit 的區域，若本地新則以本地為主
+            return max(local_date, git_date)
             
-        return result
+        return local_date
         
-    except subprocess.CalledProcessError as e:
-        # 如果真的發生 Git 錯誤（例如該目錄根本不在 Git 專案內），印出 debug 訊息
-        print(f"[Debug] Git 執行失敗，原因: {e.stderr.decode('utf-8').strip()}")
-        return datetime.datetime.now().strftime('%Y-%m-%d')
+    except Exception as e:
+        # 發生任何意外則回退到本地檔案時間
+        try:
+            return datetime.datetime.fromtimestamp(os.path.getmtime(file_path)).strftime('%Y-%m-%d')
+        except:
+            return datetime.datetime.now().strftime('%Y-%m-%d')
 
 def parse_file_metadata(file_path, file_name):
-    """解析檔案元數據，改用 Git 時間取代系統檔案時間"""
+    """解析檔案元數據，優化欄位長度與時間抓取"""
     name, ext = os.path.splitext(file_name)
     prob_id_match = re.match(r"([a-z]\d+)", file_name.lower())
     prob_id = prob_id_match.group(1) if prob_id_match else name.lower()
 
-    # --- 修改點：這裡改為呼叫 Git 指令 ---
-    last_mod = get_git_last_mod(file_path)
+    # --- 修正點：調用優化後的時間抓取函式 ---
+    last_mod = get_file_last_mod_time(file_path)
 
     metadata = {
         "prob_id": prob_id, "title": name, "complexity": "—",
         "tags": [], "difficulty": "★", "notion": None, 
-        "status": "📝 Documenting", "ext": ext.lower(),
+        "status": "📝", # 縮短初始狀態字串，避免撐寬表格
+        "ext": ext.lower(),
         "last_modified": last_mod
     }
 
     try:
         if os.path.getsize(file_path) == 0:
-            metadata["status"] = "🆕 To-Do"
+            metadata["status"] = "🆕"
             return metadata
 
         with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
             content = f.read()
             head_content = "\n".join(content.splitlines()[:15])
         
-        # 1. 提取題目名稱 (允許無 APCS Title 標頭，但若有則優先使用)
+        # 1. 提取題目名稱
         title_match = re.search(r"(?://|#)\s*APCS Title:\s*(.*)", head_content)
         if title_match: metadata["title"] = title_match.group(1).strip()
         
@@ -94,7 +98,7 @@ def parse_file_metadata(file_path, file_name):
         status_match = re.search(r"(?://|#)\s*APCS Status:\s*(.*)", head_content, re.IGNORECASE)
         notion_match = re.search(r"(?://|#)\s*APCS Note:\s*(https?://[^\s]+)", head_content)
         
-        # 判斷基礎狀態
+        # 判斷基礎狀態 (保持簡短圖示)
         if status_match and "in progress" in status_match.group(1).lower():
             metadata["status"] = "🚧"
         elif notion_match:
@@ -102,21 +106,20 @@ def parse_file_metadata(file_path, file_name):
         else:
             metadata["status"] = "📝"
             
-        # 新增：複習提醒邏輯
-        # 只有在狀態為 Finished 時才進行提醒
+        # 複習提醒邏輯
         if metadata["status"] == "✅":
             last_mod_date = datetime.datetime.strptime(metadata["last_modified"], '%Y-%m-%d')
             today = datetime.datetime.now()
             days_diff = (today - last_mod_date).days
             
             if days_diff >= REVIEW_THRESHOLD_DAYS:
-                metadata["status"] = "🔔" # 或者改為 "✅ Finished 🔔"
+                metadata["status"] = "🔔"
             
         if notion_match:
             metadata["notion"] = notion_match.group(1).strip()
 
     except Exception as e:
-        metadata["status"] = f"❌ Error: {str(e)}"
+        metadata["status"] = "❌"
         
     return metadata
 
@@ -129,7 +132,6 @@ def update_l1_readme(category_name):
         print(f"⚠️ 找不到資料夾 {cat_path}，跳過。")
         return
 
-    # 如果 README 不存在，自動初始化一個
     if not os.path.exists(readme_path):
         initial_content = f"# {category_name}: {CONFIG[category_name]['title_zh']}\n\n{L1_START}\n{L1_END}\n"
         with open(readme_path, "w", encoding="utf-8") as f:
@@ -153,29 +155,28 @@ def update_l1_readme(category_name):
                 "status": meta["status"],
                 "tags": meta["tags"],
                 "links": [],
-                "last_modified": meta["last_modified"] # <-- 記得加入這行
+                "last_modified": meta["last_modified"]
             }
         
         label = "C++" if meta["ext"] == ".cpp" else "Py"
         prob_summary[prob_id]["links"].append(f"[{label}](./{f})")
 
-    # 1. 構建表格 Markdown
-    # 1. 構建表格 Markdown (增加最後編輯欄位)
+    # --- 修正點：緊湊型 Markdown 表格與無縫標籤組合 ---
     markdown_lines = [
         "> 💡 **使用說明**：點擊 **「題目名稱」** 的藍色超連結，可直接跳轉至該題的 Notion 詳細筆記頁面。",
         "",
         "| 題目名稱 | 程式 | 複雜度 | 難度 | 核心觀念 | 狀態 | 最後編輯 |",
-        "| :--- | :---: | :--- | :--- | :--- | :---: | :---: |"
+        "|:---|:---:|:---|:---|:---|:---:|:---:|"
     ]
     
     for prob_id, info in sorted(prob_summary.items()):
-        title_cell = f"[**{info['title']}**]({info['notion']})" if info["notion"] != "請在此處貼上連結" else f"**{info['title']}**"
-        formatted_tags = " ".join([f"`{t}`" for t in info["tags"]])
-        prog_links = " ".join(sorted(info["links"], reverse=True))
+        title_cell = f"[**{info['title']}**]({info['notion']})" if info["notion"] else f"**{info['title']}**"
+        # 移除標籤之間的空格，改用連續的緊湊行內代碼，省下大量寬度
+        formatted_tags = "".join([f"`{t}`" for t in info["tags"]])
+        prog_links = "/".join(sorted(info["links"], reverse=True)) # 改用斜線緊湊連接，如 C++/Py
         
-        # 這裡加入 info['last_modified']
         markdown_lines.append(
-            f"| {title_cell} | {prog_links} | {info['complexity']} | {info['difficulty']} | {formatted_tags} | {info['status']} | {info['last_modified']} |"
+            f"| {title_cell} | {prog_links} | {info['complexity']} | {info['difficulty']} | {formatted_tags} | {info['status']} | `{info['last_modified']}` |"
         )
     
     table_content = "\n".join(markdown_lines)
@@ -193,7 +194,6 @@ def update_l1_readme(category_name):
     if L1_START not in content or L1_END not in content:
         content += f"\n\n{L1_START}\n{L1_END}\n"
 
-    # 用字串切片相加，精準繞過 re.sub 的 Bug
     parts_start = content.split(L1_START)
     parts_end = parts_start[1].split(L1_END)
     new_content = f"{parts_start[0]}{L1_START}\n{progress_header}\n\n{table_content}\n{L1_END}{parts_end[1]}"
@@ -208,15 +208,13 @@ def update_l0_root():
     readme_path = "README.md"
     if not os.path.exists(readme_path): return
 
-    # 1. 蒐集全域數據
     category_rows = []
     total_done, total_all = 0, 0
-    need_review_list = []  # 用來存放待複習題目
+    need_review_list = []
 
     for cat, info in CONFIG.items():
         if not os.path.exists(cat): continue
         
-        # 讀取該分類下的題目
         files = [f for f in os.listdir(cat) if f.endswith((".cpp", ".py")) and "tempCodeRunner" not in f]
         unique_probs = set()
         
@@ -225,8 +223,7 @@ def update_l0_root():
             meta = parse_file_metadata(file_path, f)
             unique_probs.add(meta["prob_id"])
             
-            # 檢查是否需要複習
-            if "Need Review" in meta["status"]:
+            if "🔔" in meta["status"]:
                 need_review_list.append(f"[{meta['prob_id']}](./{cat}/{f})")
         
         count = len(unique_probs)
@@ -238,13 +235,10 @@ def update_l0_root():
         total_done += count
         total_all += info["total"]
 
-    # 2. 處理複習清單字串
     review_display = ", ".join(need_review_list) if need_review_list else "目前無待複習題目"
     review_count = len(need_review_list)
     overall_pct = int((total_done / total_all) * 100) if total_all > 0 else 0
 
-    # 3. 生成儀表板與進度表內容
-    # 修改這裡，刪除 f""" 之後的所有縮排
     dashboard_content = f"""## 全域學習儀表板
 | 總覽指標 | 數據統計 |
 | :--- | :--- |
@@ -255,21 +249,17 @@ def update_l0_root():
 
 <br>
 
-<br>
-
 ## 題庫整體進度
 | 階段大分類 | 完成度 | 完成率 |
 | :--- | :---: | :---: |
 {chr(10).join(category_rows)}"""
 
-    # 4. 讀取並防呆寫入
     with open(readme_path, "r", encoding="utf-8") as f:
         content = f.read()
         
     if ROOT_START not in content or ROOT_END not in content:
         content += f"\n\n{ROOT_START}\n{ROOT_END}\n"
 
-    # 用字串切片相加，精準繞過 re.sub 的 Bug
     parts_start = content.split(ROOT_START)
     parts_end = parts_start[1].split(ROOT_END)
     new_content = f"{parts_start[0]}{ROOT_START}\n{dashboard_content}\n{ROOT_END}{parts_end[1]}"
@@ -280,12 +270,8 @@ def update_l0_root():
 
 
 if __name__ == "__main__":
-    # 獲取當前腳本所在的目錄
     script_dir = os.path.dirname(os.path.abspath(__file__))
-    # 獲取專案根目錄 (假設 tools 在根目錄下)
     root_dir = os.path.dirname(script_dir)
-    
-    # 切換工作目錄到根目錄
     os.chdir(root_dir)
     
     print(f"🚀 開始進行全新規格化平鋪架構 README 同步 (工作目錄: {root_dir})...")
