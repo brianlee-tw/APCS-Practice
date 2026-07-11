@@ -19,7 +19,7 @@
 <br>
 
 <!-- L1_START -->
-### 📊 當前章節複習進度：`31/50` (62%)
+### 📊 當前章節複習進度：`33/50` (66%)
 
 > 💡 **使用說明**：點擊 **「題目名稱」** 的藍色超連結，可直接跳轉至該題的 Notion 詳細筆記頁面。
 
@@ -35,6 +35,7 @@
 | [**a861. Secure Perimeter**](None) | [Py](./a861_Secure_The_Parimeter.py) | $O(n)$ | ★ | `Basic Syntax` `I/O Optimization` | 📝 | 2026-07-10 |
 | [**c006. Combination Lock**](https://app.notion.com/p/c006-Combination-Lock-36a43be958cd80a883afd8dc560bcb76?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c006_Combination_Lock.py) | $O(1)$ | ★★ | `Math Theory` `Basic Syntax` `I/O Optimization` | ✅ | 2026-07-10 |
 | [**c022. Odd Sum**](https://app.notion.com/p/c022-Odd-Sum-39043be958cd8010b382cce73b1a44e3?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./c022_Odd_Sum.cpp) | $O(N)$ | ★ | `IO Optimization` `Loops` `Math Theory` | ✅ | 2026-07-10 |
+| [**c085. 00350 - Pseudo-Random Numbers**](https://app.notion.com/p/c085-Pseudo-Random-Numbers-39943be958cd801aa8cac43e4e0e74ae?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./c085_Pseudo_Random_Numbers.cpp) | $O(M)$ | ★★ | `Math Theory` `Array` | ✅ | 2026-07-10 |
 | [**c276. 沒有手機的下課時間**](https://app.notion.com/p/c276-36a43be958cd80c8a553deb0e047aecf?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c276_Basic_Bulls_And_Cows.py) | $O(n)$ | ★★ | `Basic Syntax` `Loops` `Conditionals` | ✅ | 2026-07-10 |
 | [**c315. 座標移動**](https://www.notion.so/c315-I-ROBOT-36a43be958cd804ba58adaf8849c51cc?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c315_IRobotPrequel.py) | $O(n)$ | ★ | `Basic Syntax` `Conditionals` | ✅ | 2026-07-10 |
 | [**c379. 成為出題者**](None) | [C++](./c379_Become_Quetion_Setter.cpp) | $O(1)$ | ★ | `IO Optimization` | 📝 | 2026-07-10 |
@@ -50,6 +51,7 @@
 | [**d072. 格瑞哥里的煩惱 (Case 版)**](https://app.notion.com/p/d071-EOF-39043be958cd805aacd7e907233cf4c2?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d072_Leap_Year_Case.cpp) | $O(1)$ | ★ | `IO Optimization` `Conditionals` `Loops` | ✅ | 2026-07-10 |
 | [**d073. 分組報告**](None) | [C++](./d073_Group_Project.cpp) | $O(1)$ | ★ | `IO Optimization` | 📝 | 2026-07-10 |
 | [**d074. 電腦教室**](https://app.notion.com/p/d074-39043be958cd80b2b8cdea577aaaefaa?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d074_Computer.cpp) | $O(N)$ | ★ | `IO Optimization` `Loops` | ✅ | 2026-07-10 |
+| [**d097. 10038 - Jolly Jumpers**](https://app.notion.com/p/d097-Jolly-Jumpers-39943be958cd802d8552db3e93dae038?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d097_Jolly_Jumpers.cpp) | $O(n)$ | ★★ | `Array` `String` `IO Optimization` | ✅ | 2026-07-10 |
 | [**d669. Alarm Clock**](https://app.notion.com/p/d669-11677-Alarm-Clock-39043be958cd80769b6fc436b181a513?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d669_Alarm_Clock.cpp) | $O(1)$ | ★ | `IO Optimization` `Conditionals` `Math Theory` | ✅ | 2026-07-10 |
 | [**d827. 買鉛筆**](None) | [C++](./d827_Buy_Pencil.cpp) | $O(1)$ | ★ | `Math Theory` | 📝 | 2026-07-10 |
 | [**e834. 批發量**](https://app.notion.com/p/e834-Wholesale-39043be958cd8051a9d3c5f451870bc4?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./e834_Wholesale.cpp) | $O(N)$ | ★ | `IO Optimization` `Conditionals` `Loops` | ✅ | 2026-07-10 |
