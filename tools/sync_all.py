@@ -18,17 +18,13 @@ ROOT_START, ROOT_END = "<!-- ROOT_START -->", "<!-- ROOT_END -->"
 L1_START, L1_END = "<!-- L1_START -->", "<!-- L1_END -->"
 
 def get_file_last_mod_time(file_path):
-    """結合 Git Log 與本機檔案系統，取得最精準的最後修改日期"""
+    """取得檔案真正的最後編輯日期（優先使用 Git Commit 紀錄，未 commit 則使用檔案系統修改時間）"""
     try:
-        # 1. 取得本機檔案系統的最後修改時間
-        mtime = os.path.getmtime(file_path)
-        local_date = datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
-        
-        # 2. 嘗試取得 Git 的最後提交時間
         abs_path = os.path.abspath(file_path)
         file_dir = os.path.dirname(abs_path)
         file_name = os.path.basename(abs_path)
         
+        # 1. 優先使用 Git 指令獲取該檔案最後一次 commit 的日期
         cmd = ["git", "log", "-1", "--format=%cd", "--date=short", file_name]
         git_date = subprocess.check_output(
             cmd, 
@@ -36,13 +32,15 @@ def get_file_last_mod_time(file_path):
             stderr=subprocess.PIPE
         ).decode('utf-8').strip()
         
-        # 採取安全策略：如果檔案在本地被動過，以最新修改為準
         if git_date:
-            return max(local_date, git_date)
-            
-        return local_date
+            return git_date
+        
+        # 2. 如果 Git 沒有紀錄（新檔案），則獲取該檔案的本機實際修改時間
+        mtime = os.path.getmtime(file_path)
+        return datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
         
     except Exception:
+        # 發生任何例外時的防呆回退機制
         try:
             return datetime.datetime.fromtimestamp(os.path.getmtime(file_path)).strftime('%Y-%m-%d')
         except:
@@ -54,6 +52,7 @@ def parse_file_metadata(file_path, file_name):
     prob_id_match = re.match(r"([a-z]\d+)", file_name.lower())
     prob_id = prob_id_match.group(1) if prob_id_match else name.lower()
 
+    # 呼叫修正後的時間抓取函式
     last_mod = get_file_last_mod_time(file_path)
 
     metadata = {
@@ -166,14 +165,14 @@ def update_l1_readme(category_name):
     for prob_id, info in sorted(prob_summary.items()):
         title_cell = f"[**{info['title']}**]({info['notion']})" if info["notion"] else f"**{info['title']}**"
         
-        # 1. 修正：程式連結改用 <br> 換行標示
+        # 1. 修正：程式連結改用 <br> 換行標示 (C++ 在上，Py 在下)
         prog_links = "<br>".join(sorted(info["links"], reverse=True))
         
-        # 2. 修正：核心觀念正確分隔，並使用 <small> 縮小字體
-        tags_string = ", ".join([f"`{t}`" for t in info["tags"]])
+        # 2. 修正：觀念之間直接以「空格」分隔，並使用 <small> 縮小字體
+        tags_string = " ".join([f"`{t}`" for t in info["tags"]])
         formatted_tags = f"<small>{tags_string}</small>" if tags_string else "—"
         
-        # 3. 修正：最後編輯移除反引號，並使用 <small> 縮小字體
+        # 3. 修正：最後編輯移除反引號以純文字顯示，並使用 <small> 縮小字體
         date_cell = f"<small>{info['last_modified']}</small>"
         
         markdown_lines.append(
