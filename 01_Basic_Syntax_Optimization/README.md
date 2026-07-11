@@ -33,10 +33,10 @@
 | [**a148. You Cannot Pass?!**](https://app.notion.com/p/a148-You-Cannot-Pass-39043be958cd808999dfdceb9a51a348?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a148_You_Cannot_Pass.cpp) | $O(N)$ | ★ | `Conditionals` `Loops` `Math Theory` | ✅ | 2026-07-11 |
 | [**a244. for + if**](https://www.notion.so/a244-for-if-36a43be958cd8081aa57f6377251a74d?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a244_For_If_Practice.py) [C++](./a244_For_If_Practice.cpp) | $O(1)$ | ★ | `Basic Syntax` `Conditionals` | ✅ | 2026-07-11 |
 | [**a861. Secure Perimeter**](None) | [Py](./a861_Secure_The_Parimeter.py) | $O(n)$ | ★ | `Basic Syntax` `I/O Optimization` | 📝 | 2026-07-11 |
-| [**b130. 1.明明的隨機數**](https://app.notion.com/p/b130-39a43be958cd8023afe5fca38b293ad5?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./b130_NOIP_2006_1_Random_Number.cpp) | $O(N log N)$ | ★ | `IO Optimization` `Sorting` | ✅ | 2026-07-11 |
+| [**b130. 1.明明的隨機數**](https://app.notion.com/p/b130-39a43be958cd8023afe5fca38b293ad5?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./b130_Random_Number.cpp) | $O(N log N)$ | ★ | `IO Optimization` `Sorting` | ✅ | 2026-07-11 |
 | [**c006. Combination Lock**](https://app.notion.com/p/c006-Combination-Lock-36a43be958cd80a883afd8dc560bcb76?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c006_Combination_Lock.py) | $O(1)$ | ★★ | `Math Theory` `Basic Syntax` `I/O Optimization` | ✅ | 2026-07-11 |
 | [**c022. Odd Sum**](https://app.notion.com/p/c022-Odd-Sum-39043be958cd8010b382cce73b1a44e3?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./c022_Odd_Sum.cpp) | $O(N)$ | ★ | `IO Optimization` `Loops` `Math Theory` | ✅ | 2026-07-11 |
-| [**c085. 00350 - Pseudo-Random Numbers**](https://app.notion.com/p/c085-Pseudo-Random-Numbers-39943be958cd801aa8cac43e4e0e74ae?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./c085_Pseudo_Random_Numbers.cpp) | $O(M)$ | ★★ | `Math Theory` `Array` | ✅ | 2026-07-11 |
+| [**c085. Pseudo-Random Numbers**](https://app.notion.com/p/c085-Pseudo-Random-Numbers-39943be958cd801aa8cac43e4e0e74ae?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./c085_Pseudo_Random_Numbers.cpp) | $O(M)$ | ★★ | `Math Theory` `Array` | ✅ | 2026-07-11 |
 | [**c276. 沒有手機的下課時間**](https://app.notion.com/p/c276-36a43be958cd80c8a553deb0e047aecf?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c276_Basic_Bulls_And_Cows.py) | $O(n)$ | ★★ | `Basic Syntax` `Loops` `Conditionals` | ✅ | 2026-07-11 |
 | [**c315. 座標移動**](https://www.notion.so/c315-I-ROBOT-36a43be958cd804ba58adaf8849c51cc?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c315_IRobotPrequel.py) | $O(n)$ | ★ | `Basic Syntax` `Conditionals` | ✅ | 2026-07-11 |
 | [**c379. 成為出題者**](None) | [C++](./c379_Become_Quetion_Setter.cpp) | $O(1)$ | ★ | `IO Optimization` | 📝 | 2026-07-11 |
@@ -53,14 +53,14 @@
 | [**d073. 分組報告**](None) | [C++](./d073_Group_Project.cpp) | $O(1)$ | ★ | `IO Optimization` | 📝 | 2026-07-11 |
 | [**d074. 電腦教室**](https://app.notion.com/p/d074-39043be958cd80b2b8cdea577aaaefaa?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d074_Computer.cpp) | $O(N)$ | ★ | `IO Optimization` `Loops` | ✅ | 2026-07-11 |
 | [**d097. 10038 - Jolly Jumpers**](https://app.notion.com/p/d097-Jolly-Jumpers-39943be958cd802d8552db3e93dae038?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d097_Jolly_Jumpers.cpp) | $O(n)$ | ★★ | `Array` `String` `IO Optimization` | ✅ | 2026-07-11 |
-| [**d123. 11063 - B2-Sequence**](https://app.notion.com/p/d123-B2-Sequence-39a43be958cd80afa452f1cad1d030b8?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d123_B2_Sequence.cpp) | $O(N^2)$ | ★★ | `IO Optimization` `Conditionals` `Loops` `Array` `Vector` | ✅ | 2026-07-11 |
+| [**d123. B2-Sequence**](https://app.notion.com/p/d123-B2-Sequence-39a43be958cd80afa452f1cad1d030b8?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d123_B2_Sequence.cpp) | $O(N^2)$ | ★★ | `IO Optimization` `Conditionals` `Loops` `Array` `Vector` | ✅ | 2026-07-11 |
 | [**d669. Alarm Clock**](https://app.notion.com/p/d669-11677-Alarm-Clock-39043be958cd80769b6fc436b181a513?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d669_Alarm_Clock.cpp) | $O(1)$ | ★ | `IO Optimization` `Conditionals` `Math Theory` | ✅ | 2026-07-11 |
-| [**d673. 11608 - No Problem**](https://app.notion.com/p/d673-No-Problem-39a43be958cd808c8228d90c85fb8035?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d673_No_Problem.cpp) | $O(1)$ | ★★ | `IO Optimization` `Loops` `Array` | ✅ | 2026-07-11 |
+| [**d673. No Problem**](https://app.notion.com/p/d673-No-Problem-39a43be958cd808c8228d90c85fb8035?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d673_No_Problem.cpp) | $O(1)$ | ★★ | `IO Optimization` `Loops` `Array` | ✅ | 2026-07-11 |
 | [**d827. 買鉛筆**](None) | [C++](./d827_Buy_Pencil.cpp) | $O(1)$ | ★ | `Math Theory` | 📝 | 2026-07-11 |
 | [**e834. 批發量**](https://app.notion.com/p/e834-Wholesale-39043be958cd8051a9d3c5f451870bc4?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./e834_Wholesale.cpp) | $O(N)$ | ★ | `IO Optimization` `Conditionals` `Loops` | ✅ | 2026-07-11 |
 | [**e835. 表演座位**](None) | [C++](./e835_Perform_Seat.cpp) | $O(1)$ | ★ | `Conditionals` `Math Theory` | 📝 | 2026-07-11 |
 | [**e968. 2. 班級名單**](https://app.notion.com/p/e968-39043be958cd807c9ea0d79fff252e71?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./e968_Student_List.cpp) | $O(N)$ | ★ | `IO Optimization` `Loops` `Vector` | ✅ | 2026-07-11 |
-| [**r488. apcs 彗星撞擊**](https://app.notion.com/p/r488-APCS-202510-M-1-39343be958cd803e8a1ac6fa7d8a4930?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./r488_202510_M_Comet.cpp) | $O(R*C + K + M*S^2)$ | ★★★ | `Array` | ✅ | 2026-07-11 |
+| [**r488. APCS 彗星撞擊**](https://app.notion.com/p/r488-APCS-202510-M-1-39343be958cd803e8a1ac6fa7d8a4930?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./r488_202510_M_Comet.cpp) | $O(M*S^2)$ | ★★★ | `Array` | ✅ | 2026-07-11 |
 <!-- L1_END -->
 
 <br>
