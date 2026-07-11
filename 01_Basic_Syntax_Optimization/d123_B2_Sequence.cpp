@@ -1,4 +1,4 @@
-// APCS Title: d123. 11063 - B2-Sequence
+// APCS Title: d123. B2-Sequence
 // APCS Complexity: O(N^2)
 // APCS Tag: IO Optimization, Conditionals, Loops, Array, Vector
 // APCS Difficulty: 2
@@ -24,7 +24,6 @@ int main() {
         for (int i = 0; i < n; i++){
             cin >> v[i];
 
-           
             if (v[i] < 1){
                 is_b2 = false;
             }

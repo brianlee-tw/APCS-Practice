@@ -1,4 +1,4 @@
-// APCS Title: d673. 11608 - No Problem
+// APCS Title: d673. No Problem
 // APCS Complexity: O(1)
 // APCS Tag: IO Optimization, Loops, Array
 // APCS Difficulty: 2

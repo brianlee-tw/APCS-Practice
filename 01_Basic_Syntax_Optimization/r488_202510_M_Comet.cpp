@@ -1,5 +1,5 @@
-// APCS Title: r488. apcs 彗星撞擊
-// APCS Complexity: O(R*C + K + M*S^2)
+// APCS Title: r488. APCS 彗星撞擊
+// APCS Complexity: O(M*S^2)
 // APCS Tag: Array
 // APCS Difficulty: 3
 // APCS Note: https://app.notion.com/p/r488-APCS-202510-M-1-39343be958cd803e8a1ac6fa7d8a4930?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
