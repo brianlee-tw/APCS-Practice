@@ -24,23 +24,27 @@ def get_file_last_mod_time(file_path):
         file_dir = os.path.dirname(abs_path)
         file_name = os.path.basename(abs_path)
         
-        # 1. 優先叫用 Git 查詢該原始碼檔案本身的最後一次提交日期
-        cmd = ["git", "log", "-1", "--format=%cd", "--date=short", file_name]
-        git_date = subprocess.check_output(
+        # 1. 加入 --follow 參數，並指定標準日期格式 iso (只取前 10 碼 YYYY-MM-DD)
+        # 這樣就算檔案換過資料夾、改過名字，也能追溯到真正的編輯 commit 
+        cmd = ["git", "log", "-1", "--follow", "--format=%ci", file_name]
+        git_output = subprocess.check_output(
             cmd, 
             cwd=file_dir, 
             stderr=subprocess.PIPE
         ).decode('utf-8').strip()
         
-        if git_date and re.match(r"\d{4}-\d{2}-\d{2}", git_date):
-            return git_date
+        # 如果 Git 有回傳長格式 (例如 2024-05-20 14:30:00 +0800)，切出前 10 碼
+        if git_output and len(git_output) >= 10:
+            git_date = git_output[:10]
+            if re.match(r"\d{4}-\d{2}-\d{2}", git_date):
+                return git_date
         
-        # 2. 如果 Git 沒有紀錄（例如剛建立還沒 commit 的新檔案），則使用本機檔案系統的實際修改日期
+        # 2. 如果 Git 沒有紀錄（例如全新剛建立、尚未 commit 的檔案），則回退使用本地檔案系統修改日期
         mtime = os.path.getmtime(file_path)
         return datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
         
     except Exception:
-        # 防呆機制：回退至本機檔案修改時間或當前時間
+        # 最終防呆
         try:
             mtime = os.path.getmtime(file_path)
             return datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
