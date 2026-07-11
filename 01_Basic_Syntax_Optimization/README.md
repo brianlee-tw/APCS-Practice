@@ -19,7 +19,7 @@
 <br>
 
 <!-- L1_START -->
-### 📊 當前章節複習進度：`35/50` (70%)
+### 📊 當前章節複習進度：`36/50` (72%)
 
 > 💡 **使用說明**：點擊 **「題目名稱」** 的藍色超連結，可直接跳轉至該題的 Notion 詳細筆記頁面。
 
@@ -55,6 +55,7 @@
 | [**d097. 10038 - Jolly Jumpers**](https://app.notion.com/p/d097-Jolly-Jumpers-39943be958cd802d8552db3e93dae038?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d097_Jolly_Jumpers.cpp) | $O(n)$ | ★★ | `Array` `String` `IO Optimization` | ✅ | 2026-07-11 |
 | [**d123. 11063 - B2-Sequence**](https://app.notion.com/p/d123-B2-Sequence-39a43be958cd80afa452f1cad1d030b8?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d123_B2_Sequence.cpp) | $O(N^2)$ | ★★ | `IO Optimization` `Conditionals` `Loops` `Array` `Vector` | ✅ | 2026-07-11 |
 | [**d669. Alarm Clock**](https://app.notion.com/p/d669-11677-Alarm-Clock-39043be958cd80769b6fc436b181a513?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d669_Alarm_Clock.cpp) | $O(1)$ | ★ | `IO Optimization` `Conditionals` `Math Theory` | ✅ | 2026-07-11 |
+| [**d673. 11608 - No Problem**](https://app.notion.com/p/d673-No-Problem-39a43be958cd808c8228d90c85fb8035?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./d673_No_Problem.cpp) | $O(1)$ | ★★ | `IO Optimization` `Loops` `Array` | ✅ | 2026-07-11 |
 | [**d827. 買鉛筆**](None) | [C++](./d827_Buy_Pencil.cpp) | $O(1)$ | ★ | `Math Theory` | 📝 | 2026-07-11 |
 | [**e834. 批發量**](https://app.notion.com/p/e834-Wholesale-39043be958cd8051a9d3c5f451870bc4?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./e834_Wholesale.cpp) | $O(N)$ | ★ | `IO Optimization` `Conditionals` `Loops` | ✅ | 2026-07-11 |
 | [**e835. 表演座位**](None) | [C++](./e835_Perform_Seat.cpp) | $O(1)$ | ★ | `Conditionals` `Math Theory` | 📝 | 2026-07-11 |
