@@ -17,43 +17,40 @@ REVIEW_THRESHOLD_DAYS = 90
 ROOT_START, ROOT_END = "<!-- ROOT_START -->", "<!-- ROOT_END -->"
 L1_START, L1_END = "<!-- L1_START -->", "<!-- L1_END -->"
 
-def get_file_last_mod_time(file_path):
-    """忽略本地修改，強行取得該檔案在 Git 倉庫中上一次 Commit 的日期"""
-    try:
-        abs_path = os.path.abspath(file_path)
-        file_dir = os.path.dirname(abs_path)
-        file_name = os.path.basename(abs_path)
-        
-        # 這裡不加任何參數，單純問這個檔案最後一次被 commit 的時間
-        cmd = ["git", "log", "-1", "--pretty=format:%cd", "--date=format:%Y-%m-%d", "--", file_name]
-        git_date = subprocess.check_output(
-            cmd, 
-            cwd=file_dir, 
-            stderr=subprocess.PIPE
-        ).decode('utf-8').strip()
-        
-        # 如果有抓到 commit 紀錄，就直接用它
-        if git_date and re.match(r"\d{4}-\d{2}-\d{2}", git_date):
-            return git_date
-        
-        # 如果是完全沒 commit 過的新檔案，才拿本地時間
-        mtime = os.path.getmtime(file_path)
-        return datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
-        
-    except Exception:
-        try:
-            mtime = os.path.getmtime(file_path)
-            return datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
-        except:
-            return datetime.datetime.now().strftime('%Y-%m-%d')
+
+def get_file_custom_date(head_content):
+    """
+    精準從檔案前 15 行內容中提取手寫的日期標籤。
+    格式支援：YY-MM-DD (例如 26-09-12)
+    若無此標籤，則自動回傳當天的 YY-MM-DD 格式。
+    """
+    if head_content:
+        # 匹配如 // APCS Date: 26-09-12 或 # APCS Date: 26-09-12
+        date_match = re.search(r"(?://|#)\s*APCS Date:\s*(\d{2}-\d{2}-\d{2})", head_content)
+        if date_match:
+            return date_match.group(1).strip()
+            
+    # 沒有標籤時的防呆：回傳今天日期的 YY-MM-DD
+    return datetime.datetime.now().strftime('%y-%m-%d')
+
+
 def parse_file_metadata(file_path, file_name):
     """解析檔案元數據，包含修正後的時間抓取"""
     name, ext = os.path.splitext(file_name)
     prob_id_match = re.match(r"([a-z]\d+)", file_name.lower())
     prob_id = prob_id_match.group(1) if prob_id_match else name.lower()
 
-    # 取得最正確的原始碼編輯時間
-    last_mod = get_file_last_mod_time(file_path)
+    # 先行讀取檔案前 15 行內文，用來解析日期與所有屬性
+    head_content = ""
+    try:
+        if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+            with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
+                head_content = "\n".join(f.read().splitlines()[:15])
+    except Exception:
+        pass
+
+    # 從檔案內文直接解析 YY-MM-DD 日期
+    last_mod = get_file_custom_date(head_content)
 
     metadata = {
         "prob_id": prob_id, "title": name, "complexity": "—",
@@ -64,13 +61,9 @@ def parse_file_metadata(file_path, file_name):
     }
 
     try:
-        if os.path.getsize(file_path) == 0:
+        if not head_content:
             metadata["status"] = "🆕"
             return metadata
-
-        with open(file_path, "r", encoding="utf-8", errors="ignore") as f:
-            content = f.read()
-            head_content = "\n".join(content.splitlines()[:15])
         
         # 1. 提取題目名稱
         title_match = re.search(r"(?://|#)\s*APCS Title:\s*(.*)", head_content)
@@ -101,7 +94,8 @@ def parse_file_metadata(file_path, file_name):
             metadata["status"] = "📝"
             
         if metadata["status"] == "✅":
-            last_mod_date = datetime.datetime.strptime(metadata["last_modified"], '%Y-%m-%d')
+            # 注意：這裡使用小寫 %y 匹配兩位數年份 (例如 '26')
+            last_mod_date = datetime.datetime.strptime(metadata["last_modified"], '%y-%m-%d')
             today = datetime.datetime.now()
             days_diff = (today - last_mod_date).days
             
