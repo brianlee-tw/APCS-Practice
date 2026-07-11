@@ -18,13 +18,13 @@ ROOT_START, ROOT_END = "<!-- ROOT_START -->", "<!-- ROOT_END -->"
 L1_START, L1_END = "<!-- L1_START -->", "<!-- L1_END -->"
 
 def get_file_last_mod_time(file_path):
-    """取得檔案真正的最後編輯日期（優先使用 Git Commit 紀錄，未 commit 則使用檔案系統修改時間）"""
+    """精準取得程式原始碼檔案的最後編輯日期 (YYYY-MM-DD)"""
     try:
         abs_path = os.path.abspath(file_path)
         file_dir = os.path.dirname(abs_path)
         file_name = os.path.basename(abs_path)
         
-        # 1. 優先使用 Git 指令獲取該檔案最後一次 commit 的日期
+        # 1. 優先叫用 Git 查詢該原始碼檔案本身的最後一次提交日期
         cmd = ["git", "log", "-1", "--format=%cd", "--date=short", file_name]
         git_date = subprocess.check_output(
             cmd, 
@@ -32,27 +32,28 @@ def get_file_last_mod_time(file_path):
             stderr=subprocess.PIPE
         ).decode('utf-8').strip()
         
-        if git_date:
+        if git_date and re.match(r"\d{4}-\d{2}-\d{2}", git_date):
             return git_date
         
-        # 2. 如果 Git 沒有紀錄（新檔案），則獲取該檔案的本機實際修改時間
+        # 2. 如果 Git 沒有紀錄（例如剛建立還沒 commit 的新檔案），則使用本機檔案系統的實際修改日期
         mtime = os.path.getmtime(file_path)
         return datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
         
     except Exception:
-        # 發生任何例外時的防呆回退機制
+        # 防呆機制：回退至本機檔案修改時間或當前時間
         try:
-            return datetime.datetime.fromtimestamp(os.path.getmtime(file_path)).strftime('%Y-%m-%d')
+            mtime = os.path.getmtime(file_path)
+            return datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
         except:
             return datetime.datetime.now().strftime('%Y-%m-%d')
 
 def parse_file_metadata(file_path, file_name):
-    """解析檔案元數據，優化欄位長度與時間抓取"""
+    """解析檔案元數據，包含修正後的時間抓取"""
     name, ext = os.path.splitext(file_name)
     prob_id_match = re.match(r"([a-z]\d+)", file_name.lower())
     prob_id = prob_id_match.group(1) if prob_id_match else name.lower()
 
-    # 呼叫修正後的時間抓取函式
+    # 取得最正確的原始碼編輯時間
     last_mod = get_file_last_mod_time(file_path)
 
     metadata = {
@@ -165,14 +166,14 @@ def update_l1_readme(category_name):
     for prob_id, info in sorted(prob_summary.items()):
         title_cell = f"[**{info['title']}**]({info['notion']})" if info["notion"] else f"**{info['title']}**"
         
-        # 1. 修正：程式連結改用 <br> 換行標示 (C++ 在上，Py 在下)
+        # 1. 修正：程式連結改用 <br> 換行標示
         prog_links = "<br>".join(sorted(info["links"], reverse=True))
         
-        # 2. 修正：觀念之間直接以「空格」分隔，並使用 <small> 縮小字體
+        # 2. 修正：核心觀念直接以半形空格分開（不用逗號），並以外層 <small> 包覆縮小字體
         tags_string = " ".join([f"`{t}`" for t in info["tags"]])
         formatted_tags = f"<small>{tags_string}</small>" if tags_string else "—"
         
-        # 3. 修正：最後編輯移除反引號以純文字顯示，並使用 <small> 縮小字體
+        # 3. 修正：最後編輯文字移除任何 ``` 或反引號，直接純文字輸出，並用 <small> 縮小字體
         date_cell = f"<small>{info['last_modified']}</small>"
         
         markdown_lines.append(
