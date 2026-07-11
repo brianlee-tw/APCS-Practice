@@ -20,7 +20,7 @@ L1_START, L1_END = "<!-- L1_START -->", "<!-- L1_END -->"
 def get_file_last_mod_time(file_path):
     """結合 Git Log 與本機檔案系統，取得最精準的最後修改日期"""
     try:
-        # 1. 取得本機檔案系統的最後修改時間 (最準確的實際編輯時間)
+        # 1. 取得本機檔案系統的最後修改時間
         mtime = os.path.getmtime(file_path)
         local_date = datetime.datetime.fromtimestamp(mtime).strftime('%Y-%m-%d')
         
@@ -36,16 +36,13 @@ def get_file_last_mod_time(file_path):
             stderr=subprocess.PIPE
         ).decode('utf-8').strip()
         
-        # 如果 Git 有紀錄，且本機時間跟 Git 差不多（或你想以最新修改為準）
-        # 這裡採取安全策略：如果檔案在本地被動過，local_date 會大於或等於 git_date
+        # 採取安全策略：如果檔案在本地被動過，以最新修改為準
         if git_date:
-            # 為了確保「最後編輯」能反應尚未 commit 的區域，若本地新則以本地為主
             return max(local_date, git_date)
             
         return local_date
         
-    except Exception as e:
-        # 發生任何意外則回退到本地檔案時間
+    except Exception:
         try:
             return datetime.datetime.fromtimestamp(os.path.getmtime(file_path)).strftime('%Y-%m-%d')
         except:
@@ -57,13 +54,12 @@ def parse_file_metadata(file_path, file_name):
     prob_id_match = re.match(r"([a-z]\d+)", file_name.lower())
     prob_id = prob_id_match.group(1) if prob_id_match else name.lower()
 
-    # --- 修正點：調用優化後的時間抓取函式 ---
     last_mod = get_file_last_mod_time(file_path)
 
     metadata = {
         "prob_id": prob_id, "title": name, "complexity": "—",
         "tags": [], "difficulty": "★", "notion": None, 
-        "status": "📝", # 縮短初始狀態字串，避免撐寬表格
+        "status": "📝", 
         "ext": ext.lower(),
         "last_modified": last_mod
     }
@@ -98,7 +94,6 @@ def parse_file_metadata(file_path, file_name):
         status_match = re.search(r"(?://|#)\s*APCS Status:\s*(.*)", head_content, re.IGNORECASE)
         notion_match = re.search(r"(?://|#)\s*APCS Note:\s*(https?://[^\s]+)", head_content)
         
-        # 判斷基礎狀態 (保持簡短圖示)
         if status_match and "in progress" in status_match.group(1).lower():
             metadata["status"] = "🚧"
         elif notion_match:
@@ -106,7 +101,6 @@ def parse_file_metadata(file_path, file_name):
         else:
             metadata["status"] = "📝"
             
-        # 複習提醒邏輯
         if metadata["status"] == "✅":
             last_mod_date = datetime.datetime.strptime(metadata["last_modified"], '%Y-%m-%d')
             today = datetime.datetime.now()
@@ -118,7 +112,7 @@ def parse_file_metadata(file_path, file_name):
         if notion_match:
             metadata["notion"] = notion_match.group(1).strip()
 
-    except Exception as e:
+    except Exception:
         metadata["status"] = "❌"
         
     return metadata
@@ -161,7 +155,7 @@ def update_l1_readme(category_name):
         label = "C++" if meta["ext"] == ".cpp" else "Py"
         prob_summary[prob_id]["links"].append(f"[{label}](./{f})")
 
-    # --- 修正點：緊湊型 Markdown 表格與無縫標籤組合 ---
+    # --- 構建表格 Markdown ---
     markdown_lines = [
         "> 💡 **使用說明**：點擊 **「題目名稱」** 的藍色超連結，可直接跳轉至該題的 Notion 詳細筆記頁面。",
         "",
@@ -171,12 +165,19 @@ def update_l1_readme(category_name):
     
     for prob_id, info in sorted(prob_summary.items()):
         title_cell = f"[**{info['title']}**]({info['notion']})" if info["notion"] else f"**{info['title']}**"
-        # 移除標籤之間的空格，改用連續的緊湊行內代碼，省下大量寬度
-        formatted_tags = "".join([f"`{t}`" for t in info["tags"]])
-        prog_links = "/".join(sorted(info["links"], reverse=True)) # 改用斜線緊湊連接，如 C++/Py
+        
+        # 1. 修正：程式連結改用 <br> 換行標示
+        prog_links = "<br>".join(sorted(info["links"], reverse=True))
+        
+        # 2. 修正：核心觀念正確分隔，並使用 <small> 縮小字體
+        tags_string = ", ".join([f"`{t}`" for t in info["tags"]])
+        formatted_tags = f"<small>{tags_string}</small>" if tags_string else "—"
+        
+        # 3. 修正：最後編輯移除反引號，並使用 <small> 縮小字體
+        date_cell = f"<small>{info['last_modified']}</small>"
         
         markdown_lines.append(
-            f"| {title_cell} | {prog_links} | {info['complexity']} | {info['difficulty']} | {formatted_tags} | {info['status']} | `{info['last_modified']}` |"
+            f"| {title_cell} | {prog_links} | {info['complexity']} | {info['difficulty']} | {formatted_tags} | {info['status']} | {date_cell} |"
         )
     
     table_content = "\n".join(markdown_lines)
