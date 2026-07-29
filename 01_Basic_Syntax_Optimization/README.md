@@ -19,7 +19,7 @@
 <br>
 
 <!-- L1_START -->
-### 📊 當前章節複習進度：`45/50` (90%)
+### 📊 當前章節複習進度：`46/50` (92%)
 
 > 💡 **使用說明**：點擊 **「題目名稱」** 的藍色超連結，可直接跳轉至該題的 Notion 詳細筆記頁面。
 
@@ -37,6 +37,7 @@
 | **a861. Secure Perimeter** | [Py](./a861_Secure_The_Parimeter.py) | $O(n)$ | ★ | <small>`Basic Syntax` `I/O Optimization`</small> | 📝 | <small>26-07-29</small> |
 | [**b130. 明明的隨機數**](https://app.notion.com/p/b130-39a43be958cd8023afe5fca38b293ad5?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./b130_Random_Number.cpp) | $O(N log N)$ | ★ | <small>`IO Optimization` `Sorting`</small> | ✅ | <small>26-07-29</small> |
 | [**e927. Matrix Symmetry**](https://app.notion.com/p/b367-39a43be958cd80d0a5c7e033b8079c5f?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./b367_Reversed_World.cpp) | $O(N*M)$ | ★★ | <small>`Conditionals` `Loops` `Array` `Vector`</small> | ✅ | <small>26-07-11</small> |
+| [**b428. 凱撒密碼**](https://app.notion.com/p/b428-3ac43be958cd80e4ac9ee7188c4a8419?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./b428_Caesar_Encryption.cpp) | $O(1)$ | ★ | <small>`Math Theory` `String`</small> | ✅ | <small>26-07-29</small> |
 | [**c291. 矩陣翻轉**](https://app.notion.com/p/b965-3ab43be958cd80568577cdf32f690132?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./b965_201603_2_Matrix_Transformation.cpp) | $O(M * R * C)$ | ★★ | <small>`Array` `Vector` `Loops`</small> | ✅ | <small>26-07-28</small> |
 | [**c006. Combination Lock**](https://app.notion.com/p/c006-Combination-Lock-36a43be958cd80a883afd8dc560bcb76?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./c006_Combination_Lock.py) | $O(1)$ | ★★ | <small>`Math Theory` `Basic Syntax` `I/O Optimization`</small> | ✅ | <small>26-07-29</small> |
 | [**c013. 00488 - Triangle Wave**](https://app.notion.com/p/c013-Triangle-Wave-39a43be958cd807d9f75daedeb06dc45?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./c013_Triangle_Wave.cpp) | $O(n * f * a^2)$ | ★ | <small>`Loops`</small> | ✅ | <small>26-07-11</small> |
