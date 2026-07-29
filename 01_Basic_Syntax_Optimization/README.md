@@ -19,7 +19,7 @@
 <br>
 
 <!-- L1_START -->
-### 📊 當前章節複習進度：`46/50` (92%)
+### 📊 當前章節複習進度：`47/50` (94%)
 
 > 💡 **使用說明**：點擊 **「題目名稱」** 的藍色超連結，可直接跳轉至該題的 Notion 詳細筆記頁面。
 
@@ -30,6 +30,7 @@
 | [**a015. 矩陣的翻轉**](https://app.notion.com/p/a015-39943be958cd80058d9df0f6fdab49b9?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a015_Matrix_Flipping.cpp) | $O(R * C)$ | ★ | <small>`IO Optimization` `Array`</small> | ✅ | <small>26-07-29</small> |
 | **a038_Number_Reverse** | [C++](./a038_Number_Reverse.cpp) | — | ★ | — | 📝 | <small>26-07-29</small> |
 | [**a058. MOD3**](https://app.notion.com/p/a058-MOD3-39043be958cd80768d9fdf5c05b9ed54?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a058_Mod3.cpp) | $O(N)$ | ★ | <small>`IO Optimization` `Loops` `Array`</small> | ✅ | <small>26-07-29</small> |
+| [**a065. 提密碼**](https://app.notion.com/p/a065-3ac43be958cd80df8a4af97b6039bb04?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a065_Bank_Card.cpp) | $O(1)$ | ★ | <small>`String` `Array`</small> | ✅ | <small>26-07-29</small> |
 | [**a130. Google Is Feeling Lucky**](https://app.notion.com/p/a130-Google-is-Lucky-3ac43be958cd800cb815e655bb7a89d8?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a130_Google_Lucky.cpp) | $O(T)$ | ★ | <small>`Array` `Vector` `String` `Struct`</small> | ✅ | <small>26-07-28</small> |
 | [**a148. You Cannot Pass?!**](https://app.notion.com/p/a148-You-Cannot-Pass-39043be958cd808999dfdceb9a51a348?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [C++](./a148_You_Cannot_Pass.cpp) | $O(N)$ | ★ | <small>`Conditionals` `Loops` `Math Theory`</small> | ✅ | <small>26-07-29</small> |
 | [**a244. for + if**](https://www.notion.so/a244-for-if-36a43be958cd8081aa57f6377251a74d?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link) | [Py](./a244_For_If_Practice.py)<br>[C++](./a244_For_If_Practice.cpp) | $O(1)$ | ★ | <small>`Basic Syntax` `Conditionals`</small> | ✅ | <small>26-07-29</small> |
