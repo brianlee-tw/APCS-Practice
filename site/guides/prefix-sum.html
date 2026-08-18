@@ -5,12 +5,12 @@
   <title>Prefix Sum：區間總和從 O(N) 到 O(1)｜APCS 練習</title>
   <meta name="description" content="理解 Prefix Sum 的建立方式、區間 [l,r] 公式與最常見的 l-1 邊界錯誤。">
   <script>(function(){try{var s=localStorage.getItem('apcs_theme_preference');var t=s==='light'||s==='dark'?s:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t}catch(_){}})();</script>
-  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../layout-polish.css">
 </head>
 <body>
-  <header class="site-header"><div class="shell site-header-inner"><a class="brand" href="../"><span class="brand-mark">A+</span><span class="brand-copy"><span class="brand-title">APCS Diagnostic</span><span class="brand-subtitle">C++ skill check</span></span></a><div class="header-actions"><a class="header-link" href="../">回診斷</a><button class="theme-toggle" type="button" data-theme-toggle><span class="theme-icon" data-theme-icon>☾</span><span class="theme-label" data-theme-label>深色</span></button></div></div></header>
-  <main><article class="article-shell"><p class="eyebrow">Prefix / Greedy</p><h1>Prefix Sum：不要每次重算區間</h1><p>若陣列不修改、但會有很多次區間總和詢問，可以先建立：</p><pre class="code"><code>prefix[0] = a[0];
+  <button class="theme-toggle floating-theme-toggle" type="button" data-theme-toggle><span class="theme-icon" data-theme-icon>☾</span><span class="theme-label" data-theme-label>深色</span></button>
+  <main><article class="article-shell"><a class="article-back" href="../">← 回到診斷</a><p class="eyebrow">Prefix / Greedy</p><h1>Prefix Sum：<br>不要每次重算區間</h1><p>若陣列不修改，但會有很多次區間總和詢問，<br>可以先建立：</p><pre class="code"><code>prefix[0] = a[0];
 for (int i = 1; i &lt; n; ++i)
-  prefix[i] = prefix[i-1] + a[i];</code></pre><p>當 <code>l &gt; 0</code> 時，區間 <code>[l,r]</code> 的總和是 <code>prefix[r] - prefix[l-1]</code>。這把每次查詢從線性掃描降成常數時間。</p><h2>最常見錯誤</h2><p>直接寫 <code>prefix[r] - prefix[l]</code> 會少算 <code>a[l]</code>；而 <code>l=0</code> 時也要避免存取 <code>prefix[-1]</code>。</p><div class="article-cta"><a class="primary" href="../">做完整 15 題能力診斷</a></div></article></main>
+  prefix[i] = prefix[i-1] + a[i];</code></pre><p>當 <code>l &gt; 0</code> 時，區間 <code>[l,r]</code> 的總和是：</p><p><code>prefix[r] - prefix[l-1]</code></p><p>這把每次查詢從線性掃描降成常數時間。</p><h2>最常見錯誤</h2><p>直接寫 <code>prefix[r] - prefix[l]</code> 會少算 <code>a[l]</code>。<br>而 <code>l=0</code> 時，也要避免存取 <code>prefix[-1]</code>。</p><div class="article-cta"><a class="primary" href="../">做完整 15 題能力診斷</a></div></article></main>
   <script type="module" src="../js/theme.js"></script>
 </body></html>

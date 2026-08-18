@@ -5,11 +5,11 @@
   <title>TLE 怎麼判斷：先看複雜度再優化｜APCS 練習</title>
   <meta name="description" content="APCS 程式實作遇到 TLE 時，先用 constraints 與時間複雜度定位問題，而不是盲目微調 I/O。">
   <script>(function(){try{var s=localStorage.getItem('apcs_theme_preference');var t=s==='light'||s==='dark'?s:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t}catch(_){}})();</script>
-  <link rel="stylesheet" href="../styles.css">
+  <link rel="stylesheet" href="../styles.css"><link rel="stylesheet" href="../layout-polish.css">
 </head>
 <body>
-  <header class="site-header"><div class="shell site-header-inner"><a class="brand" href="../"><span class="brand-mark">A+</span><span class="brand-copy"><span class="brand-title">APCS Diagnostic</span><span class="brand-subtitle">C++ skill check</span></span></a><div class="header-actions"><a class="header-link" href="../">回診斷</a><button class="theme-toggle" type="button" data-theme-toggle><span class="theme-icon" data-theme-icon>☾</span><span class="theme-label" data-theme-label>深色</span></button></div></div></header>
-  <main><article class="article-shell"><p class="eyebrow">Algorithm / Complexity</p><h1>TLE 怎麼判斷：先看 Big-O</h1><p>TLE 的第一個問題不是「要不要把 <code>cin</code> 換掉」，而是：<strong>目前方法會執行多少次核心操作？</strong></p><pre class="code"><code>for (int i = 0; i &lt; n; ++i)
+  <button class="theme-toggle floating-theme-toggle" type="button" data-theme-toggle><span class="theme-icon" data-theme-icon>☾</span><span class="theme-label" data-theme-label>深色</span></button>
+  <main><article class="article-shell"><a class="article-back" href="../">← 回到診斷</a><p class="eyebrow">Algorithm / Complexity</p><h1>TLE 怎麼判斷：<br>先看 Big-O</h1><p>TLE 的第一個問題不是「要不要把 <code>cin</code> 換掉」，而是：</p><p><strong>目前方法會執行多少次核心操作？</strong></p><pre class="code"><code>for (int i = 0; i &lt; n; ++i)
   for (int j = 0; j &lt; n; ++j)
     work();</code></pre><p>這個結構是 <code>O(n²)</code>。如果 <code>n</code> 很大，單純換快一點的輸入方式通常無法改變數量級。</p><h2>快速檢查</h2><ol><li>先讀 constraints。</li><li>估算目前演算法的 Big-O。</li><li>找出最深層重複工作。</li><li>再考慮排序、二分、前綴和、資料結構或其他降低重複計算的方法。</li><li>最後才做常數級優化。</li></ol><div class="article-cta"><a class="primary" href="../">測試我的複雜度判斷能力</a></div></article></main>
   <script type="module" src="../js/theme.js"></script>
