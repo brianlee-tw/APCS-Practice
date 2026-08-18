@@ -1,0 +1,76 @@
+name: APCS Validate
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  metadata:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Validate APCS metadata and learning data
+        run: python tools/apcs.py validate
+
+  changed-solutions:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Syntax-check changed solutions
+        shell: bash
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_BASE_SHA: ${{ github.event.pull_request.base.sha }}
+          PUSH_BASE_SHA: ${{ github.event.before }}
+        run: |
+          if [ "$EVENT_NAME" = "pull_request" ]; then
+            BASE="$PR_BASE_SHA"
+          else
+            BASE="$PUSH_BASE_SHA"
+          fi
+
+          if [ -z "$BASE" ] || [ "$BASE" = "0000000000000000000000000000000000000000" ]; then
+            BASE="$(git rev-list --max-parents=0 HEAD)"
+          fi
+
+          git diff --name-only --diff-filter=ACMR "$BASE" HEAD > /tmp/changed-files.txt
+
+          checked=0
+          while IFS= read -r file; do
+            case "$file" in
+              tools/*|docs/*|data/*|notes/*|.github/*|.vscode/*)
+                continue
+                ;;
+              *.cpp)
+                echo "C++ syntax: $file"
+                g++ -std=c++17 -fsyntax-only "$file"
+                checked=$((checked + 1))
+                ;;
+              *.py)
+                echo "Python syntax: $file"
+                python -m py_compile "$file"
+                checked=$((checked + 1))
+                ;;
+            esac
+          done < /tmp/changed-files.txt
+
+          echo "Checked $checked changed solution file(s)."

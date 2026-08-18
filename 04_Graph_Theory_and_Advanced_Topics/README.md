@@ -1,34 +1,12 @@
-<br>
+# Legacy solution bucket
 
+此資料夾是 APCS-Practice v1 的歷史儲存位置。
 
-# 04_Graph_Theory_and_Advanced_Topics: 圖論與進階專題
-本章節挑戰 APCS 中難度最高、邏輯最複雜的題目，著重於圖論結構與遞迴思維。
+**v2 起，資料夾不再代表能力分類，也不再使用「每類 50 題」作為主要進度 KPI。** 題目的能力分類改由 `APCS Tag`、題名與檔名自動推導。
 
-<br>
+- 完整題庫：[Problem Index](../docs/PROBLEM_INDEX.md)
+- 複習佇列：[Review Queue](../docs/REVIEW_QUEUE.md)
+- 新工作流程：[Workflow](../docs/WORKFLOW.md)
+- 新題目建議放在 [`solutions/`](../solutions/)
 
-### 💡 學習策略
-圖論題目的核心在於「節點與邊的建模」。務必掌握深度優先搜尋 (DFS) 與廣度優先搜尋 (BFS) 的應用，並注意圖的連通性問題。
-
-<br>
-
-### 關鍵術語
-- `graph`: 圖論基礎
-- `tree`: 樹狀結構
-- `dfs`: 深度優先搜尋
-- `bfs`: 廣度優先搜尋
-- `rec`: 遞迴處理
-
-<br>
-
-<!-- L1_START -->
-### 📊 當前章節複習進度：`0/50` (0%)
-
-> 💡 **使用說明**：點擊 **「題目名稱」** 的藍色超連結，可直接跳轉至該題的 Notion 詳細筆記頁面。
-
-| 題目名稱 | 程式 | 複雜度 | 難度 | 核心觀念 | 狀態 | 最後編輯 |
-|:---|:---:|:---|:---|:---|:---:|:---:|
-<!-- L1_END -->
-
-<br>
-
-*Back to [Main Repository](/README.md)*
+此資料夾內既有 solution 保留原路徑，以維持 Git 歷史與既有連結。

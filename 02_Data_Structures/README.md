@@ -1,33 +1,12 @@
-<br>
+# Legacy solution bucket
 
-# 02_Data_Structures: 線性與非線性資料結構
-本章節探討如何利用正確的資料結構來儲存與操作數據，以達到最佳的記憶體與執行效率。
+此資料夾是 APCS-Practice v1 的歷史儲存位置。
 
-<br>
+**v2 起，資料夾不再代表能力分類，也不再使用「每類 50 題」作為主要進度 KPI。** 題目的能力分類改由 `APCS Tag`、題名與檔名自動推導。
 
-### 💡 學習策略
-學習判斷「何時該用什麼結構」。在解題時，應優先考慮 Array 與 Vector 的特性，並針對 Stack, Queue 與 Struct 的應用場景進行優化。
+- 完整題庫：[Problem Index](../docs/PROBLEM_INDEX.md)
+- 複習佇列：[Review Queue](../docs/REVIEW_QUEUE.md)
+- 新工作流程：[Workflow](../docs/WORKFLOW.md)
+- 新題目建議放在 [`solutions/`](../solutions/)
 
-<br>
-
-### 關鍵術語
-- `arr`: 靜態陣列
-- `vec`: 動態陣列
-- `str`: 字串處理
-- `struct`: 結構化資料
-
-<br>
-
-<!-- L1_START -->
-### 📊 當前章節複習進度：`1/50` (2%)
-
-> 💡 **使用說明**：點擊 **「題目名稱」** 的藍色超連結，可直接跳轉至該題的 Notion 詳細筆記頁面。
-
-| 題目名稱 | 程式 | 複雜度 | 難度 | 核心觀念 | 狀態 | 最後編輯 |
-|:---|:---:|:---|:---|:---|:---:|:---:|
-| **1621_Distinct_Values** | [C++](./1621_Distinct_Values.cpp) | — | ★ | — | 📝 | <small>26-07-29</small> |
-<!-- L1_END -->
-
-<br>
-
-*Back to [Main Repository](/README.md)*
+此資料夾內既有 solution 保留原路徑，以維持 Git 歷史與既有連結。

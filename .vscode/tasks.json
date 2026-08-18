@@ -1,4 +1,5 @@
 {
+  "version": "2.0.0",
   "tasks": [
     {
       "type": "cppbuild",
@@ -19,16 +20,94 @@
         "$msCompile"
       ],
       "presentation": {
-        "reveal": "silent",       // 👈 關鍵：如果編譯沒錯誤，就不會主動彈出這個視窗排擠你
-        "clear": true,            // 👈 每次編譯自動清空舊的建置訊息
-        "close": true             // 👈 如果編譯成功，自動把這個工作視窗關閉
+        "reveal": "silent",
+        "clear": true,
+        "close": true
       },
       "group": {
         "kind": "build",
         "isDefault": true
       },
       "detail": "偵錯工具產生的工作。"
+    },
+    {
+      "label": "APCS: Today",
+      "type": "shell",
+      "command": "python tools/apcs.py today",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "clear": true
+      }
+    },
+    {
+      "label": "APCS: Validate",
+      "type": "shell",
+      "command": "python tools/apcs.py validate",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "clear": true
+      }
+    },
+    {
+      "label": "APCS: Sync dashboard",
+      "type": "shell",
+      "command": "python tools/apcs.py sync",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "clear": true
+      }
+    },
+    {
+      "label": "APCS: Finish problem",
+      "type": "shell",
+      "command": "python tools/apcs.py finish ${input:apcsProblemId} ${input:apcsScore}",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "clear": true
+      }
+    },
+    {
+      "label": "APCS: Review problem",
+      "type": "shell",
+      "command": "python tools/apcs.py review ${input:apcsProblemId} ${input:apcsScore}",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "clear": true
+      }
+    },
+    {
+      "label": "APCS: Create local note",
+      "type": "shell",
+      "command": "python tools/apcs.py note ${input:apcsProblemId}",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "clear": true
+      }
     }
   ],
-  "version": "2.0.0"
+  "inputs": [
+    {
+      "id": "apcsProblemId",
+      "type": "promptString",
+      "description": "APCS problem ID (例如 b130)"
+    },
+    {
+      "id": "apcsScore",
+      "type": "pickString",
+      "description": "Recall score",
+      "options": [
+        "0",
+        "1",
+        "2",
+        "3"
+      ],
+      "default": "2"
+    }
+  ]
 }
