@@ -19,6 +19,7 @@ const files = {
   app: fs.readFileSync(new URL('../app.js', import.meta.url), 'utf8'),
   engine: fs.readFileSync(new URL('../js/engine.js', import.meta.url), 'utf8'),
   theme: fs.readFileSync(new URL('../js/theme.js', import.meta.url), 'utf8'),
+  productLibrary: fs.readFileSync(new URL('../js/product-library.js', import.meta.url), 'utf8'),
   polish: fs.readFileSync(new URL('../layout-polish.css', import.meta.url), 'utf8'),
   experience: fs.readFileSync(new URL('../experience.css', import.meta.url), 'utf8'),
   productPlan: fs.readFileSync(new URL('../product-plan.css', import.meta.url), 'utf8'),
@@ -51,6 +52,7 @@ if (!files.engine.includes('selectBalancedQuestions')) errors.push('balanced sho
 if (!files.app.includes('quiz_abandon')) errors.push('quiz exit/abandon event missing');
 if (!files.app.includes('buildReviewItems')) errors.push('free review logic missing from app.js');
 if (!files.theme.includes('apcs_theme_preference')) errors.push('theme persistence key missing');
+if (!files.theme.includes("import './product-library.js'")) errors.push('product-library enhancement must be loaded through theme.js');
 if (!files.polish.includes('.floating-theme-toggle')) errors.push('floating theme CSS missing');
 if (!files.polish.includes('width:42px') || !files.polish.includes('position:fixed')) errors.push('theme toggle must be compact and removed from document flow');
 if (!files.polish.includes('padding:28px 0 56px')) errors.push('desktop hero top spacing was not tightened');
@@ -68,6 +70,14 @@ if (futureProducts.length < 15) errors.push(`expected at least 15 future product
 for (const p of futureProducts) if (p.status !== 'preparing') errors.push(`${p.id} must be preparing`);
 if (futureProducts.some((p) => p.status === 'validation')) errors.push('formal product catalog must not use validation status');
 if (!files.productPlan.includes('.product-deliverables') || !files.productPlan.includes('.bundle-grid')) errors.push('formal product-card detail system missing');
+if (!files.productPlan.includes('font-size:clamp(2rem,4vw,3.35rem)')) errors.push('product library hero must use compact desktop sizing');
+if (!files.productPlan.includes('font-size:clamp(1.9rem,9vw,2.45rem)')) errors.push('product library hero must use compact mobile sizing');
+if (!files.productPlan.includes('.product-preview')) errors.push('product preview visual contract missing');
+if (!files.productLibrary.includes("hero.textContent = '更短的進步路徑。'")) errors.push('compact product-library H1 behavior missing');
+if (!files.productLibrary.includes('PREVIEW_CONFIG') || !files.productLibrary.includes('PREVIEW_LINKS')) errors.push('product preview configuration missing');
+for (const previewProduct of ['P1-30DAY','P2-DEBUG','P3-CONCEPT','P4-MOCK','P6-GITHUB','P7-PORTFOLIO','P8-AI-CODING']) {
+  if (!files.productLibrary.includes(`'${previewProduct}'`)) errors.push(`preview plan missing ${previewProduct}`);
+}
 
 if (errors.length) {
   console.error(errors.join('\n'));
