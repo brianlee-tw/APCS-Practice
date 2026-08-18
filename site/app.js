@@ -141,20 +141,17 @@ function showReview() {
   for (const [idx, item] of state.reviewItems.entries()) {
     const article = document.createElement("article");
     article.className = "review-card";
-
     const h3 = document.createElement("h3");
     h3.textContent = `${idx + 1}. ${labelFor(item.dimension)}｜${item.questionId}`;
     const prompt = document.createElement("p");
     prompt.textContent = item.prompt;
     article.append(h3, prompt);
-
     if (item.code) {
       const pre = document.createElement("pre");
       pre.className = "code review-code";
       pre.textContent = item.code;
       article.append(pre);
     }
-
     const selected = document.createElement("p");
     selected.innerHTML = "<strong>你的答案：</strong>";
     selected.append(document.createTextNode(item.selected));
@@ -209,6 +206,7 @@ $("review-btn").addEventListener("click", showReview);
 $("share-btn").addEventListener("click", shareResult);
 $("product-btn").addEventListener("click", productInterest);
 $("restart-btn").addEventListener("click", restart);
+$("resources-btn").addEventListener("click", () => $("resources").scrollIntoView({ behavior: "smooth", block: "start" }));
 
 init().catch((err) => {
   console.error(err);
