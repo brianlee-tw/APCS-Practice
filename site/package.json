@@ -8,6 +8,7 @@
     "validate:ui": "node scripts/validate-ui.mjs",
     "validate:free7": "node scripts/validate-free-7day.mjs",
     "validate:free7:enrichment": "node scripts/validate-free-7day-enrichment.mjs",
-    "check": "npm run validate:content && npm run validate:ui && npm run validate:free7 && npm run validate:free7:enrichment && npm test"
+    "validate:free7:deepening": "node scripts/validate-free-7day-deepening.mjs",
+    "check": "npm run validate:content && npm run validate:ui && npm run validate:free7 && npm run validate:free7:enrichment && npm run validate:free7:deepening && npm test"
   }
 }
