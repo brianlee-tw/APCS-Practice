@@ -160,12 +160,12 @@ function renderResult(result, band, recommendation) {
   $("recommend-reason").textContent = recommendation.reason;
   const product = recommendation.product;
   $("product-title").textContent = product?.title ?? "下一階段訓練";
-  $("product-price").textContent = product?.priceTwd ? `預計 NT$${product.priceTwd}` : "免費";
+  $("product-price").textContent = product?.priceTwd ? `預定首發 NT$${product.priceTwd}` : "免費";
   $("product-status").textContent = product?.status === "preparing"
-    ? "準備中，尚未開放購買。"
-    : product?.status === "validation"
-      ? "目前為市場驗證階段，尚未開放付款。"
-      : "此產品仍在規劃中。";
+    ? "產品規格已完成，內容準備中；尚未開放購買。"
+    : product?.status === "available"
+      ? "目前可使用。"
+      : "尚未開放。";
   $("product-btn").dataset.productId = recommendation.productId;
 }
 
