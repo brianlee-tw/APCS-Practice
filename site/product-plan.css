@@ -1,4 +1,4 @@
-/* Q16 — formal product plan library, compact hero, and preview affordances. */
+/* Q17 — formal product plan library with live FREE-7DAY product. */
 .product-library-shell{padding-bottom:96px}
 .library-hero{grid-template-columns:minmax(0,1.1fr) minmax(300px,.52fr);padding-bottom:26px;align-items:start}
 .library-hero h1{max-width:18ch;font-size:clamp(2rem,4vw,3.35rem);line-height:1.04;letter-spacing:-.052em;text-wrap:balance}
@@ -38,6 +38,7 @@
 .product-card-head{align-items:center}
 .product-code{letter-spacing:.04em}
 .product-status{background:var(--accent-soft);color:var(--accent-strong)}
+.product-status.is-available{background:color-mix(in srgb,var(--green) 13%,transparent);color:var(--green)}
 .product-card h3{font-size:1.34rem;line-height:1.28}
 .product-promise{margin:0 0 16px!important;color:var(--text-2)!important;font-size:.96rem;line-height:1.65!important}
 .product-fit{display:grid;gap:7px;margin:0 0 18px;padding:14px 15px;border-radius:14px;background:var(--surface-soft)}
@@ -52,9 +53,10 @@
 .product-preview-copy{min-width:0}
 .product-preview-label{display:block;margin-bottom:4px;color:var(--accent-strong);font-size:.72rem;font-weight:760;letter-spacing:.03em}
 .product-preview-copy p{margin:0;color:var(--text-3);font-size:.81rem;line-height:1.48;text-wrap:pretty}
-.product-preview-action{min-height:36px;display:inline-flex;align-items:center;justify-content:center;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface-soft);color:var(--text);font-size:.79rem;font-weight:700;white-space:nowrap}
-a.product-preview-action:hover{border-color:var(--line-strong);background:var(--surface-raised)}
+.product-preview-action,.product-live-action{min-height:36px;display:inline-flex;align-items:center;justify-content:center;padding:0 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface-soft);color:var(--text);font-size:.79rem;font-weight:700;white-space:nowrap;text-decoration:none}
+a.product-preview-action:hover,.product-live-action:hover{border-color:var(--line-strong);background:var(--surface-raised)}
 .product-preview-action.is-pending{color:var(--text-3);cursor:default}
+.product-live-action{border-color:color-mix(in srgb,var(--accent) 46%,var(--line));background:var(--accent-soft);color:var(--accent-strong)}
 
 .product-card-foot{align-items:center}
 .product-price strong{font-size:1.05rem}
@@ -100,7 +102,7 @@ a.product-preview-action:hover{border-color:var(--line-strong);background:var(--
   .product-stage{padding-top:38px}
   .product-card,.bundle-card{padding:19px;border-radius:18px}
   .product-preview{grid-template-columns:1fr;align-items:start}
-  .product-preview-action{width:fit-content}
+  .product-preview-action,.product-live-action{width:fit-content}
   .product-card-foot,.bundle-foot{align-items:start;flex-direction:column}
   .product-disabled{width:fit-content}
 }

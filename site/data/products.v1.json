@@ -1,6 +1,6 @@
 {
-  "version": "3.0.0",
-  "catalogStatus": "planned_and_preparing",
+  "version": "3.1.0",
+  "catalogStatus": "active_with_preparing_products",
   "products": [
     {
       "id": "FREE-3Q",
@@ -17,10 +17,11 @@
       "stage": "foundation",
       "title": "7 日 APCS 弱點重整計畫",
       "priceTwd": 0,
-      "status": "preparing",
+      "status": "available",
       "duration": "7 days",
       "promise": "用每天 15–25 分鐘，把診斷結果轉成第一週可完成的練習節奏。",
-      "cta": "準備中"
+      "url": "./free-7day.html",
+      "cta": "開始免費 7 日訓練"
     },
     {
       "id": "P1-30DAY",
