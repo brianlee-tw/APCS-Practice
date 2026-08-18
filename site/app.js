@@ -1,7 +1,10 @@
-import { scoreQuiz, levelBand, recommend, topErrorTags, buildReviewItems, buildShareText } from "./js/engine.js";
+import { scoreQuiz, levelBand, recommend, topErrorTags, buildReviewItems, buildShareText, selectQuestionSet } from "./js/engine.js";
 import { track } from "./js/analytics.js";
 
-const state = { questions: [], skills: null, products: [], answers: {}, index: 0, started: false, startedAt: null, reviewItems: [] };
+const state = {
+  fullQuestions: [], questions: [], skills: null, products: [], answers: {}, index: 0,
+  started: false, startedAt: null, reviewItems: [], selectedCount: 15,
+};
 const $ = (id) => document.getElementById(id);
 const labelFor = (id) => state.skills.dimensions.find((d) => d.id === id)?.label ?? id;
 
@@ -17,26 +20,36 @@ async function init() {
     loadJson("./data/skill-model.v1.json"),
     loadJson("./data/products.v1.json"),
   ]);
-  state.questions = bank.questions;
+  state.fullQuestions = bank.questions;
   state.skills = skills;
   state.products = catalog.products;
-  $("question-count").textContent = `${state.questions.length} 題`;
+  $("question-count").textContent = `5 / 10 / ${state.fullQuestions.length} 題可選`;
   $("start-btn").disabled = false;
   track("landing_view", { quizVersion: bank.version });
 }
 
 function show(viewId) {
   for (const el of document.querySelectorAll("[data-view]")) el.hidden = el.id !== viewId;
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  document.body.classList.toggle("quiz-active", viewId === "quiz-view");
+  if (viewId !== "quiz-view") window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
-function startQuiz() {
+function openLengthDialog() {
+  const dialog = $("quiz-length-dialog");
+  if (!dialog.open) dialog.showModal();
+}
+
+function startQuiz(count) {
+  state.selectedCount = count;
+  state.questions = selectQuestionSet(state.fullQuestions, count);
   state.started = true;
   state.startedAt = Date.now();
   state.index = 0;
   state.answers = {};
   state.reviewItems = [];
-  track("quiz_start", { totalQuestions: state.questions.length });
+  $("quiz-length-dialog").close();
+  $("result-mode-label").textContent = `${count} 題${count === 5 ? "快速" : count === 10 ? "標準" : "完整"}版`;
+  track("quiz_start", { totalQuestions: state.questions.length, mode: count });
   renderQuestion();
   show("quiz-view");
 }
@@ -80,6 +93,7 @@ function next() {
   if (state.index < state.questions.length - 1) {
     state.index += 1;
     renderQuestion();
+    $("quiz-scroll").scrollTo({ top: 0, behavior: "smooth" });
   } else finishQuiz();
 }
 
@@ -87,7 +101,26 @@ function back() {
   if (state.index > 0) {
     state.index -= 1;
     renderQuestion();
+    $("quiz-scroll").scrollTo({ top: 0, behavior: "smooth" });
   }
+}
+
+function requestExit() {
+  const dialog = $("exit-quiz-dialog");
+  if (!dialog.open) dialog.showModal();
+}
+
+function confirmExit() {
+  track("quiz_abandon", {
+    answered: Object.keys(state.answers).length,
+    totalQuestions: state.questions.length,
+    mode: state.selectedCount,
+  });
+  $("exit-quiz-dialog").close();
+  state.started = false;
+  state.answers = {};
+  state.index = 0;
+  show("landing-view");
 }
 
 function finishQuiz() {
@@ -96,10 +129,11 @@ function finishQuiz() {
   const band = levelBand(result.overall);
   const elapsedSec = state.startedAt ? Math.round((Date.now() - state.startedAt) / 1000) : null;
   sessionStorage.setItem("apcs_diag_result_v1", JSON.stringify(result));
-  track("quiz_complete", { overall: result.overall, weakest: result.weakest, elapsedSec });
+  track("quiz_complete", { overall: result.overall, weakest: result.weakest, elapsedSec, mode: state.selectedCount });
   renderResult(result, band, recommendation);
+  state.started = false;
   show("result-view");
-  track("result_view", { overall: result.overall, weakest: result.weakest, productId: recommendation.productId });
+  track("result_view", { overall: result.overall, weakest: result.weakest, productId: recommendation.productId, mode: state.selectedCount });
 }
 
 function renderResult(result, band, recommendation) {
@@ -107,6 +141,11 @@ function renderResult(result, band, recommendation) {
   $("band-label").textContent = band.label;
   $("weakest-label").textContent = labelFor(result.weakest);
   $("strongest-label").textContent = labelFor(result.strongest);
+  $("result-confidence-note").textContent = state.selectedCount === 5
+    ? "快速版每項能力只有 1 題，適合快速找方向；若要更穩定的能力分布，建議再做 15 題完整版。"
+    : state.selectedCount === 10
+      ? "標準版每項能力 2 題；若要更細緻地確認弱點，可再做 15 題完整版。"
+      : "完整版每項能力 3 題，適合作為目前版本最完整的能力診斷。";
 
   const bars = $("skill-bars");
   bars.replaceChildren();
@@ -194,18 +233,20 @@ function productInterest(e) {
   $("interest-box").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
-function restart() {
-  track("quiz_restart");
-  startQuiz();
-}
-
-$("start-btn").addEventListener("click", startQuiz);
+$("start-btn").addEventListener("click", openLengthDialog);
 $("next-btn").addEventListener("click", next);
 $("back-btn").addEventListener("click", back);
+$("exit-quiz-btn").addEventListener("click", requestExit);
+$("exit-cancel-btn").addEventListener("click", () => $("exit-quiz-dialog").close());
+$("exit-confirm-btn").addEventListener("click", confirmExit);
+$("length-cancel-btn").addEventListener("click", () => $("quiz-length-dialog").close());
+for (const button of document.querySelectorAll("[data-quiz-count]")) {
+  button.addEventListener("click", () => startQuiz(Number(button.dataset.quizCount)));
+}
 $("review-btn").addEventListener("click", showReview);
 $("share-btn").addEventListener("click", shareResult);
 $("product-btn").addEventListener("click", productInterest);
-$("restart-btn").addEventListener("click", restart);
+$("restart-btn").addEventListener("click", openLengthDialog);
 $("resources-btn").addEventListener("click", () => $("resources").scrollIntoView({ behavior: "smooth", block: "start" }));
 
 init().catch((err) => {
