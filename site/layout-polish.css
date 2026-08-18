@@ -1,35 +1,38 @@
-/* Q13 layout polish: reduce hero dominance, remove navigation chrome, keep theme control floating. */
+/* Q13/Q15 layout polish: compact hero, floating theme control, no navigation chrome. */
 
 .site-header{display:none!important}
 .floating-theme-toggle{
   position:fixed;
-  top:18px;
-  right:18px;
-  z-index:50;
+  top:12px;
+  right:12px;
+  z-index:80;
+  width:42px;
+  height:42px;
   min-height:42px;
-  padding:0 13px;
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
+  padding:0;
+  display:inline-grid;
+  place-items:center;
   border:1px solid var(--line);
   border-radius:999px;
   color:var(--text-2);
-  background:color-mix(in srgb,var(--surface) 86%,transparent);
+  background:color-mix(in srgb,var(--surface) 84%,transparent);
   backdrop-filter:blur(18px);
   -webkit-backdrop-filter:blur(18px);
-  box-shadow:var(--shadow-card);
+  box-shadow:0 8px 28px rgba(0,0,0,.12);
   cursor:pointer;
   font-size:.88rem;
   font-weight:650;
   transition:background var(--ease-standard),border-color var(--ease-standard),color var(--ease-standard),transform var(--ease-standard)
 }
+.floating-theme-toggle .theme-label{display:none}
+.floating-theme-toggle .theme-icon{width:auto;line-height:1}
 .floating-theme-toggle:hover{color:var(--text);background:var(--surface-raised);border-color:var(--line-strong);transform:translateY(-1px)}
-.floating-theme-toggle:active{transform:scale(.97)}
+.floating-theme-toggle:active{transform:scale(.96)}
 
-main{padding-top:22px}
+main{padding-top:0}
 .hero{
   min-height:auto;
-  padding:72px 0 62px;
+  padding:28px 0 56px;
   gap:clamp(30px,5vw,64px);
 }
 .hero-copy{max-width:640px}
@@ -38,6 +41,7 @@ main{padding-top:22px}
   font-size:clamp(2.55rem,5.4vw,4.7rem);
   line-height:1.01;
   letter-spacing:-.055em;
+  font-weight:760;
   text-wrap:balance;
 }
 .lead{
@@ -104,21 +108,30 @@ main{padding-top:22px}
 .article-back:hover{color:var(--text)}
 .article-shell h1,.article-shell h2,.article-shell p,.article-shell li{text-wrap:pretty}
 
+/* Q15: the floating toggle never reserves document flow; tighten all page tops. */
+.inline-nav{padding-top:18px!important}
+.guide-shell{padding-top:26px!important}
+.product-library-shell{padding-top:24px!important}
+.library-hero{padding-top:0}
+
 @media(max-width:860px){
-  .hero{padding-top:74px}
+  .hero{padding-top:26px}
   .hero h1{max-width:11ch;font-size:clamp(2.45rem,9vw,4rem)}
   .lead-line{display:inline}
   .lead-line+.lead-line::before{content:" "}
+  .guide-shell{padding-top:22px!important}
+  .product-library-shell{padding-top:20px!important}
 }
 
 @media(max-width:620px){
-  .floating-theme-toggle{top:12px;right:12px;min-height:40px;padding:0 11px}
-  .theme-label{display:none}
-  .hero{padding:68px 0 48px}
+  .floating-theme-toggle{top:10px;right:10px;width:38px;height:38px;min-height:38px}
+  .hero{padding:20px 0 44px}
   .hero h1{max-width:10ch;font-size:clamp(2.35rem,12vw,3.45rem);line-height:1.03}
   .hero-actions{margin-top:27px}
   .launch-action{min-height:82px}
   .launch-meta{max-width:25ch}
   .preview-track{height:36px}
   .preview-footer{font-size:.8rem}
+  .inline-nav{padding-top:14px!important}
+  .guide-shell,.product-library-shell{padding-top:16px!important}
 }
