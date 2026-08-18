@@ -1,0 +1,42 @@
+/* FREE-7DAY v1.2 — deep self-study layer. */
+.deep-opening{padding-top:30px}
+.deep-opening-copy{margin:0;padding:18px 20px;border-left:3px solid var(--accent);border-radius:0 14px 14px 0;background:var(--surface-soft);color:var(--text-2);font-size:1.02rem;line-height:1.85;text-wrap:pretty}
+.deep-paragraph{max-width:780px;margin:0 0 14px;color:var(--text-2);font-size:.98rem;line-height:1.83;text-wrap:pretty}
+.deep-paragraph:last-child{margin-bottom:0}
+.deep-dive{display:grid;gap:13px}
+.deep-dive>h3{grid-column:1/-1}
+.deep-dive-card{padding:18px 19px;border:1px solid var(--line);border-radius:16px;background:var(--surface)}
+.deep-dive-head{display:grid;grid-template-columns:34px 1fr;gap:10px;align-items:start;margin-bottom:10px}
+.deep-index{width:30px;height:30px;display:grid;place-items:center;border-radius:9px;background:var(--accent-soft);color:var(--accent-strong);font:700 .7rem/1 var(--font-mono)}
+.deep-dive-card h4{margin:4px 0 0;font-size:1rem;letter-spacing:-.02em}
+.deep-code{margin-top:15px}
+.deep-walkthrough{display:grid;gap:8px;margin:15px 0 0;padding-left:24px;color:var(--text-2);line-height:1.62}
+.deep-section-intro{margin:0 0 14px;color:var(--text-3);font-size:.9rem;line-height:1.65}
+.deep-drill,.deep-details,.deep-solution{border:1px solid var(--line);border-radius:13px;background:var(--surface);overflow:hidden}
+.deep-drill+.deep-drill,.deep-details+.deep-details,.deep-solution+.deep-solution{margin-top:9px}
+.deep-drill summary,.deep-details summary,.deep-solution summary{padding:13px 15px;cursor:pointer;color:var(--text);font-weight:680;line-height:1.5}
+.deep-drill[open] summary,.deep-details[open] summary,.deep-solution[open] summary{border-bottom:1px solid var(--line);background:var(--surface-soft)}
+.deep-answer,.deep-details>p,.deep-solution>p{padding:14px 15px}
+.deep-answer strong{display:block;margin-bottom:5px;color:var(--accent-strong)}
+.deep-answer p,.deep-details>p,.deep-solution>p{margin:0;color:var(--text-2);line-height:1.7}
+.myth-card{display:grid;gap:6px;padding:15px 16px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+.myth-card+.myth-card{margin-top:9px}
+.myth-label{color:var(--amber);font-size:.9rem}
+.myth-card p{margin:0;color:var(--text-2);line-height:1.68}
+.deep-note{width:100%;min-height:120px;margin-top:14px;padding:13px 14px;border:1px solid var(--line);border-radius:13px;background:var(--surface);color:var(--text);font:500 .9rem/1.6 var(--font-mono);resize:vertical}
+.deep-hints{display:grid;gap:8px;margin-top:12px}
+.deep-transfer>.deep-solution,.deep-optional>.deep-solution,.deep-optional>.deep-details{margin-top:9px}
+.deep-optional{margin-top:4px;padding-left:18px;padding-right:18px;border-left:3px solid color-mix(in srgb,var(--amber) 65%,var(--line));background:linear-gradient(90deg,color-mix(in srgb,var(--amber) 5%,transparent),transparent 60%)}
+.deep-recap-list{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin:0;padding:0;list-style:none}
+.deep-recap-list li{position:relative;padding:13px 14px 13px 38px;border:1px solid var(--line);border-radius:13px;background:var(--surface);color:var(--text-2);line-height:1.55}
+.deep-recap-list li::before{content:"✓";position:absolute;left:14px;top:13px;color:var(--accent-strong);font-weight:800}
+.deep-glossary-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:0}
+.deep-glossary-item{padding:14px 15px;border-top:1px solid var(--line)}
+.deep-glossary-item dt{margin:0 0 5px;color:var(--text);font:700 .82rem/1.3 var(--font-mono)}
+.deep-glossary-item dd{margin:0;color:var(--text-3);font-size:.86rem;line-height:1.58}
+@media(max-width:720px){
+  .deep-recap-list,.deep-glossary-grid{grid-template-columns:1fr}
+  .deep-opening-copy{padding:16px 17px;font-size:.97rem;line-height:1.78}
+  .deep-dive-card{padding:16px}
+  .deep-optional{padding-left:14px;padding-right:14px}
+}
