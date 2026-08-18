@@ -1,3 +1,5 @@
+import './product-library.js';
+
 const THEME_KEY = 'apcs_theme_preference';
 
 export function preferredTheme(storage = window.localStorage, media = window.matchMedia('(prefers-color-scheme: dark)')) {
