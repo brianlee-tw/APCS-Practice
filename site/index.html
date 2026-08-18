@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>APCS 15 題免費能力診斷｜找出最容易失分的地方</title>
+  <meta name="description" content="用 15 題 C++／APCS 練習題，約 8–12 分鐘診斷語法、讀碼、除錯、演算法與實作五項能力。不用登入即可開始。">
+  <meta name="robots" content="index,follow">
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="APCS 15 題免費能力診斷">
+  <meta property="og:description" content="約 8–12 分鐘，找出你的 APCS 最弱能力與下一步練習方向。">
+  <link rel="stylesheet" href="./styles.css">
+  <link rel="manifest" href="./manifest.webmanifest">
+  <script type="application/ld+json">
+  {"@context":"https://schema.org","@type":"WebApplication","name":"APCS 15 題免費能力診斷","applicationCategory":"EducationalApplication","operatingSystem":"Web","inLanguage":"zh-TW","offers":{"@type":"Offer","price":"0","priceCurrency":"TWD"}}
+  </script>
+</head>
+<body>
+  <header class="site-header"><a class="brand" href="./">APCS Diagnostic</a><a href="./privacy.html">隱私說明</a></header>
+  <main>
+    <section id="landing-view" data-view class="hero">
+      <p class="eyebrow">免費・不用登入・約 8–12 分鐘</p>
+      <h1>15 題找出你 APCS<br>最容易失分的地方</h1>
+      <p class="lead">不只算總分。測驗會分別檢查 <strong>語法、讀碼、除錯、演算法、題意轉實作</strong> 五項能力，再給你下一步練習方向。</p>
+      <div class="chips" aria-label="測驗特色"><span id="question-count">載入中</span><span>C++</span><span>五維診斷</span><span>立即看結果</span></div>
+      <button id="start-btn" class="primary" disabled>開始免費診斷</button>
+      <p id="load-error" class="error" hidden>題庫載入失敗，請重新整理頁面。</p>
+      <p class="fine-print">這是練習方向診斷，不是官方 APCS 測驗，也不保證級分或升學結果。</p>
+    </section>
+
+    <section id="quiz-view" data-view hidden class="panel quiz-panel">
+      <div class="progress-wrap"><span id="progress-label"></span><progress id="progress" value="1" max="15"></progress></div>
+      <h2 id="question-prompt"></h2>
+      <pre id="question-code" class="code" hidden><code></code></pre>
+      <div id="choices" class="choices" role="radiogroup" aria-label="選項"></div>
+      <div class="actions"><button id="back-btn" class="secondary">上一題</button><button id="next-btn" class="primary" disabled>下一題</button></div>
+    </section>
+
+    <section id="result-view" data-view hidden class="panel result-panel">
+      <p class="eyebrow">你的診斷結果</p>
+      <div class="score-card"><div><span id="overall-score" class="score">—</span><span>/100</span></div><strong id="band-label"></strong></div>
+      <div class="result-summary"><p>最需要補強：<strong id="weakest-label"></strong></p><p>目前最穩定：<strong id="strongest-label"></strong></p></div>
+      <h2>五項能力</h2>
+      <div id="skill-bars" class="skill-bars"></div>
+      <div class="diagnosis-box"><h3>常見錯誤訊號</h3><p id="error-tags"></p></div>
+      <div class="recommend-box"><p class="eyebrow">建議下一步</p><h2 id="product-title"></h2><p id="recommend-reason"></p><p><strong id="product-price"></strong></p><p id="product-status" class="fine-print"></p><button id="product-btn" class="primary">我對這個訓練有興趣</button></div>
+      <div id="interest-box" class="interest-box" hidden><strong>已記錄在這個瀏覽器的匿名事件佇列。</strong><p>目前尚未接 Email 或付款後端，因此不會要求你輸入個資。正式驗證階段會再開放首發通知。</p></div>
+      <div class="actions wrap"><button id="share-btn" class="secondary">分享診斷結果</button><button id="restart-btn" class="secondary">重新測一次</button></div>
+      <p id="share-status" class="fine-print" aria-live="polite"></p>
+    </section>
+
+    <section class="trust">
+      <h2>這份診斷在測什麼？</h2>
+      <div class="trust-grid"><article><h3>不是人格測驗</h3><p>每題都有可驗證的正確答案與解釋，結果直接由作答計算。</p></article><article><h3>不靠 AI 猜程度</h3><p>推薦規則固定、可重現；之後才能做可信的 A/B Test。</p></article><article><h3>匿名優先</h3><p>第一版不要求姓名、學校或帳號。事件只保存在瀏覽器，除非之後明確接上後端。</p></article></div>
+    </section>
+
+    <section class="guides"><h2>免費練習資源</h2><div class="guide-grid"><a href="./guides/vector-out-of-range.html">C++ vector 越界：最常見的 off-by-one</a><a href="./guides/tle.html">TLE 怎麼判斷：先看複雜度再優化</a><a href="./guides/prefix-sum.html">Prefix Sum：區間總和為什麼能變 O(1)</a></div></section>
+  </main>
+  <footer><p>APCS Diagnostic — 學習用非官方工具。<a href="https://github.com/brianlee-tw/APCS-Practice">APCS-Practice GitHub</a></p></footer>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
