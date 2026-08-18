@@ -89,6 +89,29 @@ export function topErrorTags(misses, limit = 3) {
     .map(([tag, count]) => ({ tag, count }));
 }
 
+export function buildReviewItems(questions, misses, preferredDimension, limit = 3) {
+  const byId = new Map(questions.map((q) => [q.id, q]));
+  const ordered = [...misses].sort((a, b) => {
+    const aPreferred = a.dimension === preferredDimension ? 1 : 0;
+    const bPreferred = b.dimension === preferredDimension ? 1 : 0;
+    return bPreferred - aPreferred;
+  });
+
+  return ordered.slice(0, limit).flatMap((miss) => {
+    const q = byId.get(miss.questionId);
+    if (!q) return [];
+    return [{
+      questionId: q.id,
+      dimension: q.dimension,
+      prompt: q.prompt,
+      code: q.code ?? "",
+      selected: Number.isInteger(miss.selectedIndex) ? q.choices[miss.selectedIndex] : "未作答",
+      correct: q.choices[q.correctIndex],
+      explanation: q.explanation,
+    }];
+  });
+}
+
 export function buildShareText(result, skillModel) {
   const labels = Object.fromEntries(skillModel.dimensions.map((d) => [d.id, d.label]));
   return [

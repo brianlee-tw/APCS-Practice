@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { scoreQuiz, levelBand, recommend, topErrorTags, validateQuestionBank } from "../js/engine.js";
+import { scoreQuiz, levelBand, recommend, topErrorTags, buildReviewItems, validateQuestionBank } from "../js/engine.js";
 
 const bank = JSON.parse(fs.readFileSync(new URL("../data/questions.v1.json", import.meta.url), "utf8"));
 const catalog = JSON.parse(fs.readFileSync(new URL("../data/products.v1.json", import.meta.url), "utf8"));
@@ -41,4 +41,16 @@ test("debug weakness routes to debug product when overall is not low", () => {
 test("topErrorTags aggregates repeated tags", () => {
   const tags = topErrorTags([{ errorTags: ["a", "b"] }, { errorTags: ["a"] }]);
   assert.deepEqual(tags[0], { tag: "a", count: 2 });
+});
+
+test("wrong-answer review prioritizes the weakest dimension and never exceeds limit", () => {
+  const answers = Object.fromEntries(bank.questions.map((q) => [q.id, q.correctIndex]));
+  const debugQuestions = bank.questions.filter((q) => q.dimension === "debug");
+  const syntaxQuestion = bank.questions.find((q) => q.dimension === "syntax");
+  for (const q of [...debugQuestions, syntaxQuestion]) answers[q.id] = (q.correctIndex + 1) % q.choices.length;
+  const r = scoreQuiz(bank.questions, answers);
+  const review = buildReviewItems(bank.questions, r.misses, "debug", 3);
+  assert.equal(review.length, 3);
+  assert.ok(review.every((item) => item.dimension === "debug"));
+  assert.ok(review.every((item) => item.correct && item.explanation));
 });
