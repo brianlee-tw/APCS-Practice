@@ -76,6 +76,9 @@ export function initProductLibrary() {
   const eyebrow = shell.querySelector('.library-hero .eyebrow');
   if (eyebrow) eyebrow.textContent = 'Product Library · 不是更多教材';
 
+  const catalogStatus = shell.querySelector('.library-status-note strong');
+  if (catalogStatus) catalogStatus.textContent = 'FREE-7DAY 已開放 · 其餘內容準備中';
+
   for (const card of shell.querySelectorAll('.product-card')) {
     const code = card.querySelector('.product-code')?.textContent?.trim();
     if (!code) continue;
