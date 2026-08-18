@@ -21,6 +21,7 @@ const files = {
   theme: fs.readFileSync(new URL('../js/theme.js', import.meta.url), 'utf8'),
   polish: fs.readFileSync(new URL('../layout-polish.css', import.meta.url), 'utf8'),
   experience: fs.readFileSync(new URL('../experience.css', import.meta.url), 'utf8'),
+  productPlan: fs.readFileSync(new URL('../product-plan.css', import.meta.url), 'utf8'),
 };
 const products = JSON.parse(fs.readFileSync(new URL('../data/products.v1.json', import.meta.url), 'utf8'));
 
@@ -51,14 +52,22 @@ if (!files.app.includes('quiz_abandon')) errors.push('quiz exit/abandon event mi
 if (!files.app.includes('buildReviewItems')) errors.push('free review logic missing from app.js');
 if (!files.theme.includes('apcs_theme_preference')) errors.push('theme persistence key missing');
 if (!files.polish.includes('.floating-theme-toggle')) errors.push('floating theme CSS missing');
+if (!files.polish.includes('width:42px') || !files.polish.includes('position:fixed')) errors.push('theme toggle must be compact and removed from document flow');
+if (!files.polish.includes('padding:28px 0 56px')) errors.push('desktop hero top spacing was not tightened');
 if (!files.experience.includes('.guide-shell')) errors.push('redesigned guide system missing');
 for (const key of ['vector','tle','prefix']) {
   if (!files[key].includes('guide-hero') || !files[key].includes('guide-content') || !files[key].includes('experience.css')) errors.push(`${key} guide did not migrate to Q14 design`);
 }
-if (!files.productsHtml.includes('Product Library') || !files.productsHtml.includes('全部準備中')) errors.push('product library shell/status missing');
+if (!files.productsHtml.includes('Product Library') || !files.productsHtml.includes('產品規格完成 · 內容準備中')) errors.push('formal product library status missing');
+if (!files.productsHtml.includes('product-plan.css')) errors.push('formal product-plan stylesheet missing');
+for (const requiredProduct of ['P1-30DAY','P2-DEBUG','P3-CONCEPT','P3-INTERMEDIATE','P3-ADVANCED','P4-SPRINT','P4-MOCK','P5-POSTEXAM','P6-GITHUB','P7-PORTFOLIO','P8-AI-CODING','B1-APCS-CORE','B2-PORTFOLIO','B3-APCS-PREP']) {
+  if (!files.productsHtml.includes(requiredProduct)) errors.push(`product library missing ${requiredProduct}`);
+}
 const futureProducts = products.products.filter((p) => p.id !== 'FREE-3Q');
-if (futureProducts.length < 10) errors.push(`expected at least 10 future product slots, got ${futureProducts.length}`);
+if (futureProducts.length < 15) errors.push(`expected at least 15 future product slots, got ${futureProducts.length}`);
 for (const p of futureProducts) if (p.status !== 'preparing') errors.push(`${p.id} must be preparing`);
+if (futureProducts.some((p) => p.status === 'validation')) errors.push('formal product catalog must not use validation status');
+if (!files.productPlan.includes('.product-deliverables') || !files.productPlan.includes('.bundle-grid')) errors.push('formal product-card detail system missing');
 
 if (errors.length) {
   console.error(errors.join('\n'));
