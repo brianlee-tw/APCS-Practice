@@ -44,7 +44,7 @@ for (const marker of [
 
 for (const marker of ['.teaching-story','.lesson-playground','.self-check-option','.playground-output','@media(max-width:620px)']) if (!css.includes(marker)) errors.push(`enrichment CSS missing ${marker}`);
 if (!html.includes('./free-product-enrichment.css') || !html.includes('./js/free-7day-enrichment.js')) errors.push('FREE-7DAY enrichment assets not wired into page');
-if (!html.includes('每天約 30–45 分鐘')) errors.push('FREE-7DAY enriched time promise missing from page');
+if (!html.includes('每天約 30–45 分鐘') && !html.includes('45–60 分鐘核心')) errors.push('FREE-7DAY enriched-or-deepened time promise missing from page');
 
 const syntax = spawnSync(process.execPath, ['--check', new URL('../js/free-7day-enrichment.js', import.meta.url).pathname], { encoding: 'utf8' });
 if (syntax.status !== 0) errors.push(`enrichment JS syntax check failed: ${syntax.stderr || syntax.stdout}`);
