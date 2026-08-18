@@ -1,1 +1,16 @@
-{"version":"1.0.0","products":[{"id":"FREE-3Q","type":"free","title":"弱點 3 題微訓練","priceTwd":0,"status":"planned","cta":"先做 3 題免費弱點練習"},{"id":"P1-30DAY","type":"paid","title":"APCS 程式實作 初級→中級 30 天診斷訓練包","priceTwd":149,"regularPriceTwd":199,"status":"validation","cta":"查看 30 天訓練包"},{"id":"P2-DEBUG","type":"paid","title":"C++ Bug 診斷／弱點修復迷你包","priceTwd":99,"status":"validation","cta":"查看 Debug 修復包"},{"id":"P3-INTERMEDIATE","type":"paid","title":"APCS 中級實作強化包","priceTwd":249,"status":"planned","cta":"查看中級強化包"},{"id":"P4-MOCK","type":"paid","title":"APCS 模擬考 Pack","priceTwd":99,"status":"planned","cta":"查看模擬考"}]}
+{
+  "version": "2.0.0",
+  "products": [
+    {"id":"FREE-3Q","type":"free","stage":"current","title":"弱點 3 題微訓練","priceTwd":0,"status":"available","cta":"先做 3 題免費弱點練習"},
+    {"id":"FREE-7DAY","type":"free","stage":"foundation","title":"7 日 APCS 微訓練","priceTwd":0,"status":"preparing","cta":"準備中"},
+    {"id":"P1-30DAY","type":"paid","stage":"foundation","title":"APCS 程式實作 初級→中級 30 天診斷訓練包","priceTwd":149,"regularPriceTwd":199,"status":"preparing","cta":"準備中"},
+    {"id":"P2-DEBUG","type":"paid","stage":"repair","title":"C++ Bug 診斷／弱點修復迷你包","priceTwd":99,"status":"preparing","cta":"準備中"},
+    {"id":"P3-INTERMEDIATE","type":"paid","stage":"growth","title":"APCS 中級實作強化包","priceTwd":249,"status":"preparing","cta":"準備中"},
+    {"id":"P4-MOCK","type":"paid","stage":"exam","title":"APCS 模擬考 Pack","priceTwd":99,"status":"preparing","cta":"準備中"},
+    {"id":"P5-POSTEXAM","type":"paid","stage":"exam","title":"APCS 考後弱點修復包","priceTwd":149,"status":"preparing","cta":"準備中"},
+    {"id":"P6-GITHUB","type":"paid","stage":"portfolio","title":"GitHub 程式作品集工具包","priceTwd":229,"status":"preparing","cta":"準備中"},
+    {"id":"P7-PORTFOLIO","type":"paid","stage":"portfolio","title":"資訊類學習歷程整理工具包","priceTwd":249,"status":"preparing","cta":"準備中"},
+    {"id":"P8-AI-CODING","type":"paid","stage":"project","title":"AI Coding 專題實作包","priceTwd":299,"status":"preparing","cta":"準備中"},
+    {"id":"P9-SEASON","type":"bundle","stage":"continuity","title":"APCS 季度訓練 Season Pass","priceTwd":null,"status":"preparing","cta":"準備中"}
+  ]
+}
