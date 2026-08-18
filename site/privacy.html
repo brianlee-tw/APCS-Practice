@@ -5,9 +5,10 @@
   <title>隱私說明｜APCS Diagnostic</title>
   <script>(function(){try{var s=localStorage.getItem('apcs_theme_preference');var t=s==='light'||s==='dark'?s:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t}catch(_){}})();</script>
   <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./layout-polish.css">
 </head>
 <body>
-  <header class="site-header"><div class="shell site-header-inner"><a class="brand" href="./"><span class="brand-mark">A+</span><span class="brand-copy"><span class="brand-title">APCS Diagnostic</span><span class="brand-subtitle">C++ skill check</span></span></a><div class="header-actions"><a class="header-link" href="./">回首頁</a><button class="theme-toggle" type="button" data-theme-toggle><span class="theme-icon" data-theme-icon>☾</span><span class="theme-label" data-theme-label>深色</span></button></div></div></header>
-  <main><article class="article-shell"><p class="eyebrow">Privacy</p><h1>隱私說明</h1><p>目前的 MVP 採匿名優先設計，不要求姓名、學校、帳號或 Email。</p><h2>瀏覽器內事件</h2><p>測驗開始、作答、完成與商品興趣等事件會暫存在你的瀏覽器 <code>localStorage</code>，目的是驗證事件 schema 與使用流程。</p><h2>遠端分析狀態</h2><p>程式已預留匿名遠端分析介面，但目前分析端點是空白、預設關閉，因此事件不會自動送到專案擁有者。未來若啟用，遠端事件只允許漏斗必要欄位與單次瀏覽階段的隨機 session ID；不傳每題答案、姓名、Email、學校、永久使用者 ID 或精確總分。</p><h2>分享</h2><p>分享結果只包含總分、最弱與最強能力，不含你的每題答案或身分資訊。</p><h2>啟用第三方服務前</h2><p>若未來加入遠端分析、Email 或付款服務，本頁必須在啟用前更新，說明蒐集欄位、用途、保存期間與第三方處理者；分析服務也必須先確認其平台層級日誌與 IP 保存政策。</p></article></main>
+  <button class="theme-toggle floating-theme-toggle" type="button" data-theme-toggle><span class="theme-icon" data-theme-icon>☾</span><span class="theme-label" data-theme-label>深色</span></button>
+  <main><article class="article-shell"><a class="article-back" href="./">← 回到診斷</a><p class="eyebrow">Privacy</p><h1>隱私說明</h1><p>目前的 MVP 採匿名優先設計，<br>不要求姓名、學校、帳號或 Email。</p><h2>瀏覽器內事件</h2><p>測驗開始、作答、完成與商品興趣等事件會暫存在你的瀏覽器 <code>localStorage</code>。<br>目的是驗證事件 schema 與使用流程。</p><h2>遠端分析狀態</h2><p>程式已預留匿名遠端分析介面，但目前分析端點是空白、預設關閉，因此事件不會自動送到專案擁有者。</p><p>未來若啟用，遠端事件只允許漏斗必要欄位與單次瀏覽階段的隨機 session ID；不傳每題答案、姓名、Email、學校、永久使用者 ID 或精確總分。</p><h2>分享</h2><p>分享結果只包含總分、最弱與最強能力，<br>不含你的每題答案或身分資訊。</p><h2>啟用第三方服務前</h2><p>若未來加入遠端分析、Email 或付款服務，本頁必須在啟用前更新，說明蒐集欄位、用途、保存期間與第三方處理者。</p><p>分析服務也必須先確認其平台層級日誌與 IP 保存政策。</p></article></main>
   <script type="module" src="./js/theme.js"></script>
 </body></html>
