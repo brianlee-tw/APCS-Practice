@@ -1,5 +1,17 @@
 const DIMENSIONS = ["syntax", "reading", "debug", "algorithm", "implementation"];
 
+export function selectBalancedQuestions(questions, count) {
+  if (![5, 10, 15].includes(count)) throw new Error(`Unsupported quiz count: ${count}`);
+  const perDimension = count / DIMENSIONS.length;
+  const selected = [];
+  for (const dimension of DIMENSIONS) {
+    const pool = questions.filter((q) => q.dimension === dimension);
+    if (pool.length < perDimension) throw new Error(`Not enough questions for ${dimension}: need ${perDimension}`);
+    selected.push(...pool.slice(0, perDimension));
+  }
+  return selected;
+}
+
 export function scoreQuiz(questions, answers) {
   const byDimension = Object.fromEntries(DIMENSIONS.map((id) => [id, { correct: 0, total: 0 }]));
   const misses = [];
@@ -115,7 +127,7 @@ export function buildReviewItems(questions, misses, preferredDimension, limit = 
 export function buildShareText(result, skillModel) {
   const labels = Object.fromEntries(skillModel.dimensions.map((d) => [d.id, d.label]));
   return [
-    `我的 APCS 15 題診斷：${result.overall}/100`,
+    `我的 APCS ${result.total} 題診斷：${result.overall}/100`,
     `最需補強：${labels[result.weakest] ?? result.weakest}`,
     `最穩定：${labels[result.strongest] ?? result.strongest}`,
     "這不是正式 APCS 成績，只是練習方向診斷。",
