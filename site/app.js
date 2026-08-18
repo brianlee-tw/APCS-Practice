@@ -1,7 +1,7 @@
-import { scoreQuiz, levelBand, recommend, topErrorTags, buildShareText } from "./js/engine.js";
+import { scoreQuiz, levelBand, recommend, topErrorTags, buildReviewItems, buildShareText } from "./js/engine.js";
 import { track } from "./js/analytics.js";
 
-const state = { questions: [], skills: null, products: [], answers: {}, index: 0, started: false, startedAt: null };
+const state = { questions: [], skills: null, products: [], answers: {}, index: 0, started: false, startedAt: null, reviewItems: [] };
 const $ = (id) => document.getElementById(id);
 const labelFor = (id) => state.skills.dimensions.find((d) => d.id === id)?.label ?? id;
 
@@ -35,6 +35,7 @@ function startQuiz() {
   state.startedAt = Date.now();
   state.index = 0;
   state.answers = {};
+  state.reviewItems = [];
   track("quiz_start", { totalQuestions: state.questions.length });
   renderQuestion();
   show("quiz-view");
@@ -118,12 +119,58 @@ function renderResult(result, band, recommendation) {
 
   const errors = topErrorTags(result.misses, 3);
   $("error-tags").textContent = errors.length ? errors.map((e) => e.tag).join("、") : "目前沒有明顯集中錯誤";
+
+  state.reviewItems = buildReviewItems(state.questions, result.misses, result.weakest, 3);
+  $("review-list").replaceChildren();
+  $("review-list").hidden = true;
+  $("review-btn").hidden = state.reviewItems.length === 0;
+  $("review-empty").hidden = state.reviewItems.length !== 0;
+  $("review-btn").textContent = `免費看 ${state.reviewItems.length} 個錯題解析`;
+
   $("recommend-reason").textContent = recommendation.reason;
   const product = recommendation.product;
   $("product-title").textContent = product?.title ?? "下一階段訓練";
   $("product-price").textContent = product?.priceTwd ? `預計首發 NT$${product.priceTwd}` : "免費";
   $("product-status").textContent = product?.status === "validation" ? "目前為市場驗證階段，尚未開放付款。" : "此產品仍在規劃中。";
   $("product-btn").dataset.productId = recommendation.productId;
+}
+
+function showReview() {
+  const list = $("review-list");
+  list.replaceChildren();
+  for (const [idx, item] of state.reviewItems.entries()) {
+    const article = document.createElement("article");
+    article.className = "review-card";
+
+    const h3 = document.createElement("h3");
+    h3.textContent = `${idx + 1}. ${labelFor(item.dimension)}｜${item.questionId}`;
+    const prompt = document.createElement("p");
+    prompt.textContent = item.prompt;
+    article.append(h3, prompt);
+
+    if (item.code) {
+      const pre = document.createElement("pre");
+      pre.className = "code review-code";
+      pre.textContent = item.code;
+      article.append(pre);
+    }
+
+    const selected = document.createElement("p");
+    selected.innerHTML = "<strong>你的答案：</strong>";
+    selected.append(document.createTextNode(item.selected));
+    const correct = document.createElement("p");
+    correct.innerHTML = "<strong>正確答案：</strong>";
+    correct.append(document.createTextNode(item.correct));
+    const explanation = document.createElement("p");
+    explanation.className = "review-explanation";
+    explanation.textContent = item.explanation;
+    article.append(selected, correct, explanation);
+    list.append(article);
+  }
+  list.hidden = false;
+  $("review-btn").hidden = true;
+  track("free_review_open", { count: state.reviewItems.length });
+  list.scrollIntoView({ behavior: "smooth", block: "start" });
 }
 
 async function shareResult() {
@@ -158,6 +205,7 @@ function restart() {
 $("start-btn").addEventListener("click", startQuiz);
 $("next-btn").addEventListener("click", next);
 $("back-btn").addEventListener("click", back);
+$("review-btn").addEventListener("click", showReview);
 $("share-btn").addEventListener("click", shareResult);
 $("product-btn").addEventListener("click", productInterest);
 $("restart-btn").addEventListener("click", restart);
