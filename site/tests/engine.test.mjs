@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import fs from "node:fs";
-import { scoreQuiz, levelBand, recommend, topErrorTags, buildReviewItems, validateQuestionBank } from "../js/engine.js";
+import { scoreQuiz, levelBand, recommend, topErrorTags, buildReviewItems, validateQuestionBank, selectBalancedQuestions } from "../js/engine.js";
 
 const bank = JSON.parse(fs.readFileSync(new URL("../data/questions.v1.json", import.meta.url), "utf8"));
 const catalog = JSON.parse(fs.readFileSync(new URL("../data/products.v1.json", import.meta.url), "utf8"));
@@ -9,6 +9,21 @@ const catalog = JSON.parse(fs.readFileSync(new URL("../data/products.v1.json", i
 test("question bank is structurally valid", () => {
   assert.deepEqual(validateQuestionBank(bank), []);
   assert.equal(bank.questions.length, 15);
+});
+
+test("5 10 and 15 question modes stay balanced across five dimensions", () => {
+  for (const count of [5, 10, 15]) {
+    const selected = selectBalancedQuestions(bank.questions, count);
+    assert.equal(selected.length, count);
+    const perDimension = count / 5;
+    const counts = new Map();
+    for (const q of selected) counts.set(q.dimension, (counts.get(q.dimension) ?? 0) + 1);
+    assert.deepEqual([...counts.values()].sort(), Array(5).fill(perDimension));
+  }
+});
+
+test("unsupported question counts are rejected", () => {
+  assert.throws(() => selectBalancedQuestions(bank.questions, 7), /Unsupported quiz count/);
 });
 
 test("all-correct answers produce 100 across dimensions", () => {
@@ -19,6 +34,15 @@ test("all-correct answers produce 100 across dimensions", () => {
   for (const score of Object.values(r.scores)) assert.equal(score, 100);
   assert.equal(levelBand(r.overall).id, "strong");
   assert.equal(recommend(r, catalog.products).productId, "P4-MOCK");
+});
+
+test("five-question all-correct mode still scores all dimensions at 100", () => {
+  const questions = selectBalancedQuestions(bank.questions, 5);
+  const answers = Object.fromEntries(questions.map((q) => [q.id, q.correctIndex]));
+  const r = scoreQuiz(questions, answers);
+  assert.equal(r.total, 5);
+  assert.equal(r.overall, 100);
+  for (const score of Object.values(r.scores)) assert.equal(score, 100);
 });
 
 test("all-wrong answers produce foundation recommendation", () => {
