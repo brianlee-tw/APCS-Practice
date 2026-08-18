@@ -1,7 +1,16 @@
-import { scoreQuiz, levelBand, recommend, topErrorTags, buildReviewItems, buildShareText } from "./js/engine.js";
+import { scoreQuiz, levelBand, recommend, topErrorTags, buildReviewItems, buildShareText, selectBalancedQuestions } from "./js/engine.js";
 import { track } from "./js/analytics.js";
 
-const state = { questions: [], skills: null, products: [], answers: {}, index: 0, started: false, startedAt: null, reviewItems: [] };
+const MODE_META = {
+  5: { label: "5 題快速診斷", time: "約 3–4 分鐘" },
+  10: { label: "10 題標準診斷", time: "約 6–8 分鐘" },
+  15: { label: "15 題完整診斷", time: "約 8–12 分鐘" },
+};
+
+const state = {
+  allQuestions: [], questions: [], skills: null, products: [], answers: {}, index: 0,
+  selectedCount: 10, started: false, startedAt: null, reviewItems: [],
+};
 const $ = (id) => document.getElementById(id);
 const labelFor = (id) => state.skills.dimensions.find((d) => d.id === id)?.label ?? id;
 
@@ -17,17 +26,34 @@ async function init() {
     loadJson("./data/skill-model.v1.json"),
     loadJson("./data/products.v1.json"),
   ]);
-  state.questions = bank.questions;
+  state.allQuestions = bank.questions;
   state.skills = skills;
   state.products = catalog.products;
-  $("question-count").textContent = `${state.questions.length} 題`;
+  $("question-count").textContent = `${state.allQuestions.length} 題題庫`;
+  syncModeUi();
   $("start-btn").disabled = false;
   track("landing_view", { quizVersion: bank.version });
 }
 
 function show(viewId) {
   for (const el of document.querySelectorAll("[data-view]")) el.hidden = el.id !== viewId;
+  document.body.classList.toggle("quiz-active", viewId === "quiz-view");
   window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+function syncModeUi() {
+  const meta = MODE_META[state.selectedCount];
+  $("launch-badge").textContent = String(state.selectedCount);
+  $("selected-count").textContent = `${state.selectedCount} 題`;
+  $("selected-time").textContent = meta.time;
+  $("quiz-mode-title").textContent = meta.label;
+}
+
+function chooseCount(count) {
+  if (!MODE_META[count]) return;
+  state.selectedCount = count;
+  syncModeUi();
+  track("quiz_length_select", { count });
 }
 
 function startQuiz() {
@@ -36,7 +62,8 @@ function startQuiz() {
   state.index = 0;
   state.answers = {};
   state.reviewItems = [];
-  track("quiz_start", { totalQuestions: state.questions.length });
+  state.questions = selectBalancedQuestions(state.allQuestions, state.selectedCount);
+  track("quiz_start", { totalQuestions: state.questions.length, mode: state.selectedCount });
   renderQuestion();
   show("quiz-view");
 }
@@ -80,6 +107,7 @@ function next() {
   if (state.index < state.questions.length - 1) {
     state.index += 1;
     renderQuestion();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   } else finishQuiz();
 }
 
@@ -87,6 +115,7 @@ function back() {
   if (state.index > 0) {
     state.index -= 1;
     renderQuestion();
+    window.scrollTo({ top: 0, behavior: "smooth" });
   }
 }
 
@@ -96,10 +125,11 @@ function finishQuiz() {
   const band = levelBand(result.overall);
   const elapsedSec = state.startedAt ? Math.round((Date.now() - state.startedAt) / 1000) : null;
   sessionStorage.setItem("apcs_diag_result_v1", JSON.stringify(result));
-  track("quiz_complete", { overall: result.overall, weakest: result.weakest, elapsedSec });
+  track("quiz_complete", { overall: result.overall, weakest: result.weakest, elapsedSec, totalQuestions: result.total });
   renderResult(result, band, recommendation);
+  state.started = false;
   show("result-view");
-  track("result_view", { overall: result.overall, weakest: result.weakest, productId: recommendation.productId });
+  track("result_view", { overall: result.overall, weakest: result.weakest, productId: recommendation.productId, totalQuestions: result.total });
 }
 
 function renderResult(result, band, recommendation) {
@@ -130,8 +160,12 @@ function renderResult(result, band, recommendation) {
   $("recommend-reason").textContent = recommendation.reason;
   const product = recommendation.product;
   $("product-title").textContent = product?.title ?? "下一階段訓練";
-  $("product-price").textContent = product?.priceTwd ? `預計首發 NT$${product.priceTwd}` : "免費";
-  $("product-status").textContent = product?.status === "validation" ? "目前為市場驗證階段，尚未開放付款。" : "此產品仍在規劃中。";
+  $("product-price").textContent = product?.priceTwd ? `預計 NT$${product.priceTwd}` : "免費";
+  $("product-status").textContent = product?.status === "preparing"
+    ? "準備中，尚未開放購買。"
+    : product?.status === "validation"
+      ? "目前為市場驗證階段，尚未開放付款。"
+      : "此產品仍在規劃中。";
   $("product-btn").dataset.productId = recommendation.productId;
 }
 
@@ -175,7 +209,7 @@ async function shareResult() {
   if (!raw) return;
   const result = JSON.parse(raw);
   const text = buildShareText(result, state.skills);
-  track("share_click", { weakest: result.weakest, overall: result.overall });
+  track("share_click", { weakest: result.weakest, overall: result.overall, totalQuestions: result.total });
   try {
     if (navigator.share) await navigator.share({ title: "APCS 能力診斷", text });
     else {
@@ -194,11 +228,36 @@ function productInterest(e) {
   $("interest-box").scrollIntoView({ behavior: "smooth", block: "center" });
 }
 
+function openExitDialog() {
+  const dialog = $("exit-dialog");
+  if (typeof dialog.showModal === "function") dialog.showModal();
+  else exitQuiz();
+}
+
+function closeExitDialog() {
+  const dialog = $("exit-dialog");
+  if (dialog.open) dialog.close();
+}
+
+function exitQuiz() {
+  const answered = Object.keys(state.answers).length;
+  track("quiz_abandon", { answered, totalQuestions: state.questions.length, mode: state.selectedCount });
+  closeExitDialog();
+  state.started = false;
+  state.questions = [];
+  state.answers = {};
+  state.index = 0;
+  show("landing-view");
+}
+
 function restart() {
-  track("quiz_restart");
+  track("quiz_restart", { mode: state.selectedCount });
   startQuiz();
 }
 
+for (const input of document.querySelectorAll('input[name="quiz-count"]')) {
+  input.addEventListener("change", () => chooseCount(Number(input.value)));
+}
 $("start-btn").addEventListener("click", startQuiz);
 $("next-btn").addEventListener("click", next);
 $("back-btn").addEventListener("click", back);
@@ -207,6 +266,9 @@ $("share-btn").addEventListener("click", shareResult);
 $("product-btn").addEventListener("click", productInterest);
 $("restart-btn").addEventListener("click", restart);
 $("resources-btn").addEventListener("click", () => $("resources").scrollIntoView({ behavior: "smooth", block: "start" }));
+$("exit-quiz-btn").addEventListener("click", openExitDialog);
+$("continue-quiz-btn").addEventListener("click", closeExitDialog);
+$("confirm-exit-btn").addEventListener("click", exitQuiz);
 
 init().catch((err) => {
   console.error(err);

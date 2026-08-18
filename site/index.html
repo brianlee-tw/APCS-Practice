@@ -2,15 +2,15 @@
 <html lang="zh-Hant-TW" data-theme="dark">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0b0d12">
-  <title>APCS 15 題免費能力診斷｜找出最容易失分的地方</title>
-  <meta name="description" content="用 15 題 C++／APCS 練習題，約 8–12 分鐘診斷語法、讀碼、除錯、演算法與實作五項能力。不用登入即可開始。">
+  <title>APCS 免費能力診斷｜5 / 10 / 15 題自由選</title>
+  <meta name="description" content="用 5、10 或 15 題 C++／APCS 練習題，診斷語法、讀碼、除錯、演算法與實作五項能力。不用登入即可開始。">
   <meta name="robots" content="index,follow">
   <meta name="apcs-analytics-endpoint" content="">
   <meta property="og:type" content="website">
-  <meta property="og:title" content="APCS 15 題免費能力診斷">
-  <meta property="og:description" content="約 8–12 分鐘，找出你的 APCS 最弱能力與下一步練習方向。">
+  <meta property="og:title" content="APCS 免費能力診斷">
+  <meta property="og:description" content="5 / 10 / 15 題自由選，找出你的 APCS 最弱能力與下一步練習方向。">
   <script>
     (function () {
       try {
@@ -23,8 +23,9 @@
   </script>
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./layout-polish.css">
+  <link rel="stylesheet" href="./experience.css">
   <link rel="manifest" href="./manifest.webmanifest">
-  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"APCS 15 題免費能力診斷","applicationCategory":"EducationalApplication","operatingSystem":"Web","inLanguage":"zh-TW","offers":{"@type":"Offer","price":"0","priceCurrency":"TWD"}}</script>
+  <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"APCS 免費能力診斷","applicationCategory":"EducationalApplication","operatingSystem":"Web","inLanguage":"zh-TW","offers":{"@type":"Offer","price":"0","priceCurrency":"TWD"}}</script>
 </head>
 <body>
   <button class="theme-toggle floating-theme-toggle" type="button" data-theme-toggle>
@@ -38,42 +39,64 @@
         <p class="kicker"><span class="kicker-dot"></span>APCS / C++ 能力診斷</p>
         <h1>找出<em>弱點</em>，再開始練習。</h1>
         <p class="lead">
-          <span class="lead-line">15 題，把 <strong>語法、讀碼、除錯、演算法、題意轉實作</strong> 分開看。</span>
-          <span class="lead-line">不是只給一個總分，而是告訴你下一個最值得補的能力。</span>
+          <span class="lead-line">把 <strong>語法、讀碼、除錯、演算法、題意轉實作</strong> 分開看。</span>
+          <span class="lead-line">選你願意完成的題數，再得到一個可執行的下一步。</span>
         </p>
         <div class="meta-row" aria-label="測驗特色">
-          <span class="meta-chip" id="question-count">載入中</span>
-          <span class="meta-chip">約 8–12 分鐘</span>
+          <span class="meta-chip" id="question-count">15 題題庫</span>
           <span class="meta-chip">不用登入</span>
+          <span class="meta-chip">五能力平衡</span>
           <span class="meta-chip">立即看結果</span>
         </div>
+
+        <fieldset class="count-picker" id="count-picker">
+          <legend>選擇這次要做幾題</legend>
+          <div class="count-options">
+            <label class="count-option">
+              <input type="radio" name="quiz-count" value="5">
+              <span class="count-option-body">
+                <span class="count-option-title"><strong>5 題</strong><span>快速</span></span>
+                <span class="count-option-meta">約 3–4 分鐘 · 每能力 1 題</span>
+              </span>
+            </label>
+            <label class="count-option">
+              <input type="radio" name="quiz-count" value="10" checked>
+              <span class="count-option-body">
+                <span class="count-option-title"><strong>10 題</strong><span class="count-option-recommend">建議</span></span>
+                <span class="count-option-meta">約 6–8 分鐘 · 每能力 2 題</span>
+              </span>
+            </label>
+            <label class="count-option">
+              <input type="radio" name="quiz-count" value="15">
+              <span class="count-option-body">
+                <span class="count-option-title"><strong>15 題</strong><span>完整</span></span>
+                <span class="count-option-meta">約 8–12 分鐘 · 每能力 3 題</span>
+              </span>
+            </label>
+          </div>
+        </fieldset>
+
         <div class="hero-actions">
           <button id="start-btn" class="launch-action" disabled>
-            <span class="launch-badge">15</span>
+            <span class="launch-badge" id="launch-badge">10</span>
             <span class="launch-copy">
               <span class="launch-title">開始免費診斷</span>
-              <span class="launch-meta">完成後立即查看五維能力與錯題解析</span>
+              <span class="launch-meta"><span id="selected-count">10 題</span> · <span id="selected-time">約 6–8 分鐘</span> · 完成後立即看結果</span>
             </span>
             <span class="launch-arrow" aria-hidden="true">→</span>
           </button>
           <button id="resources-btn" class="secondary-link" type="button">先看看免費練習資源 <span aria-hidden="true">↓</span></button>
         </div>
         <p id="load-error" class="error" hidden>題庫載入失敗，請重新整理頁面。</p>
-        <p class="hero-note">非官方 APCS 工具。結果只用來規劃練習方向，不保證級分或升學結果。</p>
+        <p class="hero-note">非官方 APCS 工具。短版結果較粗略；需要更穩定的能力分布時可選 15 題。</p>
       </div>
 
       <aside class="hero-preview" aria-label="診斷結果預覽">
         <div class="preview-window">
-          <div class="preview-topbar">
-            <span>診斷結果預覽</span>
-            <span class="window-dots"><span></span><span></span><span></span></span>
-          </div>
+          <div class="preview-topbar"><span>診斷結果預覽</span><span class="window-dots"><span></span><span></span><span></span></span></div>
           <div class="preview-body">
             <span class="preview-label">Overall readiness</span>
-            <div class="preview-score-row">
-              <strong class="preview-score">73</strong>
-              <span class="preview-status">基礎穩定</span>
-            </div>
+            <div class="preview-score-row"><strong class="preview-score">73</strong><span class="preview-status">基礎穩定</span></div>
             <div class="preview-bars" aria-label="五維能力預覽">
               <div class="preview-bar-item"><span class="preview-track" style="--score:88%"><span class="preview-bar-label">語法</span><strong class="preview-bar-score">88</strong></span></div>
               <div class="preview-bar-item"><span class="preview-track" style="--score:76%"><span class="preview-bar-label">讀碼</span><strong class="preview-bar-score">76</strong></span></div>
@@ -81,17 +104,18 @@
               <div class="preview-bar-item"><span class="preview-track" style="--score:71%"><span class="preview-bar-label">演算法</span><strong class="preview-bar-score">71</strong></span></div>
               <div class="preview-bar-item"><span class="preview-track" style="--score:66%"><span class="preview-bar-label">實作</span><strong class="preview-bar-score">66</strong></span></div>
             </div>
-            <div class="preview-footer">
-              <span>最需補強：除錯</span>
-              <span>下一步：錯題定位</span>
-            </div>
+            <div class="preview-footer"><span>最需補強：除錯</span><span>下一步：錯題定位</span></div>
           </div>
         </div>
       </aside>
     </section>
 
     <section id="quiz-view" data-view hidden class="panel quiz-panel">
-      <div class="progress-wrap"><span id="progress-label"></span><progress id="progress" value="1" max="15"></progress></div>
+      <div class="quiz-focus-header">
+        <div class="quiz-mode-label"><strong id="quiz-mode-title">10 題標準診斷</strong><span>作答期間只保留測驗內容</span></div>
+        <button id="exit-quiz-btn" class="exit-quiz-btn" type="button">退出測驗</button>
+      </div>
+      <div class="progress-wrap"><span id="progress-label"></span><progress id="progress" value="1" max="10"></progress></div>
       <h2 id="question-prompt"></h2>
       <pre id="question-code" class="code" hidden><code></code></pre>
       <div id="choices" class="choices" role="radiogroup" aria-label="選項"></div>
@@ -128,11 +152,11 @@
         <button id="product-btn" class="primary" type="button">我對這個訓練有興趣</button>
       </div>
       <div id="interest-box" class="interest-box" hidden><strong>已記錄在這個瀏覽器的匿名事件佇列。</strong><p>目前沒有 Email 或付款流程，也不會要求你輸入個資。</p></div>
-      <div class="actions wrap"><button id="share-btn" class="secondary" type="button">分享診斷結果</button><button id="restart-btn" class="secondary" type="button">重新測一次</button></div>
+      <div class="actions wrap"><button id="share-btn" class="secondary" type="button">分享診斷結果</button><button id="restart-btn" class="secondary" type="button">同題數再測一次</button></div>
       <p id="share-status" class="fine-print" aria-live="polite"></p>
     </section>
 
-    <section class="section-block" aria-labelledby="why-heading">
+    <section class="section-block marketing-only" aria-labelledby="why-heading">
       <div class="section-heading">
         <div><p class="eyebrow">設計原則</p><h2 id="why-heading">不是測驗噱頭，<br>是可解釋的練習工具。</h2></div>
         <p>保留免費、匿名與可重現。<br>讓結果真的能用來決定下一步。</p>
@@ -144,7 +168,7 @@
       </div>
     </section>
 
-    <section class="section-block" id="resources" aria-labelledby="resources-heading">
+    <section class="section-block marketing-only" id="resources" aria-labelledby="resources-heading">
       <div class="section-heading">
         <div><p class="eyebrow">免費資源</p><h2 id="resources-heading">先解一個你今天<br>就會遇到的問題。</h2></div>
         <p>不必先買東西。<br>這些短篇直接處理常見 APCS 實作失分點。</p>
@@ -155,9 +179,25 @@
         <a class="guide-link" href="./guides/prefix-sum.html"><span class="guide-link-copy"><strong>Prefix Sum 入門</strong><p>把重複的區間總和<br>從 O(N) 降到 O(1)。</p></span><span class="guide-arrow">→</span></a>
       </div>
     </section>
+
+    <section class="section-block marketing-only" aria-labelledby="library-entry-heading">
+      <div class="library-entry">
+        <div><p class="eyebrow">產品庫</p><h3 id="library-entry-heading">未來訓練路線已先排好。</h3><p>從弱點修復、30 天訓練、模擬考，到 GitHub、學習歷程與 AI Coding 專題。現在先公開產品架構，所有商品都尚未開賣。</p></div>
+        <a class="library-entry-link" href="./products.html">查看產品庫 <span aria-hidden="true">→</span></a>
+      </div>
+    </section>
   </main>
 
-  <footer class="footer"><div class="shell footer-inner"><span>APCS Diagnostic · 非官方學習工具</span><span class="footer-links"><a href="./privacy.html">隱私</a><a href="https://github.com/brianlee-tw/APCS-Practice">GitHub</a></span></div></footer>
+  <footer class="footer marketing-only"><div class="shell footer-inner"><span>APCS Diagnostic · 非官方學習工具</span><span class="footer-links"><a href="./products.html">產品庫</a><a href="./privacy.html">隱私</a><a href="https://github.com/brianlee-tw/APCS-Practice">GitHub</a></span></div></footer>
+
+  <dialog id="exit-dialog" class="exit-dialog">
+    <div class="exit-dialog-inner">
+      <h2>要退出這次測驗嗎？</h2>
+      <p>目前答案不會上傳。退出後會回到首頁，你可以重新選 5、10 或 15 題再開始。</p>
+      <div class="exit-dialog-actions"><button id="continue-quiz-btn" class="secondary" type="button">繼續作答</button><button id="confirm-exit-btn" class="primary" type="button">退出測驗</button></div>
+    </div>
+  </dialog>
+
   <script type="module" src="./js/theme.js"></script>
   <script type="module" src="./app.js"></script>
 </body>
