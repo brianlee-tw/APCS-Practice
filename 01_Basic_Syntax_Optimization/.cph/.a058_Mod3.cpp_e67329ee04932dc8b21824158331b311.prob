@@ -1,1 +1,0 @@
-{"name":"Local: a058_Mod3","url":"c:\\0_code\\APCS-Practice\\01_Basic_Syntax_Optimization\\a058_Mod3.cpp","tests":[{"id":1782876515761,"input":"5\n1\n2\n3\n4\n5","output":"1 2 2"}],"interactive":false,"memoryLimit":1024,"timeLimit":3000,"srcPath":"c:\\0_code\\APCS-Practice\\01_Basic_Syntax_Optimization\\a058_Mod3.cpp","group":"local","local":true}

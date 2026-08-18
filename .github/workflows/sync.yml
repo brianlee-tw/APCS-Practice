@@ -1,43 +1,53 @@
-name: Auto Sync README
+name: APCS Dashboard Sync
 
 on:
   push:
     branches:
-      - main  # 當你推送到 main 分支時觸發
+      - main
+    paths:
+      - '**/*.cpp'
+      - '**/*.py'
+      - 'data/**'
+      - 'notes/**'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: apcs-dashboard-sync
+  cancel-in-progress: false
 
 jobs:
   sync:
+    if: github.actor != 'github-actions[bot]'
     runs-on: ubuntu-latest
-    permissions:
-      contents: write # 給予自動同步腳本寫入權限
+
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v4 # 💡 升級到 v4，避免舊版 node 警告
+      - name: Checkout main
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v5 # 💡 升級到 v5，速度更快且相容新版 Python
+        uses: actions/setup-python@v5
         with:
-          python-version: '3.x' 
+          python-version: '3.12'
 
-      - name: Run sync script
-        run: python tools/sync_all.py
+      - name: Generate learning dashboard
+        run: python tools/apcs.py sync
 
-      - name: Commit and Push changes
+      - name: Commit generated indexes only
+        shell: bash
         run: |
-          git config --global user.name 'github-actions[bot]'
-          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
-          
-          # 檢查是否有更動
-          if [ -n "$(git status --porcelain)" ]; then
-            # 1. ⚡ 關鍵：先把自動生成的所有變更直接 Commit 存起來（讓暫存區和工作區變乾淨）
-            git add .
-            git commit -m "chore(sync): auto-update README index [skip ci]"
-            
-            # 2. ⚡ 這時候本地已經是一個乾淨的 Commit 了，直接拉取遠端並把我們的變更墊在最上面
-            git pull --rebase origin main
-            
-            # 3. 完美推上雲端
-            git push origin main
-          else
-            echo "No changes detected, skipping commit."
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+
+          git add README.md docs/PROBLEM_INDEX.md docs/REVIEW_QUEUE.md
+
+          if git diff --cached --quiet; then
+            echo "Generated indexes are already current."
+            exit 0
           fi
+
+          git commit -m "chore(sync): refresh APCS dashboard [skip ci]"
+          git push origin HEAD:main

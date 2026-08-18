@@ -1,92 +1,57 @@
-<br>
+# APCS-Practice
 
-#  APCS-Practice: 演算法實作與知識庫
+APCS 實作練習、複習與弱點追蹤倉庫。
 
-這是一個以 **APCS 實作題** 為導向的系統性開發專案，旨在透過結構化的代碼與筆記，建立紮實的計算思維與解決問題的能力。
+這個倉庫的 v2 設計把「**檔案放在哪個資料夾**」和「**這題屬於什麼能力**」分開：題目能力由 `APCS Tag`、題名與檔名自動分類；舊有四個資料夾只保留歷史位置，新題目建議統一放在 [`solutions/`](./solutions/)。
 
-<br>
+## 目標
 
-<br>
+- APCS 觀念題與實作題持續提升。
+- 不以「刷了幾題」取代真正的掌握程度。
+- 將 **AC、重解結果、複習間隔、弱項** 變成可追蹤資料。
+- 保留既有 Notion 筆記，但不再要求每題都開一頁 Notion。
 
-##  目標與願景
-- **APCS 檢定目標**：觀念 3+ 級分 / 實作 3+ 級分。
-- **學術與職業願景**：為申請資工領域奠定基礎，養成符合業界標準的 Git 開發流程與技術文檔撰寫習慣。
+## 最短工作流程
 
+1. 在 `solutions/` 新增 `.cpp` / `.py`，檔名以題號開頭，例如 `b130_Random_Number.cpp`。
+2. 檔頭只保留相對穩定的題目資訊：
+   ```cpp
+   // APCS Title: b130. 明明的隨機數
+   // APCS Complexity: O(N log N)
+   // APCS Tag: Sorting, Set
+   // APCS Difficulty: 1
+   // APCS Source: https://...
+   ```
+3. AC 後執行：`python tools/apcs.py finish b130 2`
+4. 之後重解執行：`python tools/apcs.py review b130 3`
+5. 只有值得整理的題目才執行：`python tools/apcs.py note b130`
 
-<br>
+Recall 自評：`0=不會`、`1=需要提示`、`2=自己做出但偏慢`、`3=流暢獨立完成`。
 
-<br>
+更完整的操作方式見 [`docs/WORKFLOW.md`](./docs/WORKFLOW.md)。
 
-##  開發紀錄儀表板 
-| 資源 | 連結 |
-| :--- | :--- |
-| **刷題總表 (Notion)** | [點擊查看我的刷題進度與筆記](https://www.notion.so/36a43be958cd80528db4df429506892f?v=36a43be958cd8075b3ac000c2c628f5d) |
+<!-- APCS_DASHBOARD_START -->
+> Dashboard 將由 `python tools/apcs.py sync` / GitHub Actions 自動產生。
+<!-- APCS_DASHBOARD_END -->
 
-<br>
+## 資料來源與可信度
 
-<br>
+- `data/progress.csv`：目前狀態（Verdict、初次 AC、最近複習、Recall）。
+- `data/reviews.csv`：每次複習的 append-only 歷史。
+- 程式碼檔頭：題目名稱、複雜度、Tags、難度、來源等靜態 metadata。
+- `notes/<id>.md`：可選的短筆記。
+- 既有 `APCS Note: <Notion URL>` 會繼續顯示，但 **Notion 連結不再等同於 AC**。
 
-<!-- ROOT_START -->
-## 全域學習儀表板
-| 總覽指標 | 數據統計 |
-| :--- | :--- |
-| **總題目數** | `58 / 200` |
-| **目前進度** | <progress value="58" max="200"></progress> 28% |
-| **待複習 (超過90天)** | `0 題` |
-| **複習清單** | 目前無待複習題目 |
+## 自動化
 
-<br>
+- Pull Request / main push：metadata 驗證；新改動的 C++ / Python 解答做語法編譯檢查。
+- main 更新後：安全地重新產生 README、Problem Index、Review Queue。
+- 自動同步只 stage 生成檔，不再使用 `git add .`，也不再 `git pull --rebase`。
 
-## 題庫整體進度
-| 階段大分類 | 完成度 | 完成率 |
-| :--- | :---: | :---: |
-| [01_Basic_Syntax_Optimization](./01_Basic_Syntax_Optimization/) | 47/50 | <progress value="47" max="50"></progress> 94% |
-| [02_Data_Structures](./02_Data_Structures/) | 1/50 | <progress value="1" max="50"></progress> 2% |
-| [03_Algorithmic_Paradigms](./03_Algorithmic_Paradigms/) | 10/50 | <progress value="10" max="50"></progress> 20% |
-| [04_Graph_Theory_and_Advanced_Topics](./04_Graph_Theory_and_Advanced_Topics/) | 0/50 | <progress value="0" max="50"></progress> 0% |
-<!-- ROOT_END -->
+## Legacy folders
 
+`01_Basic_Syntax_Optimization`、`02_Data_Structures`、`03_Algorithmic_Paradigms`、`04_Graph_Theory_and_Advanced_Topics` 是 v1 歷史資料夾。v2 不再用它們當作能力分類或固定「50 題」進度 KPI。
 
-<br>
+## License
 
-<br>
-
-##  重點解題里程碑 
-*這裡收錄最具代表性的挑戰題目，涵蓋演算法優化與複雜度分析。*
-
-| 年份/來源 | 題目名稱 | 時間複雜度  | 核心關鍵與優化點 |
-| :--- | :--- | :--- | :--- |
-| - | - | - | - |
-
-<br>
-
-<br>
-
-##  開發標準 
-為了確保專案質量，本倉庫遵守：
-- **Conventional Commits**：紀錄每一次的實作更新（如 `feat: add prime factor logic`）。
-- **Performance Optimization**：使用標準 `ios_base::sync_with_stdio(0)` 加速 I/O。
-
-<br>
-
-<br>
-
-##  學習哲學 
-當遇到無法解決的難題時，我會遵循以下 SOP：
-1. **問題拆解**：將複雜問題分解為基礎子問題。
-2. **手動模擬**：使用紙筆模擬演算法流程。
-3. **錯誤偵測**：利用 Debugger 工具分析記憶體與變數狀態。
-4. **回顧與總結**：將解題思路歸納於 Notion，確保同類問題不再踩坑。
-
-<br>
-
-<br>
-
-##  授權 
-本專案內容僅供學習交流使用，遵循 [MIT License](https://opensource.org/licenses/MIT) 規範。
-
-<br>
-
-<br>
-
-> *"Code is a way to express your logic clearly."* — 保持規律，持續迭代。
+MIT License。

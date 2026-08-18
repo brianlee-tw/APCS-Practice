@@ -1,1 +1,0 @@
-{"name":"Local: d050_Time","url":"c:\\0_code\\APCS-Practice\\01_Basic_Syntax_Optimization\\d050_Time.cpp","tests":[{"id":1782821570577,"input":"21","output":"6"},{"id":1782821573896,"input":"11","output":"20"}],"interactive":false,"memoryLimit":1024,"timeLimit":3000,"srcPath":"c:\\0_code\\APCS-Practice\\01_Basic_Syntax_Optimization\\d050_Time.cpp","group":"local","local":true}

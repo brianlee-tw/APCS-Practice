@@ -1,1 +1,0 @@
-{"name":"Local: d074_Computer","url":"c:\\0_code\\APCS-Practice\\01_Basic_Syntax_Optimization\\d074_Computer.cpp","tests":[{"id":1782874397414,"input":"5\n42 39 41 43 30","output":"43"}],"interactive":false,"memoryLimit":1024,"timeLimit":3000,"srcPath":"c:\\0_code\\APCS-Practice\\01_Basic_Syntax_Optimization\\d074_Computer.cpp","group":"local","local":true}

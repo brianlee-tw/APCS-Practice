@@ -1,1 +1,0 @@
-{"name":"Local: c022_Odd_Sum","url":"c:\\0_code\\APCS-Practice\\01_Basic_Syntax_Optimization\\c022_Odd_Sum.cpp","tests":[{"id":1782873353965,"input":"2\n1\n5\n3\n5","output":"Case 1: 9\nCase 2: 8"}],"interactive":false,"memoryLimit":1024,"timeLimit":3000,"srcPath":"c:\\0_code\\APCS-Practice\\01_Basic_Syntax_Optimization\\c022_Odd_Sum.cpp","group":"local","local":true}

@@ -1,17 +1,27 @@
 repos:
--   repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.5.0
-    hooks:
-    -   id: trailing-whitespace  # 自動刪除程式碼行尾沒意義的空格
-    -   id: end-of-file-fixer   # 確保檔案結尾剛好只有一個換行，這是標準規範
-    -   id: check-yaml          # 檢查專案裡的 yaml 設定檔語法有沒有寫錯
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v4.5.0
+  hooks:
+  - id: trailing-whitespace
+  - id: end-of-file-fixer
+  - id: check-yaml
 
--   repo: https://github.com/psf/black
-    rev: 23.11.0
-    hooks:
-    -   id: black               # 自動排版 Python 程式碼
+- repo: https://github.com/psf/black
+  rev: 23.11.0
+  hooks:
+  - id: black
+    files: ^tools/.*\.py$
 
--   repo: https://github.com/pre-commit/mirrors-clang-format
-    rev: v17.0.5
-    hooks:
-    -   id: clang-format        # 自動排版 C++ 程式碼 (遵循 LLVM/Google 專業風格)
+- repo: https://github.com/pre-commit/mirrors-clang-format
+  rev: v17.0.5
+  hooks:
+  - id: clang-format
+    files: \.(cpp|hpp|h)$
+
+- repo: local
+  hooks:
+  - id: apcs-validate
+    name: APCS metadata validation
+    entry: python tools/apcs.py validate
+    language: system
+    pass_filenames: false
