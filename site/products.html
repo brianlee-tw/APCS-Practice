@@ -4,67 +4,165 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
   <meta name="theme-color" content="#0b0d12">
-  <title>APCS 產品庫｜未來訓練路線</title>
-  <meta name="description" content="APCS Diagnostic 未來產品庫：30 天訓練、Debug 修復、中級實作、模擬考、GitHub 作品集、學習歷程與 AI Coding 專題。所有產品目前皆準備中。">
+  <title>APCS 產品庫｜完整訓練與作品路線</title>
+  <meta name="description" content="APCS Diagnostic 正式產品規劃：30 天 C++ 實作、Debug、程式識讀、2→3／3→4 級分、考前衝刺、原創模擬考、GitHub、學習歷程與 AI Coding 專題。">
   <script>(function(){try{var s=localStorage.getItem('apcs_theme_preference');var t=s==='light'||s==='dark'?s:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t}catch(_){}})();</script>
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./layout-polish.css">
   <link rel="stylesheet" href="./experience.css">
+  <link rel="stylesheet" href="./product-plan.css">
 </head>
 <body>
   <button class="theme-toggle floating-theme-toggle" type="button" data-theme-toggle><span class="theme-icon" data-theme-icon>☾</span><span class="theme-label" data-theme-label>深色</span></button>
   <div class="inline-nav"><a class="library-back" href="./">← 回到診斷</a></div>
+
   <main class="product-library-shell">
     <section class="library-hero">
       <div>
         <p class="eyebrow">Product Library</p>
-        <h1>從診斷，走到真正能展示的能力。</h1>
-        <p>這裡先公開未來產品架構，讓每一個下一步都有位置。產品會依真實使用者需求與驗證結果逐步製作，不因為「已經排版」就代表會立即上線。</p>
+        <h1>不是更多教材，<br>而是更短的進步路徑。</h1>
+        <p class="library-deck">產品線已完成規格設計。每個商品只處理一個明確問題：不知道怎麼開始、常 WA/RE、觀念題不穩、實作卡級分、考前不會安排，或有能力卻不知道怎麼整理成作品。現在標示「準備中」代表內容正在製作，不代表產品方向仍在實驗。</p>
       </div>
-      <aside class="library-status-note"><strong>目前狀態：全部準備中</strong><p>尚未開放購買，也沒有假倒數、假庫存或預先收款。價格只作為目前規劃參考，正式推出前仍可能調整。</p></aside>
+      <aside class="library-status-note">
+        <span class="library-status-kicker">Catalog status</span>
+        <strong>產品規格完成 · 內容準備中</strong>
+        <ul>
+          <li>所有付費題目與測資以原創為原則。</li>
+          <li>主產品定價集中在 NT$129–399，降低第一次購買門檻。</li>
+          <li>Bundle 用於降低選擇成本，不用拆碎內容製造重複購買。</li>
+          <li>正式開賣前仍不顯示假庫存、假倒數或假評論。</li>
+        </ul>
+      </aside>
     </section>
 
-    <section class="product-stage">
-      <div class="product-stage-head"><h2>01 · 建立基礎</h2><p>先把練習做成可持續的節奏。</p></div>
-      <div class="product-grid">
-        <article class="product-card"><div class="product-card-head"><span class="product-code">FREE-7DAY</span><span class="product-status">準備中</span></div><div><h3>7 日 APCS 微訓練</h3><p>給剛做完診斷、還不想直接進 30 天計畫的人。每天只做一個小任務，先建立完成感與基本解題節奏。</p><div class="product-tags"><span>7 天</span><span>微任務</span><span>免費入口</span></div></div><div class="product-card-foot"><div class="product-price"><span>預計價格</span><strong>免費</strong></div><span class="product-disabled">尚未開放</span></div></article>
-        <article class="product-card"><div class="product-card-head"><span class="product-code">P1-30DAY</span><span class="product-status">準備中</span></div><div><h3>APCS 30 天診斷訓練包</h3><p>從題意理解、實作、除錯到複雜度判斷，建立完整的初級→中級訓練路線，搭配進度表與錯題修復節點。</p><div class="product-tags"><span>30 天</span><span>主線產品</span><span>初級→中級</span></div></div><div class="product-card-foot"><div class="product-price"><span>規劃價格</span><strong>NT$149–199</strong></div><span class="product-disabled">尚未開放</span></div></article>
-      </div>
+    <section class="library-principles" aria-label="商品設計原則">
+      <article class="library-principle"><span>01</span><strong>先診斷再推薦</strong><p>不從「買哪本書」開始，而是從使用者目前的弱點開始。</p></article>
+      <article class="library-principle"><span>02</span><strong>付費買結構，不買資訊</strong><p>免費網路已有大量知識；商品價值是路線、原創練習、錯誤分析與進度控制。</p></article>
+      <article class="library-principle"><span>03</span><strong>一次商品要有完成點</strong><p>每個產品都有清楚起點、終點與可檢查的成果，不做無限堆內容。</p></article>
+      <article class="library-principle"><span>04</span><strong>考試能力延伸到作品</strong><p>APCS 不是終點；後段商品把程式能力轉成 GitHub、專題與學習歷程證據。</p></article>
     </section>
 
-    <section class="product-stage">
-      <div class="product-stage-head"><h2>02 · 修復弱點</h2><p>不是重學全部，而是處理真正失分的地方。</p></div>
-      <div class="product-grid">
-        <article class="product-card"><div class="product-card-head"><span class="product-code">P2-DEBUG</span><span class="product-status">準備中</span></div><div><h3>C++ Bug 診斷／弱點修復迷你包</h3><p>集中處理 WA、RE、邊界、索引、初始化與錯誤定位，適合「會寫但常常卡在奇怪錯誤」的使用者。</p><div class="product-tags"><span>Debug</span><span>WA / RE</span><span>迷你包</span></div></div><div class="product-card-foot"><div class="product-price"><span>規劃價格</span><strong>NT$99</strong></div><span class="product-disabled">尚未開放</span></div></article>
-        <article class="product-card"><div class="product-card-head"><span class="product-code">P3-INTERMEDIATE</span><span class="product-status">準備中</span></div><div><h3>APCS 中級實作強化包</h3><p>把排序、二分、前綴和、資料結構與方法判斷接到實際題目，重點放在「知道概念」到「能獨立實作」之間的落差。</p><div class="product-tags"><span>中級</span><span>演算法</span><span>實作</span></div></div><div class="product-card-foot"><div class="product-price"><span>規劃價格</span><strong>NT$249</strong></div><span class="product-disabled">尚未開放</span></div></article>
-      </div>
-    </section>
-
-    <section class="product-stage">
-      <div class="product-stage-head"><h2>03 · 考前 / 考後</h2><p>把能力轉成考場穩定度，再把考後失分轉成下一輪訓練。</p></div>
-      <div class="product-grid">
-        <article class="product-card"><div class="product-card-head"><span class="product-code">P4-MOCK</span><span class="product-status">準備中</span></div><div><h3>APCS 模擬考 Pack</h3><p>限時、分級、可回顧的模擬實戰，用來檢查整合能力與時間分配，不再只看單題是否會做。</p><div class="product-tags"><span>Mock Exam</span><span>限時</span><span>考前</span></div></div><div class="product-card-foot"><div class="product-price"><span>規劃價格</span><strong>NT$99</strong></div><span class="product-disabled">尚未開放</span></div></article>
-        <article class="product-card"><div class="product-card-head"><span class="product-code">P5-POSTEXAM</span><span class="product-status">準備中</span></div><div><h3>APCS 考後弱點修復包</h3><p>把正式考試或模擬考的失分原因整理成下一輪訓練，避免考完只留下分數，沒有形成新的學習策略。</p><div class="product-tags"><span>考後</span><span>弱點修復</span><span>下一輪</span></div></div><div class="product-card-foot"><div class="product-price"><span>規劃價格</span><strong>NT$149</strong></div><span class="product-disabled">尚未開放</span></div></article>
-      </div>
-    </section>
-
-    <section class="product-stage">
-      <div class="product-stage-head"><h2>04 · 把能力變成作品</h2><p>考試之外，把程式能力整理成可以展示的證據。</p></div>
-      <div class="product-grid">
-        <article class="product-card"><div class="product-card-head"><span class="product-code">P6-GITHUB</span><span class="product-status">準備中</span></div><div><h3>GitHub 程式作品集工具包</h3><p>整理 repository、README、commit、題解與專題呈現方式，讓零散練習變成可讀、可追蹤的作品紀錄。</p><div class="product-tags"><span>GitHub</span><span>作品集</span><span>README</span></div></div><div class="product-card-foot"><div class="product-price"><span>規劃價格</span><strong>NT$229</strong></div><span class="product-disabled">尚未開放</span></div></article>
-        <article class="product-card"><div class="product-card-head"><span class="product-code">P7-PORTFOLIO</span><span class="product-status">準備中</span></div><div><h3>資訊類學習歷程整理工具包</h3><p>把 APCS、營隊、專題與 GitHub 證據轉成結構化學習歷程素材，重點放在問題、過程、反思與能力證據。</p><div class="product-tags"><span>學習歷程</span><span>反思</span><span>證據整理</span></div></div><div class="product-card-foot"><div class="product-price"><span>規劃價格</span><strong>NT$249</strong></div><span class="product-disabled">尚未開放</span></div></article>
+    <section class="product-route">
+      <div class="product-route-head"><h2>我現在該買哪一種？</h2><p>產品庫不是要讓使用者全部買，而是讓不同階段只有一個最自然的下一步。</p></div>
+      <div class="route-grid">
+        <article class="route-card"><strong>剛開始 / 五項都不穩</strong><p>先做免費診斷 → 7 日弱點重整 → P1 30 天核心訓練。</p></article>
+        <article class="route-card"><strong>會寫，但常 WA / RE / TLE</strong><p>直接進 P2 Debug Lab，不需要把整套基礎重學一次。</p></article>
+        <article class="route-card"><strong>程式識讀 / 觀念題不穩</strong><p>選 P3 Concept Sprint，集中練 code tracing、複雜度與資料結構判斷。</p></article>
+        <article class="route-card"><strong>考期很近</strong><p>剩 14 天左右直接用 P4 Sprint + Mock；不要臨時開一門 30 小時大課。</p></article>
       </div>
     </section>
 
     <section class="product-stage">
-      <div class="product-stage-head"><h2>05 · 專題與長期路線</h2><p>從解題者進一步成為能規劃、製作與展示作品的人。</p></div>
+      <div class="product-stage-head"><div><span class="product-stage-index">STAGE 01</span><h2>免費入口：先證明這套方法對你有用</h2></div><p>免費內容不只是試吃，而是讓使用者真的完成一次「診斷 → 修正 → 再做」循環。</p></div>
       <div class="product-grid">
-        <article class="product-card"><div class="product-card-head"><span class="product-code">P8-AI-CODING</span><span class="product-status">準備中</span></div><div><h3>AI Coding 專題實作包</h3><p>學會把 AI 當成工程工具，而不是代寫器：需求拆解、Git、測試、除錯、文件與小型專題交付都會納入。</p><div class="product-tags"><span>AI Coding</span><span>Git</span><span>專題</span></div></div><div class="product-card-foot"><div class="product-price"><span>規劃價格</span><strong>NT$299</strong></div><span class="product-disabled">尚未開放</span></div></article>
-        <article class="product-card"><div class="product-card-head"><span class="product-code">P9-SEASON</span><span class="product-status">準備中</span></div><div><h3>APCS 季度訓練 Season Pass</h3><p>只有在重複購買與持續訓練需求被驗證後才會啟用。預留給跨考期的訓練、更新與組合內容，不提前做訂閱綁定。</p><div class="product-tags"><span>長期路線</span><span>Bundle</span><span>驗證後才開</span></div></div><div class="product-card-foot"><div class="product-price"><span>規劃價格</span><strong>待驗證</strong></div><span class="product-disabled">尚未開放</span></div></article>
+        <article class="product-card is-featured">
+          <div class="product-card-head"><span class="product-code">FREE-7DAY</span><span class="product-status">準備中</span></div>
+          <div><h3>7 日 APCS 弱點重整計畫</h3><p class="product-promise">每天 15–25 分鐘，把診斷結果轉成一週可完成的訓練節奏。</p><div class="product-fit"><span>適合你如果</span><strong>知道自己有弱點，但還沒準備好投入 30 天完整訓練。</strong></div><ul class="product-deliverables"><li>7 個日任務，依五能力輪替。</li><li>每日 1 個核心概念 + 1 個短練習。</li><li>Day 1 / Day 7 對照紀錄。</li><li>完成後自動建議下一個最合適產品。</li></ul><div class="product-tags"><span>7 天</span><span>15–25 分鐘/日</span><span>免費</span></div></div>
+          <div class="product-card-foot"><div class="product-price"><span>價格</span><strong>免費</strong></div><span class="product-disabled">準備中</span></div>
+        </article>
       </div>
     </section>
 
-    <p class="library-footer-note">產品庫的目的，是先固定產品架構與使用者路徑，而不是先把所有內容做完。正式製作順序仍會依診斷使用量、product-interest 與實際購買訊號決定。</p>
+    <section class="product-stage">
+      <div class="product-stage-head"><div><span class="product-stage-index">STAGE 02</span><h2>核心能力：真正把 C++ 寫穩</h2></div><p>不做百科全書式課程。每個產品只處理一種高頻失分來源。</p></div>
+      <div class="product-grid">
+        <article class="product-card is-featured">
+          <div class="product-card-head"><span class="product-code">P1-30DAY</span><span class="product-status">準備中</span></div>
+          <div><h3>APCS 30 天 C++ 實作核心訓練</h3><p class="product-promise">從「看懂範例」推進到「能獨立寫出基礎與中階實作題」。</p><div class="product-fit"><span>適合你如果</span><strong>語法大致會，但遇到完整題目時常不知道怎麼拆、怎麼開始。</strong></div><ul class="product-deliverables"><li>30 天訓練路線：理解題意 → 模擬 → 實作 → 除錯 → 複雜度。</li><li>30 個主訓練任務 + 10 個加強挑戰。</li><li>每題 Hint Ladder：方向提示、步驟提示、完整解析分層揭露。</li><li>WA / RE / TLE / Logic Error 錯誤分類表。</li><li>進度表、錯題本與每 7 天 checkpoint。</li></ul><div class="product-tags"><span>30 天</span><span>主線產品</span><span>初級→中級</span></div></div>
+          <div class="product-card-foot"><div class="product-price"><span>預定首發 / 常態</span><strong>NT$199 <del>NT$299</del></strong></div><span class="product-disabled">準備中</span></div>
+        </article>
+
+        <article class="product-card">
+          <div class="product-card-head"><span class="product-code">P2-DEBUG</span><span class="product-status">準備中</span></div>
+          <div><h3>C++ Debug Lab：WA / RE / TLE 修復訓練</h3><p class="product-promise">把除錯從「一直改到 AC」變成一套可以重複使用的定位流程。</p><div class="product-fit"><span>適合你如果</span><strong>解法常常想得到，但會卡在索引、邊界、初始化、型別或效能問題。</strong></div><ul class="product-deliverables"><li>36 個原創 bug cases，分成 WA / RE / TLE / Logic。</li><li>每題包含錯誤版、症狀、最小測資與修正版。</li><li>Boundary / indexing / overflow / initialization 專項 checklist。</li><li>「先找症狀 → 建假設 → 最小化測資 → 驗證」除錯流程卡。</li></ul><div class="product-tags"><span>36 cases</span><span>Debug</span><span>高頻失分</span></div></div>
+          <div class="product-card-foot"><div class="product-price"><span>預定首發 / 常態</span><strong>NT$129 <del>NT$159</del></strong></div><span class="product-disabled">準備中</span></div>
+        </article>
+
+        <article class="product-card">
+          <div class="product-card-head"><span class="product-code">P3-CONCEPT</span><span class="product-status">準備中</span></div>
+          <div><h3>APCS 程式識讀與觀念題 Sprint</h3><p class="product-promise">把追蹤程式、時間複雜度與資料結構判斷從「憑感覺」變成可拆解步驟。</p><div class="product-fit"><span>適合你如果</span><strong>實作不一定差，但觀念題容易被選項細節、code tracing 或複雜度混淆。</strong></div><ul class="product-deliverables"><li>14 日短衝刺，每天一個識讀主題。</li><li>Code tracing、作用域、reference、STL、複雜度與資料結構題組。</li><li>每個錯誤選項都有「為什麼錯」，不只給正解。</li><li>考前可重刷的 1 頁觀念檢查表。</li></ul><div class="product-tags"><span>14 天</span><span>程式識讀</span><span>觀念題</span></div></div>
+          <div class="product-card-foot"><div class="product-price"><span>預定首發 / 常態</span><strong>NT$179 <del>NT$229</del></strong></div><span class="product-disabled">準備中</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="product-stage">
+      <div class="product-stage-head"><div><span class="product-stage-index">STAGE 03</span><h2>級分突破：從會寫，到方法與效率都對</h2></div><p>依能力分層，不讓初學者硬啃進階演算法，也不讓已經會的人重複做太簡單的題。</p></div>
+      <div class="product-grid">
+        <article class="product-card">
+          <div class="product-card-head"><span class="product-code">P3-INTERMEDIATE</span><span class="product-status">準備中</span></div>
+          <div><h3>APCS 實作 2→3 級分強化包</h3><p class="product-promise">把常用技巧真正接到題目：陣列、字串、模擬、前綴和、排序、二分與基本資料結構。</p><div class="product-fit"><span>適合你如果</span><strong>基礎題能做，但題目一長、資料一複雜就容易卡住。</strong></div><ul class="product-deliverables"><li>24 個原創實作題，按能力地圖排序。</li><li>4 個 checkpoint，確認不是只看懂解析。</li><li>題意 → 資料表示 → 方法選擇 → 邊界 → 測資的解題模板。</li><li>每題附錯誤解法分析與可接受複雜度。</li></ul><div class="product-tags"><span>24 題</span><span>2→3</span><span>實作主線</span></div></div>
+          <div class="product-card-foot"><div class="product-price"><span>預定首發 / 常態</span><strong>NT$249 <del>NT$299</del></strong></div><span class="product-disabled">準備中</span></div>
+        </article>
+
+        <article class="product-card">
+          <div class="product-card-head"><span class="product-code">P3-ADVANCED</span><span class="product-status">準備中</span></div>
+          <div><h3>APCS 實作 3→4 級分進階包</h3><p class="product-promise">重點不是再學更多名詞，而是學會辨認何時該排序、二分、greedy、stack / queue 或換更有效率的方法。</p><div class="product-fit"><span>適合你如果</span><strong>中階題大多能寫，但常在效能、方法選擇或整合多個技巧時失分。</strong></div><ul class="product-deliverables"><li>24 個中高階原創題。</li><li>Optimization Lab：同題從慢解到可過測資。</li><li>方法比較表：brute force / sorting / binary search / greedy / traversal。</li><li>時間限制與 constraints 驅動的解法選擇訓練。</li></ul><div class="product-tags"><span>24 題</span><span>3→4</span><span>效能優化</span></div></div>
+          <div class="product-card-foot"><div class="product-price"><span>預定首發 / 常態</span><strong>NT$349 <del>NT$429</del></strong></div><span class="product-disabled">準備中</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="product-stage">
+      <div class="product-stage-head"><div><span class="product-stage-index">STAGE 04</span><h2>考試循環：把能力轉成考場穩定度</h2></div><p>考前不再無限刷題；考後也不讓分數變成一次性事件。</p></div>
+      <div class="product-grid">
+        <article class="product-card is-featured">
+          <div class="product-card-head"><span class="product-code">P4-SPRINT</span><span class="product-status">準備中</span></div>
+          <div><h3>APCS 考前 14 日衝刺計畫</h3><p class="product-promise">考前兩週只保留高報酬任務，降低「東看一點、西刷一點」的焦慮與時間浪費。</p><div class="product-fit"><span>適合你如果</span><strong>考試已接近，現在最需要的是排程、取捨與考場節奏，而不是再開一門大課。</strong></div><ul class="product-deliverables"><li>14 日倒數行程，每天 35–60 分鐘。</li><li>弱點修補日、識讀日、實作日、完整演練日交錯。</li><li>2 次完整限時演練 + 逐題 postmortem。</li><li>考前 48 小時 checklist 與考場時間分配卡。</li></ul><div class="product-tags"><span>14 天</span><span>考前</span><span>低時間成本</span></div></div>
+          <div class="product-card-foot"><div class="product-price"><span>預定首發 / 常態</span><strong>NT$249 <del>NT$299</del></strong></div><span class="product-disabled">準備中</span></div>
+        </article>
+
+        <article class="product-card">
+          <div class="product-card-head"><span class="product-code">P4-MOCK</span><span class="product-status">準備中</span></div>
+          <div><h3>APCS 原創模擬考 Pack</h3><p class="product-promise">不是把舊題換數字，而是用原創題測「整合能力 + 時間分配 + 穩定度」。</p><div class="product-fit"><span>適合你如果</span><strong>平常單題會做，但不知道完整考試下自己到底穩不穩。</strong></div><ul class="product-deliverables"><li>3 組原創模擬套卷。</li><li>計時版作答規則與 score sheet。</li><li>每組附難度分布、能力標籤與完整解析。</li><li>考後復盤模板：卡在哪、為何卡、下次怎麼改。</li></ul><div class="product-tags"><span>3 套</span><span>原創模擬</span><span>限時</span></div></div>
+          <div class="product-card-foot"><div class="product-price"><span>預定首發 / 常態</span><strong>NT$199 <del>NT$249</del></strong></div><span class="product-disabled">準備中</span></div>
+        </article>
+
+        <article class="product-card">
+          <div class="product-card-head"><span class="product-code">P5-POSTEXAM</span><span class="product-status">準備中</span></div>
+          <div><h3>APCS 考後復盤與弱點修復包</h3><p class="product-promise">把「我這次考幾級」改成「下一輪具體要修哪三件事」。</p><div class="product-fit"><span>適合你如果</span><strong>剛考完或剛做完模擬考，知道失分但還沒整理成下一輪計畫。</strong></div><ul class="product-deliverables"><li>考後記憶回溯表：題型、卡點、時間、錯誤類型。</li><li>失分分類 → 7–10 日修復任務。</li><li>錯誤重做間隔表與再測 checkpoint。</li><li>下一次考期的起始能力 baseline。</li></ul><div class="product-tags"><span>考後</span><span>7–10 天</span><span>復盤</span></div></div>
+          <div class="product-card-foot"><div class="product-price"><span>預定首發 / 常態</span><strong>NT$149 <del>NT$199</del></strong></div><span class="product-disabled">準備中</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="product-stage">
+      <div class="product-stage-head"><div><span class="product-stage-index">STAGE 05</span><h2>作品與升學材料：讓能力看得見</h2></div><p>這一段不賣「漂亮模板」本身，而是把解題、營隊與專題過程整理成可以被別人理解的證據。</p></div>
+      <div class="product-grid">
+        <article class="product-card">
+          <div class="product-card-head"><span class="product-code">P6-GITHUB</span><span class="product-status">準備中</span></div>
+          <div><h3>GitHub 程式作品集 Starter Kit</h3><p class="product-promise">把題解與專題從資料夾堆積，整理成能看懂你的思考、進步與工程習慣的 repository。</p><div class="product-fit"><span>適合你如果</span><strong>已經寫過不少程式，但 GitHub 看起來仍像檔案備份站。</strong></div><ul class="product-deliverables"><li>README / solution note / project page 三種模板。</li><li>Repository 結構、命名、commit 與 release 範例。</li><li>從 APCS 題解挑選「值得展示」題目的 rubric。</li><li>作品集自評 checklist。</li></ul><div class="product-tags"><span>GitHub</span><span>README</span><span>作品集</span></div></div>
+          <div class="product-card-foot"><div class="product-price"><span>預定首發 / 常態</span><strong>NT$229 <del>NT$299</del></strong></div><span class="product-disabled">準備中</span></div>
+        </article>
+
+        <article class="product-card">
+          <div class="product-card-head"><span class="product-code">P7-PORTFOLIO</span><span class="product-status">準備中</span></div>
+          <div><h3>資訊類學習歷程 Evidence Kit</h3><p class="product-promise">把「我參加過、我做過」改寫成「我遇到什麼問題、怎麼解、留下哪些證據、能力如何變化」。</p><div class="product-fit"><span>適合你如果</span><strong>有 APCS、營隊、GitHub 或專題經驗，但不知道哪些素材值得留、怎麼組成一份有邏輯的紀錄。</strong></div><ul class="product-deliverables"><li>活動前 / 活動中 / 活動後記錄模板。</li><li>證據索引：照片、commit、測試、筆記、成果頁。</li><li>反思框架與避免空泛敘述的改寫清單。</li><li>單頁摘要與長版素材包兩種結構。</li></ul><div class="product-tags"><span>學習歷程</span><span>證據</span><span>反思</span></div></div>
+          <div class="product-card-foot"><div class="product-price"><span>預定首發 / 常態</span><strong>NT$249 <del>NT$329</del></strong></div><span class="product-disabled">準備中</span></div>
+        </article>
+
+        <article class="product-card">
+          <div class="product-card-head"><span class="product-code">P8-AI-CODING</span><span class="product-status">準備中</span></div>
+          <div><h3>AI Coding 14 日專題實作包</h3><p class="product-promise">用 AI 加速，但保留自己的需求拆解、程式理解、測試與 Git 證據，完成一個真的可以展示的小型軟體。</p><div class="product-fit"><span>適合你如果</span><strong>已會基本程式，想從「解題」跨到「做產品」，又不想只是把需求整段丟給 AI。</strong></div><ul class="product-deliverables"><li>3 種可選專題 brief + scope boundary。</li><li>需求 → 任務 → branch → test → review → release 流程。</li><li>AI prompt patterns 與「哪些地方一定要自己驗證」清單。</li><li>最終 README、demo、測試紀錄與學習反思模板。</li></ul><div class="product-tags"><span>14 天</span><span>AI Coding</span><span>專題</span></div></div>
+          <div class="product-card-foot"><div class="product-price"><span>預定首發 / 常態</span><strong>NT$399 <del>NT$499</del></strong></div><span class="product-disabled">準備中</span></div>
+        </article>
+      </div>
+    </section>
+
+    <section class="product-stage">
+      <div class="product-stage-head"><div><span class="product-stage-index">BUNDLES</span><h2>組合包：降低選擇成本，不強迫全買</h2></div><p>Bundle 只把自然會連續使用的產品放在一起；單品永遠保留。</p></div>
+      <div class="bundle-grid">
+        <article class="bundle-card is-primary"><div><span class="product-code">B1-APCS-CORE</span><h3>APCS Core Bundle</h3><p>適合希望一次建立完整備考底座的人。</p></div><ul class="bundle-includes"><li>P1 30 天核心訓練</li><li>P2 Debug Lab</li><li>P3 程式識讀 Sprint</li><li>P4 原創模擬考 Pack</li></ul><div class="bundle-foot"><div class="product-price"><span>預定組合價</span><strong>NT$599</strong></div><span class="product-disabled">準備中</span></div></article>
+        <article class="bundle-card"><div><span class="product-code">B2-PORTFOLIO</span><h3>Portfolio Builder Bundle</h3><p>適合把程式能力轉成作品、專題與學習歷程的人。</p></div><ul class="bundle-includes"><li>P6 GitHub Starter Kit</li><li>P7 學習歷程 Evidence Kit</li><li>P8 AI Coding 專題包</li></ul><div class="bundle-foot"><div class="product-price"><span>預定組合價</span><strong>NT$699</strong></div><span class="product-disabled">準備中</span></div></article>
+        <article class="bundle-card"><div><span class="product-code">B3-APCS-PREP</span><h3>APCS Complete Prep Bundle</h3><p>從平日訓練一路接到考前衝刺的完整自學路線。</p></div><ul class="bundle-includes"><li>P1 + P2 + P3 Concept</li><li>P3 2→3 級分強化</li><li>P4 14 日考前 Sprint</li><li>P4 原創模擬考 Pack</li></ul><div class="bundle-foot"><div class="product-price"><span>預定組合價</span><strong>NT$899</strong></div><span class="product-disabled">準備中</span></div></article>
+      </div>
+    </section>
+
+    <section class="library-policy">
+      <h2>購買體驗也先定義好</h2>
+      <p>產品本身不是實驗，但販售流程仍遵守幾個固定原則：不靠誤導性稀缺、不把必要內容拆成無限小包、不用訂閱綁住只需要一次考期的人。數位商品應該讓使用者在購買前就清楚知道「適合誰、會得到什麼、完成後能做什麼」。</p>
+      <div class="library-policy-grid"><div class="library-policy-item"><strong>同版本免費更新</strong><span>修正錯字、測資或解析錯誤不另外收費。</span></div><div class="library-policy-item"><strong>升級只收差額邏輯</strong><span>若日後支援 Bundle upgrade，優先抵扣已購單品，避免重複付款。</span></div><div class="library-policy-item"><strong>不做假倒數</strong><span>若有首發價，必須有明確起訖或數量規則，不能永久「最後一天」。</span></div></div>
+    </section>
   </main>
   <script type="module" src="./js/theme.js"></script>
 </body>
