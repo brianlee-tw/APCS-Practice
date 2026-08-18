@@ -1,3 +1,16 @@
-<!doctype html><html lang="zh-Hant-TW"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark"><meta name="theme-color" content="#070b14"><title>C++ vector 越界：最常見的 off-by-one｜APCS 練習</title><meta name="description" content="用一個短例子理解 C++ vector 越界、i<n 與 i<=n 的差異，以及 APCS 實作題常見的 RE／未定義行為來源。"><link rel="stylesheet" href="../styles.css"></head><body><header class="site-header"><a class="brand" href="../">APCS//DIAGNOSTIC</a><a href="../">BACK</a></header><main><article class="panel"><p class="eyebrow">DEBUG / ARRAYS</p><h1>C++ vector 越界：先檢查 i &lt; n</h1><p>若 vector 有 n 個元素，合法索引是 <code>0</code> 到 <code>n-1</code>。因此遍歷全部元素通常寫成：</p><pre class="code"><code>for (int i = 0; i &lt; n; ++i) {
+<!doctype html>
+<html lang="zh-Hant-TW" data-theme="dark">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#0b0d12">
+  <title>C++ vector 越界：最常見的 off-by-one｜APCS 練習</title>
+  <meta name="description" content="用一個短例子理解 C++ vector 越界、i<n 與 i<=n 的差異，以及 APCS 實作題常見的 RE／未定義行為來源。">
+  <script>(function(){try{var s=localStorage.getItem('apcs_theme_preference');var t=s==='light'||s==='dark'?s:(matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light');document.documentElement.dataset.theme=t;document.documentElement.style.colorScheme=t}catch(_){}})();</script>
+  <link rel="stylesheet" href="../styles.css">
+</head>
+<body>
+  <header class="site-header"><div class="shell site-header-inner"><a class="brand" href="../"><span class="brand-mark">A+</span><span class="brand-copy"><span class="brand-title">APCS Diagnostic</span><span class="brand-subtitle">C++ skill check</span></span></a><div class="header-actions"><a class="header-link" href="../">回診斷</a><button class="theme-toggle" type="button" data-theme-toggle><span class="theme-icon" data-theme-icon>☾</span><span class="theme-label" data-theme-label>深色</span></button></div></div></header>
+  <main><article class="article-shell"><p class="eyebrow">Debug / Arrays</p><h1>C++ vector 越界：先檢查 <code>i &lt; n</code></h1><p>若 <code>vector</code> 有 <code>n</code> 個元素，合法索引是 <code>0</code> 到 <code>n-1</code>。因此遍歷全部元素通常寫成：</p><pre class="code"><code>for (int i = 0; i &lt; n; ++i) {
   cout &lt;&lt; v[i] &lt;&lt; '\n';
-}</code></pre><p>把條件誤寫成 <code>i &lt;= n</code> 時，最後一次會存取 <code>v[n]</code>。這超出合法範圍，屬於未定義行為；可能看似正常，也可能 RE，因此不能以「我的電腦沒壞」判定程式正確。</p><h2>除錯順序</h2><ol><li>確認容器 size。</li><li>列出合法索引範圍。</li><li>檢查迴圈起點、終點與是否含等號。</li><li>再檢查二維矩陣的 R/C 是否顛倒。</li></ol><p><a class="primary" href="../">做 15 題免費診斷 →</a></p></article></main></body></html>
+}</code></pre><p>把條件誤寫成 <code>i &lt;= n</code> 時，最後一次會存取 <code>v[n]</code>。這超出合法範圍，屬於未定義行為；可能看似正常，也可能 RE，因此不能以「我的電腦沒壞」判定程式正確。</p><h2>除錯順序</h2><ol><li>確認容器 <code>size</code>。</li><li>列出合法索引範圍。</li><li>檢查迴圈起點、終點與是否含等號。</li><li>再檢查二維矩陣的 R/C 是否顛倒。</li></ol><div class="article-cta"><a class="primary" href="../">做 15 題免費診斷</a></div></article></main>
+  <script type="module" src="../js/theme.js"></script>
+</body></html>
