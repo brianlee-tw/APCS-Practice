@@ -158,6 +158,8 @@ function applyDeepening() {
   if (!deepening) return;
   const host = document.getElementById('lesson-view');
   if (!host?.querySelector('.lesson-head')) return;
+  // v1.2 is intentionally layered after v1.1 so section order is deterministic.
+  if (!host.querySelector('.teaching-story') || !host.querySelector('.lesson-playground') || !host.querySelector('.interactive-self-check')) return;
   const dayNo = currentDayNumber();
   const day = deepening.days.find((x) => x.day === dayNo);
   if (!day) return;
