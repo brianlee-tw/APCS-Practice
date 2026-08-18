@@ -31,7 +31,36 @@ Recall 自評：`0=不會`、`1=需要提示`、`2=自己做出但偏慢`、`3=�
 更完整的操作方式見 [`docs/WORKFLOW.md`](./docs/WORKFLOW.md)。
 
 <!-- APCS_DASHBOARD_START -->
-> Dashboard 將由 `python tools/apcs.py sync` / GitHub Actions 自動產生。
+## APCS Training Dashboard
+
+| 指標 | 數量 |
+| :--- | ---: |
+| 索引題目 | **57** |
+| 明確標記 AC | **0** |
+| 舊制完成（有筆記、尚未確認 AC） | **44** |
+| 今日到期複習 | **0** |
+
+> `📚 Legacy` 代表舊制資料；v2 不再把 Notion 連結等同於 AC。
+
+### 能力分布
+
+| 領域 | 題數 | AC / 舊制完成 | 到期 |
+| :--- | ---: | ---: | ---: |
+| Fundamentals / Simulation | 21 | 12 | 0 |
+| Math | 20 | 17 | 0 |
+| Arrays / Simulation | 7 | 7 | 0 |
+| String | 5 | 5 | 0 |
+| Prefix / Greedy | 2 | 2 | 0 |
+| Data Structures | 1 | 0 | 0 |
+| Search / Sort | 1 | 1 | 0 |
+
+### 今日複習優先序
+
+| ID | 題目 | 領域 | Recall | 到期日 |
+| :--- | :--- | :--- | ---: | :---: |
+| — | 目前沒有到期題目 | — | — | — |
+
+完整題庫見 [Problem Index](./docs/PROBLEM_INDEX.md)，複習佇列見 [Review Queue](./docs/REVIEW_QUEUE.md)。
 <!-- APCS_DASHBOARD_END -->
 
 ## 資料來源與可信度
