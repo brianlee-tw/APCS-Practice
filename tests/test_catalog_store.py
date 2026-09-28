@@ -353,4 +353,3 @@ class CatalogStoreTest(unittest.TestCase):
             self.data.joinpath("solutions.csv").read_bytes(),
             before,
         )
-
