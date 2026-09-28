@@ -358,6 +358,33 @@ class CatalogStore:
             [*solutions, new_solution]
         )
 
+    def add_solution(
+        self,
+        solution: SolutionMeta,
+    ) -> None:
+        row = self._solution_row(solution)
+        problems = self.load_problems()
+        solutions = self.load_solutions()
+        pid = row["problem_id"]
+
+        if pid not in problems:
+            raise CatalogError(
+                f"problem not found: {pid}"
+            )
+
+        if any(
+            item.path == row["path"]
+            for item in solutions
+        ):
+            raise CatalogError(
+                f"solution path already exists: "
+                f"{row['path']}"
+            )
+
+        self.save_solutions(
+            [*solutions, SolutionMeta(**row)]
+        )
+
     def update_problem(
         self,
         problem: ProblemMeta,

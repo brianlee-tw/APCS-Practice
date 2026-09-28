@@ -291,3 +291,66 @@ class CatalogStoreTest(unittest.TestCase):
             solution.complexity,
             "O(N)",
         )
+
+    def test_add_solution_to_existing_problem(self):
+        self.valid_catalog()
+        store = CatalogStore(self.data)
+
+        store.add_solution(
+            SolutionMeta(
+                "a001",
+                "solutions/a001.py",
+                "PYTHON",
+                "O(1)",
+            )
+        )
+
+        solutions = store.load_solutions()
+
+        self.assertTrue(
+            any(
+                item.problem_id == "a001"
+                and item.path == "solutions/a001.py"
+                and item.language == "python"
+                for item in solutions
+            )
+        )
+
+    def test_add_solution_rejects_unknown_problem_without_mutation(self):
+        self.valid_catalog()
+        store = CatalogStore(self.data)
+        before = self.data.joinpath("solutions.csv").read_bytes()
+
+        with self.assertRaises(CatalogError):
+            store.add_solution(
+                SolutionMeta(
+                    "z999",
+                    "solutions/z999.cpp",
+                    "cpp",
+                )
+            )
+
+        self.assertEqual(
+            self.data.joinpath("solutions.csv").read_bytes(),
+            before,
+        )
+
+    def test_add_solution_rejects_duplicate_path_without_mutation(self):
+        self.valid_catalog()
+        store = CatalogStore(self.data)
+        before = self.data.joinpath("solutions.csv").read_bytes()
+
+        with self.assertRaises(CatalogError):
+            store.add_solution(
+                SolutionMeta(
+                    "a001",
+                    "solutions/a001.cpp",
+                    "cpp",
+                )
+            )
+
+        self.assertEqual(
+            self.data.joinpath("solutions.csv").read_bytes(),
+            before,
+        )
+
