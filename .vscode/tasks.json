@@ -2,38 +2,56 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "type": "cppbuild",
-      "label": "C/C++: cl.exe 建置使用中檔案",
-      "command": "cl.exe",
+      "label": "APCS: Build current C++",
+      "type": "shell",
+      "command": "bash",
       "args": [
-        "/Zi",
-        "/EHsc",
-        "/nologo",
-        "/utf-8",
-        "/Fe${fileDirname}\\${fileBasenameNoExtension}.exe",
-        "${file}"
+        "-lc",
+        "mkdir -p \"${workspaceFolder}/build\" && g++ -std=c++17 -O2 -Wall -Wextra \"${file}\" -o \"${workspaceFolder}/build/${fileBasenameNoExtension}\""
       ],
       "options": {
-        "cwd": "${fileDirname}"
+        "cwd": "${workspaceFolder}"
       },
       "problemMatcher": [
-        "$msCompile"
+        "$gcc"
       ],
       "presentation": {
-        "reveal": "silent",
+        "reveal": "always",
         "clear": true,
-        "close": true
+        "panel": "shared"
       },
       "group": {
         "kind": "build",
         "isDefault": true
+      }
+    },
+    {
+      "label": "APCS: Build & Run current C++",
+      "type": "shell",
+      "command": "bash",
+      "args": [
+        "-lc",
+        "\"${workspaceFolder}/build/${fileBasenameNoExtension}\""
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
       },
-      "detail": "偵錯工具產生的工作。"
+      "dependsOn": [
+        "APCS: Build current C++"
+      ],
+      "dependsOrder": "sequence",
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "clear": false,
+        "focus": true,
+        "panel": "shared"
+      }
     },
     {
       "label": "APCS: Today",
       "type": "shell",
-      "command": "python tools/apcs.py today",
+      "command": "python3 tools/apcs.py today",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -43,7 +61,7 @@
     {
       "label": "APCS: Validate",
       "type": "shell",
-      "command": "python tools/apcs.py validate",
+      "command": "python3 tools/apcs.py validate",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -53,7 +71,7 @@
     {
       "label": "APCS: Sync dashboard",
       "type": "shell",
-      "command": "python tools/apcs.py sync",
+      "command": "python3 tools/apcs.py sync",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -63,7 +81,7 @@
     {
       "label": "APCS: Finish problem",
       "type": "shell",
-      "command": "python tools/apcs.py finish ${input:apcsProblemId} ${input:apcsScore}",
+      "command": "python3 tools/apcs.py finish ${input:apcsProblemId} ${input:apcsScore}",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -73,7 +91,7 @@
     {
       "label": "APCS: Review problem",
       "type": "shell",
-      "command": "python tools/apcs.py review ${input:apcsProblemId} ${input:apcsScore}",
+      "command": "python3 tools/apcs.py review ${input:apcsProblemId} ${input:apcsScore}",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -83,7 +101,7 @@
     {
       "label": "APCS: Create local note",
       "type": "shell",
-      "command": "python tools/apcs.py note ${input:apcsProblemId}",
+      "command": "python3 tools/apcs.py note ${input:apcsProblemId}",
       "problemMatcher": [],
       "presentation": {
         "reveal": "always",
@@ -95,7 +113,7 @@
     {
       "id": "apcsProblemId",
       "type": "promptString",
-      "description": "APCS problem ID (例如 b130)"
+      "description": "APCS problem ID（例如 b130）"
     },
     {
       "id": "apcsScore",
