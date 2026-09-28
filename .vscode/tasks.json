@@ -2,12 +2,36 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "APCS: Build current C++",
-      "type": "shell",
-      "command": "bash",
+      "label": "APCS｜00 控制中心",
+      "detail": "APCS 日常學習、複習、筆記與 Git 操作入口",
+      "type": "process",
+      "command": "python3",
       "args": [
-        "-lc",
-        "mkdir -p \"${workspaceFolder}/build\" && g++ -std=c++17 -O2 -Wall -Wextra \"${file}\" -o \"${workspaceFolder}/build/${fileBasenameNoExtension}\""
+        "tools/apcs_control.py",
+        "${file}"
+      ],
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
+      "problemMatcher": [],
+      "presentation": {
+        "echo": false,
+        "reveal": "always",
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
+      }
+    },
+    {
+      "label": "APCS｜01 編譯並執行 C++",
+      "detail": "Ctrl+Shift+B｜編譯目前 C++，成功後直接執行",
+      "type": "process",
+      "command": "python3",
+      "args": [
+        "tools/vscode_task.py",
+        "build-run",
+        "${file}"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
@@ -16,9 +40,12 @@
         "$gcc"
       ],
       "presentation": {
+        "echo": false,
         "reveal": "always",
-        "clear": true,
-        "panel": "shared"
+        "focus": true,
+        "panel": "dedicated",
+        "showReuseMessage": false,
+        "clear": true
       },
       "group": {
         "kind": "build",
@@ -26,106 +53,29 @@
       }
     },
     {
-      "label": "APCS: Build & Run current C++",
-      "type": "shell",
-      "command": "bash",
+      "label": "APCS｜02 只編譯 C++",
+      "detail": "只檢查目前 C++ 是否能成功編譯，不執行",
+      "type": "process",
+      "command": "python3",
       "args": [
-        "-lc",
-        "\"${workspaceFolder}/build/${fileBasenameNoExtension}\""
+        "tools/vscode_task.py",
+        "build",
+        "${file}"
       ],
       "options": {
         "cwd": "${workspaceFolder}"
       },
-      "dependsOn": [
-        "APCS: Build current C++"
+      "problemMatcher": [
+        "$gcc"
       ],
-      "dependsOrder": "sequence",
-      "problemMatcher": [],
       "presentation": {
+        "echo": false,
         "reveal": "always",
-        "clear": false,
-        "focus": true,
-        "panel": "shared"
-      }
-    },
-    {
-      "label": "APCS: Today",
-      "type": "shell",
-      "command": "python3 tools/apcs.py today",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
+        "focus": false,
+        "panel": "dedicated",
+        "showReuseMessage": false,
         "clear": true
       }
-    },
-    {
-      "label": "APCS: Validate",
-      "type": "shell",
-      "command": "python3 tools/apcs.py validate",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "clear": true
-      }
-    },
-    {
-      "label": "APCS: Sync dashboard",
-      "type": "shell",
-      "command": "python3 tools/apcs.py sync",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "clear": true
-      }
-    },
-    {
-      "label": "APCS: Finish problem",
-      "type": "shell",
-      "command": "python3 tools/apcs.py finish ${input:apcsProblemId} ${input:apcsScore}",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "clear": true
-      }
-    },
-    {
-      "label": "APCS: Review problem",
-      "type": "shell",
-      "command": "python3 tools/apcs.py review ${input:apcsProblemId} ${input:apcsScore}",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "clear": true
-      }
-    },
-    {
-      "label": "APCS: Create local note",
-      "type": "shell",
-      "command": "python3 tools/apcs.py note ${input:apcsProblemId}",
-      "problemMatcher": [],
-      "presentation": {
-        "reveal": "always",
-        "clear": true
-      }
-    }
-  ],
-  "inputs": [
-    {
-      "id": "apcsProblemId",
-      "type": "promptString",
-      "description": "APCS problem ID（例如 b130）"
-    },
-    {
-      "id": "apcsScore",
-      "type": "pickString",
-      "description": "Recall score",
-      "options": [
-        "0",
-        "1",
-        "2",
-        "3"
-      ],
-      "default": "2"
     }
   ]
 }

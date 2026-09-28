@@ -1,4 +1,4 @@
-# APCS-Practice v2 Workflow
+# APCS-Practice v2.1 Workflow
 
 ## 1. 核心原則
 
@@ -9,6 +9,8 @@ v2 將資料分成三層：
 3. **Notes**：`notes/<id>.md` 或既有 Notion，只在有價值時建立。
 
 資料夾不再代表能力分類；能力分類由 tags 與 metadata 推導。
+
+日常操作以 VS Code 為主：`Ctrl+Shift+B` 編譯並執行目前 C++，`Ctrl+Alt+A` 開啟 APCS 控制中心。CLI 保留給除錯、自動化與進階操作。
 
 ---
 
@@ -60,7 +62,7 @@ python tools/apcs.py finish b130 2
 | 2 | 可獨立完成但偏慢 | 7 天 |
 | 3 | 流暢獨立完成 | 30 天 |
 
-連續兩次 Recall=3 後，間隔拉長到 60 天；連續三次以上為 90 天。
+只有正式 Review 的 `AC + Recall 3` 才累積 streak，而且必須發生在不同日期。同一天多次 Review 只採最後一筆參與 streak 計算。第 1 次為 30 天、第 2 次為 60 天、第 3 次以上為 90 天；較低 Recall 或非 AC 會中斷 streak。
 
 可額外記錄時間：
 
@@ -72,30 +74,32 @@ python tools/apcs.py finish b130 2 --minutes 18
 
 ## 4. 複習
 
-看今天到期的題目：
+日常使用 APCS 控制中心的「今日複習」查看並開啟到期題目。
 
-```powershell
+重解後，由控制中心依序記錄：
+
+```text
+Result → Recall → Minutes
+```
+
+Result 支援 `AC`、`WA`、`TLE`、`RE`、`MLE`、`CE`。Minutes 可略過；非 AC 不允許 Recall 3。
+
+CLI 等價操作：
+
+```bash
 python tools/apcs.py today
-```
-
-重解後：
-
-```powershell
 python tools/apcs.py review b130 3 --minutes 7
+python tools/apcs.py review b130 1 --result WA --minutes 11
 ```
 
-若重解結果不是 AC：
+Review 失敗不會移除既有首次 AC。`solved_on` 表示首次完成日期；`last_review_on`、`last_result` 與 `recall` 則描述最近一次複習狀態。
 
-```powershell
-python tools/apcs.py review b130 1 --result WA
-```
+只有正式 Review 的 `AC + Recall 3` 會累積 streak，而且必須來自不同日期；同一天多次 Review 只採最後一筆。第 1、2、3 次連續成功分別對應 30、60、90 天。較低 Recall 或非 AC 會中斷 streak。
 
 這些紀錄會寫入：
 
-- `data/progress.csv`：最新狀態
-- `data/reviews.csv`：歷史紀錄
-
-然後自動重新產生 dashboard。
+- `data/progress.csv`：目前學習狀態快照。
+- `data/reviews.csv`：Finish / Review 的事件歷史，包括 Result、Recall 與 Minutes。
 
 ---
 

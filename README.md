@@ -13,22 +13,53 @@ APCS 實作練習、複習與弱點追蹤倉庫。
 
 ## 最短工作流程
 
-1. 在 `solutions/` 新增 `.cpp` / `.py`，檔名以題號開頭，例如 `b130_Random_Number.cpp`。
-2. 檔頭只保留相對穩定的題目資訊：
-   ```cpp
-   // APCS Title: b130. 明明的隨機數
-   // APCS Complexity: O(N log N)
-   // APCS Tag: Sorting, Set
-   // APCS Difficulty: 1
-   // APCS Source: https://...
-   ```
-3. AC 後執行：`python tools/apcs.py finish b130 2`
-4. 之後重解執行：`python tools/apcs.py review b130 3`
-5. 只有值得整理的題目才執行：`python tools/apcs.py note b130`
+日常使用以 VS Code 為主，不需要記大量指令或快捷鍵。
 
-Recall 自評：`0=不會`、`1=需要提示`、`2=自己做出但偏慢`、`3=流暢獨立完成`。
+### 主要入口
 
-更完整的操作方式見 [`docs/WORKFLOW.md`](./docs/WORKFLOW.md)。
+```text
+Ctrl+Shift+B
+→ 編譯並執行目前 C++ 題目
+
+Ctrl+Alt+A
+→ 開啟 APCS 控制中心
+```
+
+APCS 控制中心提供：
+
+- **今日複習**：查看並開啟已到期或逾期的題目。
+- **完成題目**：首次 AC 後記錄 Recall 與解題分鐘數。
+- **複習題目**：記錄 AC / WA / TLE / RE / MLE / CE、Recall 與分鐘數。
+- **題目筆記**：建立或開啟 `notes/<id>.md`。
+- **檢查與提交**：檢視 Git 變更、stage、commit，以及確認後 push。
+
+Recall 自評：
+
+| Recall | 定義 | 基礎複習間隔 |
+| ---: | --- | ---: |
+| 0 | 幾乎不會／需要看答案 | 1 天 |
+| 1 | 需要提示 | 3 天 |
+| 2 | 可獨立完成但偏慢 | 7 天 |
+| 3 | 流暢、獨立完成 | 30 天起 |
+
+正式 Review 若連續在不同日期取得 `AC + Recall 3`，間隔依序延長為 30、60、90 天。
+
+分鐘數屬於每次 Finish / Review 的事件資料，可略過；不會覆蓋先前的練習時間紀錄。
+
+### CLI
+
+控制中心是日常入口；CLI 保留給除錯、自動化與進階操作，例如：
+
+```bash
+python tools/apcs.py today
+python tools/apcs.py finish b130 2 --minutes 18
+python tools/apcs.py review b130 1 --result WA --minutes 11
+python tools/apcs.py note b130
+python tools/apcs.py validate
+python tools/apcs.py sync
+```
+
+目前 v2.1 仍可讀取既有 solution 檔案中的 `APCS Title`、`APCS Tag`、`APCS Complexity` 等 metadata。新的 Problem Catalog 與 metadata workflow 將在後續版本處理；本版不大量重寫既有 solution files。
 
 <!-- APCS_DASHBOARD_START -->
 ## APCS Training Dashboard
@@ -36,11 +67,12 @@ Recall 自評：`0=不會`、`1=需要提示`、`2=自己做出但偏慢`、`3=�
 | 指標 | 數量 |
 | :--- | ---: |
 | 索引題目 | **57** |
-| 明確標記 AC | **0** |
-| 舊制完成（有筆記、尚未確認 AC） | **44** |
+| 明確 AC | **0** |
+| Mastered | **0** |
 | 今日到期複習 | **0** |
+| 舊制完成（未確認 AC） | **44** |
 
-> `📚 Legacy` 代表舊制資料；v2 不再把 Notion 連結等同於 AC。
+> `📚 Legacy` 代表舊制資料；Notion 筆記本身不等同於 AC。
 
 ### 能力分布
 
