@@ -18,9 +18,11 @@ from pathlib import Path
 try:
     from . import apcs as core
     from .catalog_store import CatalogError, ProblemMeta, SolutionMeta
+    from .tag_taxonomy import TAG_GROUPS, serialize_selection, split_tags
 except ImportError:
     import apcs as core
     from catalog_store import CatalogError, ProblemMeta, SolutionMeta
+    from tag_taxonomy import TAG_GROUPS, serialize_selection, split_tags
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -349,6 +351,7 @@ def choose_menu(
     problem=None,
     main=False,
     footer_numbers=True,
+    back_text: str | None = None,
 ):
     selected = first_enabled(options)
 
@@ -436,7 +439,8 @@ def choose_menu(
             print(f"{GRAY}1–{len(options)} 直達 · Esc / Q 關閉{RESET}")
         else:
             print(f"{GRAY}↑↓ 選擇 · Enter 執行{RESET}")
-            print(f"{GRAY}Esc / Q 返回控制中心{RESET}")
+            label = back_text or "返回控制中心"
+            print(f"{GRAY}Esc / Q {label}{RESET}")
 
         key = read_key()
 
@@ -1081,6 +1085,303 @@ def prompt_text(
     return value
 
 
+
+
+def _print_tag_header(title: str, selected: set[str], kept_legacy: set[str]) -> None:
+    clear()
+    heading(title)
+    print()
+
+    total = len(selected) + len(kept_legacy)
+    print(f"{GRAY}已選 {total} 個 Tags{RESET}")
+
+    if total:
+        preview = ", ".join(sorted(selected) + sorted(kept_legacy))
+        print(f"{WHITE}{fit(preview, ui_width())}{RESET}")
+
+    print()
+    rule()
+    print()
+
+
+def _tag_group_menu(
+    group_name: str,
+    group_tags,
+    selected: set[str],
+    kept_legacy: set[str],
+) -> str:
+    cursor = 0
+    tags = list(group_tags)
+
+    while True:
+        _print_tag_header(
+            f"Tags · {group_name}",
+            selected,
+            kept_legacy,
+        )
+
+        for index, tag in enumerate(tags):
+            mark = "✓" if tag in selected else "○"
+            prefix = "›" if index == cursor else " "
+            color = CYAN + BOLD if index == cursor else ""
+
+            print(
+                f"{color}{prefix} {index + 1}  "
+                f"{mark} {tag}{RESET}"
+            )
+
+        print()
+        rule()
+        print(f"{GRAY}↑↓ 選擇 · Enter / Space 切換{RESET}")
+        print(f"{GRAY}S 完成 Tags 選擇 · Esc / Q 返回分類{RESET}")
+
+        key = read_key()
+
+        if key == "UP":
+            cursor = (cursor - 1) % len(tags)
+        elif key == "DOWN":
+            cursor = (cursor + 1) % len(tags)
+        elif key in {"ENTER", " "}:
+            tag = tags[cursor]
+            if tag in selected:
+                selected.remove(tag)
+            else:
+                selected.add(tag)
+        elif key in {"s", "S"}:
+            return "save"
+        elif key in {"ESC", "q", "Q"}:
+            return "back"
+        elif key.isdigit():
+            index = int(key) - 1
+            if 0 <= index < len(tags):
+                cursor = index
+
+
+def _legacy_tag_menu(
+    tags: list[str],
+    kept: set[str],
+    selected: set[str],
+) -> str:
+    cursor = 0
+
+    while True:
+        _print_tag_header(
+            "Tags · Legacy / 其他",
+            selected,
+            kept,
+        )
+
+        for index, tag in enumerate(tags):
+            mark = "✓" if tag in kept else "○"
+            prefix = "›" if index == cursor else " "
+            color = CYAN + BOLD if index == cursor else ""
+
+            print(
+                f"{color}{prefix} {index + 1}  "
+                f"{mark} {tag}{RESET}"
+            )
+
+        print()
+        rule()
+        print(f"{GRAY}↑↓ 選擇 · Enter / Space 切換{RESET}")
+        print(f"{GRAY}S 完成 Tags 選擇 · Esc / Q 返回分類{RESET}")
+
+        key = read_key()
+
+        if key == "UP":
+            cursor = (cursor - 1) % len(tags)
+        elif key == "DOWN":
+            cursor = (cursor + 1) % len(tags)
+        elif key in {"ENTER", " "}:
+            tag = tags[cursor]
+            if tag in kept:
+                kept.remove(tag)
+            else:
+                kept.add(tag)
+        elif key in {"s", "S"}:
+            return "save"
+        elif key in {"ESC", "q", "Q"}:
+            return "back"
+        elif key.isdigit():
+            index = int(key) - 1
+            if 0 <= index < len(tags):
+                cursor = index
+
+
+def tag_selector(
+    current: str = "",
+    *,
+    required: bool = False,
+) -> str | None:
+    canonical, unknown = split_tags(current)
+    selected = set(canonical)
+    legacy = list(unknown)
+    kept_legacy = set(legacy)
+    cursor = 0
+
+    def finish() -> str | None:
+        if required and not selected and not kept_legacy:
+            return None
+
+        return serialize_selection(
+            selected,
+            [
+                tag
+                for tag in legacy
+                if tag in kept_legacy
+            ],
+        )
+
+    while True:
+        entries = [
+            (
+                "group",
+                group_name,
+                group_tags,
+                sum(tag in selected for tag in group_tags),
+                len(group_tags),
+            )
+            for group_name, group_tags in TAG_GROUPS
+        ]
+
+        if legacy:
+            entries.append(
+                (
+                    "legacy",
+                    "Legacy / 其他",
+                    legacy,
+                    sum(tag in kept_legacy for tag in legacy),
+                    len(legacy),
+                )
+            )
+
+        entries.append(
+            (
+                "save",
+                "✓ 完成 Tags 選擇",
+                None,
+                len(selected) + len(kept_legacy),
+                None,
+            )
+        )
+
+        cursor %= len(entries)
+
+        _print_tag_header(
+            "Tags 分類",
+            selected,
+            kept_legacy,
+        )
+
+        for index, entry in enumerate(entries):
+            kind, label, _, count, maximum = entry
+            prefix = "›" if index == cursor else " "
+            color = CYAN + BOLD if index == cursor else ""
+
+            if kind == "save":
+                detail = f"目前共 {count} 個 Tags"
+            elif kind == "legacy":
+                detail = f"{count}/{maximum} 保留"
+            else:
+                detail = f"{count}/{maximum} 已選"
+
+            print(
+                f"{color}{prefix} {index + 1}  "
+                f"{label}{RESET}"
+            )
+            print(f"     {GRAY}{detail}{RESET}")
+
+        print()
+        rule()
+        print(f"{GRAY}↑↓ 選擇 · Enter 執行{RESET}")
+        print(f"{GRAY}S 完成 Tags 選擇 · Esc / Q 取消 Tags 編輯{RESET}")
+
+        key = read_key()
+
+        if key == "UP":
+            cursor = (cursor - 1) % len(entries)
+            continue
+
+        if key == "DOWN":
+            cursor = (cursor + 1) % len(entries)
+            continue
+
+        if key in {"s", "S"}:
+            result = finish()
+            if result is not None:
+                return result
+
+            clear()
+            heading("Tags 分類")
+            print()
+            print(
+                f"{YELLOW}"
+                "新題目至少需要選擇 1 個 Tag。"
+                f"{RESET}"
+            )
+            pause()
+            continue
+
+        if key in {"ESC", "q", "Q"}:
+            return None
+
+        if key.isdigit():
+            index = int(key) - 1
+            if 0 <= index < len(entries):
+                cursor = index
+            continue
+
+        if key != "ENTER":
+            continue
+
+        kind, label, values, _, _ = entries[cursor]
+
+        if kind == "save":
+            result = finish()
+            if result is not None:
+                return result
+
+            clear()
+            heading("Tags 分類")
+            print()
+            print(
+                f"{YELLOW}"
+                "新題目至少需要選擇 1 個 Tag。"
+                f"{RESET}"
+            )
+            pause()
+            continue
+
+        if kind == "legacy":
+            action = _legacy_tag_menu(
+                values,
+                kept_legacy,
+                selected,
+            )
+        else:
+            action = _tag_group_menu(
+                label,
+                values,
+                selected,
+                kept_legacy,
+            )
+
+        if action == "save":
+            result = finish()
+            if result is not None:
+                return result
+
+            clear()
+            heading("Tags 分類")
+            print()
+            print(
+                f"{YELLOW}"
+                "新題目至少需要選擇 1 個 Tag。"
+                f"{RESET}"
+            )
+            pause()
+
+
 def language_menu() -> str | None:
     selected = choose_menu(
         "Solution 語言",
@@ -1158,7 +1459,7 @@ def create_problem_ui() -> str | None:
     if difficulty is None:
         return None
 
-    tags = prompt_text("Tags，逗號分隔（可略過）")
+    tags = tag_selector(required=True)
     if tags is None:
         return None
 
@@ -1166,22 +1467,41 @@ def create_problem_ui() -> str | None:
     if language is None:
         return None
 
+    clear()
+    heading("新增題目")
+    print()
+    print(f"{WHITE}{pid} · {title}{RESET}")
+    print(f"{GRAY}Tags 已完成 · 接著設定 solution metadata{RESET}")
+    print(f"{GRAY}Tags: {tags or '—'}{RESET}")
+    print(f"{GRAY}Language: {language}{RESET}")
+    print()
+
     complexity = prompt_text("Complexity（可略過）")
     if complexity is None:
         return None
 
     clear()
-    heading("確認新增題目")
+    heading("確認並建立")
     print()
-    print(f"題號        {pid}")
-    print(f"題名        {title}")
+    print(f"{WHITE}{pid} · {title}{RESET}")
+    print()
+    rule()
+    print()
     print(f"來源        {source or '—'}")
     print(f"難度        {difficulty or '—'}")
     print(f"Tags        {tags or '—'}")
     print(f"Language    {language}")
     print(f"Complexity  {complexity or '—'}")
+    print()
+    rule()
+    print()
+    print(
+        f"{GRAY}"
+        "以上內容尚未寫入 Catalog"
+        f"{RESET}"
+    )
 
-    if not confirm("建立題目與 solution？"):
+    if not confirm("確認建立題目與 solution？"):
         return None
 
     try:
@@ -1207,9 +1527,14 @@ def create_problem_ui() -> str | None:
         return None
 
     clear()
-    heading("新增題目")
+    heading("建立完成")
     print()
-    print(f"{GREEN}✓ 已建立 {pid}{RESET}")
+    print(
+        f"{GREEN}{BOLD}"
+        f"✓ {pid} 已成功寫入 Catalog"
+        f"{RESET}"
+    )
+    print()
     print(path.relative_to(ROOT))
 
     if open_in_vscode(path):
@@ -1243,7 +1568,11 @@ def edit_problem_ui(problem) -> None:
     heading("編輯題目")
     print()
     print(f"{WHITE}{pid} · {current.title or pid}{RESET}")
-    print(f"{GRAY}Enter 保留原值；可選欄位輸入 - 可清除{RESET}")
+    print(
+        f"{GRAY}"
+        "文字欄位 Enter 保留原值；Tags 使用分類選擇"
+        f"{RESET}"
+    )
     print()
 
     title = prompt_text(
@@ -1270,16 +1599,34 @@ def edit_problem_ui(problem) -> None:
     if difficulty is None:
         return
 
-    tags = prompt_text(
-        "Tags",
-        current=current.tags,
-        allow_clear=True,
-    )
+    tags = tag_selector(current.tags)
     if tags is None:
         return
 
+    clear()
+    heading("編輯題目")
+    print()
+    print(f"{GREEN}✓ Tags 選擇完成{RESET}")
+    print(f"{GRAY}{tags or '—'}{RESET}")
+    print()
+    print(
+        f"{GRAY}"
+        "尚未儲存；完成剩餘 metadata 後會統一確認"
+        f"{RESET}"
+    )
+    print()
+
     complexity = None
     if solution is not None:
+        clear()
+        heading("編輯題目")
+        print()
+        print(f"{WHITE}{pid} · {title}{RESET}")
+        print(f"{GRAY}Tags 已完成 · 接著設定目前 solution{RESET}")
+        print(f"{GRAY}Tags: {tags or '—'}{RESET}")
+        print(f"{GRAY}Solution: {solution.path}{RESET}")
+        print()
+
         complexity = prompt_text(
             "目前 solution Complexity",
             current=solution.complexity,
@@ -1289,10 +1636,12 @@ def edit_problem_ui(problem) -> None:
             return
 
     clear()
-    heading("確認 metadata")
+    heading("確認並儲存")
     print()
-    print(f"題號        {pid}")
-    print(f"題名        {title}")
+    print(f"{WHITE}{pid} · {title}{RESET}")
+    print()
+    rule()
+    print()
     print(f"來源        {source or '—'}")
     print(f"難度        {difficulty or '—'}")
     print(f"Tags        {tags or '—'}")
@@ -1300,7 +1649,16 @@ def edit_problem_ui(problem) -> None:
     if solution is not None:
         print(f"Complexity  {complexity or '—'}")
 
-    if not confirm("寫入 Catalog？"):
+    print()
+    rule()
+    print()
+    print(
+        f"{GRAY}"
+        "以上內容尚未寫入 Catalog"
+        f"{RESET}"
+    )
+
+    if not confirm("確認儲存全部 metadata？"):
         return
 
     try:
@@ -1336,9 +1694,24 @@ def edit_problem_ui(problem) -> None:
         return
 
     clear()
-    heading("編輯題目")
+    heading("儲存完成")
     print()
-    print(f"{GREEN}✓ Catalog metadata 已更新{RESET}")
+    print(
+        f"{GREEN}{BOLD}"
+        "✓ metadata 已成功寫入 Catalog"
+        f"{RESET}"
+    )
+    print()
+    print(f"{WHITE}{pid} · {title}{RESET}")
+    print(f"{GRAY}Tags: {tags or '—'}{RESET}")
+
+    if solution is not None:
+        print(
+            f"{GRAY}"
+            f"Complexity: {complexity or '—'}"
+            f"{RESET}"
+        )
+
     pause()
 
 

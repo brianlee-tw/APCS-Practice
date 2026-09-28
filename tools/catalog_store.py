@@ -5,6 +5,11 @@ import csv
 from dataclasses import dataclass
 from pathlib import Path
 
+try:
+    from .tag_taxonomy import normalize_tags
+except ImportError:
+    from tag_taxonomy import normalize_tags
+
 
 PROBLEM_FIELDS = [
     "problem_id",
@@ -157,17 +162,7 @@ class CatalogStore:
 
     @staticmethod
     def _clean_tags(value: str) -> str:
-        seen: set[str] = set()
-        items: list[str] = []
-
-        for item in str(value).split(","):
-            item = item.strip()
-
-            if item and item not in seen:
-                seen.add(item)
-                items.append(item)
-
-        return ", ".join(items)
+        return normalize_tags(value)
 
     @classmethod
     def _problem_row(cls, item: ProblemMeta) -> dict[str, str]:
