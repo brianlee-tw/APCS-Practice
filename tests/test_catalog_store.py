@@ -353,3 +353,217 @@ class CatalogStoreTest(unittest.TestCase):
             self.data.joinpath("solutions.csv").read_bytes(),
             before,
         )
+
+    def test_load_rejects_invalid_problem_id(self):
+        self.write(
+            "problems.csv",
+            "problem_id,title,source,difficulty,tags\n"
+            "bad-id,Bad,,1,\n",
+        )
+        self.write(
+            "solutions.csv",
+            "problem_id,path,language,complexity\n",
+        )
+
+        with self.assertRaises(CatalogError):
+            CatalogStore(
+                self.data
+            ).load_problems()
+
+    def test_load_rejects_invalid_difficulty(self):
+        self.write(
+            "problems.csv",
+            "problem_id,title,source,difficulty,tags\n"
+            "a001,Bad,,9,\n",
+        )
+        self.write(
+            "solutions.csv",
+            "problem_id,path,language,complexity\n"
+            "a001,solutions/a001.cpp,cpp,\n",
+        )
+
+        with self.assertRaises(CatalogError):
+            CatalogStore(
+                self.data
+            ).load_problems()
+
+    def test_load_rejects_language_extension_mismatch(self):
+        self.write(
+            "problems.csv",
+            "problem_id,title,source,difficulty,tags\n"
+            "a001,Hello,,1,\n",
+        )
+        self.write(
+            "solutions.csv",
+            "problem_id,path,language,complexity\n"
+            "a001,solutions/a001.py,cpp,\n",
+        )
+
+        with self.assertRaises(CatalogError):
+            CatalogStore(
+                self.data
+            ).load_solutions()
+
+    def test_windows_absolute_solution_path_is_rejected(self):
+        self.valid_catalog()
+        store = CatalogStore(self.data)
+
+        with self.assertRaises(CatalogError):
+            store.add_solution(
+                SolutionMeta(
+                    "a001",
+                    "C:/temp/a001.cpp",
+                    "cpp",
+                )
+            )
+
+    def test_create_pair_rolls_back_when_second_write_fails(self):
+        self.valid_catalog()
+        store = CatalogStore(self.data)
+
+        before_problems = (
+            store.problems_path.read_bytes()
+        )
+        before_solutions = (
+            store.solutions_path.read_bytes()
+        )
+
+        original_write = store._write_rows
+        calls = {"count": 0}
+
+        def fail_second(path, fields, rows):
+            calls["count"] += 1
+
+            if calls["count"] == 2:
+                raise OSError(
+                    "simulated second write failure"
+                )
+
+            return original_write(
+                path,
+                fields,
+                rows,
+            )
+
+        store._write_rows = fail_second
+
+        with self.assertRaises(OSError):
+            store.create_problem_with_solution(
+                ProblemMeta(
+                    "b001",
+                    "Atomic Create",
+                    difficulty="2",
+                ),
+                SolutionMeta(
+                    "b001",
+                    "solutions/b001.cpp",
+                    "cpp",
+                    "O(1)",
+                ),
+            )
+
+        self.assertEqual(
+            store.problems_path.read_bytes(),
+            before_problems,
+        )
+        self.assertEqual(
+            store.solutions_path.read_bytes(),
+            before_solutions,
+        )
+
+    def test_update_pair_updates_both_catalogs(self):
+        self.valid_catalog()
+        store = CatalogStore(self.data)
+
+        store.update_problem_with_solution(
+            ProblemMeta(
+                "a001",
+                "Updated",
+                "ZeroJudge",
+                "3",
+                "Basic Syntax, I/O",
+            ),
+            SolutionMeta(
+                "a001",
+                "solutions/a001.cpp",
+                "cpp",
+                "O(N)",
+            ),
+        )
+
+        problem = (
+            store.load_problems()["a001"]
+        )
+        solution = next(
+            item
+            for item in store.load_solutions()
+            if item.path
+            == "solutions/a001.cpp"
+        )
+
+        self.assertEqual(
+            problem.title,
+            "Updated",
+        )
+        self.assertEqual(
+            problem.difficulty,
+            "3",
+        )
+        self.assertEqual(
+            solution.complexity,
+            "O(N)",
+        )
+
+    def test_update_pair_rolls_back_when_second_write_fails(self):
+        self.valid_catalog()
+        store = CatalogStore(self.data)
+
+        before_problems = (
+            store.problems_path.read_bytes()
+        )
+        before_solutions = (
+            store.solutions_path.read_bytes()
+        )
+
+        original_write = store._write_rows
+        calls = {"count": 0}
+
+        def fail_second(path, fields, rows):
+            calls["count"] += 1
+
+            if calls["count"] == 2:
+                raise OSError(
+                    "simulated second write failure"
+                )
+
+            return original_write(
+                path,
+                fields,
+                rows,
+            )
+
+        store._write_rows = fail_second
+
+        with self.assertRaises(OSError):
+            store.update_problem_with_solution(
+                ProblemMeta(
+                    "a001",
+                    "Should Roll Back",
+                    difficulty="5",
+                ),
+                SolutionMeta(
+                    "a001",
+                    "solutions/a001.cpp",
+                    "cpp",
+                    "O(N^2)",
+                ),
+            )
+
+        self.assertEqual(
+            store.problems_path.read_bytes(),
+            before_problems,
+        )
+        self.assertEqual(
+            store.solutions_path.read_bytes(),
+            before_solutions,
+        )

@@ -1662,24 +1662,27 @@ def edit_problem_ui(problem) -> None:
         return
 
     try:
-        core.CATALOG.update_problem(
-            ProblemMeta(
-                problem_id=pid,
-                title=title,
-                source=source,
-                difficulty=difficulty,
-                tags=tags,
-            )
+        updated_problem = ProblemMeta(
+            problem_id=pid,
+            title=title,
+            source=source,
+            difficulty=difficulty,
+            tags=tags,
         )
 
         if solution is not None:
-            core.CATALOG.update_solution(
+            core.CATALOG.update_problem_with_solution(
+                updated_problem,
                 SolutionMeta(
                     problem_id=solution.problem_id,
                     path=solution.path,
                     language=solution.language,
                     complexity=complexity,
-                )
+                ),
+            )
+        else:
+            core.CATALOG.update_problem(
+                updated_problem
             )
 
         with contextlib.redirect_stdout(io.StringIO()):
