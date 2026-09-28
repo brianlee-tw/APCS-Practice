@@ -6,6 +6,8 @@ from pathlib import Path
 from tools.catalog_store import (
     CatalogError,
     CatalogStore,
+    ProblemMeta,
+    SolutionMeta,
 )
 
 
@@ -139,4 +141,153 @@ class CatalogStoreTest(unittest.TestCase):
         self.assertEqual(
             sum("solution file missing" in x for x in errors),
             2,
+        )
+
+    def test_create_problem_with_solution(self):
+        self.valid_catalog()
+        store = CatalogStore(self.data)
+
+        store.create_problem_with_solution(
+            ProblemMeta(
+                "b130",
+                "Random Number",
+                "ZeroJudge",
+                "2",
+                " Sorting, Set, Sorting ",
+            ),
+            SolutionMeta(
+                "b130",
+                "solutions/b130.cpp",
+                "CPP",
+                "O(N log N)",
+            ),
+        )
+
+        problems = store.load_problems()
+        solutions = store.load_solutions()
+
+        self.assertEqual(
+            problems["b130"].tags,
+            "Sorting, Set",
+        )
+        self.assertTrue(
+            any(
+                item.problem_id == "b130"
+                and item.path == "solutions/b130.cpp"
+                and item.language == "cpp"
+                for item in solutions
+            )
+        )
+
+    def test_create_rejects_duplicate_problem_without_mutation(self):
+        self.valid_catalog()
+        store = CatalogStore(self.data)
+        before_problems = self.data.joinpath(
+            "problems.csv"
+        ).read_bytes()
+        before_solutions = self.data.joinpath(
+            "solutions.csv"
+        ).read_bytes()
+
+        with self.assertRaises(CatalogError):
+            store.create_problem_with_solution(
+                ProblemMeta("a001", "Duplicate"),
+                SolutionMeta(
+                    "a001",
+                    "solutions/duplicate.cpp",
+                    "cpp",
+                ),
+            )
+
+        self.assertEqual(
+            self.data.joinpath("problems.csv").read_bytes(),
+            before_problems,
+        )
+        self.assertEqual(
+            self.data.joinpath("solutions.csv").read_bytes(),
+            before_solutions,
+        )
+
+    def test_create_rejects_mismatched_problem_id(self):
+        self.valid_catalog()
+        store = CatalogStore(self.data)
+
+        with self.assertRaises(CatalogError):
+            store.create_problem_with_solution(
+                ProblemMeta("b001", "One"),
+                SolutionMeta(
+                    "b002",
+                    "solutions/b001.cpp",
+                    "cpp",
+                ),
+            )
+
+    def test_invalid_difficulty_is_rejected(self):
+        self.valid_catalog()
+        store = CatalogStore(self.data)
+
+        with self.assertRaises(CatalogError):
+            store.create_problem_with_solution(
+                ProblemMeta(
+                    "b001",
+                    "Bad",
+                    difficulty="9",
+                ),
+                SolutionMeta(
+                    "b001",
+                    "solutions/b001.cpp",
+                    "cpp",
+                ),
+            )
+
+    def test_unsafe_solution_path_is_rejected(self):
+        self.valid_catalog()
+        store = CatalogStore(self.data)
+
+        with self.assertRaises(CatalogError):
+            store.create_problem_with_solution(
+                ProblemMeta("b001", "Bad Path"),
+                SolutionMeta(
+                    "b001",
+                    "../outside.cpp",
+                    "cpp",
+                ),
+            )
+
+    def test_update_problem_and_solution(self):
+        self.valid_catalog()
+        store = CatalogStore(self.data)
+
+        store.update_problem(
+            ProblemMeta(
+                "a001",
+                "Hello Updated",
+                "ZeroJudge",
+                "2",
+                "Basic Syntax, IO",
+            )
+        )
+        store.update_solution(
+            SolutionMeta(
+                "a001",
+                "solutions/a001.cpp",
+                "cpp",
+                "O(N)",
+            )
+        )
+
+        self.assertEqual(
+            store.load_problems()["a001"].title,
+            "Hello Updated",
+        )
+
+        solution = next(
+            item
+            for item in store.load_solutions()
+            if item.path == "solutions/a001.cpp"
+        )
+
+        self.assertEqual(
+            solution.complexity,
+            "O(N)",
         )

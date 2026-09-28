@@ -154,6 +154,253 @@ class CatalogStore:
 
         return result
 
+
+    @staticmethod
+    def _clean_tags(value: str) -> str:
+        seen: set[str] = set()
+        items: list[str] = []
+
+        for item in str(value).split(","):
+            item = item.strip()
+
+            if item and item not in seen:
+                seen.add(item)
+                items.append(item)
+
+        return ", ".join(items)
+
+    @classmethod
+    def _problem_row(cls, item: ProblemMeta) -> dict[str, str]:
+        pid = item.problem_id.strip().lower()
+
+        if not pid:
+            raise CatalogError("problem_id cannot be empty")
+
+        difficulty = item.difficulty.strip()
+
+        if difficulty:
+            try:
+                level = int(difficulty)
+            except ValueError as exc:
+                raise CatalogError(
+                    f"{pid}: difficulty must be 1-5"
+                ) from exc
+
+            if level not in {1, 2, 3, 4, 5}:
+                raise CatalogError(
+                    f"{pid}: difficulty must be 1-5"
+                )
+
+            difficulty = str(level)
+
+        return {
+            "problem_id": pid,
+            "title": item.title.strip(),
+            "source": item.source.strip(),
+            "difficulty": difficulty,
+            "tags": cls._clean_tags(item.tags),
+        }
+
+    @staticmethod
+    def _solution_row(item: SolutionMeta) -> dict[str, str]:
+        pid = item.problem_id.strip().lower()
+        path = item.path.strip().replace("\\", "/")
+        language = item.language.strip().lower()
+
+        if not pid:
+            raise CatalogError("solution problem_id cannot be empty")
+
+        if not path:
+            raise CatalogError(
+                f"{pid}: solution path cannot be empty"
+            )
+
+        candidate = Path(path)
+
+        if candidate.is_absolute() or ".." in candidate.parts:
+            raise CatalogError(
+                f"{pid}: solution path must be repository-relative"
+            )
+
+        if language not in {"cpp", "python"}:
+            raise CatalogError(
+                f"{pid}: unsupported language {language!r}"
+            )
+
+        return {
+            "problem_id": pid,
+            "path": path,
+            "language": language,
+            "complexity": item.complexity.strip(),
+        }
+
+    @staticmethod
+    def _write_rows(
+        path: Path,
+        fields: list[str],
+        rows: list[dict[str, str]],
+    ) -> None:
+        path.parent.mkdir(parents=True, exist_ok=True)
+        temp = path.with_name(path.name + ".tmp")
+
+        try:
+            with temp.open(
+                "w",
+                encoding="utf-8",
+                newline="",
+            ) as handle:
+                writer = csv.DictWriter(
+                    handle,
+                    fieldnames=fields,
+                    lineterminator="\n",
+                )
+                writer.writeheader()
+                writer.writerows(rows)
+
+            temp.replace(path)
+
+        finally:
+            if temp.exists():
+                temp.unlink()
+
+    def save_problems(
+        self,
+        problems: list[ProblemMeta],
+    ) -> None:
+        rows = [
+            self._problem_row(item)
+            for item in problems
+        ]
+
+        ids = [row["problem_id"] for row in rows]
+
+        if len(ids) != len(set(ids)):
+            raise CatalogError(
+                "problems.csv: duplicate problem_id"
+            )
+
+        rows.sort(key=lambda row: row["problem_id"])
+        self._write_rows(
+            self.problems_path,
+            PROBLEM_FIELDS,
+            rows,
+        )
+
+    def save_solutions(
+        self,
+        solutions: list[SolutionMeta],
+    ) -> None:
+        rows = [
+            self._solution_row(item)
+            for item in solutions
+        ]
+
+        paths = [row["path"] for row in rows]
+
+        if len(paths) != len(set(paths)):
+            raise CatalogError(
+                "solutions.csv: duplicate path"
+            )
+
+        rows.sort(
+            key=lambda row: (
+                row["problem_id"],
+                row["path"],
+            )
+        )
+        self._write_rows(
+            self.solutions_path,
+            SOLUTION_FIELDS,
+            rows,
+        )
+
+    def create_problem_with_solution(
+        self,
+        problem: ProblemMeta,
+        solution: SolutionMeta,
+    ) -> None:
+        problem_row = self._problem_row(problem)
+        solution_row = self._solution_row(solution)
+
+        if (
+            problem_row["problem_id"]
+            != solution_row["problem_id"]
+        ):
+            raise CatalogError(
+                "problem and solution problem_id mismatch"
+            )
+
+        problems = self.load_problems()
+        solutions = self.load_solutions()
+        pid = problem_row["problem_id"]
+
+        if pid in problems:
+            raise CatalogError(
+                f"problem already exists: {pid}"
+            )
+
+        if any(
+            item.path == solution_row["path"]
+            for item in solutions
+        ):
+            raise CatalogError(
+                f"solution path already exists: "
+                f"{solution_row['path']}"
+            )
+
+        new_problem = ProblemMeta(**problem_row)
+        new_solution = SolutionMeta(**solution_row)
+
+        self.save_problems(
+            [*problems.values(), new_problem]
+        )
+        self.save_solutions(
+            [*solutions, new_solution]
+        )
+
+    def update_problem(
+        self,
+        problem: ProblemMeta,
+    ) -> None:
+        row = self._problem_row(problem)
+        problems = self.load_problems()
+        pid = row["problem_id"]
+
+        if pid not in problems:
+            raise CatalogError(
+                f"problem not found: {pid}"
+            )
+
+        problems[pid] = ProblemMeta(**row)
+        self.save_problems(list(problems.values()))
+
+    def update_solution(
+        self,
+        solution: SolutionMeta,
+    ) -> None:
+        row = self._solution_row(solution)
+        solutions = self.load_solutions()
+        found = False
+        updated: list[SolutionMeta] = []
+
+        for item in solutions:
+            if item.path == row["path"]:
+                if item.problem_id != row["problem_id"]:
+                    raise CatalogError(
+                        "solution problem_id cannot be changed"
+                    )
+
+                updated.append(SolutionMeta(**row))
+                found = True
+            else:
+                updated.append(item)
+
+        if not found:
+            raise CatalogError(
+                f"solution not found: {row['path']}"
+            )
+
+        self.save_solutions(updated)
     def validate(
         self,
         root: Path | None = None,
