@@ -15,11 +15,16 @@ import tty
 import unicodedata
 from pathlib import Path
 
-import apcs as core
+try:
+    from . import apcs as core
+    from .catalog_store import CatalogError, ProblemMeta, SolutionMeta
+except ImportError:
+    import apcs as core
+    from catalog_store import CatalogError, ProblemMeta, SolutionMeta
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ID_RE = re.compile(r"^([A-Za-z]\d+)(?:_|$)")
+ID_RE = re.compile(r"^([A-Za-z]\d+|\d+)(?:_|$)")
 
 RESET = "\033[0m"
 BOLD = "\033[1m"
@@ -189,13 +194,24 @@ def current_problem(filename: str | None):
         return None
 
     pid = match.group(1).lower()
+    candidate = path if path.is_absolute() else ROOT / path
+    resolved = candidate.resolve()
 
     for row in all_rows():
         if row[0] == pid:
+            matched_path = next(
+                (
+                    solution.path
+                    for solution in row[1]
+                    if solution.path.resolve() == resolved
+                ),
+                row[2].path,
+            )
+
             return {
                 "id": pid,
                 "title": clean_title(pid, row[2].title),
-                "path": row[2].path,
+                "path": matched_path,
                 "state": row[3],
                 "due": row[5],
             }
@@ -417,7 +433,7 @@ def choose_menu(
 
         if main:
             print(f"{GRAY}↑↓ 選擇 · Enter 執行{RESET}")
-            print(f"{GRAY}1–5 直達 · Esc / Q 關閉{RESET}")
+            print(f"{GRAY}1–{len(options)} 直達 · Esc / Q 關閉{RESET}")
         else:
             print(f"{GRAY}↑↓ 選擇 · Enter 執行{RESET}")
             print(f"{GRAY}Esc / Q 返回控制中心{RESET}")
@@ -856,6 +872,593 @@ def record_problem(action: str, problem) -> None:
     pause()
 
 
+
+# ============================================================
+# Catalog workflow
+# ============================================================
+
+PROBLEM_ID_RE = re.compile(r"^(?:[A-Za-z]\d+|\d+)$")
+
+
+def normalize_problem_id(value: str) -> str:
+    value = str(value).strip().lower()
+
+    if not PROBLEM_ID_RE.fullmatch(value):
+        raise CatalogError(
+            "題號格式必須是英文字母+數字（例如 b130）或純數字"
+        )
+
+    return value
+
+
+def solution_template(language: str) -> str:
+    language = language.strip().lower()
+
+    if language == "cpp":
+        return (
+            "#include <bits/stdc++.h>\n"
+            "using namespace std;\n\n"
+            "int main() {\n"
+            "    ios::sync_with_stdio(false);\n"
+            "    cin.tie(nullptr);\n\n"
+            "    return 0;\n"
+            "}\n"
+        )
+
+    if language == "python":
+        return (
+            "def main():\n"
+            "    pass\n\n\n"
+            'if __name__ == "__main__":\n'
+            "    main()\n"
+        )
+
+    raise CatalogError(f"不支援的語言：{language}")
+
+
+def next_solution_path(
+    pid: str,
+    language: str,
+    *,
+    root: Path = ROOT,
+) -> Path:
+    pid = normalize_problem_id(pid)
+    language = language.strip().lower()
+
+    suffix = {
+        "cpp": ".cpp",
+        "python": ".py",
+    }.get(language)
+
+    if suffix is None:
+        raise CatalogError(f"不支援的語言：{language}")
+
+    folder = Path(root) / "solutions"
+    candidate = folder / f"{pid}{suffix}"
+    index = 2
+
+    while candidate.exists():
+        candidate = folder / f"{pid}_{index}{suffix}"
+        index += 1
+
+    return candidate
+
+
+def create_problem_assets(
+    problem: ProblemMeta,
+    language: str,
+    complexity: str = "",
+    *,
+    root: Path = ROOT,
+    store=None,
+) -> Path:
+    store = store or core.CATALOG
+    pid = normalize_problem_id(problem.problem_id)
+
+    normalized = ProblemMeta(
+        problem_id=pid,
+        title=problem.title,
+        source=problem.source,
+        difficulty=problem.difficulty,
+        tags=problem.tags,
+    )
+
+    target = next_solution_path(
+        pid,
+        language,
+        root=root,
+    )
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        solution_template(language),
+        encoding="utf-8",
+    )
+
+    relative = target.relative_to(root).as_posix()
+
+    try:
+        store.create_problem_with_solution(
+            normalized,
+            SolutionMeta(
+                problem_id=pid,
+                path=relative,
+                language=language,
+                complexity=complexity,
+            ),
+        )
+    except Exception:
+        target.unlink(missing_ok=True)
+        raise
+
+    return target
+
+
+def add_solution_asset(
+    pid: str,
+    language: str,
+    complexity: str = "",
+    *,
+    root: Path = ROOT,
+    store=None,
+) -> Path:
+    store = store or core.CATALOG
+    pid = normalize_problem_id(pid)
+    target = next_solution_path(
+        pid,
+        language,
+        root=root,
+    )
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        solution_template(language),
+        encoding="utf-8",
+    )
+
+    relative = target.relative_to(root).as_posix()
+
+    try:
+        store.add_solution(
+            SolutionMeta(
+                problem_id=pid,
+                path=relative,
+                language=language,
+                complexity=complexity,
+            )
+        )
+    except Exception:
+        target.unlink(missing_ok=True)
+        raise
+
+    return target
+
+
+def current_catalog_solution(problem, *, store=None):
+    if not problem:
+        return None
+
+    store = store or core.CATALOG
+
+    try:
+        relative = Path(problem["path"]).resolve().relative_to(
+            ROOT.resolve()
+        ).as_posix()
+    except ValueError:
+        return None
+
+    for item in store.load_solutions():
+        if item.path == relative:
+            return item
+
+    return None
+
+
+def prompt_text(
+    label: str,
+    *,
+    current: str | None = None,
+    required: bool = False,
+    allow_clear: bool = False,
+) -> str | None:
+    shown = f" [{current}]" if current else ""
+    clear_hint = " · 輸入 - 清除" if allow_clear else ""
+
+    try:
+        value = input(
+            f"{label}{shown}{clear_hint}\n> "
+        ).strip()
+    except (EOFError, KeyboardInterrupt):
+        return None
+
+    if current is not None and not value:
+        return current
+
+    if allow_clear and value == "-":
+        return ""
+
+    if required and not value:
+        return None
+
+    return value
+
+
+def language_menu() -> str | None:
+    selected = choose_menu(
+        "Solution 語言",
+        [
+            {
+                "label": "C++",
+                "detail": "建立 .cpp",
+                "enabled": True,
+            },
+            {
+                "label": "Python",
+                "detail": "建立 .py",
+                "enabled": True,
+            },
+        ],
+        footer_numbers=True,
+    )
+
+    if selected is None:
+        return None
+
+    return "cpp" if selected == 0 else "python"
+
+
+def open_in_vscode(path: Path) -> bool:
+    result = subprocess.run(
+        ["code", "--reuse-window", str(path)],
+        cwd=ROOT,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    return result.returncode == 0
+
+
+def create_problem_ui() -> str | None:
+    clear()
+    heading("新增題目")
+    print()
+    print(f"{GRAY}建立 Catalog metadata 與純 solution file{RESET}")
+    print(f"{GRAY}Esc 可在選單步驟取消；文字欄位可 Ctrl+C 取消{RESET}")
+    print()
+
+    raw_pid = prompt_text("題號", required=True)
+    if raw_pid is None:
+        return None
+
+    try:
+        pid = normalize_problem_id(raw_pid)
+    except CatalogError as exc:
+        print(f"{RED}✕ {exc}{RESET}")
+        pause()
+        return None
+
+    try:
+        existing = core.CATALOG.load_problems()
+    except CatalogError as exc:
+        print(f"{RED}✕ Catalog 無法讀取：{exc}{RESET}")
+        pause()
+        return None
+
+    if pid in existing:
+        print(f"{RED}✕ 題目已存在：{pid}{RESET}")
+        pause()
+        return None
+
+    title = prompt_text("題名", required=True)
+    if title is None:
+        return None
+
+    source = prompt_text("來源 URL / 名稱（可略過）")
+    if source is None:
+        return None
+
+    difficulty = prompt_text("難度 1–5（可略過）")
+    if difficulty is None:
+        return None
+
+    tags = prompt_text("Tags，逗號分隔（可略過）")
+    if tags is None:
+        return None
+
+    language = language_menu()
+    if language is None:
+        return None
+
+    complexity = prompt_text("Complexity（可略過）")
+    if complexity is None:
+        return None
+
+    clear()
+    heading("確認新增題目")
+    print()
+    print(f"題號        {pid}")
+    print(f"題名        {title}")
+    print(f"來源        {source or '—'}")
+    print(f"難度        {difficulty or '—'}")
+    print(f"Tags        {tags or '—'}")
+    print(f"Language    {language}")
+    print(f"Complexity  {complexity or '—'}")
+
+    if not confirm("建立題目與 solution？"):
+        return None
+
+    try:
+        path = create_problem_assets(
+            ProblemMeta(
+                problem_id=pid,
+                title=title,
+                source=source,
+                difficulty=difficulty,
+                tags=tags,
+            ),
+            language,
+            complexity,
+        )
+        with contextlib.redirect_stdout(io.StringIO()):
+            core.sync()
+    except (CatalogError, OSError) as exc:
+        clear()
+        heading("新增題目")
+        print()
+        print(f"{RED}✕ 建立失敗：{exc}{RESET}")
+        pause()
+        return None
+
+    clear()
+    heading("新增題目")
+    print()
+    print(f"{GREEN}✓ 已建立 {pid}{RESET}")
+    print(path.relative_to(ROOT))
+
+    if open_in_vscode(path):
+        print(f"{GREEN}✓ 已在 VS Code 開啟{RESET}")
+    else:
+        print(f"{YELLOW}⚠ 無法自動開啟 VS Code{RESET}")
+
+    pause()
+    return str(path)
+
+
+def edit_problem_ui(problem) -> None:
+    if not problem:
+        return
+
+    pid = problem["id"]
+
+    try:
+        problems = core.CATALOG.load_problems()
+        current = problems[pid]
+        solution = current_catalog_solution(problem)
+    except (CatalogError, KeyError) as exc:
+        clear()
+        heading("編輯題目")
+        print()
+        print(f"{RED}✕ 無法讀取 Catalog：{exc}{RESET}")
+        pause()
+        return
+
+    clear()
+    heading("編輯題目")
+    print()
+    print(f"{WHITE}{pid} · {current.title or pid}{RESET}")
+    print(f"{GRAY}Enter 保留原值；可選欄位輸入 - 可清除{RESET}")
+    print()
+
+    title = prompt_text(
+        "題名",
+        current=current.title,
+        required=True,
+    )
+    if title is None:
+        return
+
+    source = prompt_text(
+        "來源",
+        current=current.source,
+        allow_clear=True,
+    )
+    if source is None:
+        return
+
+    difficulty = prompt_text(
+        "難度 1–5",
+        current=current.difficulty,
+        allow_clear=True,
+    )
+    if difficulty is None:
+        return
+
+    tags = prompt_text(
+        "Tags",
+        current=current.tags,
+        allow_clear=True,
+    )
+    if tags is None:
+        return
+
+    complexity = None
+    if solution is not None:
+        complexity = prompt_text(
+            "目前 solution Complexity",
+            current=solution.complexity,
+            allow_clear=True,
+        )
+        if complexity is None:
+            return
+
+    clear()
+    heading("確認 metadata")
+    print()
+    print(f"題號        {pid}")
+    print(f"題名        {title}")
+    print(f"來源        {source or '—'}")
+    print(f"難度        {difficulty or '—'}")
+    print(f"Tags        {tags or '—'}")
+
+    if solution is not None:
+        print(f"Complexity  {complexity or '—'}")
+
+    if not confirm("寫入 Catalog？"):
+        return
+
+    try:
+        core.CATALOG.update_problem(
+            ProblemMeta(
+                problem_id=pid,
+                title=title,
+                source=source,
+                difficulty=difficulty,
+                tags=tags,
+            )
+        )
+
+        if solution is not None:
+            core.CATALOG.update_solution(
+                SolutionMeta(
+                    problem_id=solution.problem_id,
+                    path=solution.path,
+                    language=solution.language,
+                    complexity=complexity,
+                )
+            )
+
+        with contextlib.redirect_stdout(io.StringIO()):
+            core.sync()
+
+    except (CatalogError, OSError) as exc:
+        clear()
+        heading("編輯題目")
+        print()
+        print(f"{RED}✕ 更新失敗：{exc}{RESET}")
+        pause()
+        return
+
+    clear()
+    heading("編輯題目")
+    print()
+    print(f"{GREEN}✓ Catalog metadata 已更新{RESET}")
+    pause()
+
+
+def add_solution_ui(problem) -> str | None:
+    if not problem:
+        return None
+
+    pid = problem["id"]
+    language = language_menu()
+
+    if language is None:
+        return None
+
+    clear()
+    heading("新增 Solution")
+    print()
+    print(f"{WHITE}{problem_line(problem)}{RESET}")
+    print()
+
+    complexity = prompt_text("Complexity（可略過）")
+    if complexity is None:
+        return None
+
+    if not confirm(
+        f"為 {pid} 建立新的 {language} solution？"
+    ):
+        return None
+
+    try:
+        path = add_solution_asset(
+            pid,
+            language,
+            complexity,
+        )
+        with contextlib.redirect_stdout(io.StringIO()):
+            core.sync()
+    except (CatalogError, OSError) as exc:
+        clear()
+        heading("新增 Solution")
+        print()
+        print(f"{RED}✕ 建立失敗：{exc}{RESET}")
+        pause()
+        return None
+
+    clear()
+    heading("新增 Solution")
+    print()
+    print(f"{GREEN}✓ 已建立{RESET}")
+    print(path.relative_to(ROOT))
+
+    if open_in_vscode(path):
+        print(f"{GREEN}✓ 已在 VS Code 開啟{RESET}")
+    else:
+        print(f"{YELLOW}⚠ 無法自動開啟 VS Code{RESET}")
+
+    pause()
+    return str(path)
+
+
+def catalog_center(problem, current_filename: str | None):
+    try:
+        problems = core.CATALOG.load_problems()
+    except CatalogError as exc:
+        clear()
+        heading("題目資料")
+        print()
+        print(f"{RED}✕ Catalog 無法讀取：{exc}{RESET}")
+        pause()
+        return current_filename
+
+    known = bool(
+        problem
+        and problem["id"] in problems
+    )
+
+    options = [
+        {
+            "label": "新增題目",
+            "detail": "建立 metadata 與第一份 solution",
+            "enabled": True,
+        },
+        {
+            "label": "編輯目前題目",
+            "detail": (
+                "修改 title / source / difficulty / tags / complexity"
+                if known
+                else "目前檔案不在 Catalog"
+            ),
+            "enabled": known,
+        },
+        {
+            "label": "新增 Solution",
+            "detail": (
+                "為目前題目建立另一份 C++ / Python 解法"
+                if known
+                else "需先選擇 Catalog 題目"
+            ),
+            "enabled": known,
+        },
+    ]
+
+    selected = choose_menu(
+        "題目資料",
+        options,
+        problem=problem,
+    )
+
+    if selected is None:
+        return current_filename
+
+    if selected == 0:
+        created = create_problem_ui()
+        return created or current_filename
+
+    if selected == 1:
+        edit_problem_ui(problem)
+        return current_filename
+
+    created = add_solution_ui(problem)
+    return created or current_filename
 # ============================================================
 # Today / Notes
 # ============================================================
@@ -1721,6 +2324,11 @@ def main() -> int:
                 "enabled": True,
             },
             {
+                "label": "題目資料",
+                "detail": "新增題目、編輯 metadata、建立 solution",
+                "enabled": True,
+            },
+            {
                 "label": "完成題目",
                 "detail": finish_detail,
                 "enabled": finish_enabled,
@@ -1761,15 +2369,18 @@ def main() -> int:
             filename = today_view(filename)
 
         elif selected == 1:
-            record_problem("finish", problem)
+            filename = catalog_center(problem, filename)
 
         elif selected == 2:
-            record_problem("review", problem)
+            record_problem("finish", problem)
 
         elif selected == 3:
-            open_note(problem)
+            record_problem("review", problem)
 
         elif selected == 4:
+            open_note(problem)
+
+        elif selected == 5:
             git_center()
 
 
