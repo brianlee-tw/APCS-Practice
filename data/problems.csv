@@ -1,0 +1,59 @@
+problem_id,title,source,difficulty,tags
+1621,,,,
+a001,哈囉,,1,"Basic Syntax, IO Optimization"
+a006,一元二次方程式,,1,"Conditionals, Math Theory"
+a010,因數分解,,2,"Math Theory, Loops"
+a015,矩陣的翻轉,,1,"IO Optimization, Array"
+a034,二進位制轉換,,2,"Basic Syntax, Loops, Math Theory"
+a038,,,,
+a058,MOD3,,1,"IO Optimization, Loops, Array"
+a059,完全平方和,,1,"Math Theory, Loops"
+a065,提密碼,,1,"String, Array"
+a130,Google Is Feeling Lucky,,1,"Array, Vector, String, Struct"
+a148,You Cannot Pass?!,,1,"Conditionals, Loops, Math Theory"
+a244,for + if,,1,"Basic Syntax, Conditionals"
+a248,除法練習,,2,"Math Theory, I/O Optimization"
+a453,TOI2010 <br> 第一題：一元二次方程式,,1,"Math Theory, Conditionals"
+a686,蝸牛往上爬,,2,"Greedy, Loops"
+a693,吞食天地,,2,"Vector, Loops"
+a695,找出最大質因數,,2,"Math Theory, Loops"
+a740,質因數之和,,2,"Math Theory, I/O Optimization"
+a861,Secure Perimeter,,1,"Basic Syntax, I/O Optimization"
+b130,明明的隨機數,,1,"IO Optimization, Sorting"
+b367,翻轉世界,,2,"Conditionals, Loops, Array, Vector"
+b428,凱撒密碼,,1,"Math Theory, String"
+b965,2. 矩陣轉換,,2,"Array, Vector, Loops"
+c005,10300 - Ecological Premium,,2,"Math Theory, I/O Optimization"
+c006,Combination Lock,,2,"Math Theory, Basic Syntax, I/O Optimization"
+c013,00488 - Triangle Wave,,1,Loops
+c022,Odd Sum,,1,"IO Optimization, Loops, Math Theory"
+c079,10346 - Peter's Smokes,,2,"Math Theory, I/O Optimization"
+c085,Pseudo Randoms,,2,"Math Theory, Array"
+c135,00706 - LC-Display,,3,"Loops, Vector, String"
+c276,沒有手機的下課時間,,2,"Basic Syntax, Loops, Conditionals"
+c290,祕密差,,1,"String, Loops"
+c294,三角形辨別,,1,Conditionals
+c315,座標移動,,1,"Basic Syntax, Conditionals"
+c379,成為出題者,,1,IO Optimization
+d010,盈虧數,,2,"Math Theory, Conditionals, Loops"
+d049,中華民國萬歲,,1,IO Optimization
+d050,妳那邊幾點,,1,IO Optimization
+d065,三人行必有我師,,1,Conditionals
+d066,上學去吧！,,1,Conditionals
+d067,格瑞哥里的煩惱 (1 行版),,1,Conditionals
+d068,該減肥了！,,1,Conditionals
+d070,格瑞哥里的煩惱 (0 尾版),,1,"IO Optimization, Conditionals, Loops"
+d071,格瑞哥里的煩惱 (EOF 版),,1,"IO Optimization, Conditionals, Loops"
+d072,格瑞哥里的煩惱 (Case 版),,1,"IO Optimization, Conditionals, Loops"
+d073,分組報告,,1,IO Optimization
+d074,電腦教室,,1,"IO Optimization, Loops"
+d097,Jolly Jumpers,,2,"Array, String, IO Optimization"
+d123,B2-Sequence,,2,"IO Optimization, Conditionals, Vector"
+d669,Alarm Clock,,1,"IO Optimization, Conditionals, Math Theory"
+d673,No Problem,,2,"IO Optimization, Loops, Array"
+d827,買鉛筆,,1,Math Theory
+e834,批發量,,1,"IO Optimization, Conditionals, Loops"
+e835,表演座位,,1,"Conditionals, Math Theory"
+e968,2. 班級名單,,1,"IO Optimization, Loops, Vector"
+g275,,,,
+r488,APCS 彗星撞擊,,3,Array

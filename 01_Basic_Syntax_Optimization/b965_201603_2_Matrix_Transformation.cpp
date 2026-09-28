@@ -1,4 +1,4 @@
-// APCS Title: c291. 矩陣翻轉
+// APCS Title: b965. 2. 矩陣轉換
 // APCS Complexity: O(M * R * C)
 // APCS Tag: Array, Vector, Loops
 // APCS Difficulty: 2

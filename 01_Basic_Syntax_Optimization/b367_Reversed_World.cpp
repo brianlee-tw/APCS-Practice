@@ -1,4 +1,4 @@
-// APCS Title: e927. Matrix Symmetry
+// APCS Title: b367. 翻轉世界
 // APCS Complexity: O(N*M)
 // APCS Tag: Conditionals, Loops, Array, Vector
 // APCS Difficulty: 2

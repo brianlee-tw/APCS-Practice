@@ -31,6 +31,12 @@ except ImportError:
     )
 
 
+try:
+    from .catalog_store import CatalogError, CatalogStore
+except ImportError:
+    from catalog_store import CatalogError, CatalogStore
+
+
 ROOT = Path(__file__).resolve().parents[1]
 
 DATA = Path(
@@ -48,6 +54,7 @@ QUEUE = DOCS / "REVIEW_QUEUE.md"
 
 STORE = LearningStore(DATA)
 ENGINE = LearningEngine(STORE)
+CATALOG = CatalogStore(DATA)
 
 SUFFIXES = {".cpp", ".py"}
 
@@ -68,7 +75,7 @@ EXCLUDE = {
 START = "<!-- APCS_DASHBOARD_START -->"
 END = "<!-- APCS_DASHBOARD_END -->"
 
-ID_RE = re.compile(r"([a-z]\d+)", re.I)
+ID_RE = re.compile(r"([a-z]\d+|\d+)", re.I)
 
 META_RE = re.compile(
     r"^(?://|#)\s*APCS\s+([^:]+):\s*(.*?)\s*$",
@@ -318,7 +325,91 @@ def domain(sol: Sol):
     return "Fundamentals / Simulation"
 
 
+def catalog_available():
+    return (
+        (DATA / "problems.csv").is_file()
+        and (DATA / "solutions.csv").is_file()
+    )
+
+
+def build_catalog():
+    progress = load_progress()
+    by = defaultdict(list)
+    warnings = []
+
+    try:
+        problems = CATALOG.load_problems()
+        catalog_solutions = CATALOG.load_solutions()
+    except CatalogError as exc:
+        return [], [f"Catalog: {exc}"]
+
+    for entry in catalog_solutions:
+        problem = problems.get(entry.problem_id)
+
+        if problem is None:
+            warnings.append(
+                f"Catalog: {entry.problem_id} 不存在題目資料"
+            )
+            continue
+
+        path = ROOT / entry.path
+        meta = {
+            "title": problem.title,
+            "source": problem.source,
+            "difficulty": problem.difficulty,
+            "tag": problem.tags,
+            "complexity": entry.complexity,
+        }
+
+        by[entry.problem_id].append(
+            Sol(
+                path=path,
+                pid=entry.problem_id,
+                meta=meta,
+            )
+        )
+
+    rows = []
+
+    for pid, solutions in sorted(by.items()):
+        primary = sorted(
+            solutions,
+            key=lambda x: (
+                0 if x.path.suffix == ".cpp" else 1,
+                str(x.path),
+            ),
+        )[0]
+
+        state = progress.get(
+            pid,
+            ProgressState(problem_id=pid),
+        )
+
+        due = (
+            ENGINE.next_due(pid)
+            if state.solved_on
+            else None
+        )
+
+        rows.append(
+            (
+                pid,
+                solutions,
+                primary,
+                state,
+                False,
+                due,
+                domain(primary),
+            )
+        )
+
+    return rows, warnings
+
+
 def build():
+    if catalog_available():
+        return build_catalog()
+
     progress = load_progress()
     by = defaultdict(list)
     warnings = []
@@ -409,7 +500,7 @@ def link(
     )
 
 
-def status(state, legacy):
+def status(state, _legacy):
     if state.solved_on:
         if (
             state.last_review_on
@@ -423,8 +514,6 @@ def status(state, legacy):
 
         return "✅ AC"
 
-    if legacy:
-        return "📚 Legacy"
 
     return "📝 Untracked"
 
@@ -434,12 +523,6 @@ def render_dashboard(rows):
 
     solved = sum(
         bool(row[3].solved_on)
-        for row in rows
-    )
-
-    legacy = sum(
-        row[4]
-        and not row[3].solved_on
         for row in rows
     )
 
@@ -467,7 +550,6 @@ def render_dashboard(rows):
         data[0] += 1
         data[1] += int(
             bool(row[3].solved_on)
-            or row[4]
         )
         data[2] += int(
             bool(
@@ -485,14 +567,10 @@ def render_dashboard(rows):
         f"| 明確 AC | **{solved}** |",
         f"| Mastered | **{mastery['MASTERED']}** |",
         f"| 今日到期複習 | **{due}** |",
-        f"| 舊制完成（未確認 AC） | **{legacy}** |",
-        "",
-        "> `📚 Legacy` 代表舊制資料；"
-        "Notion 筆記本身不等同於 AC。",
         "",
         "### 能力分布",
         "",
-        "| 領域 | 題數 | AC / 舊制完成 | 到期 |",
+        "| 領域 | 題數 | AC | 到期 |",
         "| :--- | ---: | ---: | ---: |",
     ]
 
@@ -599,20 +677,9 @@ def render_index(rows):
         local = NOTES / f"{pid}.md"
 
         note = (
-            link(
-                local,
-                "Local",
-                True,
-            )
+            link(local, "Local", True)
             if local.exists()
-            else next(
-                (
-                    f"[Notion]({solution.note})"
-                    for solution in solutions
-                    if solution.note
-                ),
-                "—",
-            )
+            else "—"
         )
 
         lines.append(
@@ -786,6 +853,13 @@ def validate(strict=False):
 
     rows, warnings = build()
     errors = []
+    metadata_label = "Catalog" if catalog_available() else "APCS"
+
+    if catalog_available():
+        errors.extend(
+            f"Catalog: {message}"
+            for message in CATALOG.validate(root=ROOT)
+        )
 
     for (
         _,
@@ -803,17 +877,17 @@ def validate(strict=False):
 
             if not solution.meta.get("title"):
                 warnings.append(
-                    f"{relative}: 缺少 APCS Title"
+                    f"{relative}: 缺少 {metadata_label} Title"
                 )
 
             if not solution.tags:
                 warnings.append(
-                    f"{relative}: 缺少 APCS Tag"
+                    f"{relative}: 缺少 {metadata_label} Tag"
                 )
 
             if solution.complexity == "—":
                 warnings.append(
-                    f"{relative}: 缺少 APCS Complexity"
+                    f"{relative}: 缺少 {metadata_label} Complexity"
                 )
 
     progress = STORE.load_progress()
@@ -1096,7 +1170,7 @@ def note_cmd(pid):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
-        description="APCS-Practice v2.1 learning workflow"
+        description="APCS-Practice v2.2 catalog workflow"
     )
 
     sub = parser.add_subparsers(

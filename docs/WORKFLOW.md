@@ -1,14 +1,15 @@
-# APCS-Practice v2.1 Workflow
+# APCS-Practice v2.2 Workflow
 
 ## 1. 核心原則
 
-v2 將資料分成三層：
+v2.2 將資料分成四層：
 
-1. **Solution**：`.cpp` / `.py`，保存真正的解法。
-2. **Learning state**：`data/progress.csv` 與 `data/reviews.csv`，保存 AC 與複習結果。
-3. **Notes**：`notes/<id>.md` 或既有 Notion，只在有價值時建立。
+1. **Problem Catalog**：`data/problems.csv`，保存題目 ID、名稱、來源、難度與 tags。
+2. **Solution Catalog**：`data/solutions.csv`，連結 `.cpp` / `.py` 解法並保存 language 與 complexity。
+3. **Learning state**：`data/progress.csv` 與 `data/reviews.csv`，保存 Finish / Review 與複習狀態。
+4. **Notes**：`notes/<id>.md`，只在有價值時建立。
 
-資料夾不再代表能力分類；能力分類由 tags 與 metadata 推導。
+資料夾不再代表能力分類；能力分類由 Problem Catalog 的 metadata 推導。
 
 日常操作以 VS Code 為主：`Ctrl+Shift+B` 編譯並執行目前 C++，`Ctrl+Alt+A` 開啟 APCS 控制中心。CLI 保留給除錯、自動化與進階操作。
 
@@ -16,32 +17,14 @@ v2 將資料分成三層：
 
 ## 2. 新題目
 
-新題目放在 `solutions/`。建議檔名：
+目前 v2.2 migration 階段，新題目需要同時：
 
-```text
-b130_Random_Number.cpp
-```
+1. 建立純 `.cpp` / `.py` solution file。
+2. 在 `data/problems.csv` 建立 problem metadata。
+3. 在 `data/solutions.csv` 建立 solution path / language / complexity。
+4. 執行 `python tools/apcs.py validate` 驗證 Catalog consistency。
 
-建議的最小檔頭：
-
-```cpp
-// APCS Title: b130. 明明的隨機數
-// APCS Complexity: O(N log N)
-// APCS Tag: Sorting, Set
-// APCS Difficulty: 1
-// APCS Source: https://...
-```
-
-Python 使用 `#`：
-
-```python
-# APCS Title: a010. 質因數分解
-# APCS Complexity: O(sqrt(N))
-# APCS Tag: Math, Prime
-# APCS Difficulty: 2
-```
-
-`APCS Source` 可省略。新題目不需要再手動維護 `APCS Date`、`APCS Status`。
+solution source 不再需要 `APCS Title`、`APCS Tag`、`APCS Complexity`、`APCS Note`、`APCS Date` 等 metadata headers。Control Center 的新增題目 workflow 將在 v2.2 後續 Gate 接管這些操作。
 
 ---
 
@@ -103,15 +86,11 @@ Review 失敗不會移除既有首次 AC。`solved_on` 表示首次完成日期�
 
 ---
 
-## 5. 筆記：Notion 不再是必填
+## 5. 筆記
 
-### 一般題
+一般題不需要額外筆記；solution、Catalog metadata 與 review history 通常已足夠。
 
-不做額外筆記。程式碼、tags、複雜度和 review history 就足夠。
-
-### 值得整理的題
-
-建立 repo 內短筆記：
+只有值得整理的題目才建立 repo 內短筆記：
 
 ```powershell
 python tools/apcs.py note b130
@@ -123,24 +102,7 @@ python tools/apcs.py note b130
 notes/b130.md
 ```
 
-同步器會自動找到它，不必再修改程式碼 metadata。
-
-### 舊 Notion
-
-既有：
-
-```text
-APCS Note: https://...
-```
-
-會保留並繼續出現在索引中。
-
-建議只把 Notion 留給：
-
-- 需要圖解的演算法
-- 有多種解法比較
-- 常犯錯、值得寫長反思
-- APCS 經典題型整理
+筆記與題目 metadata 分離，不需要修改 solution source。
 
 ---
 
@@ -172,13 +134,7 @@ python tools/sync_all.py
 python tools/apcs.py validate
 ```
 
-目前 v1 資料會以 warning 方式呈現，例如：
-
-- 檔名 ID 與 `APCS Title` 中的 ID 不一致
-- 缺少 tags
-- 缺少 complexity
-
-只有真正損壞學習資料的問題才會讓 CI fail。
+Catalog metadata 不完整時會以 warning 呈現，例如缺少 title、tags 或 complexity。Catalog 結構錯誤、solution 指向不存在題目、solution file 不存在，以及損壞的 learning data 都屬於 error，會使驗證失敗。
 
 若要把 warning 也視為 failure：
 
