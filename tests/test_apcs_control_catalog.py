@@ -5,6 +5,8 @@ from pathlib import Path
 from tools.apcs_control import (
     add_solution_asset,
     create_problem_assets,
+    finish_with_optional_complexity,
+    missing_finish_complexity,
     next_solution_path,
     normalize_problem_id,
     solution_template,
@@ -13,6 +15,7 @@ from tools.catalog_store import (
     CatalogError,
     CatalogStore,
     ProblemMeta,
+    SolutionMeta,
 )
 
 
@@ -136,6 +139,153 @@ class ApcsControlCatalogTest(unittest.TestCase):
                 and item.complexity == "O(N)"
                 for item in solutions
             )
+        )
+
+
+
+    def test_missing_finish_complexity_detects_blank(self):
+        self.store.update_solution(
+            SolutionMeta(
+                "a001",
+                "solutions/a001_old.cpp",
+                "cpp",
+                "",
+            )
+        )
+
+        problem = {
+            "path": str(
+                self.root
+                / "solutions"
+                / "a001_old.cpp"
+            )
+        }
+
+        solution = missing_finish_complexity(
+            problem,
+            store=self.store,
+            root=self.root,
+        )
+
+        self.assertIsNotNone(solution)
+        self.assertEqual(
+            solution.path,
+            "solutions/a001_old.cpp",
+        )
+
+    def test_missing_finish_complexity_skips_existing(self):
+        problem = {
+            "path": str(
+                self.root
+                / "solutions"
+                / "a001_old.cpp"
+            )
+        }
+
+        self.assertIsNone(
+            missing_finish_complexity(
+                problem,
+                store=self.store,
+                root=self.root,
+            )
+        )
+
+    def test_finish_complexity_is_saved_on_success(self):
+        self.store.update_solution(
+            SolutionMeta(
+                "a001",
+                "solutions/a001_old.cpp",
+                "cpp",
+                "",
+            )
+        )
+
+        original = next(
+            item
+            for item in self.store.load_solutions()
+            if item.path
+            == "solutions/a001_old.cpp"
+        )
+
+        calls = []
+
+        def runner(pid, score, *, minutes=None):
+            calls.append(
+                (pid, score, minutes)
+            )
+            return 0
+
+        result = finish_with_optional_complexity(
+            "a001",
+            2,
+            minutes=17,
+            complexity_solution=original,
+            complexity="O(N)",
+            store=self.store,
+            finish_runner=runner,
+        )
+
+        self.assertEqual(result, 0)
+        self.assertEqual(
+            calls,
+            [("a001", 2, 17)],
+        )
+
+        updated = next(
+            item
+            for item in self.store.load_solutions()
+            if item.path
+            == "solutions/a001_old.cpp"
+        )
+
+        self.assertEqual(
+            updated.complexity,
+            "O(N)",
+        )
+
+    def test_finish_failure_rolls_back_complexity(self):
+        self.store.update_solution(
+            SolutionMeta(
+                "a001",
+                "solutions/a001_old.cpp",
+                "cpp",
+                "",
+            )
+        )
+
+        original = next(
+            item
+            for item in self.store.load_solutions()
+            if item.path
+            == "solutions/a001_old.cpp"
+        )
+
+        def runner(pid, score, *, minutes=None):
+            raise SystemExit(
+                "simulated Finish failure"
+            )
+
+        with self.assertRaises(SystemExit):
+            finish_with_optional_complexity(
+                "a001",
+                2,
+                minutes=10,
+                complexity_solution=original,
+                complexity="O(N log N)",
+                store=self.store,
+                finish_runner=runner,
+            )
+
+        rolled_back = next(
+            item
+            for item in self.store.load_solutions()
+            if item.path
+            == "solutions/a001_old.cpp"
+        )
+
+        self.assertEqual(
+            rolled_back.complexity,
+            "",
         )
 
 

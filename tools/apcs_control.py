@@ -792,6 +792,55 @@ def record_problem(action: str, problem) -> None:
 
     minutes = minutes_result
 
+    complexity_solution = None
+    finish_complexity = None
+
+    if action == "finish":
+        try:
+            complexity_solution = (
+                missing_finish_complexity(
+                    problem
+                )
+            )
+        except CatalogError as exc:
+            clear()
+            heading(title)
+            print()
+            print(
+                f"{RED}"
+                f"✕ Catalog 無法讀取：{exc}"
+                f"{RESET}"
+            )
+            pause()
+            return
+
+        if complexity_solution is not None:
+            clear()
+            heading("完成題目 · Complexity")
+            print()
+            print_problem_context(problem)
+            print()
+            print(
+                f"{YELLOW}"
+                "此 solution 尚未記錄 Complexity。"
+                f"{RESET}"
+            )
+            print(
+                f"{GRAY}"
+                "請先判斷演算法時間複雜度，例如 "
+                "O(1)、O(N)、O(N log N)。"
+                f"{RESET}"
+            )
+            print()
+
+            finish_complexity = prompt_text(
+                "Complexity（必填）",
+                required=True,
+            )
+
+            if finish_complexity is None:
+                return
+
     clear()
     heading(title)
     print()
@@ -822,6 +871,12 @@ def record_problem(action: str, problem) -> None:
         )
     )
 
+    if complexity_solution is not None:
+        print(
+            "Complexity  "
+            f"{CYAN}{finish_complexity}{RESET}"
+        )
+
     print()
     rule()
     print()
@@ -835,10 +890,16 @@ def record_problem(action: str, problem) -> None:
     try:
         with contextlib.redirect_stdout(io.StringIO()):
             if action == "finish":
-                command_result = core.finish_cmd(
-                    problem["id"],
-                    score,
-                    minutes=minutes,
+                command_result = (
+                    finish_with_optional_complexity(
+                        problem["id"],
+                        score,
+                        minutes=minutes,
+                        complexity_solution=(
+                            complexity_solution
+                        ),
+                        complexity=finish_complexity,
+                    )
                 )
             else:
                 command_result = core.review_cmd(
@@ -848,7 +909,11 @@ def record_problem(action: str, problem) -> None:
                     minutes=minutes,
                 )
 
-    except SystemExit as exc:
+    except (
+        SystemExit,
+        CatalogError,
+        OSError,
+    ) as exc:
         print()
         print(
             f"{RED}"
@@ -866,6 +931,14 @@ def record_problem(action: str, problem) -> None:
             f"✓ 學習紀錄已更新"
             f"{RESET}"
         )
+
+        if complexity_solution is not None:
+            print(
+                f"{GREEN}"
+                f"✓ Complexity 已寫入 Catalog："
+                f"{finish_complexity}"
+                f"{RESET}"
+            )
     else:
         print(
             f"{RED}"
@@ -1036,17 +1109,26 @@ def add_solution_asset(
     return target
 
 
-def current_catalog_solution(problem, *, store=None):
+def current_catalog_solution(
+    problem,
+    *,
+    store=None,
+    root: Path = ROOT,
+):
     if not problem:
         return None
 
     store = store or core.CATALOG
+    root = Path(root)
 
     try:
-        relative = Path(problem["path"]).resolve().relative_to(
-            ROOT.resolve()
-        ).as_posix()
-    except ValueError:
+        relative = (
+            Path(problem["path"])
+            .resolve()
+            .relative_to(root.resolve())
+            .as_posix()
+        )
+    except (KeyError, ValueError):
         return None
 
     for item in store.load_solutions():
@@ -1054,6 +1136,106 @@ def current_catalog_solution(problem, *, store=None):
             return item
 
     return None
+
+
+def missing_finish_complexity(
+    problem,
+    *,
+    store=None,
+    root: Path = ROOT,
+):
+    solution = current_catalog_solution(
+        problem,
+        store=store,
+        root=root,
+    )
+
+    if solution is None:
+        return None
+
+    if solution.complexity.strip():
+        return None
+
+    return solution
+
+
+def finish_with_optional_complexity(
+    problem_id: str,
+    score: int,
+    *,
+    minutes: int | None = None,
+    complexity_solution=None,
+    complexity: str | None = None,
+    store=None,
+    finish_runner=None,
+):
+    store = store or core.CATALOG
+    finish_runner = (
+        finish_runner
+        or core.finish_cmd
+    )
+
+    original = complexity_solution
+    catalog_updated = False
+
+    if original is not None:
+        value = str(
+            complexity or ""
+        ).strip()
+
+        if not value:
+            raise CatalogError(
+                "缺少 Complexity，無法完成 Finish。"
+            )
+
+        store.update_solution(
+            SolutionMeta(
+                problem_id=original.problem_id,
+                path=original.path,
+                language=original.language,
+                complexity=value,
+            )
+        )
+
+        catalog_updated = True
+
+    def rollback_complexity():
+        if not catalog_updated:
+            return
+
+        store.update_solution(
+            original
+        )
+
+    try:
+        result = finish_runner(
+            problem_id,
+            score,
+            minutes=minutes,
+        )
+
+    except BaseException as exc:
+        if catalog_updated:
+            try:
+                rollback_complexity()
+            except Exception as rollback_exc:
+                raise CatalogError(
+                    "Finish 失敗，且 Complexity rollback "
+                    f"亦失敗：{rollback_exc}"
+                ) from exc
+
+        raise
+
+    if result != 0 and catalog_updated:
+        try:
+            rollback_complexity()
+        except Exception as rollback_exc:
+            raise CatalogError(
+                "Finish 回傳失敗，且 Complexity rollback "
+                f"亦失敗：{rollback_exc}"
+            )
+
+    return result
 
 
 def prompt_text(
