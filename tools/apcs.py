@@ -972,6 +972,10 @@ def validate(strict=False):
                 f"{pid}: 存在 {count} 個 Finish events"
             )
 
+    errors.extend(
+        STORE.validate_consistency()
+    )
+
     print(
         f"題目：{len(rows)} | "
         f"錯誤：{len(errors)} | "

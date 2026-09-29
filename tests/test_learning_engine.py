@@ -4,9 +4,13 @@ import unittest
 from pathlib import Path
 
 from tools.learning_engine import (
+    EVENT_FINISH,
+    EVENT_REVIEW,
     LearningEngine,
     LearningError,
     LearningStore,
+    ProgressState,
+    ReviewEvent,
 )
 
 
@@ -312,6 +316,248 @@ class LearningEngineTest(unittest.TestCase):
             production,
         )
         self.assertTrue(test_file.exists())
+
+
+
+    def test_19_finish_transaction_rolls_back(self):
+        self.store.ensure()
+
+        before_progress = (
+            self.store.progress_path.read_bytes()
+        )
+        before_reviews = (
+            self.store.reviews_path.read_bytes()
+        )
+
+        original_write = self.store._write_csv
+        calls = {"count": 0}
+
+        def fail_second(path, fields, rows):
+            calls["count"] += 1
+
+            if calls["count"] == 2:
+                raise OSError(
+                    "simulated reviews write failure"
+                )
+
+            return original_write(
+                path,
+                fields,
+                rows,
+            )
+
+        self.store._write_csv = fail_second
+
+        with self.assertRaises(OSError):
+            self.engine.finish(
+                "a001",
+                2,
+                when=D0,
+            )
+
+        self.assertEqual(
+            self.store.progress_path.read_bytes(),
+            before_progress,
+        )
+        self.assertEqual(
+            self.store.reviews_path.read_bytes(),
+            before_reviews,
+        )
+
+    def test_20_review_transaction_rolls_back(self):
+        self.finish()
+
+        before_progress = (
+            self.store.progress_path.read_bytes()
+        )
+        before_reviews = (
+            self.store.reviews_path.read_bytes()
+        )
+
+        original_write = self.store._write_csv
+        calls = {"count": 0}
+
+        def fail_second(path, fields, rows):
+            calls["count"] += 1
+
+            if calls["count"] == 2:
+                raise OSError(
+                    "simulated reviews write failure"
+                )
+
+            return original_write(
+                path,
+                fields,
+                rows,
+            )
+
+        self.store._write_csv = fail_second
+
+        with self.assertRaises(OSError):
+            self.engine.review(
+                "a001",
+                1,
+                result="WA",
+                when=D0 + dt.timedelta(days=7),
+            )
+
+        self.assertEqual(
+            self.store.progress_path.read_bytes(),
+            before_progress,
+        )
+        self.assertEqual(
+            self.store.reviews_path.read_bytes(),
+            before_reviews,
+        )
+
+    def test_21_valid_history_is_consistent(self):
+        self.finish(
+            score=2,
+        )
+
+        self.review(
+            score=3,
+            day=D0 + dt.timedelta(days=7),
+        )
+
+        self.assertEqual(
+            self.store.validate_consistency(),
+            [],
+        )
+
+    def test_22_progress_without_finish_is_detected(self):
+        self.store.ensure()
+
+        self.store.save_progress(
+            {
+                "a001": ProgressState(
+                    problem_id="a001",
+                    solved_on=D0,
+                    last_result="AC",
+                    recall=2,
+                )
+            }
+        )
+
+        errors = (
+            self.store.validate_consistency()
+        )
+
+        self.assertTrue(
+            any(
+                "缺少 Finish event" in error
+                for error in errors
+            )
+        )
+
+    def test_23_finish_without_progress_is_detected(self):
+        self.store.ensure()
+
+        self.store.append_event(
+            ReviewEvent(
+                problem_id="a001",
+                event_type=EVENT_FINISH,
+                date=D0,
+                score=2,
+                result="AC",
+            )
+        )
+
+        errors = (
+            self.store.validate_consistency()
+        )
+
+        self.assertTrue(
+            any(
+                "progress 未標記完成" in error
+                for error in errors
+            )
+        )
+
+    def test_24_snapshot_latest_review_mismatch_detected(self):
+        self.finish(
+            score=2,
+        )
+
+        day = D0 + dt.timedelta(days=7)
+
+        self.review(
+            score=3,
+            day=day,
+        )
+
+        states = self.store.load_progress()
+        states["a001"].recall = 1
+
+        self.store.save_progress(
+            states
+        )
+
+        errors = (
+            self.store.validate_consistency()
+        )
+
+        self.assertTrue(
+            any(
+                "最新 event score" in error
+                for error in errors
+            )
+        )
+
+    def test_25_review_without_finish_is_detected(self):
+        self.store.ensure()
+
+        self.store.append_event(
+            ReviewEvent(
+                problem_id="a001",
+                event_type=EVENT_REVIEW,
+                date=D0,
+                score=2,
+                result="AC",
+            )
+        )
+
+        errors = (
+            self.store.validate_consistency()
+        )
+
+        self.assertTrue(
+            any(
+                "Review event" in error
+                and "缺少 Finish event" in error
+                for error in errors
+            )
+        )
+
+    def test_26_review_cannot_move_backward_in_time(self):
+        self.finish()
+
+        later = D0 + dt.timedelta(days=10)
+
+        self.review(
+            day=later,
+        )
+
+        before_progress = (
+            self.store.progress_path.read_bytes()
+        )
+        before_reviews = (
+            self.store.reviews_path.read_bytes()
+        )
+
+        with self.assertRaises(LearningError):
+            self.review(
+                day=D0 + dt.timedelta(days=5),
+            )
+
+        self.assertEqual(
+            self.store.progress_path.read_bytes(),
+            before_progress,
+        )
+        self.assertEqual(
+            self.store.reviews_path.read_bytes(),
+            before_reviews,
+        )
 
 
 if __name__ == "__main__":
