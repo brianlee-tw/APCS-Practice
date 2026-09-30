@@ -1,0 +1,179 @@
+{
+  "schema_version": "1.0",
+  "architecture_version": "v2.3-draft-0",
+  "daily_surface": "vscode",
+  "principles": [
+    "One authoritative writer per semantic fact.",
+    "Notion draft content is not runtime truth until it is compiled, validated, reviewed, and published to Git.",
+    "VS Code is the default daily learning and problem-solving surface.",
+    "Git contains deterministic machine contracts, code, tests, CI, and published curriculum snapshots.",
+    "Notion contains curriculum authoring, long-form teaching content, and durable learning records.",
+    "ChatGPT may coach, explain, diagnose, and propose evidence; it does not independently award mastery.",
+    "Generated dashboards, memory estimates, and next-review dates are derived state, not independent truth.",
+    "Review Due is a scheduling signal, not homework debt.",
+    "Problem count may grow without making daily review workload grow linearly.",
+    "New-learning capacity must remain protected even when review candidates accumulate."
+  ],
+  "systems": {
+    "notion": {
+      "role": [
+        "curriculum_authoring",
+        "long_form_lessons",
+        "problem_bank_authoring",
+        "durable_solve_records",
+        "durable_evidence_ledger",
+        "human_readable_reflection"
+      ],
+      "forbidden": [
+        "runtime_scheduler",
+        "manual_mastery_truth_without_evidence",
+        "parallel_machine_rule_engine",
+        "direct_daily_code_runtime"
+      ]
+    },
+    "git": {
+      "role": [
+        "published_learning_contract",
+        "curriculum_snapshot",
+        "source_code",
+        "solution_metadata",
+        "tests",
+        "ci",
+        "release_history"
+      ],
+      "forbidden": [
+        "parallel_long_form_lesson_authoring",
+        "manual_duplicate_evidence_ledger"
+      ]
+    },
+    "vscode": {
+      "role": [
+        "daily_learning_runtime",
+        "problem_solving",
+        "build_run_debug",
+        "review_runtime",
+        "evidence_capture",
+        "quality_gate"
+      ],
+      "forbidden": [
+        "manual_curriculum_taxonomy_fork",
+        "silent_mastery_override"
+      ]
+    },
+    "chatgpt": {
+      "role": [
+        "coach",
+        "concept_explanation",
+        "debugging_assistance",
+        "error_diagnosis",
+        "reflection_support",
+        "evidence_proposal"
+      ],
+      "forbidden": [
+        "mastery_authority",
+        "invented_attempt_facts",
+        "silent_curriculum_mutation"
+      ]
+    },
+    "cloudflare": {
+      "role": [
+        "optional_interactive_visualizations",
+        "optional_learning_labs",
+        "notion_writeback_api",
+        "read_only_dashboards"
+      ],
+      "forbidden": [
+        "parallel_curriculum_truth",
+        "primary_cpp_runtime",
+        "independent_mastery_engine"
+      ]
+    }
+  },
+  "entities": {
+    "skill_identity": {
+      "authoring_owner": "notion",
+      "published_owner": "git",
+      "runtime_reader": "vscode",
+      "policy": "Skill UID is stable. Draft edits in Notion affect runtime only after publish."
+    },
+    "skill_prerequisites": {
+      "authoring_owner": "notion",
+      "published_owner": "git",
+      "runtime_reader": "vscode",
+      "policy": "Prerequisite graph must pass cycle and reference validation before publish."
+    },
+    "problem_intrinsic_metadata": {
+      "authoring_owner": "notion",
+      "published_owner": "git",
+      "runtime_reader": "vscode",
+      "policy": "Problem identity, source/judge URL, calibrated D1-D5 difficulty, and intrinsic relations are published from validated authoring data."
+    },
+    "problem_solution_metadata": {
+      "authoring_owner": "git",
+      "published_owner": "git",
+      "runtime_reader": "vscode",
+      "policy": "Solution path, language, complexity, tests, and code stay Git-native."
+    },
+    "problem_placement": {
+      "authoring_owner": "notion",
+      "published_owner": "git",
+      "runtime_reader": "vscode",
+      "policy": "Role and lesson order belong to a placement/activity, not permanently to the problem itself."
+    },
+    "attempt_facts": {
+      "authoring_owner": "vscode",
+      "durable_owner": "notion",
+      "runtime_reader": "vscode",
+      "policy": "VS Code captures facts once; durable writeback is idempotent. Unknown facts remain unknown."
+    },
+    "evidence_events": {
+      "authoring_owner": "vscode",
+      "durable_owner": "notion",
+      "runtime_reader": "vscode",
+      "policy": "One evidence event evaluates one Skill x Track. Multiple events may originate from one attempt only when separately observable."
+    },
+    "mastery": {
+      "authoring_owner": "system",
+      "durable_owner": "notion",
+      "runtime_reader": "vscode",
+      "policy": "RM/IM/RR/IR are derived from valid evidence and gate rules; no manual promotion without supporting evidence."
+    },
+    "memory_state": {
+      "authoring_owner": "system",
+      "durable_owner": "derived",
+      "runtime_reader": "vscode",
+      "policy": "Stability, retrievability, and next-review estimates are rebuildable from evidence plus scheduler version; they are not canonical learning records."
+    },
+    "daily_plan": {
+      "authoring_owner": "system",
+      "durable_owner": "derived",
+      "runtime_reader": "vscode",
+      "policy": "Daily selection obeys capacity limits and may defer candidates without creating debt."
+    }
+  },
+  "review_invariants": {
+    "scheduler_unit": "skill_x_track",
+    "fixed_review_sequence_forbidden": true,
+    "fixed_review_count_graduation_forbidden": true,
+    "same_problem_repetition_is_not_mastery": true,
+    "mature_skills_use_representative_or_mixed_retrieval": true,
+    "review_budget_fraction_default": {
+      "min": 0.25,
+      "max": 0.35
+    },
+    "new_learning_capacity_protected": true,
+    "deferred_reviews_are_not_debt": true
+  },
+  "publication": {
+    "flow": [
+      "notion_draft",
+      "compile",
+      "validate",
+      "git_diff_review",
+      "ci",
+      "published_snapshot",
+      "vscode_runtime"
+    ],
+    "runtime_live_notion_dependency": false
+  }
+}
