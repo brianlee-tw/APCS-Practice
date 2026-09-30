@@ -1,9 +1,3 @@
-// APCS Title: b130. 明明的隨機數
-// APCS Complexity: O(N log N)
-// APCS Tag: IO Optimization, Sorting
-// APCS Difficulty: 1
-// APCS Note: https://app.notion.com/p/b130-39a43be958cd8023afe5fca38b293ad5?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
-
 #include <bits/stdc++.h>
 
 using namespace std;

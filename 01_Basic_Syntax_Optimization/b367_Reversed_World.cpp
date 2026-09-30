@@ -1,10 +1,3 @@
-// APCS Title: b367. 翻轉世界
-// APCS Complexity: O(N*M)
-// APCS Tag: Conditionals, Loops, Array, Vector
-// APCS Difficulty: 2
-// APCS Note: https://app.notion.com/p/b367-39a43be958cd80d0a5c7e033b8079c5f?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
-// APCS Date: 26-07-11
-
 #include <bits/stdc++.h>
 
 using namespace std;

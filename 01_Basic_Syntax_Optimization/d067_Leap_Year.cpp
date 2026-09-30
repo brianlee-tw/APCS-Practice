@@ -1,9 +1,3 @@
-// APCS Title: d067. 格瑞哥里的煩惱 (1 行版)
-// APCS Complexity: O(1)
-// APCS Tag: Conditionals
-// APCS Difficulty: 1
-// APCS Note:
-
 #include<bits/stdc++.h>
 using namespace std;
 int main(){

@@ -70,37 +70,10 @@ STORE = LearningStore(DATA)
 ENGINE = LearningEngine(STORE)
 CATALOG = CatalogStore(DATA)
 
-SUFFIXES = {".cpp", ".py"}
-
-EXCLUDE = {
-    ".git",
-    ".github",
-    ".vscode",
-    "tools",
-    "tests",
-    "docs",
-    "data",
-    "notes",
-    "build",
-    "Build",
-    "__pycache__",
-}
-
 START = "<!-- APCS_DASHBOARD_START -->"
 END = "<!-- APCS_DASHBOARD_END -->"
 
 ID_RE = re.compile(r"([a-z]\d+|\d+)", re.I)
-
-META_RE = re.compile(
-    r"^(?://|#)\s*APCS\s+([^:]+):\s*(.*?)\s*$",
-    re.I,
-)
-
-DATE_FORMATS = (
-    "%Y-%m-%d",
-    "%y-%m-%d",
-)
-
 
 @dataclass
 class Sol:
@@ -142,37 +115,11 @@ class Sol:
         except Exception:
             return 1
 
-    @property
-    def note(self):
-        return self.meta.get("note", "")
-
-    @property
-    def legacy_date(self):
-        return parse_date(
-            self.meta.get("date", "")
-        )
-
-
 def norm(value: str | None) -> str:
     match = ID_RE.search(
         (value or "").lower()
     )
     return match.group(1) if match else ""
-
-
-def parse_date(value: str | None):
-    value = (value or "").strip()
-
-    for format_ in DATE_FORMATS:
-        try:
-            return dt.datetime.strptime(
-                value,
-                format_,
-            ).date()
-        except ValueError:
-            pass
-
-    return None
 
 
 def ensure():
@@ -181,66 +128,9 @@ def ensure():
     NOTES.mkdir(exist_ok=True)
 
 
-def files():
-    for path in ROOT.rglob("*"):
-        if (
-            not path.is_file()
-            or path.suffix.lower() not in SUFFIXES
-        ):
-            continue
-
-        relative = path.relative_to(ROOT)
-
-        if any(
-            part in EXCLUDE
-            or part == ".cph"
-            for part in relative.parts[:-1]
-        ):
-            continue
-
-        if "tempCodeRunner" in path.name:
-            continue
-
-        yield path
-
-
-def parse_solution(path: Path):
-    text = "\n".join(
-        path.read_text(
-            encoding="utf-8",
-            errors="ignore",
-        ).splitlines()[:24]
-    )
-
-    meta = {}
-
-    for line in text.splitlines():
-        match = META_RE.match(line)
-
-        if match:
-            meta[
-                match.group(1)
-                .strip()
-                .lower()
-            ] = match.group(2).strip()
-
-    return Sol(
-        path,
-        norm(path.stem),
-        meta,
-    )
-
-
 def load_progress():
     ensure()
     return STORE.load_progress()
-
-
-def catalog_available():
-    return (
-        (DATA / "problems.csv").is_file()
-        and (DATA / "solutions.csv").is_file()
-    )
 
 
 def build_catalog():
@@ -248,11 +138,8 @@ def build_catalog():
     by = defaultdict(list)
     warnings = []
 
-    try:
-        problems = CATALOG.load_problems()
-        catalog_solutions = CATALOG.load_solutions()
-    except CatalogError as exc:
-        return [], [f"Catalog: {exc}"]
+    problems = CATALOG.load_problems()
+    catalog_solutions = CATALOG.load_solutions()
 
     for entry in catalog_solutions:
         problem = problems.get(entry.problem_id)
@@ -323,85 +210,7 @@ def build_catalog():
 
 
 def build():
-    if catalog_available():
-        return build_catalog()
-
-    progress = load_progress()
-    by = defaultdict(list)
-    warnings = []
-
-    for path in files():
-        solution = parse_solution(path)
-
-        if not solution.pid:
-            warnings.append(
-                f"{path.relative_to(ROOT)}: 檔名沒有題號"
-            )
-            continue
-
-        title_id = norm(
-            solution.meta.get("title")
-        )
-
-        if (
-            title_id
-            and title_id != solution.pid
-        ):
-            warnings.append(
-                f"{path.relative_to(ROOT)}: "
-                f"檔名題號={solution.pid}，"
-                f"APCS Title 題號={title_id}"
-            )
-
-        by[solution.pid].append(solution)
-
-    rows = []
-
-    for pid, solutions in sorted(by.items()):
-        primary = sorted(
-            solutions,
-            key=lambda x: (
-                0 if x.path.suffix == ".cpp" else 1,
-                str(x.path),
-            ),
-        )[0]
-
-        state = progress.get(
-            pid,
-            ProgressState(
-                problem_id=pid,
-            ),
-        )
-
-        legacy_done = any(
-            solution.note
-            for solution in solutions
-        )
-
-        due = (
-            ENGINE.next_due(pid)
-            if state.solved_on
-            else None
-        )
-
-        rows.append(
-            (
-                pid,
-                solutions,
-                primary,
-                state,
-                legacy_done,
-                due,
-                display_tags(
-                    primary.meta.get(
-                        "tag",
-                        "",
-                    )
-                ),
-            )
-        )
-
-    return rows, warnings
+    return build_catalog()
 
 
 def link(
@@ -826,14 +635,27 @@ def sync():
 def validate(strict=False):
     ensure()
 
-    rows, warnings = build()
+    rows = []
+    warnings = []
     errors = []
-    metadata_label = "Catalog" if catalog_available() else "APCS"
+    metadata_label = "Catalog"
 
-    if catalog_available():
+    try:
+        rows, build_warnings = build()
+        warnings.extend(
+            build_warnings
+        )
+
         errors.extend(
             f"Catalog: {message}"
-            for message in CATALOG.validate(root=ROOT)
+            for message in CATALOG.validate(
+                root=ROOT
+            )
+        )
+
+    except CatalogError as exc:
+        errors.append(
+            f"Catalog: {exc}"
         )
 
     for (

@@ -15,6 +15,21 @@ class ApcsIntegrationTest(unittest.TestCase):
     def setUp(self):
         self.temp = tempfile.TemporaryDirectory()
         self.data = Path(self.temp.name) / "data"
+        self.data.mkdir()
+
+        for name in (
+            "problems.csv",
+            "solutions.csv",
+        ):
+            (
+                self.data / name
+            ).write_bytes(
+                (
+                    ROOT
+                    / "data"
+                    / name
+                ).read_bytes()
+            )
 
         self.production_files = [
             ROOT / "data" / "progress.csv",

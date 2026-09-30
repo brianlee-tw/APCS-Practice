@@ -1,9 +1,3 @@
-// APCS Title: d050. 妳那邊幾點
-// APCS Complexity: O(1)
-// APCS Tag: IO Optimization
-// APCS Difficulty: 1
-// APCS Note:
-
 #include<bits/stdc++.h>
 using namespace std;
 int main(){

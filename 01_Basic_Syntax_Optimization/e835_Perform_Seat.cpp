@@ -1,9 +1,3 @@
-// APCS Title: e835. 表演座位
-// APCS Complexity: O(1)
-// APCS Tag: Conditionals, Math Theory
-// APCS Difficulty: 1
-// APCS Note:
-
 #include<bits/stdc++.h>
 using namespace std;
 int main(){

@@ -1,9 +1,3 @@
-// APCS Title: e834. 批發量
-// APCS Complexity: O(N)
-// APCS Tag: IO Optimization, Conditionals, Loops
-// APCS Difficulty: 1
-// APCS Note: https://app.notion.com/p/e834-Wholesale-39043be958cd8051a9d3c5f451870bc4?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
-
 #include <bits/stdc++.h>
 using namespace std;
 

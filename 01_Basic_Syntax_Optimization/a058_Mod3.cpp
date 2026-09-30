@@ -1,9 +1,3 @@
-// APCS Title: a058. MOD3
-// APCS Complexity: O(N)
-// APCS Tag: IO Optimization, Loops, Array
-// APCS Difficulty: 1
-// APCS Note: https://app.notion.com/p/a058-MOD3-39043be958cd80768d9fdf5c05b9ed54?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
-
 #include <bits/stdc++.h>
 using namespace std;
 

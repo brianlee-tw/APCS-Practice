@@ -59,7 +59,7 @@ python tools/apcs.py validate
 python tools/apcs.py sync
 ```
 
-v2.2 以 `data/problems.csv` 與 `data/solutions.csv` 作為靜態 metadata 的正式來源。既有 solution 檔頭目前只保留作 migration fallback，完成遷移驗收後將移除。
+v2.2 以 `data/problems.csv` 與 `data/solutions.csv` 作為靜態 metadata 的唯一正式來源；solution code 不再承載 `APCS` metadata header，也不再提供 source-header fallback。
 
 <!-- APCS_DASHBOARD_START -->
 ## APCS Training Dashboard

@@ -1,10 +1,3 @@
-// APCS Title: c013. 00488 - Triangle Wave
-// APCS Complexity: O(n * f * a^2)
-// APCS Tag: Loops
-// APCS Difficulty: 1
-// APCS Note: https://app.notion.com/p/c013-Triangle-Wave-39a43be958cd807d9f75daedeb06dc45?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
-// APCS Date: 26-07-11
-
 #include <bits/stdc++.h>
 
 using namespace std;

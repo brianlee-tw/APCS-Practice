@@ -1,10 +1,3 @@
-// APCS Title: a130. Google Is Feeling Lucky
-// APCS Complexity: O(T)
-// APCS Tag: Array, Vector, String, Struct
-// APCS Difficulty: 1
-// APCS Note: https://app.notion.com/p/a130-Google-is-Lucky-3ac43be958cd800cb815e655bb7a89d8?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
-// APCS Date: 26-07-28
-
 #include <iostream>
 #include <vector>
 #include <string>

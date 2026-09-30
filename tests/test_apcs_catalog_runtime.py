@@ -120,19 +120,33 @@ class ApcsCatalogRuntimeTest(unittest.TestCase):
             ["1621", "True"],
         )
 
-    def test_missing_catalog_uses_legacy_fallback(self):
+    def test_missing_catalog_is_hard_failure(self):
         result = self.run_code(
-            "import tools.apcs as a; "
-            "rows,w=a.build(); "
-            "r=next(x for x in rows if x[0]=='b130'); "
-            "print(r[2].title); "
-            "print(r[4])"
+            """import tools.apcs as a
+from tools.catalog_store import CatalogError
+
+try:
+    a.build()
+except CatalogError as exc:
+    print("CATALOG_REQUIRED")
+    print("catalog file missing" in str(exc))
+else:
+    print("FALLBACK_USED")
+"""
         )
 
-        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(
+            result.returncode,
+            0,
+            result.stderr,
+        )
+
         self.assertEqual(
             result.stdout.strip().splitlines(),
-            ["b130. 明明的隨機數", "True"],
+            [
+                "CATALOG_REQUIRED",
+                "True",
+            ],
         )
 
 

@@ -1,9 +1,3 @@
-# APCS Title: c006. Combination Lock
-# APCS Complexity: O(1)
-# APCS Tag: Math Theory, Basic Syntax, I/O Optimization
-# APCS Difficulty: 2
-# APCS Note: https://app.notion.com/p/c006-Combination-Lock-36a43be958cd80a883afd8dc560bcb76?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
-
 import sys
 
 def main():

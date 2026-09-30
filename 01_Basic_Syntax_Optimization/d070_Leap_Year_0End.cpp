@@ -1,9 +1,3 @@
-// APCS Title: d070. 格瑞哥里的煩惱 (0 尾版)
-// APCS Complexity: O(1)
-// APCS Tag: IO Optimization, Conditionals, Loops
-// APCS Difficulty: 1
-// APCS Note: https://app.notion.com/p/d070-0-39043be958cd8076a5e4c79eb19f02a4?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link 
-
 #include <bits/stdc++.h>
 using namespace std;
 

@@ -1,10 +1,3 @@
-// APCS Title: c294. 三角形辨別
-// APCS Complexity: O(1)
-// APCS Tag: Conditionals
-// APCS Difficulty: 1
-// APCS Note: https://app.notion.com/p/c294-3a843be958cd80f7987bd0c3cea9bfa8?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
-// APCS Date: 26-07-25
-
 #include <bits/stdc++.h>
 
 using namespace std;

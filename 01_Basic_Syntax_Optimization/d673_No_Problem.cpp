@@ -1,9 +1,3 @@
-// APCS Title: d673. No Problem
-// APCS Complexity: O(1)
-// APCS Tag: IO Optimization, Loops, Array
-// APCS Difficulty: 2
-// APCS Note: https://app.notion.com/p/d673-No-Problem-39a43be958cd808c8228d90c85fb8035?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
-
 #include <bits/stdc++.h>
 
 using namespace std;
