@@ -2253,6 +2253,18 @@ def whitespace_ok() -> bool:
     return a.returncode == 0 and b.returncode == 0
 
 
+def local_quality_gate():
+    return subprocess.run(
+        [
+            sys.executable,
+            "tools/quality_gate.py",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
+
+
 def branch_sync():
     branch_result = run_git("branch", "--show-current")
     branch = branch_result.stdout.strip()
@@ -2529,6 +2541,48 @@ def create_commit() -> None:
         print("請先修正後再 Commit。")
         pause()
         return
+
+    print(
+        f"{GRAY}"
+        "正在執行完整 regression + warning gate…"
+        f"{RESET}"
+    )
+
+    quality = local_quality_gate()
+
+    if quality.returncode != 0:
+        print()
+        print(
+            f"{RED}"
+            "✕ Quality Gate 未通過；不建立 Commit"
+            f"{RESET}"
+        )
+
+        output = (
+            quality.stdout.strip()
+            or quality.stderr.strip()
+        )
+
+        if output:
+            print()
+
+            for line in output.splitlines()[-12:]:
+                print(
+                    fit(
+                        line,
+                        ui_width(),
+                    )
+                )
+
+        pause()
+        return
+
+    print(
+        f"{GREEN}"
+        "✓ Regression + warning gate 通過"
+        f"{RESET}"
+    )
+    print()
 
     stat = run_git(
         "diff",

@@ -36,6 +36,9 @@ jobs:
       - name: Run learning-engine regression tests
         run: python -m unittest discover -s tests -v
 
+      - name: Enforce APCS validation warning budget
+        run: python tools/quality_gate.py --validate-only
+
       - name: Generate learning dashboard
         run: python tools/apcs.py sync
 
