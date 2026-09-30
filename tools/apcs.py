@@ -37,6 +37,20 @@ except ImportError:
     from catalog_store import CatalogError, CatalogStore
 
 
+try:
+    from .tag_analytics import (
+        build_tag_stats,
+        display_tags,
+        weakness_stats,
+    )
+except ImportError:
+    from tag_analytics import (
+        build_tag_stats,
+        display_tags,
+        weakness_stats,
+    )
+
+
 ROOT = Path(__file__).resolve().parents[1]
 
 DATA = Path(
@@ -222,109 +236,6 @@ def load_progress():
     return STORE.load_progress()
 
 
-def domain(sol: Sol):
-    text = " ".join(
-        sol.tags
-        + [
-            sol.title,
-            sol.path.stem,
-        ]
-    ).lower()
-
-    rules = [
-        (
-            "Graph",
-            [
-                "graph",
-                "bfs",
-                "dfs",
-                "dijkstra",
-                "topological",
-                "mst",
-                "union find",
-                "dsu",
-            ],
-        ),
-        (
-            "DP / Recursion",
-            [
-                "dynamic programming",
-                " dp ",
-                "recursion",
-                "backtracking",
-                "memo",
-            ],
-        ),
-        (
-            "Prefix / Greedy",
-            [
-                "prefix",
-                "greedy",
-                "difference array",
-                "sliding window",
-            ],
-        ),
-        (
-            "Search / Sort",
-            [
-                "binary search",
-                "sorting",
-                "sort",
-                "two pointers",
-            ],
-        ),
-        (
-            "Data Structures",
-            [
-                "stack",
-                "queue",
-                "deque",
-                "heap",
-                "priority queue",
-                "set",
-                "map",
-                "hash",
-                "tree",
-            ],
-        ),
-        (
-            "Math",
-            [
-                "math",
-                "prime",
-                "factor",
-                "gcd",
-                "lcm",
-                "mod",
-                "number theory",
-                "geometry",
-            ],
-        ),
-        (
-            "String",
-            [
-                "string",
-                "char",
-            ],
-        ),
-        (
-            "Arrays / Simulation",
-            [
-                "array",
-                "vector",
-                "matrix",
-                "simulation",
-            ],
-        ),
-    ]
-
-    for name, keys in rules:
-        if any(key in text for key in keys):
-            return name
-
-    return "Fundamentals / Simulation"
-
-
 def catalog_available():
     return (
         (DATA / "problems.csv").is_file()
@@ -399,7 +310,12 @@ def build_catalog():
                 state,
                 False,
                 due,
-                domain(primary),
+                display_tags(
+                    primary.meta.get(
+                        "tag",
+                        "",
+                    )
+                ),
             )
         )
 
@@ -476,7 +392,12 @@ def build():
                 state,
                 legacy_done,
                 due,
-                domain(primary),
+                display_tags(
+                    primary.meta.get(
+                        "tag",
+                        "",
+                    )
+                ),
             )
         )
 
@@ -535,28 +456,29 @@ def render_dashboard(rows):
     )
 
     mastery = defaultdict(int)
+    mastery_by_pid = {}
 
     for row in rows:
-        mastery[
-            ENGINE.mastery(row[0])
-        ] += 1
+        level = ENGINE.mastery(
+            row[0]
+        )
 
-    domains = defaultdict(
-        lambda: [0, 0, 0]
+        mastery[level] += 1
+        mastery_by_pid[
+            row[0]
+        ] = level
+
+    tag_stats, legacy_tags = (
+        build_tag_stats(
+            rows,
+            today=today,
+            mastery_by_pid=mastery_by_pid,
+        )
     )
 
-    for row in rows:
-        data = domains[row[6]]
-        data[0] += 1
-        data[1] += int(
-            bool(row[3].solved_on)
-        )
-        data[2] += int(
-            bool(
-                row[5]
-                and row[5] <= today
-            )
-        )
+    weak = weakness_stats(
+        tag_stats
+    )
 
     lines = [
         "## APCS Training Dashboard",
@@ -568,29 +490,82 @@ def render_dashboard(rows):
         f"| Mastered | **{mastery['MASTERED']}** |",
         f"| 今日到期複習 | **{due}** |",
         "",
-        "### 能力分布",
+        "### Canonical Tag 能力分布",
         "",
-        "| 領域 | 題數 | AC | 到期 |",
-        "| :--- | ---: | ---: | ---: |",
+        "> 一題可同時計入多個 Tag，"
+        "因此 Tag 題數加總可能大於索引題目總數。",
+        "",
+        "| 類別 | Tag | 題數 | AC | "
+        "Mastered | Recall 0–1 | 到期 |",
+        "| :--- | :--- | ---: | ---: | "
+        "---: | ---: | ---: |",
     ]
 
-    for name, data in sorted(
-        domains.items(),
-        key=lambda item: (
-            -item[1][0],
-            item[0],
-        ),
-    ):
+    if tag_stats:
+        for stat in tag_stats:
+            lines.append(
+                f"| {stat.group} | "
+                f"{stat.tag} | "
+                f"{stat.total} | "
+                f"{stat.solved} | "
+                f"{stat.mastered} | "
+                f"{stat.low_recall} | "
+                f"{stat.due} |"
+            )
+    else:
         lines.append(
-            f"| {name} | {data[0]} | "
-            f"{data[1]} | {data[2]} |"
+            "| — | 尚無 canonical Tag | "
+            "— | — | — | — | — |"
         )
+
+    lines += [
+        "",
+        "### 弱項訊號",
+        "",
+        "> 只使用可觀察資料：Recall 0–1 "
+        "或已到期題目；不使用黑箱分數。",
+        "",
+        "| Tag | 已 AC | Recall 0–1 | 到期 | Mastered |",
+        "| :--- | ---: | ---: | ---: | ---: |",
+    ]
+
+    if weak:
+        for stat in weak:
+            lines.append(
+                f"| {stat.tag} | "
+                f"{stat.solved} | "
+                f"{stat.low_recall} | "
+                f"{stat.due} | "
+                f"{stat.mastered} |"
+            )
+    else:
+        lines.append(
+            "| — | — | — | — | "
+            "目前沒有明確弱項訊號 |"
+        )
+
+    if legacy_tags:
+        lines += [
+            "",
+            "### Legacy Tag 待整理",
+            "",
+            "> 下列標籤未被 taxonomy 自動推測或轉換；"
+            "保留原值，待後續人工確認。",
+            "",
+            "| Legacy Tag | 題數 |",
+            "| :--- | ---: |",
+        ]
+
+        for tag, count in legacy_tags:
+            lines.append(
+                f"| {tag} | {count} |"
+            )
 
     lines += [
         "",
         "### 今日複習優先序",
         "",
-        "| ID | 題目 | 領域 | Recall | 到期日 |",
+        "| ID | 題目 | Tags | Recall | 到期日 |",
         "| :--- | :--- | :--- | ---: | :---: |",
     ]
 
@@ -643,7 +618,7 @@ def render_index(rows):
         "",
         "> 自動產生；請勿手動編輯。",
         "",
-        "| ID | 題目 | 領域 | 程式 | 複雜度 | "
+        "| ID | 題目 | Tags | 程式 | 複雜度 | "
         "難度 | 狀態 | Recall | Mastery | 筆記 |",
         "| :--- | :--- | :--- | :--- | :--- | "
         ":---: | :---: | ---: | :---: | :--- |",
@@ -715,7 +690,7 @@ def render_queue(rows):
         "",
         "> 自動產生；依 v2.1 adaptive review 排序。",
         "",
-        "| 到期日 | ID | 題目 | 領域 | Recall | Mastery | 狀態 |",
+        "| 到期日 | ID | 題目 | Tags | Recall | Mastery | 狀態 |",
         "| :---: | :--- | :--- | :--- | ---: | :---: | :---: |",
     ]
 
