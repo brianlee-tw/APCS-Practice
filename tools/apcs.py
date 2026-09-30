@@ -635,6 +635,44 @@ def sync():
     return 0
 
 
+def sync_generated_best_effort(
+    *,
+    sync_runner=None,
+):
+    """
+    Regenerate derived artifacts without changing the outcome of an
+    already-successful authoritative mutation.
+
+    Returns None on success/disabled sync, otherwise a human-readable
+    warning string.  Generated sync is deliberately not transactional
+    with learning/catalog state.
+    """
+
+    if os.environ.get(
+        "APCS_DISABLE_SYNC"
+    ) == "1":
+        return None
+
+    runner = sync_runner or sync
+
+    try:
+        result = runner()
+    except BaseException as exc:
+        message = str(exc).strip()
+        return (
+            message
+            or exc.__class__.__name__
+        )
+
+    if result != 0:
+        return (
+            f"sync returned non-zero status "
+            f"{result}"
+        )
+
+    return None
+
+
 def validate(strict=False):
     ensure()
 
@@ -813,6 +851,7 @@ def finish_cmd(
     *,
     minutes=None,
     note="",
+    sync_after=True,
 ):
     pid = norm(pid)
 
@@ -831,15 +870,22 @@ def finish_cmd(
     except LearningError as exc:
         raise SystemExit(str(exc))
 
-    if os.environ.get(
-        "APCS_DISABLE_SYNC"
-    ) != "1":
-        sync()
+    sync_warning = (
+        sync_generated_best_effort()
+        if sync_after
+        else None
+    )
 
     print(
         f"已完成 {pid}："
         f"Recall={score}/3"
     )
+
+    if sync_warning:
+        print(
+            "警告：學習紀錄已寫入，但 generated sync 失敗："
+            f"{sync_warning}"
+        )
 
     return 0
 
@@ -851,6 +897,7 @@ def review_cmd(
     result="AC",
     minutes=None,
     note="",
+    sync_after=True,
 ):
     pid = norm(pid)
 
@@ -870,15 +917,22 @@ def review_cmd(
     except LearningError as exc:
         raise SystemExit(str(exc))
 
-    if os.environ.get(
-        "APCS_DISABLE_SYNC"
-    ) != "1":
-        sync()
+    sync_warning = (
+        sync_generated_best_effort()
+        if sync_after
+        else None
+    )
 
     print(
         f"已複習 {pid}："
         f"{result}, Recall={score}/3"
     )
+
+    if sync_warning:
+        print(
+            "警告：學習紀錄已寫入，但 generated sync 失敗："
+            f"{sync_warning}"
+        )
 
     return 0
 
