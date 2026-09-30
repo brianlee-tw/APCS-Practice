@@ -99,21 +99,18 @@ class Sol:
 
     @property
     def difficulty(self):
+        raw = self.meta.get(
+            "difficulty",
+            "",
+        ).strip()
+
+        if not raw:
+            return None
+
         try:
-            return max(
-                1,
-                min(
-                    5,
-                    int(
-                        self.meta.get(
-                            "difficulty",
-                            "1",
-                        )
-                    ),
-                ),
-            )
-        except Exception:
-            return 1
+            return int(raw)
+        except (TypeError, ValueError):
+            return None
 
 def norm(value: str | None) -> str:
     match = ID_RE.search(
@@ -466,13 +463,19 @@ def render_index(rows):
             else "—"
         )
 
+        difficulty = (
+            "★" * primary.difficulty
+            if primary.difficulty is not None
+            else "—"
+        )
+
         lines.append(
             f"| `{pid}` | "
             f"{primary.title} | "
             f"{area} | "
             f"{programs} | "
             f"`{primary.complexity}` | "
-            f"{'★' * primary.difficulty} | "
+            f"{difficulty} | "
             f"{status(state, legacy)} | "
             f"{state.recall if state.recall is not None else '—'} | "
             f"{ENGINE.mastery(pid)} | "
@@ -497,7 +500,7 @@ def render_queue(rows):
     lines = [
         "# Review Queue",
         "",
-        "> 自動產生；依 v2.1 adaptive review 排序。",
+        "> 自動產生；依 v2.2 adaptive review 排序。",
         "",
         "| 到期日 | ID | 題目 | Tags | Recall | Mastery | 狀態 |",
         "| :---: | :--- | :--- | :--- | ---: | :---: | :---: |",

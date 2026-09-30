@@ -17,14 +17,19 @@ v2.2 將資料分成四層：
 
 ## 2. 新題目
 
-目前 v2.2 migration 階段，新題目需要同時：
+日常操作由 **APCS 控制中心 → 題目資料 → 新增題目** 完成。
+
+建立一題時，系統會：
 
 1. 建立純 `.cpp` / `.py` solution file。
-2. 在 `data/problems.csv` 建立 problem metadata。
-3. 在 `data/solutions.csv` 建立 solution path / language / complexity。
-4. 執行 `python tools/apcs.py validate` 驗證 Catalog consistency。
+2. 寫入 `data/problems.csv` 的 problem metadata。
+3. 寫入 `data/solutions.csv` 的 solution path、language 與 complexity。
+4. 使用 canonical Tag selector 選擇一個以上的能力 Tag。
+5. 以 rollback-safe Catalog mutation 避免兩份 CSV 只成功一半。
 
-solution source 不再需要 `APCS Title`、`APCS Tag`、`APCS Complexity`、`APCS Note`、`APCS Date` 等 metadata headers。Control Center 的新增題目 workflow 將在 v2.2 後續 Gate 接管這些操作。
+solution source 不承載 `APCS Title`、`APCS Tag`、`APCS Complexity`、`APCS Note` 或 `APCS Date` 等 metadata header。
+
+`data/problems.csv` 與 `data/solutions.csv` 是 metadata 的唯一 engineering truth。
 
 ---
 
@@ -130,78 +135,100 @@ python tools/sync_all.py
 
 ## 7. 驗證
 
-```powershell
-python tools/apcs.py validate
+完整本機 quality gate：
+
+```bash
+python3 tools/quality_gate.py
 ```
 
-Catalog metadata 不完整時會以 warning 呈現，例如缺少 title、tags 或 complexity。Catalog 結構錯誤、solution 指向不存在題目、solution file 不存在，以及損壞的 learning data 都屬於 error，會使驗證失敗。
+它會依序檢查：
 
-若要把 warning 也視為 failure：
+1. 完整 regression tests。
+2. `git diff --check` 與 staged whitespace。
+3. Catalog / learning-data validation。
+4. known-warning budget。
 
-```powershell
-python tools/apcs.py validate --strict
+目前少數歷史題目仍有明確列出的 metadata 缺口；這些 warning 被記錄在 `.github/apcs-known-warnings.txt`。既有 warning 可以減少，但新增或重複增加的 warning 會使 quality gate 失敗。
+
+只執行 validator：
+
+```bash
+python3 tools/apcs.py validate
 ```
+
+Catalog 結構錯誤、solution path 不存在、learning snapshot/event 不一致等屬於 error，會直接失敗。
+
+metadata 不完整則維持 unknown，不應為了消除 warning 猜測 Title、Tag、Complexity 或其他資料。
 
 ---
 
 ## 8. Git / GitHub 自動化
 
-### Pull Request / push validation
+### Control Center commit
 
-GitHub Actions 會：
+「檢查與提交 → 建立 Commit」會先執行完整 regression 與 warning-budget quality gate。Gate 未通過時不建立 commit。
 
-1. 執行 metadata / learning-data validator。
-2. 只對本次新增或修改的 `.cpp` / `.py` solution 做 syntax check。
-3. 不會因歷史題目中仍存在的 v1 warning 阻擋所有開發。
+### GitHub Actions
+
+Pull Request / main push 會：
+
+1. 執行完整 regression tests。
+2. 驗證 Catalog 與 learning data。
+3. enforce known-warning budget。
+4. syntax-check 本次新增或修改的 solution source。
 
 ### main dashboard sync
 
-main 收到新 solution / progress / review / tooling 變更後：
+main 收到 solution、data、notes 或 tooling 更新後：
 
-1. 執行 `python tools/apcs.py sync`
-2. 只 stage `README.md`、`docs/PROBLEM_INDEX.md`、`docs/REVIEW_QUEUE.md`
-3. 有差異才 commit
-4. 不再 `git add .`
-5. 不再自動 `pull --rebase`
+1. 執行 regression 與 warning-budget gate。
+2. 執行 `python3 tools/apcs.py sync`。
+3. 只 stage `README.md`、`docs/PROBLEM_INDEX.md`、`docs/REVIEW_QUEUE.md`。
+4. 有 generated diff 才建立 sync commit。
 
 ---
 
-## 9. 舊四資料夾
+## 9. 舊四資料夾與能力分類
 
-v1 的四個資料夾保留，以避免一次性搬移 58 題造成大量無學習價值的 Git churn 與連結斷裂。
+`01_Basic_Syntax_Optimization`、`02_Data_Structures`、`03_Algorithmic_Paradigms`、`04_Graph_Theory_and_Advanced_Topics` 是歷史檔案位置，不代表目前能力分類。
 
-v2 的能力分類改為：
+v2.2 使用 canonical multi-tag taxonomy：
 
-- Graph
-- DP / Recursion
-- Prefix / Greedy
-- Search / Sort
-- Data Structures
-- Math
-- String
-- Arrays / Simulation
-- Fundamentals / Simulation
+- **基礎**：Basic Syntax、I/O、Conditionals、Loops、Simulation
+- **資料結構**：Array、Vector、String、Struct、Stack、Queue、Set、Map
+- **演算法**：Sorting、Searching、Binary Search、Prefix Sum、Two Pointers、Greedy
+- **數學**：Math、Number Theory、Prime、GCD / LCM、Geometry、Combinatorics
+- **圖論**：Graph、BFS、DFS、Shortest Path
+- **進階**：Dynamic Programming、Recursion、Backtracking
 
-因此同一題可以靠多個 tags 表達真實能力，而不是被迫放進唯一一個資料夾。
+一題可同時計入多個 canonical Tags。Dashboard 的弱項訊號只使用可觀察資料：`Recall 0–1` 或到期題目，不建立黑箱能力分數。
+
+無法安全自動轉換的歷史 Tag 會標示為 `Legacy`，保留原值等待人工確認。
 
 ---
 
 ## 10. 建議每日操作
 
 ```text
-開始 APCS
+Ctrl+Alt+A
   ↓
-python tools/apcs.py today
+今日複習
   ↓
-先重解 1~3 題到期題
+完成到期／逾期題
   ↓
 做新題
   ↓
-AC → python tools/apcs.py finish <id> <score>
+AC → 完成題目
   ↓
-必要時 python tools/apcs.py note <id>
+必要時建立題目筆記
   ↓
-git commit / push
+檢查與提交
+  ↓
+Quality Gate PASS
+  ↓
+Commit / Push
 ```
 
-Dashboard 和索引由工具與 GitHub Actions維持。
+一般日常操作不需要手動編輯 CSV，也不需要記住 CLI 指令。CLI 保留給 debugging、自動化與進階操作。
+
+Dashboard、Problem Index 與 Review Queue 由 `tools/apcs.py sync` 與 GitHub Actions 維持。

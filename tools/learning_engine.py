@@ -87,8 +87,9 @@ def validate_result(result: str) -> str:
 
 class LearningStore:
     """
-    v2.1 learning state storage.
+    v2.2 learning state storage.
 
+    progress snapshot 與 review event 採 rollback-safe paired update。
     測試時只需傳入 tempfile 路徑，完全不接觸正式 data/。
     """
 

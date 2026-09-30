@@ -97,6 +97,44 @@ class ApcsCatalogRuntimeTest(unittest.TestCase):
             ],
         )
 
+    def test_blank_difficulty_is_not_invented(self):
+        self.write_catalog(
+            ["1621", "Distinct Values", "", "", "Set"],
+            [
+                "1621",
+                "02_Data_Structures/1621_Distinct_Values.cpp",
+                "cpp",
+                "O(N log N)",
+            ],
+        )
+
+        result = self.run_code(
+            "import tools.apcs as a; "
+            "rows,w=a.build(); "
+            "r=rows[0]; "
+            "print(r[2].difficulty is None); "
+            "print(a.render_index(rows).splitlines()[-1])"
+        )
+
+        self.assertEqual(
+            result.returncode,
+            0,
+            result.stderr,
+        )
+
+        lines = result.stdout.strip().splitlines()
+
+        self.assertEqual(
+            lines[0],
+            "True",
+        )
+
+        self.assertIn(
+            "`O(N log N)` | — |",
+            lines[1],
+        )
+
+
     def test_numeric_problem_id_is_runtime_compatible(self):
         self.write_catalog(
             ["1621", "Distinct Values", "", "2", "Set"],

@@ -61,6 +61,15 @@ python tools/apcs.py sync
 
 v2.2 以 `data/problems.csv` 與 `data/solutions.csv` 作為靜態 metadata 的唯一正式來源；solution code 不再承載 `APCS` metadata header，也不再提供 source-header fallback。
 
+### v2.2 核心保證
+
+- Problem / Solution Catalog 是 metadata 唯一正式來源；solution source 保持純程式碼。
+- `progress.csv` 與 `reviews.csv` 採 rollback-safe paired update，並驗證 snapshot / event consistency。
+- 能力分析使用 canonical multi-tag taxonomy；一題可以同時計入多個能力 Tag。
+- 弱項只根據 Recall 0–1 或已到期題目，不建立黑箱分數。
+- known-warning budget 防止新的 metadata 缺口無聲增加。
+- Control Center 建立 commit 前會執行完整 regression 與 quality gate。
+
 <!-- APCS_DASHBOARD_START -->
 ## APCS Training Dashboard
 
@@ -71,21 +80,42 @@ v2.2 以 `data/problems.csv` 與 `data/solutions.csv` 作為靜態 metadata 的�
 | Mastered | **0** |
 | 今日到期複習 | **0** |
 
-### 能力分布
+### Canonical Tag 能力分布
 
-| 領域 | 題數 | AC | 到期 |
-| :--- | ---: | ---: | ---: |
-| Fundamentals / Simulation | 22 | 0 | 0 |
-| Math | 20 | 0 | 0 |
-| Arrays / Simulation | 7 | 0 | 0 |
-| String | 5 | 0 | 0 |
-| Prefix / Greedy | 2 | 0 | 0 |
-| Data Structures | 1 | 0 | 0 |
-| Search / Sort | 1 | 0 | 0 |
+> 一題可同時計入多個 Tag，因此 Tag 題數加總可能大於索引題目總數。
+
+| 類別 | Tag | 題數 | AC | Mastered | Recall 0–1 | 到期 |
+| :--- | :--- | ---: | ---: | ---: | ---: | ---: |
+| 基礎 | Basic Syntax | 7 | 0 | 0 | 0 | 0 |
+| 基礎 | I/O | 25 | 0 | 0 | 0 | 0 |
+| 基礎 | Conditionals | 20 | 0 | 0 | 0 | 0 |
+| 基礎 | Loops | 23 | 0 | 0 | 0 | 0 |
+| 資料結構 | Array | 10 | 0 | 0 | 0 | 0 |
+| 資料結構 | Vector | 7 | 0 | 0 | 0 | 0 |
+| 資料結構 | String | 6 | 0 | 0 | 0 | 0 |
+| 資料結構 | Struct | 1 | 0 | 0 | 0 | 0 |
+| 演算法 | Sorting | 1 | 0 | 0 | 0 | 0 |
+| 演算法 | Greedy | 1 | 0 | 0 | 0 | 0 |
+
+### 弱項訊號
+
+> 只使用可觀察資料：Recall 0–1 或已到期題目；不使用黑箱分數。
+
+| Tag | 已 AC | Recall 0–1 | 到期 | Mastered |
+| :--- | ---: | ---: | ---: | ---: |
+| — | — | — | — | 目前沒有明確弱項訊號 |
+
+### Legacy Tag 待整理
+
+> 下列標籤未被 taxonomy 自動推測或轉換；保留原值，待後續人工確認。
+
+| Legacy Tag | 題數 |
+| :--- | ---: |
+| Math Theory | 19 |
 
 ### 今日複習優先序
 
-| ID | 題目 | 領域 | Recall | 到期日 |
+| ID | 題目 | Tags | Recall | 到期日 |
 | :--- | :--- | :--- | ---: | :---: |
 | — | 目前沒有到期題目 | — | — | — |
 
@@ -102,9 +132,9 @@ v2.2 以 `data/problems.csv` 與 `data/solutions.csv` 作為靜態 metadata 的�
 
 ## 自動化
 
-- Pull Request / main push：Catalog、learning data 驗證；新改動的 C++ / Python 解答做語法編譯檢查。
-- main 更新後：安全地重新產生 README、Problem Index、Review Queue。
-- 自動同步只 stage 生成檔，不再使用 `git add .`，也不再 `git pull --rebase`。
+- Control Center 建立 commit 前：完整 regression、whitespace check、Catalog / learning validation、warning-budget gate。
+- Pull Request / main push：完整 regression、warning-budget validation，以及本次修改 solution 的 syntax check。
+- main 更新後：安全重新產生 README、Problem Index、Review Queue，只 stage generated artifacts。
 
 ## Historical folders
 
