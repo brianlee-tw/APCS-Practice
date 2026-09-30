@@ -1,10 +1,3 @@
-// APCS Title: c135. 00706 - LC-Display
-// APCS Complexity: O(L * n)
-// APCS Tag: Loops, Vector, String
-// APCS Difficulty: 3
-// APCS Note: https://app.notion.com/p/c135-LC-Display-39a43be958cd80d38f69da3406f6f9c7?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
-// APCS Date: 26-07-11
-
 #include <iostream>
 #include <string>
 #include <vector>

@@ -15,11 +15,18 @@ import tty
 import unicodedata
 from pathlib import Path
 
-import apcs as core
+try:
+    from . import apcs as core
+    from .catalog_store import CatalogError, ProblemMeta, SolutionMeta
+    from .tag_taxonomy import TAG_GROUPS, serialize_selection, split_tags
+except ImportError:
+    import apcs as core
+    from catalog_store import CatalogError, ProblemMeta, SolutionMeta
+    from tag_taxonomy import TAG_GROUPS, serialize_selection, split_tags
 
 
 ROOT = Path(__file__).resolve().parents[1]
-ID_RE = re.compile(r"^([A-Za-z]\d+)(?:_|$)")
+ID_RE = re.compile(r"^([A-Za-z]\d+|\d+)(?:_|$)")
 
 RESET = "\033[0m"
 BOLD = "\033[1m"
@@ -189,13 +196,24 @@ def current_problem(filename: str | None):
         return None
 
     pid = match.group(1).lower()
+    candidate = path if path.is_absolute() else ROOT / path
+    resolved = candidate.resolve()
 
     for row in all_rows():
         if row[0] == pid:
+            matched_path = next(
+                (
+                    solution.path
+                    for solution in row[1]
+                    if solution.path.resolve() == resolved
+                ),
+                row[2].path,
+            )
+
             return {
                 "id": pid,
                 "title": clean_title(pid, row[2].title),
-                "path": row[2].path,
+                "path": matched_path,
                 "state": row[3],
                 "due": row[5],
             }
@@ -333,6 +351,7 @@ def choose_menu(
     problem=None,
     main=False,
     footer_numbers=True,
+    back_text: str | None = None,
 ):
     selected = first_enabled(options)
 
@@ -417,10 +436,11 @@ def choose_menu(
 
         if main:
             print(f"{GRAY}↑↓ 選擇 · Enter 執行{RESET}")
-            print(f"{GRAY}1–5 直達 · Esc / Q 關閉{RESET}")
+            print(f"{GRAY}1–{len(options)} 直達 · Esc / Q 關閉{RESET}")
         else:
             print(f"{GRAY}↑↓ 選擇 · Enter 執行{RESET}")
-            print(f"{GRAY}Esc / Q 返回控制中心{RESET}")
+            label = back_text or "返回控制中心"
+            print(f"{GRAY}Esc / Q {label}{RESET}")
 
         key = read_key()
 
@@ -772,6 +792,55 @@ def record_problem(action: str, problem) -> None:
 
     minutes = minutes_result
 
+    complexity_solution = None
+    finish_complexity = None
+
+    if action == "finish":
+        try:
+            complexity_solution = (
+                missing_finish_complexity(
+                    problem
+                )
+            )
+        except CatalogError as exc:
+            clear()
+            heading(title)
+            print()
+            print(
+                f"{RED}"
+                f"✕ Catalog 無法讀取：{exc}"
+                f"{RESET}"
+            )
+            pause()
+            return
+
+        if complexity_solution is not None:
+            clear()
+            heading("完成題目 · Complexity")
+            print()
+            print_problem_context(problem)
+            print()
+            print(
+                f"{YELLOW}"
+                "此 solution 尚未記錄 Complexity。"
+                f"{RESET}"
+            )
+            print(
+                f"{GRAY}"
+                "請先判斷演算法時間複雜度，例如 "
+                "O(1)、O(N)、O(N log N)。"
+                f"{RESET}"
+            )
+            print()
+
+            finish_complexity = prompt_text(
+                "Complexity（必填）",
+                required=True,
+            )
+
+            if finish_complexity is None:
+                return
+
     clear()
     heading(title)
     print()
@@ -802,6 +871,12 @@ def record_problem(action: str, problem) -> None:
         )
     )
 
+    if complexity_solution is not None:
+        print(
+            "Complexity  "
+            f"{CYAN}{finish_complexity}{RESET}"
+        )
+
     print()
     rule()
     print()
@@ -815,10 +890,16 @@ def record_problem(action: str, problem) -> None:
     try:
         with contextlib.redirect_stdout(io.StringIO()):
             if action == "finish":
-                command_result = core.finish_cmd(
-                    problem["id"],
-                    score,
-                    minutes=minutes,
+                command_result = (
+                    finish_with_optional_complexity(
+                        problem["id"],
+                        score,
+                        minutes=minutes,
+                        complexity_solution=(
+                            complexity_solution
+                        ),
+                        complexity=finish_complexity,
+                    )
                 )
             else:
                 command_result = core.review_cmd(
@@ -828,7 +909,11 @@ def record_problem(action: str, problem) -> None:
                     minutes=minutes,
                 )
 
-    except SystemExit as exc:
+    except (
+        SystemExit,
+        CatalogError,
+        OSError,
+    ) as exc:
         print()
         print(
             f"{RED}"
@@ -846,6 +931,14 @@ def record_problem(action: str, problem) -> None:
             f"✓ 學習紀錄已更新"
             f"{RESET}"
         )
+
+        if complexity_solution is not None:
+            print(
+                f"{GREEN}"
+                f"✓ Complexity 已寫入 Catalog："
+                f"{finish_complexity}"
+                f"{RESET}"
+            )
     else:
         print(
             f"{RED}"
@@ -856,6 +949,1074 @@ def record_problem(action: str, problem) -> None:
     pause()
 
 
+
+# ============================================================
+# Catalog workflow
+# ============================================================
+
+PROBLEM_ID_RE = re.compile(r"^(?:[A-Za-z]\d+|\d+)$")
+
+
+def normalize_problem_id(value: str) -> str:
+    value = str(value).strip().lower()
+
+    if not PROBLEM_ID_RE.fullmatch(value):
+        raise CatalogError(
+            "題號格式必須是英文字母+數字（例如 b130）或純數字"
+        )
+
+    return value
+
+
+def solution_template(language: str) -> str:
+    language = language.strip().lower()
+
+    if language == "cpp":
+        return (
+            "#include <bits/stdc++.h>\n"
+            "using namespace std;\n\n"
+            "int main() {\n"
+            "    ios::sync_with_stdio(false);\n"
+            "    cin.tie(nullptr);\n\n"
+            "    return 0;\n"
+            "}\n"
+        )
+
+    if language == "python":
+        return (
+            "def main():\n"
+            "    pass\n\n\n"
+            'if __name__ == "__main__":\n'
+            "    main()\n"
+        )
+
+    raise CatalogError(f"不支援的語言：{language}")
+
+
+def next_solution_path(
+    pid: str,
+    language: str,
+    *,
+    root: Path = ROOT,
+) -> Path:
+    pid = normalize_problem_id(pid)
+    language = language.strip().lower()
+
+    suffix = {
+        "cpp": ".cpp",
+        "python": ".py",
+    }.get(language)
+
+    if suffix is None:
+        raise CatalogError(f"不支援的語言：{language}")
+
+    folder = Path(root) / "solutions"
+    candidate = folder / f"{pid}{suffix}"
+    index = 2
+
+    while candidate.exists():
+        candidate = folder / f"{pid}_{index}{suffix}"
+        index += 1
+
+    return candidate
+
+
+def create_problem_assets(
+    problem: ProblemMeta,
+    language: str,
+    complexity: str = "",
+    *,
+    root: Path = ROOT,
+    store=None,
+) -> Path:
+    store = store or core.CATALOG
+    pid = normalize_problem_id(problem.problem_id)
+
+    normalized = ProblemMeta(
+        problem_id=pid,
+        title=problem.title,
+        source=problem.source,
+        difficulty=problem.difficulty,
+        tags=problem.tags,
+    )
+
+    target = next_solution_path(
+        pid,
+        language,
+        root=root,
+    )
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        solution_template(language),
+        encoding="utf-8",
+    )
+
+    relative = target.relative_to(root).as_posix()
+
+    try:
+        store.create_problem_with_solution(
+            normalized,
+            SolutionMeta(
+                problem_id=pid,
+                path=relative,
+                language=language,
+                complexity=complexity,
+            ),
+        )
+    except Exception:
+        target.unlink(missing_ok=True)
+        raise
+
+    return target
+
+
+def add_solution_asset(
+    pid: str,
+    language: str,
+    complexity: str = "",
+    *,
+    root: Path = ROOT,
+    store=None,
+) -> Path:
+    store = store or core.CATALOG
+    pid = normalize_problem_id(pid)
+    target = next_solution_path(
+        pid,
+        language,
+        root=root,
+    )
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_text(
+        solution_template(language),
+        encoding="utf-8",
+    )
+
+    relative = target.relative_to(root).as_posix()
+
+    try:
+        store.add_solution(
+            SolutionMeta(
+                problem_id=pid,
+                path=relative,
+                language=language,
+                complexity=complexity,
+            )
+        )
+    except Exception:
+        target.unlink(missing_ok=True)
+        raise
+
+    return target
+
+
+def current_catalog_solution(
+    problem,
+    *,
+    store=None,
+    root: Path = ROOT,
+):
+    if not problem:
+        return None
+
+    store = store or core.CATALOG
+    root = Path(root)
+
+    try:
+        relative = (
+            Path(problem["path"])
+            .resolve()
+            .relative_to(root.resolve())
+            .as_posix()
+        )
+    except (KeyError, ValueError):
+        return None
+
+    for item in store.load_solutions():
+        if item.path == relative:
+            return item
+
+    return None
+
+
+def missing_finish_complexity(
+    problem,
+    *,
+    store=None,
+    root: Path = ROOT,
+):
+    solution = current_catalog_solution(
+        problem,
+        store=store,
+        root=root,
+    )
+
+    if solution is None:
+        return None
+
+    if solution.complexity.strip():
+        return None
+
+    return solution
+
+
+def finish_with_optional_complexity(
+    problem_id: str,
+    score: int,
+    *,
+    minutes: int | None = None,
+    complexity_solution=None,
+    complexity: str | None = None,
+    store=None,
+    finish_runner=None,
+):
+    store = store or core.CATALOG
+    finish_runner = (
+        finish_runner
+        or core.finish_cmd
+    )
+
+    original = complexity_solution
+    catalog_updated = False
+
+    if original is not None:
+        value = str(
+            complexity or ""
+        ).strip()
+
+        if not value:
+            raise CatalogError(
+                "缺少 Complexity，無法完成 Finish。"
+            )
+
+        store.update_solution(
+            SolutionMeta(
+                problem_id=original.problem_id,
+                path=original.path,
+                language=original.language,
+                complexity=value,
+            )
+        )
+
+        catalog_updated = True
+
+    def rollback_complexity():
+        if not catalog_updated:
+            return
+
+        store.update_solution(
+            original
+        )
+
+    try:
+        result = finish_runner(
+            problem_id,
+            score,
+            minutes=minutes,
+        )
+
+    except BaseException as exc:
+        if catalog_updated:
+            try:
+                rollback_complexity()
+            except Exception as rollback_exc:
+                raise CatalogError(
+                    "Finish 失敗，且 Complexity rollback "
+                    f"亦失敗：{rollback_exc}"
+                ) from exc
+
+        raise
+
+    if result != 0 and catalog_updated:
+        try:
+            rollback_complexity()
+        except Exception as rollback_exc:
+            raise CatalogError(
+                "Finish 回傳失敗，且 Complexity rollback "
+                f"亦失敗：{rollback_exc}"
+            )
+
+    return result
+
+
+def prompt_text(
+    label: str,
+    *,
+    current: str | None = None,
+    required: bool = False,
+    allow_clear: bool = False,
+) -> str | None:
+    shown = f" [{current}]" if current else ""
+    clear_hint = " · 輸入 - 清除" if allow_clear else ""
+
+    try:
+        value = input(
+            f"{label}{shown}{clear_hint}\n> "
+        ).strip()
+    except (EOFError, KeyboardInterrupt):
+        return None
+
+    if current is not None and not value:
+        return current
+
+    if allow_clear and value == "-":
+        return ""
+
+    if required and not value:
+        return None
+
+    return value
+
+
+
+
+def _print_tag_header(title: str, selected: set[str], kept_legacy: set[str]) -> None:
+    clear()
+    heading(title)
+    print()
+
+    total = len(selected) + len(kept_legacy)
+    print(f"{GRAY}已選 {total} 個 Tags{RESET}")
+
+    if total:
+        preview = ", ".join(sorted(selected) + sorted(kept_legacy))
+        print(f"{WHITE}{fit(preview, ui_width())}{RESET}")
+
+    print()
+    rule()
+    print()
+
+
+def _tag_group_menu(
+    group_name: str,
+    group_tags,
+    selected: set[str],
+    kept_legacy: set[str],
+) -> str:
+    cursor = 0
+    tags = list(group_tags)
+
+    while True:
+        _print_tag_header(
+            f"Tags · {group_name}",
+            selected,
+            kept_legacy,
+        )
+
+        for index, tag in enumerate(tags):
+            mark = "✓" if tag in selected else "○"
+            prefix = "›" if index == cursor else " "
+            color = CYAN + BOLD if index == cursor else ""
+
+            print(
+                f"{color}{prefix} {index + 1}  "
+                f"{mark} {tag}{RESET}"
+            )
+
+        print()
+        rule()
+        print(f"{GRAY}↑↓ 選擇 · Enter / Space 切換{RESET}")
+        print(f"{GRAY}S 完成 Tags 選擇 · Esc / Q 返回分類{RESET}")
+
+        key = read_key()
+
+        if key == "UP":
+            cursor = (cursor - 1) % len(tags)
+        elif key == "DOWN":
+            cursor = (cursor + 1) % len(tags)
+        elif key in {"ENTER", " "}:
+            tag = tags[cursor]
+            if tag in selected:
+                selected.remove(tag)
+            else:
+                selected.add(tag)
+        elif key in {"s", "S"}:
+            return "save"
+        elif key in {"ESC", "q", "Q"}:
+            return "back"
+        elif key.isdigit():
+            index = int(key) - 1
+            if 0 <= index < len(tags):
+                cursor = index
+
+
+def _legacy_tag_menu(
+    tags: list[str],
+    kept: set[str],
+    selected: set[str],
+) -> str:
+    cursor = 0
+
+    while True:
+        _print_tag_header(
+            "Tags · Legacy / 其他",
+            selected,
+            kept,
+        )
+
+        for index, tag in enumerate(tags):
+            mark = "✓" if tag in kept else "○"
+            prefix = "›" if index == cursor else " "
+            color = CYAN + BOLD if index == cursor else ""
+
+            print(
+                f"{color}{prefix} {index + 1}  "
+                f"{mark} {tag}{RESET}"
+            )
+
+        print()
+        rule()
+        print(f"{GRAY}↑↓ 選擇 · Enter / Space 切換{RESET}")
+        print(f"{GRAY}S 完成 Tags 選擇 · Esc / Q 返回分類{RESET}")
+
+        key = read_key()
+
+        if key == "UP":
+            cursor = (cursor - 1) % len(tags)
+        elif key == "DOWN":
+            cursor = (cursor + 1) % len(tags)
+        elif key in {"ENTER", " "}:
+            tag = tags[cursor]
+            if tag in kept:
+                kept.remove(tag)
+            else:
+                kept.add(tag)
+        elif key in {"s", "S"}:
+            return "save"
+        elif key in {"ESC", "q", "Q"}:
+            return "back"
+        elif key.isdigit():
+            index = int(key) - 1
+            if 0 <= index < len(tags):
+                cursor = index
+
+
+def tag_selector(
+    current: str = "",
+    *,
+    required: bool = False,
+) -> str | None:
+    canonical, unknown = split_tags(current)
+    selected = set(canonical)
+    legacy = list(unknown)
+    kept_legacy = set(legacy)
+    cursor = 0
+
+    def finish() -> str | None:
+        if required and not selected and not kept_legacy:
+            return None
+
+        return serialize_selection(
+            selected,
+            [
+                tag
+                for tag in legacy
+                if tag in kept_legacy
+            ],
+        )
+
+    while True:
+        entries = [
+            (
+                "group",
+                group_name,
+                group_tags,
+                sum(tag in selected for tag in group_tags),
+                len(group_tags),
+            )
+            for group_name, group_tags in TAG_GROUPS
+        ]
+
+        if legacy:
+            entries.append(
+                (
+                    "legacy",
+                    "Legacy / 其他",
+                    legacy,
+                    sum(tag in kept_legacy for tag in legacy),
+                    len(legacy),
+                )
+            )
+
+        entries.append(
+            (
+                "save",
+                "✓ 完成 Tags 選擇",
+                None,
+                len(selected) + len(kept_legacy),
+                None,
+            )
+        )
+
+        cursor %= len(entries)
+
+        _print_tag_header(
+            "Tags 分類",
+            selected,
+            kept_legacy,
+        )
+
+        for index, entry in enumerate(entries):
+            kind, label, _, count, maximum = entry
+            prefix = "›" if index == cursor else " "
+            color = CYAN + BOLD if index == cursor else ""
+
+            if kind == "save":
+                detail = f"目前共 {count} 個 Tags"
+            elif kind == "legacy":
+                detail = f"{count}/{maximum} 保留"
+            else:
+                detail = f"{count}/{maximum} 已選"
+
+            print(
+                f"{color}{prefix} {index + 1}  "
+                f"{label}{RESET}"
+            )
+            print(f"     {GRAY}{detail}{RESET}")
+
+        print()
+        rule()
+        print(f"{GRAY}↑↓ 選擇 · Enter 執行{RESET}")
+        print(f"{GRAY}S 完成 Tags 選擇 · Esc / Q 取消 Tags 編輯{RESET}")
+
+        key = read_key()
+
+        if key == "UP":
+            cursor = (cursor - 1) % len(entries)
+            continue
+
+        if key == "DOWN":
+            cursor = (cursor + 1) % len(entries)
+            continue
+
+        if key in {"s", "S"}:
+            result = finish()
+            if result is not None:
+                return result
+
+            clear()
+            heading("Tags 分類")
+            print()
+            print(
+                f"{YELLOW}"
+                "新題目至少需要選擇 1 個 Tag。"
+                f"{RESET}"
+            )
+            pause()
+            continue
+
+        if key in {"ESC", "q", "Q"}:
+            return None
+
+        if key.isdigit():
+            index = int(key) - 1
+            if 0 <= index < len(entries):
+                cursor = index
+            continue
+
+        if key != "ENTER":
+            continue
+
+        kind, label, values, _, _ = entries[cursor]
+
+        if kind == "save":
+            result = finish()
+            if result is not None:
+                return result
+
+            clear()
+            heading("Tags 分類")
+            print()
+            print(
+                f"{YELLOW}"
+                "新題目至少需要選擇 1 個 Tag。"
+                f"{RESET}"
+            )
+            pause()
+            continue
+
+        if kind == "legacy":
+            action = _legacy_tag_menu(
+                values,
+                kept_legacy,
+                selected,
+            )
+        else:
+            action = _tag_group_menu(
+                label,
+                values,
+                selected,
+                kept_legacy,
+            )
+
+        if action == "save":
+            result = finish()
+            if result is not None:
+                return result
+
+            clear()
+            heading("Tags 分類")
+            print()
+            print(
+                f"{YELLOW}"
+                "新題目至少需要選擇 1 個 Tag。"
+                f"{RESET}"
+            )
+            pause()
+
+
+def language_menu() -> str | None:
+    selected = choose_menu(
+        "Solution 語言",
+        [
+            {
+                "label": "C++",
+                "detail": "建立 .cpp",
+                "enabled": True,
+            },
+            {
+                "label": "Python",
+                "detail": "建立 .py",
+                "enabled": True,
+            },
+        ],
+        footer_numbers=True,
+    )
+
+    if selected is None:
+        return None
+
+    return "cpp" if selected == 0 else "python"
+
+
+def open_in_vscode(path: Path) -> bool:
+    result = subprocess.run(
+        ["code", "--reuse-window", str(path)],
+        cwd=ROOT,
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+    )
+    return result.returncode == 0
+
+
+def create_problem_ui() -> str | None:
+    clear()
+    heading("新增題目")
+    print()
+    print(f"{GRAY}建立 Catalog metadata 與純 solution file{RESET}")
+    print(f"{GRAY}Esc 可在選單步驟取消；文字欄位可 Ctrl+C 取消{RESET}")
+    print()
+
+    raw_pid = prompt_text("題號", required=True)
+    if raw_pid is None:
+        return None
+
+    try:
+        pid = normalize_problem_id(raw_pid)
+    except CatalogError as exc:
+        print(f"{RED}✕ {exc}{RESET}")
+        pause()
+        return None
+
+    try:
+        existing = core.CATALOG.load_problems()
+    except CatalogError as exc:
+        print(f"{RED}✕ Catalog 無法讀取：{exc}{RESET}")
+        pause()
+        return None
+
+    if pid in existing:
+        print(f"{RED}✕ 題目已存在：{pid}{RESET}")
+        pause()
+        return None
+
+    title = prompt_text("題名", required=True)
+    if title is None:
+        return None
+
+    source = prompt_text("來源 URL / 名稱（可略過）")
+    if source is None:
+        return None
+
+    difficulty = prompt_text("難度 1–5（可略過）")
+    if difficulty is None:
+        return None
+
+    tags = tag_selector(required=True)
+    if tags is None:
+        return None
+
+    language = language_menu()
+    if language is None:
+        return None
+
+    clear()
+    heading("新增題目")
+    print()
+    print(f"{WHITE}{pid} · {title}{RESET}")
+    print(f"{GRAY}Tags 已完成 · 接著設定 solution metadata{RESET}")
+    print(f"{GRAY}Tags: {tags or '—'}{RESET}")
+    print(f"{GRAY}Language: {language}{RESET}")
+    print()
+
+    complexity = prompt_text("Complexity（可略過）")
+    if complexity is None:
+        return None
+
+    clear()
+    heading("確認並建立")
+    print()
+    print(f"{WHITE}{pid} · {title}{RESET}")
+    print()
+    rule()
+    print()
+    print(f"來源        {source or '—'}")
+    print(f"難度        {difficulty or '—'}")
+    print(f"Tags        {tags or '—'}")
+    print(f"Language    {language}")
+    print(f"Complexity  {complexity or '—'}")
+    print()
+    rule()
+    print()
+    print(
+        f"{GRAY}"
+        "以上內容尚未寫入 Catalog"
+        f"{RESET}"
+    )
+
+    if not confirm("確認建立題目與 solution？"):
+        return None
+
+    try:
+        path = create_problem_assets(
+            ProblemMeta(
+                problem_id=pid,
+                title=title,
+                source=source,
+                difficulty=difficulty,
+                tags=tags,
+            ),
+            language,
+            complexity,
+        )
+        with contextlib.redirect_stdout(io.StringIO()):
+            core.sync()
+    except (CatalogError, OSError) as exc:
+        clear()
+        heading("新增題目")
+        print()
+        print(f"{RED}✕ 建立失敗：{exc}{RESET}")
+        pause()
+        return None
+
+    clear()
+    heading("建立完成")
+    print()
+    print(
+        f"{GREEN}{BOLD}"
+        f"✓ {pid} 已成功寫入 Catalog"
+        f"{RESET}"
+    )
+    print()
+    print(path.relative_to(ROOT))
+
+    if open_in_vscode(path):
+        print(f"{GREEN}✓ 已在 VS Code 開啟{RESET}")
+    else:
+        print(f"{YELLOW}⚠ 無法自動開啟 VS Code{RESET}")
+
+    pause()
+    return str(path)
+
+
+def edit_problem_ui(problem) -> None:
+    if not problem:
+        return
+
+    pid = problem["id"]
+
+    try:
+        problems = core.CATALOG.load_problems()
+        current = problems[pid]
+        solution = current_catalog_solution(problem)
+    except (CatalogError, KeyError) as exc:
+        clear()
+        heading("編輯題目")
+        print()
+        print(f"{RED}✕ 無法讀取 Catalog：{exc}{RESET}")
+        pause()
+        return
+
+    clear()
+    heading("編輯題目")
+    print()
+    print(f"{WHITE}{pid} · {current.title or pid}{RESET}")
+    print(
+        f"{GRAY}"
+        "文字欄位 Enter 保留原值；Tags 使用分類選擇"
+        f"{RESET}"
+    )
+    print()
+
+    title = prompt_text(
+        "題名",
+        current=current.title,
+        required=True,
+    )
+    if title is None:
+        return
+
+    source = prompt_text(
+        "來源",
+        current=current.source,
+        allow_clear=True,
+    )
+    if source is None:
+        return
+
+    difficulty = prompt_text(
+        "難度 1–5",
+        current=current.difficulty,
+        allow_clear=True,
+    )
+    if difficulty is None:
+        return
+
+    tags = tag_selector(current.tags)
+    if tags is None:
+        return
+
+    clear()
+    heading("編輯題目")
+    print()
+    print(f"{GREEN}✓ Tags 選擇完成{RESET}")
+    print(f"{GRAY}{tags or '—'}{RESET}")
+    print()
+    print(
+        f"{GRAY}"
+        "尚未儲存；完成剩餘 metadata 後會統一確認"
+        f"{RESET}"
+    )
+    print()
+
+    complexity = None
+    if solution is not None:
+        clear()
+        heading("編輯題目")
+        print()
+        print(f"{WHITE}{pid} · {title}{RESET}")
+        print(f"{GRAY}Tags 已完成 · 接著設定目前 solution{RESET}")
+        print(f"{GRAY}Tags: {tags or '—'}{RESET}")
+        print(f"{GRAY}Solution: {solution.path}{RESET}")
+        print()
+
+        complexity = prompt_text(
+            "目前 solution Complexity",
+            current=solution.complexity,
+            allow_clear=True,
+        )
+        if complexity is None:
+            return
+
+    clear()
+    heading("確認並儲存")
+    print()
+    print(f"{WHITE}{pid} · {title}{RESET}")
+    print()
+    rule()
+    print()
+    print(f"來源        {source or '—'}")
+    print(f"難度        {difficulty or '—'}")
+    print(f"Tags        {tags or '—'}")
+
+    if solution is not None:
+        print(f"Complexity  {complexity or '—'}")
+
+    print()
+    rule()
+    print()
+    print(
+        f"{GRAY}"
+        "以上內容尚未寫入 Catalog"
+        f"{RESET}"
+    )
+
+    if not confirm("確認儲存全部 metadata？"):
+        return
+
+    try:
+        updated_problem = ProblemMeta(
+            problem_id=pid,
+            title=title,
+            source=source,
+            difficulty=difficulty,
+            tags=tags,
+        )
+
+        if solution is not None:
+            core.CATALOG.update_problem_with_solution(
+                updated_problem,
+                SolutionMeta(
+                    problem_id=solution.problem_id,
+                    path=solution.path,
+                    language=solution.language,
+                    complexity=complexity,
+                ),
+            )
+        else:
+            core.CATALOG.update_problem(
+                updated_problem
+            )
+
+        with contextlib.redirect_stdout(io.StringIO()):
+            core.sync()
+
+    except (CatalogError, OSError) as exc:
+        clear()
+        heading("編輯題目")
+        print()
+        print(f"{RED}✕ 更新失敗：{exc}{RESET}")
+        pause()
+        return
+
+    clear()
+    heading("儲存完成")
+    print()
+    print(
+        f"{GREEN}{BOLD}"
+        "✓ metadata 已成功寫入 Catalog"
+        f"{RESET}"
+    )
+    print()
+    print(f"{WHITE}{pid} · {title}{RESET}")
+    print(f"{GRAY}Tags: {tags or '—'}{RESET}")
+
+    if solution is not None:
+        print(
+            f"{GRAY}"
+            f"Complexity: {complexity or '—'}"
+            f"{RESET}"
+        )
+
+    pause()
+
+
+def add_solution_ui(problem) -> str | None:
+    if not problem:
+        return None
+
+    pid = problem["id"]
+    language = language_menu()
+
+    if language is None:
+        return None
+
+    clear()
+    heading("新增 Solution")
+    print()
+    print(f"{WHITE}{problem_line(problem)}{RESET}")
+    print()
+
+    complexity = prompt_text("Complexity（可略過）")
+    if complexity is None:
+        return None
+
+    if not confirm(
+        f"為 {pid} 建立新的 {language} solution？"
+    ):
+        return None
+
+    try:
+        path = add_solution_asset(
+            pid,
+            language,
+            complexity,
+        )
+        with contextlib.redirect_stdout(io.StringIO()):
+            core.sync()
+    except (CatalogError, OSError) as exc:
+        clear()
+        heading("新增 Solution")
+        print()
+        print(f"{RED}✕ 建立失敗：{exc}{RESET}")
+        pause()
+        return None
+
+    clear()
+    heading("新增 Solution")
+    print()
+    print(f"{GREEN}✓ 已建立{RESET}")
+    print(path.relative_to(ROOT))
+
+    if open_in_vscode(path):
+        print(f"{GREEN}✓ 已在 VS Code 開啟{RESET}")
+    else:
+        print(f"{YELLOW}⚠ 無法自動開啟 VS Code{RESET}")
+
+    pause()
+    return str(path)
+
+
+def catalog_center(problem, current_filename: str | None):
+    try:
+        problems = core.CATALOG.load_problems()
+    except CatalogError as exc:
+        clear()
+        heading("題目資料")
+        print()
+        print(f"{RED}✕ Catalog 無法讀取：{exc}{RESET}")
+        pause()
+        return current_filename
+
+    known = bool(
+        problem
+        and problem["id"] in problems
+    )
+
+    options = [
+        {
+            "label": "新增題目",
+            "detail": "建立 metadata 與第一份 solution",
+            "enabled": True,
+        },
+        {
+            "label": "編輯目前題目",
+            "detail": (
+                "修改 title / source / difficulty / tags / complexity"
+                if known
+                else "目前檔案不在 Catalog"
+            ),
+            "enabled": known,
+        },
+        {
+            "label": "新增 Solution",
+            "detail": (
+                "為目前題目建立另一份 C++ / Python 解法"
+                if known
+                else "需先選擇 Catalog 題目"
+            ),
+            "enabled": known,
+        },
+    ]
+
+    selected = choose_menu(
+        "題目資料",
+        options,
+        problem=problem,
+    )
+
+    if selected is None:
+        return current_filename
+
+    if selected == 0:
+        created = create_problem_ui()
+        return created or current_filename
+
+    if selected == 1:
+        edit_problem_ui(problem)
+        return current_filename
+
+    created = add_solution_ui(problem)
+    return created or current_filename
 # ============================================================
 # Today / Notes
 # ============================================================
@@ -1090,6 +2251,18 @@ def whitespace_ok() -> bool:
     a = run_git("diff", "--check")
     b = run_git("diff", "--cached", "--check")
     return a.returncode == 0 and b.returncode == 0
+
+
+def local_quality_gate():
+    return subprocess.run(
+        [
+            sys.executable,
+            "tools/quality_gate.py",
+        ],
+        cwd=ROOT,
+        capture_output=True,
+        text=True,
+    )
 
 
 def branch_sync():
@@ -1368,6 +2541,48 @@ def create_commit() -> None:
         print("請先修正後再 Commit。")
         pause()
         return
+
+    print(
+        f"{GRAY}"
+        "正在執行完整 regression + warning gate…"
+        f"{RESET}"
+    )
+
+    quality = local_quality_gate()
+
+    if quality.returncode != 0:
+        print()
+        print(
+            f"{RED}"
+            "✕ Quality Gate 未通過；不建立 Commit"
+            f"{RESET}"
+        )
+
+        output = (
+            quality.stdout.strip()
+            or quality.stderr.strip()
+        )
+
+        if output:
+            print()
+
+            for line in output.splitlines()[-12:]:
+                print(
+                    fit(
+                        line,
+                        ui_width(),
+                    )
+                )
+
+        pause()
+        return
+
+    print(
+        f"{GREEN}"
+        "✓ Regression + warning gate 通過"
+        f"{RESET}"
+    )
+    print()
 
     stat = run_git(
         "diff",
@@ -1721,6 +2936,11 @@ def main() -> int:
                 "enabled": True,
             },
             {
+                "label": "題目資料",
+                "detail": "新增題目、編輯 metadata、建立 solution",
+                "enabled": True,
+            },
+            {
                 "label": "完成題目",
                 "detail": finish_detail,
                 "enabled": finish_enabled,
@@ -1761,15 +2981,18 @@ def main() -> int:
             filename = today_view(filename)
 
         elif selected == 1:
-            record_problem("finish", problem)
+            filename = catalog_center(problem, filename)
 
         elif selected == 2:
-            record_problem("review", problem)
+            record_problem("finish", problem)
 
         elif selected == 3:
-            open_note(problem)
+            record_problem("review", problem)
 
         elif selected == 4:
+            open_note(problem)
+
+        elif selected == 5:
             git_center()
 
 

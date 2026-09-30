@@ -1,9 +1,3 @@
-// APCS Title: c085. Pseudo Randoms
-// APCS Complexity: O(M)
-// APCS Tag: Math Theory, Array
-// APCS Difficulty: 2
-// APCS Note: https://app.notion.com/p/c085-Pseudo-Random-Numbers-39943be958cd801aa8cac43e4e0e74ae?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
-
 #include <bits/stdc++.h>
 
 using namespace std;

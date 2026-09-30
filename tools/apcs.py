@@ -31,6 +31,26 @@ except ImportError:
     )
 
 
+try:
+    from .catalog_store import CatalogError, CatalogStore
+except ImportError:
+    from catalog_store import CatalogError, CatalogStore
+
+
+try:
+    from .tag_analytics import (
+        build_tag_stats,
+        display_tags,
+        weakness_stats,
+    )
+except ImportError:
+    from tag_analytics import (
+        build_tag_stats,
+        display_tags,
+        weakness_stats,
+    )
+
+
 ROOT = Path(__file__).resolve().parents[1]
 
 DATA = Path(
@@ -48,38 +68,12 @@ QUEUE = DOCS / "REVIEW_QUEUE.md"
 
 STORE = LearningStore(DATA)
 ENGINE = LearningEngine(STORE)
-
-SUFFIXES = {".cpp", ".py"}
-
-EXCLUDE = {
-    ".git",
-    ".github",
-    ".vscode",
-    "tools",
-    "tests",
-    "docs",
-    "data",
-    "notes",
-    "build",
-    "Build",
-    "__pycache__",
-}
+CATALOG = CatalogStore(DATA)
 
 START = "<!-- APCS_DASHBOARD_START -->"
 END = "<!-- APCS_DASHBOARD_END -->"
 
-ID_RE = re.compile(r"([a-z]\d+)", re.I)
-
-META_RE = re.compile(
-    r"^(?://|#)\s*APCS\s+([^:]+):\s*(.*?)\s*$",
-    re.I,
-)
-
-DATE_FORMATS = (
-    "%Y-%m-%d",
-    "%y-%m-%d",
-)
-
+ID_RE = re.compile(r"([a-z]\d+|\d+)", re.I)
 
 @dataclass
 class Sol:
@@ -105,32 +99,18 @@ class Sol:
 
     @property
     def difficulty(self):
+        raw = self.meta.get(
+            "difficulty",
+            "",
+        ).strip()
+
+        if not raw:
+            return None
+
         try:
-            return max(
-                1,
-                min(
-                    5,
-                    int(
-                        self.meta.get(
-                            "difficulty",
-                            "1",
-                        )
-                    ),
-                ),
-            )
-        except Exception:
-            return 1
-
-    @property
-    def note(self):
-        return self.meta.get("note", "")
-
-    @property
-    def legacy_date(self):
-        return parse_date(
-            self.meta.get("date", "")
-        )
-
+            return int(raw)
+        except (TypeError, ValueError):
+            return None
 
 def norm(value: str | None) -> str:
     match = ID_RE.search(
@@ -139,75 +119,10 @@ def norm(value: str | None) -> str:
     return match.group(1) if match else ""
 
 
-def parse_date(value: str | None):
-    value = (value or "").strip()
-
-    for format_ in DATE_FORMATS:
-        try:
-            return dt.datetime.strptime(
-                value,
-                format_,
-            ).date()
-        except ValueError:
-            pass
-
-    return None
-
-
 def ensure():
     STORE.ensure()
     DOCS.mkdir(exist_ok=True)
     NOTES.mkdir(exist_ok=True)
-
-
-def files():
-    for path in ROOT.rglob("*"):
-        if (
-            not path.is_file()
-            or path.suffix.lower() not in SUFFIXES
-        ):
-            continue
-
-        relative = path.relative_to(ROOT)
-
-        if any(
-            part in EXCLUDE
-            or part == ".cph"
-            for part in relative.parts[:-1]
-        ):
-            continue
-
-        if "tempCodeRunner" in path.name:
-            continue
-
-        yield path
-
-
-def parse_solution(path: Path):
-    text = "\n".join(
-        path.read_text(
-            encoding="utf-8",
-            errors="ignore",
-        ).splitlines()[:24]
-    )
-
-    meta = {}
-
-    for line in text.splitlines():
-        match = META_RE.match(line)
-
-        if match:
-            meta[
-                match.group(1)
-                .strip()
-                .lower()
-            ] = match.group(2).strip()
-
-    return Sol(
-        path,
-        norm(path.stem),
-        meta,
-    )
 
 
 def load_progress():
@@ -215,138 +130,39 @@ def load_progress():
     return STORE.load_progress()
 
 
-def domain(sol: Sol):
-    text = " ".join(
-        sol.tags
-        + [
-            sol.title,
-            sol.path.stem,
-        ]
-    ).lower()
-
-    rules = [
-        (
-            "Graph",
-            [
-                "graph",
-                "bfs",
-                "dfs",
-                "dijkstra",
-                "topological",
-                "mst",
-                "union find",
-                "dsu",
-            ],
-        ),
-        (
-            "DP / Recursion",
-            [
-                "dynamic programming",
-                " dp ",
-                "recursion",
-                "backtracking",
-                "memo",
-            ],
-        ),
-        (
-            "Prefix / Greedy",
-            [
-                "prefix",
-                "greedy",
-                "difference array",
-                "sliding window",
-            ],
-        ),
-        (
-            "Search / Sort",
-            [
-                "binary search",
-                "sorting",
-                "sort",
-                "two pointers",
-            ],
-        ),
-        (
-            "Data Structures",
-            [
-                "stack",
-                "queue",
-                "deque",
-                "heap",
-                "priority queue",
-                "set",
-                "map",
-                "hash",
-                "tree",
-            ],
-        ),
-        (
-            "Math",
-            [
-                "math",
-                "prime",
-                "factor",
-                "gcd",
-                "lcm",
-                "mod",
-                "number theory",
-                "geometry",
-            ],
-        ),
-        (
-            "String",
-            [
-                "string",
-                "char",
-            ],
-        ),
-        (
-            "Arrays / Simulation",
-            [
-                "array",
-                "vector",
-                "matrix",
-                "simulation",
-            ],
-        ),
-    ]
-
-    for name, keys in rules:
-        if any(key in text for key in keys):
-            return name
-
-    return "Fundamentals / Simulation"
-
-
-def build():
+def build_catalog():
     progress = load_progress()
     by = defaultdict(list)
     warnings = []
 
-    for path in files():
-        solution = parse_solution(path)
+    problems = CATALOG.load_problems()
+    catalog_solutions = CATALOG.load_solutions()
 
-        if not solution.pid:
+    for entry in catalog_solutions:
+        problem = problems.get(entry.problem_id)
+
+        if problem is None:
             warnings.append(
-                f"{path.relative_to(ROOT)}: 檔名沒有題號"
+                f"Catalog: {entry.problem_id} 不存在題目資料"
             )
             continue
 
-        title_id = norm(
-            solution.meta.get("title")
-        )
+        path = ROOT / entry.path
+        meta = {
+            "title": problem.title,
+            "source": problem.source,
+            "difficulty": problem.difficulty,
+            "tag": problem.tags,
+            "complexity": entry.complexity,
+        }
 
-        if (
-            title_id
-            and title_id != solution.pid
-        ):
-            warnings.append(
-                f"{path.relative_to(ROOT)}: "
-                f"檔名題號={solution.pid}，"
-                f"APCS Title 題號={title_id}"
+        by[entry.problem_id].append(
+            Sol(
+                path=path,
+                pid=entry.problem_id,
+                meta=meta,
             )
-
-        by[solution.pid].append(solution)
+        )
 
     rows = []
 
@@ -361,14 +177,7 @@ def build():
 
         state = progress.get(
             pid,
-            ProgressState(
-                problem_id=pid,
-            ),
-        )
-
-        legacy_done = any(
-            solution.note
-            for solution in solutions
+            ProgressState(problem_id=pid),
         )
 
         due = (
@@ -383,13 +192,22 @@ def build():
                 solutions,
                 primary,
                 state,
-                legacy_done,
+                False,
                 due,
-                domain(primary),
+                display_tags(
+                    primary.meta.get(
+                        "tag",
+                        "",
+                    )
+                ),
             )
         )
 
     return rows, warnings
+
+
+def build():
+    return build_catalog()
 
 
 def link(
@@ -409,7 +227,7 @@ def link(
     )
 
 
-def status(state, legacy):
+def status(state, _legacy):
     if state.solved_on:
         if (
             state.last_review_on
@@ -423,8 +241,6 @@ def status(state, legacy):
 
         return "✅ AC"
 
-    if legacy:
-        return "📚 Legacy"
 
     return "📝 Untracked"
 
@@ -437,12 +253,6 @@ def render_dashboard(rows):
         for row in rows
     )
 
-    legacy = sum(
-        row[4]
-        and not row[3].solved_on
-        for row in rows
-    )
-
     due = sum(
         bool(
             row[5]
@@ -452,29 +262,29 @@ def render_dashboard(rows):
     )
 
     mastery = defaultdict(int)
+    mastery_by_pid = {}
 
     for row in rows:
-        mastery[
-            ENGINE.mastery(row[0])
-        ] += 1
+        level = ENGINE.mastery(
+            row[0]
+        )
 
-    domains = defaultdict(
-        lambda: [0, 0, 0]
+        mastery[level] += 1
+        mastery_by_pid[
+            row[0]
+        ] = level
+
+    tag_stats, legacy_tags = (
+        build_tag_stats(
+            rows,
+            today=today,
+            mastery_by_pid=mastery_by_pid,
+        )
     )
 
-    for row in rows:
-        data = domains[row[6]]
-        data[0] += 1
-        data[1] += int(
-            bool(row[3].solved_on)
-            or row[4]
-        )
-        data[2] += int(
-            bool(
-                row[5]
-                and row[5] <= today
-            )
-        )
+    weak = weakness_stats(
+        tag_stats
+    )
 
     lines = [
         "## APCS Training Dashboard",
@@ -485,34 +295,83 @@ def render_dashboard(rows):
         f"| 明確 AC | **{solved}** |",
         f"| Mastered | **{mastery['MASTERED']}** |",
         f"| 今日到期複習 | **{due}** |",
-        f"| 舊制完成（未確認 AC） | **{legacy}** |",
         "",
-        "> `📚 Legacy` 代表舊制資料；"
-        "Notion 筆記本身不等同於 AC。",
+        "### Canonical Tag 能力分布",
         "",
-        "### 能力分布",
+        "> 一題可同時計入多個 Tag，"
+        "因此 Tag 題數加總可能大於索引題目總數。",
         "",
-        "| 領域 | 題數 | AC / 舊制完成 | 到期 |",
-        "| :--- | ---: | ---: | ---: |",
+        "| 類別 | Tag | 題數 | AC | "
+        "Mastered | Recall 0–1 | 到期 |",
+        "| :--- | :--- | ---: | ---: | "
+        "---: | ---: | ---: |",
     ]
 
-    for name, data in sorted(
-        domains.items(),
-        key=lambda item: (
-            -item[1][0],
-            item[0],
-        ),
-    ):
+    if tag_stats:
+        for stat in tag_stats:
+            lines.append(
+                f"| {stat.group} | "
+                f"{stat.tag} | "
+                f"{stat.total} | "
+                f"{stat.solved} | "
+                f"{stat.mastered} | "
+                f"{stat.low_recall} | "
+                f"{stat.due} |"
+            )
+    else:
         lines.append(
-            f"| {name} | {data[0]} | "
-            f"{data[1]} | {data[2]} |"
+            "| — | 尚無 canonical Tag | "
+            "— | — | — | — | — |"
         )
+
+    lines += [
+        "",
+        "### 弱項訊號",
+        "",
+        "> 只使用可觀察資料：Recall 0–1 "
+        "或已到期題目；不使用黑箱分數。",
+        "",
+        "| Tag | 已 AC | Recall 0–1 | 到期 | Mastered |",
+        "| :--- | ---: | ---: | ---: | ---: |",
+    ]
+
+    if weak:
+        for stat in weak:
+            lines.append(
+                f"| {stat.tag} | "
+                f"{stat.solved} | "
+                f"{stat.low_recall} | "
+                f"{stat.due} | "
+                f"{stat.mastered} |"
+            )
+    else:
+        lines.append(
+            "| — | — | — | — | "
+            "目前沒有明確弱項訊號 |"
+        )
+
+    if legacy_tags:
+        lines += [
+            "",
+            "### Legacy Tag 待整理",
+            "",
+            "> 下列標籤未被 taxonomy 自動推測或轉換；"
+            "保留原值，待後續人工確認。",
+            "",
+            "| Legacy Tag | 題數 |",
+            "| :--- | ---: |",
+        ]
+
+        for tag, count in legacy_tags:
+            lines.append(
+                f"| {tag} | {count} |"
+            )
 
     lines += [
         "",
         "### 今日複習優先序",
         "",
-        "| ID | 題目 | 領域 | Recall | 到期日 |",
+        "| ID | 題目 | Tags | Recall | 到期日 |",
         "| :--- | :--- | :--- | ---: | :---: |",
     ]
 
@@ -565,7 +424,7 @@ def render_index(rows):
         "",
         "> 自動產生；請勿手動編輯。",
         "",
-        "| ID | 題目 | 領域 | 程式 | 複雜度 | "
+        "| ID | 題目 | Tags | 程式 | 複雜度 | "
         "難度 | 狀態 | Recall | Mastery | 筆記 |",
         "| :--- | :--- | :--- | :--- | :--- | "
         ":---: | :---: | ---: | :---: | :--- |",
@@ -599,20 +458,15 @@ def render_index(rows):
         local = NOTES / f"{pid}.md"
 
         note = (
-            link(
-                local,
-                "Local",
-                True,
-            )
+            link(local, "Local", True)
             if local.exists()
-            else next(
-                (
-                    f"[Notion]({solution.note})"
-                    for solution in solutions
-                    if solution.note
-                ),
-                "—",
-            )
+            else "—"
+        )
+
+        difficulty = (
+            "★" * primary.difficulty
+            if primary.difficulty is not None
+            else "—"
         )
 
         lines.append(
@@ -621,7 +475,7 @@ def render_index(rows):
             f"{area} | "
             f"{programs} | "
             f"`{primary.complexity}` | "
-            f"{'★' * primary.difficulty} | "
+            f"{difficulty} | "
             f"{status(state, legacy)} | "
             f"{state.recall if state.recall is not None else '—'} | "
             f"{ENGINE.mastery(pid)} | "
@@ -646,9 +500,9 @@ def render_queue(rows):
     lines = [
         "# Review Queue",
         "",
-        "> 自動產生；依 v2.1 adaptive review 排序。",
+        "> 自動產生；依 v2.2 adaptive review 排序。",
         "",
-        "| 到期日 | ID | 題目 | 領域 | Recall | Mastery | 狀態 |",
+        "| 到期日 | ID | 題目 | Tags | Recall | Mastery | 狀態 |",
         "| :---: | :--- | :--- | :--- | ---: | :---: | :---: |",
     ]
 
@@ -784,8 +638,28 @@ def sync():
 def validate(strict=False):
     ensure()
 
-    rows, warnings = build()
+    rows = []
+    warnings = []
     errors = []
+    metadata_label = "Catalog"
+
+    try:
+        rows, build_warnings = build()
+        warnings.extend(
+            build_warnings
+        )
+
+        errors.extend(
+            f"Catalog: {message}"
+            for message in CATALOG.validate(
+                root=ROOT
+            )
+        )
+
+    except CatalogError as exc:
+        errors.append(
+            f"Catalog: {exc}"
+        )
 
     for (
         _,
@@ -803,17 +677,17 @@ def validate(strict=False):
 
             if not solution.meta.get("title"):
                 warnings.append(
-                    f"{relative}: 缺少 APCS Title"
+                    f"{relative}: 缺少 {metadata_label} Title"
                 )
 
             if not solution.tags:
                 warnings.append(
-                    f"{relative}: 缺少 APCS Tag"
+                    f"{relative}: 缺少 {metadata_label} Tag"
                 )
 
             if solution.complexity == "—":
                 warnings.append(
-                    f"{relative}: 缺少 APCS Complexity"
+                    f"{relative}: 缺少 {metadata_label} Complexity"
                 )
 
     progress = STORE.load_progress()
@@ -897,6 +771,10 @@ def validate(strict=False):
             errors.append(
                 f"{pid}: 存在 {count} 個 Finish events"
             )
+
+    errors.extend(
+        STORE.validate_consistency()
+    )
 
     print(
         f"題目：{len(rows)} | "
@@ -1096,7 +974,7 @@ def note_cmd(pid):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
-        description="APCS-Practice v2.1 learning workflow"
+        description="APCS-Practice v2.2 catalog workflow"
     )
 
     sub = parser.add_subparsers(

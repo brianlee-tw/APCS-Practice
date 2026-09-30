@@ -1,9 +1,3 @@
-// APCS Title: d068. 該減肥了！
-// APCS Complexity: O(1)
-// APCS Tag: Conditionals
-// APCS Difficulty: 1
-// APCS Note:
-
 #include<bits/stdc++.h>
 using namespace std;
 int main(){

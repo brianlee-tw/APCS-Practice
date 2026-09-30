@@ -1,9 +1,3 @@
-// APCS Title: c379. 成為出題者
-// APCS Complexity: O(1)
-// APCS Tag: IO Optimization
-// APCS Difficulty: 1
-// APCS Note:
-
 #include<bits/stdc++.h>
 using namespace std;
 int main(){

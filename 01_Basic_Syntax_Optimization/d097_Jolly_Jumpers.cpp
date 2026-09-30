@@ -1,9 +1,3 @@
-// APCS Title: d097. Jolly Jumpers
-// APCS Complexity: O(n)
-// APCS Tag: Array, String, IO Optimization
-// APCS Difficulty: 2
-// APCS Note: https://app.notion.com/p/d097-Jolly-Jumpers-39943be958cd802d8552db3e93dae038?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
-
 #include <bits/stdc++.h>
 
 using namespace std;

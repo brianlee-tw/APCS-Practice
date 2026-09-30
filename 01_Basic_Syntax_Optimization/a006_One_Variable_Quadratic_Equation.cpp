@@ -1,9 +1,3 @@
-// APCS Title: a006. 一元二次方程式
-// APCS Complexity: O(1)
-// APCS Tag: Conditionals, Math Theory
-// APCS Difficulty: 1
-// APCS Note:
-
 #include<bits/stdc++.h>
 using namespace std;
 int main(){

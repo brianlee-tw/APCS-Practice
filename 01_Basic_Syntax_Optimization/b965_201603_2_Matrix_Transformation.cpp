@@ -1,10 +1,3 @@
-// APCS Title: c291. 矩陣翻轉
-// APCS Complexity: O(M * R * C)
-// APCS Tag: Array, Vector, Loops
-// APCS Difficulty: 2
-// APCS Note: https://app.notion.com/p/b965-3ab43be958cd80568577cdf32f690132?v=36a43be958cd8075b3ac000c2c628f5d&source=copy_link
-// APCS Date: 26-07-28
-
 #include <iostream>
 #include <vector>
 #include <algorithm>

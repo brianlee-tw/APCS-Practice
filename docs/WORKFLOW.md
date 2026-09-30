@@ -1,14 +1,15 @@
-# APCS-Practice v2.1 Workflow
+# APCS-Practice v2.2 Workflow
 
 ## 1. 核心原則
 
-v2 將資料分成三層：
+v2.2 將資料分成四層：
 
-1. **Solution**：`.cpp` / `.py`，保存真正的解法。
-2. **Learning state**：`data/progress.csv` 與 `data/reviews.csv`，保存 AC 與複習結果。
-3. **Notes**：`notes/<id>.md` 或既有 Notion，只在有價值時建立。
+1. **Problem Catalog**：`data/problems.csv`，保存題目 ID、名稱、來源、難度與 tags。
+2. **Solution Catalog**：`data/solutions.csv`，連結 `.cpp` / `.py` 解法並保存 language 與 complexity。
+3. **Learning state**：`data/progress.csv` 與 `data/reviews.csv`，保存 Finish / Review 與複習狀態。
+4. **Notes**：`notes/<id>.md`，只在有價值時建立。
 
-資料夾不再代表能力分類；能力分類由 tags 與 metadata 推導。
+資料夾不再代表能力分類；能力分類由 Problem Catalog 的 metadata 推導。
 
 日常操作以 VS Code 為主：`Ctrl+Shift+B` 編譯並執行目前 C++，`Ctrl+Alt+A` 開啟 APCS 控制中心。CLI 保留給除錯、自動化與進階操作。
 
@@ -16,32 +17,19 @@ v2 將資料分成三層：
 
 ## 2. 新題目
 
-新題目放在 `solutions/`。建議檔名：
+日常操作由 **APCS 控制中心 → 題目資料 → 新增題目** 完成。
 
-```text
-b130_Random_Number.cpp
-```
+建立一題時，系統會：
 
-建議的最小檔頭：
+1. 建立純 `.cpp` / `.py` solution file。
+2. 寫入 `data/problems.csv` 的 problem metadata。
+3. 寫入 `data/solutions.csv` 的 solution path、language 與 complexity。
+4. 使用 canonical Tag selector 選擇一個以上的能力 Tag。
+5. 以 rollback-safe Catalog mutation 避免兩份 CSV 只成功一半。
 
-```cpp
-// APCS Title: b130. 明明的隨機數
-// APCS Complexity: O(N log N)
-// APCS Tag: Sorting, Set
-// APCS Difficulty: 1
-// APCS Source: https://...
-```
+solution source 不承載 `APCS Title`、`APCS Tag`、`APCS Complexity`、`APCS Note` 或 `APCS Date` 等 metadata header。
 
-Python 使用 `#`：
-
-```python
-# APCS Title: a010. 質因數分解
-# APCS Complexity: O(sqrt(N))
-# APCS Tag: Math, Prime
-# APCS Difficulty: 2
-```
-
-`APCS Source` 可省略。新題目不需要再手動維護 `APCS Date`、`APCS Status`。
+`data/problems.csv` 與 `data/solutions.csv` 是 metadata 的唯一 engineering truth。
 
 ---
 
@@ -103,15 +91,11 @@ Review 失敗不會移除既有首次 AC。`solved_on` 表示首次完成日期�
 
 ---
 
-## 5. 筆記：Notion 不再是必填
+## 5. 筆記
 
-### 一般題
+一般題不需要額外筆記；solution、Catalog metadata 與 review history 通常已足夠。
 
-不做額外筆記。程式碼、tags、複雜度和 review history 就足夠。
-
-### 值得整理的題
-
-建立 repo 內短筆記：
+只有值得整理的題目才建立 repo 內短筆記：
 
 ```powershell
 python tools/apcs.py note b130
@@ -123,24 +107,7 @@ python tools/apcs.py note b130
 notes/b130.md
 ```
 
-同步器會自動找到它，不必再修改程式碼 metadata。
-
-### 舊 Notion
-
-既有：
-
-```text
-APCS Note: https://...
-```
-
-會保留並繼續出現在索引中。
-
-建議只把 Notion 留給：
-
-- 需要圖解的演算法
-- 有多種解法比較
-- 常犯錯、值得寫長反思
-- APCS 經典題型整理
+筆記與題目 metadata 分離，不需要修改 solution source。
 
 ---
 
@@ -168,84 +135,100 @@ python tools/sync_all.py
 
 ## 7. 驗證
 
-```powershell
-python tools/apcs.py validate
+完整本機 quality gate：
+
+```bash
+python3 tools/quality_gate.py
 ```
 
-目前 v1 資料會以 warning 方式呈現，例如：
+它會依序檢查：
 
-- 檔名 ID 與 `APCS Title` 中的 ID 不一致
-- 缺少 tags
-- 缺少 complexity
+1. 完整 regression tests。
+2. `git diff --check` 與 staged whitespace。
+3. Catalog / learning-data validation。
+4. known-warning budget。
 
-只有真正損壞學習資料的問題才會讓 CI fail。
+目前少數歷史題目仍有明確列出的 metadata 缺口；這些 warning 被記錄在 `.github/apcs-known-warnings.txt`。既有 warning 可以減少，但新增或重複增加的 warning 會使 quality gate 失敗。
 
-若要把 warning 也視為 failure：
+只執行 validator：
 
-```powershell
-python tools/apcs.py validate --strict
+```bash
+python3 tools/apcs.py validate
 ```
+
+Catalog 結構錯誤、solution path 不存在、learning snapshot/event 不一致等屬於 error，會直接失敗。
+
+metadata 不完整則維持 unknown，不應為了消除 warning 猜測 Title、Tag、Complexity 或其他資料。
 
 ---
 
 ## 8. Git / GitHub 自動化
 
-### Pull Request / push validation
+### Control Center commit
 
-GitHub Actions 會：
+「檢查與提交 → 建立 Commit」會先執行完整 regression 與 warning-budget quality gate。Gate 未通過時不建立 commit。
 
-1. 執行 metadata / learning-data validator。
-2. 只對本次新增或修改的 `.cpp` / `.py` solution 做 syntax check。
-3. 不會因歷史題目中仍存在的 v1 warning 阻擋所有開發。
+### GitHub Actions
+
+Pull Request / main push 會：
+
+1. 執行完整 regression tests。
+2. 驗證 Catalog 與 learning data。
+3. enforce known-warning budget。
+4. syntax-check 本次新增或修改的 solution source。
 
 ### main dashboard sync
 
-main 收到新 solution / progress / review / tooling 變更後：
+main 收到 solution、data、notes 或 tooling 更新後：
 
-1. 執行 `python tools/apcs.py sync`
-2. 只 stage `README.md`、`docs/PROBLEM_INDEX.md`、`docs/REVIEW_QUEUE.md`
-3. 有差異才 commit
-4. 不再 `git add .`
-5. 不再自動 `pull --rebase`
+1. 執行 regression 與 warning-budget gate。
+2. 執行 `python3 tools/apcs.py sync`。
+3. 只 stage `README.md`、`docs/PROBLEM_INDEX.md`、`docs/REVIEW_QUEUE.md`。
+4. 有 generated diff 才建立 sync commit。
 
 ---
 
-## 9. 舊四資料夾
+## 9. 舊四資料夾與能力分類
 
-v1 的四個資料夾保留，以避免一次性搬移 58 題造成大量無學習價值的 Git churn 與連結斷裂。
+`01_Basic_Syntax_Optimization`、`02_Data_Structures`、`03_Algorithmic_Paradigms`、`04_Graph_Theory_and_Advanced_Topics` 是歷史檔案位置，不代表目前能力分類。
 
-v2 的能力分類改為：
+v2.2 使用 canonical multi-tag taxonomy：
 
-- Graph
-- DP / Recursion
-- Prefix / Greedy
-- Search / Sort
-- Data Structures
-- Math
-- String
-- Arrays / Simulation
-- Fundamentals / Simulation
+- **基礎**：Basic Syntax、I/O、Conditionals、Loops、Simulation
+- **資料結構**：Array、Vector、String、Struct、Stack、Queue、Set、Map
+- **演算法**：Sorting、Searching、Binary Search、Prefix Sum、Two Pointers、Greedy
+- **數學**：Math、Number Theory、Prime、GCD / LCM、Geometry、Combinatorics
+- **圖論**：Graph、BFS、DFS、Shortest Path
+- **進階**：Dynamic Programming、Recursion、Backtracking
 
-因此同一題可以靠多個 tags 表達真實能力，而不是被迫放進唯一一個資料夾。
+一題可同時計入多個 canonical Tags。Dashboard 的弱項訊號只使用可觀察資料：`Recall 0–1` 或到期題目，不建立黑箱能力分數。
+
+無法安全自動轉換的歷史 Tag 會標示為 `Legacy`，保留原值等待人工確認。
 
 ---
 
 ## 10. 建議每日操作
 
 ```text
-開始 APCS
+Ctrl+Alt+A
   ↓
-python tools/apcs.py today
+今日複習
   ↓
-先重解 1~3 題到期題
+完成到期／逾期題
   ↓
 做新題
   ↓
-AC → python tools/apcs.py finish <id> <score>
+AC → 完成題目
   ↓
-必要時 python tools/apcs.py note <id>
+必要時建立題目筆記
   ↓
-git commit / push
+檢查與提交
+  ↓
+Quality Gate PASS
+  ↓
+Commit / Push
 ```
 
-Dashboard 和索引由工具與 GitHub Actions維持。
+一般日常操作不需要手動編輯 CSV，也不需要記住 CLI 指令。CLI 保留給 debugging、自動化與進階操作。
+
+Dashboard、Problem Index 與 Review Queue 由 `tools/apcs.py sync` 與 GitHub Actions 維持。
