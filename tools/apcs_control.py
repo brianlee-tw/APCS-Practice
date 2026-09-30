@@ -899,6 +899,15 @@ def record_problem(action: str, problem) -> None:
                             complexity_solution
                         ),
                         complexity=finish_complexity,
+                        finish_runner=(
+                            lambda pid, recall, *, minutes=None:
+                            core.finish_cmd(
+                                pid,
+                                recall,
+                                minutes=minutes,
+                                sync_after=False,
+                            )
+                        ),
                     )
                 )
             else:
@@ -907,6 +916,7 @@ def record_problem(action: str, problem) -> None:
                     score,
                     result=result,
                     minutes=minutes,
+                    sync_after=False,
                 )
 
     except (
@@ -923,6 +933,13 @@ def record_problem(action: str, problem) -> None:
         pause()
         return
 
+    sync_warning = None
+
+    if command_result == 0:
+        sync_warning = (
+            core.sync_generated_best_effort()
+        )
+
     print()
 
     if command_result == 0:
@@ -937,6 +954,25 @@ def record_problem(action: str, problem) -> None:
                 f"{GREEN}"
                 f"✓ Complexity 已寫入 Catalog："
                 f"{finish_complexity}"
+                f"{RESET}"
+            )
+
+        if sync_warning:
+            print()
+            print(
+                f"{YELLOW}"
+                "⚠ 學習紀錄已成功寫入，但 generated sync 失敗。"
+                f"{RESET}"
+            )
+            print(
+                f"{GRAY}"
+                f"{fit(sync_warning, ui_width())}"
+                f"{RESET}"
+            )
+            print(
+                f"{GRAY}"
+                "不需要重做本次 Finish / Review；"
+                "之後可單獨重新執行 sync。"
                 f"{RESET}"
             )
     else:
