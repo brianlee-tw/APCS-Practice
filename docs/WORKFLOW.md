@@ -1,17 +1,21 @@
-# APCS-Practice v2.2 Workflow
+# APCS-Practice v2.3 Workflow
 
 ## 1. 核心原則
 
-v2.2 將資料分成四層：
+v2.3 把「工程資料」與「學習 runtime」分開：
 
-1. **Problem Catalog**：`data/problems.csv`，保存題目 ID、名稱、來源、難度與 tags。
-2. **Solution Catalog**：`data/solutions.csv`，連結 `.cpp` / `.py` 解法並保存 language 與 complexity。
-3. **Learning state**：`data/progress.csv` 與 `data/reviews.csv`，保存 Finish / Review 與複習狀態。
-4. **Notes**：`notes/<id>.md`，只在有價值時建立。
+1. **Problem / Solution Catalog**：repo 內工程 metadata、solution path、language、complexity。
+2. **Published Curriculum**：由 Notion authoring 經 compiler / validation / Git review 後產生的 runtime snapshot。
+3. **Compatibility learning history**：data/progress.csv 與 data/reviews.csv，保留 v2.2 歷史與過渡狀態。
+4. **Durable local Evidence outbox**：.apcs/runtime/outbox/，一次 Attempt 只記一次，remote writeback 可重試。
+5. **Adaptive Skill memory**：.apcs/runtime/skill_memory.json，屬於可重建 derived cache，不是新的 SSOT。
+6. **Notes**：notes/<id>.md，只在有長期價值時建立。
 
-資料夾不再代表能力分類；能力分類由 Problem Catalog 的 metadata 推導。
+日常 learner surface 是 VS Code Control Center。Notion 負責 curriculum authoring、long-form teaching、REC / Evidence durable record；Git 負責 published contract、code、tests、CI；ChatGPT 負責 coach / explanation / debugging，而不是 mastery authority。
 
-日常操作以 VS Code 為主：`Ctrl+Shift+B` 編譯並執行目前 C++，`Ctrl+Alt+A` 開啟 APCS 控制中心。CLI 保留給除錯、自動化與進階操作。
+固定 1/3/7/30/60/90 天與「複習 N 次畢業」已退出 learner-facing runtime。Review 使用 Skill × Track Stability / Retrievability，加上每日 capacity governor；deferred review 不視為欠作業。
+
+日常操作以 VS Code 為主：Ctrl+Shift+B 編譯並執行目前 C++，Ctrl+Alt+A 開啟 APCS 控制中心。Finish / Review 不應透過舊 CLI 繞過 Evidence capture。
 
 ---
 
@@ -35,13 +39,24 @@ solution source 不承載 `APCS Title`、`APCS Tag`、`APCS Complexity`、`APCS 
 
 ## 3. 做完一題
 
-確認 Online Judge 為 AC 後：
+確認 Online Judge 結果後，使用：
 
-```powershell
-python tools/apcs.py finish b130 2
+```text
+Ctrl+Alt+A
+→ 完成題目
 ```
 
-其中 Recall 只描述本次主觀回憶品質，不再直接對應固定下一次複習日期：
+Control Center 會記錄：
+
+- Result / Recall / Minutes；
+- A0–A5 Assistance；
+- Independent；
+- Novelty；
+- Timed；
+- Published Curriculum Placement；
+- explicit Primary Skill × Implementation Evidence。
+
+Recall 只描述本次主觀回憶品質：
 
 | 分數 | 定義 |
 |---:|---|
@@ -50,44 +65,45 @@ python tools/apcs.py finish b130 2
 | 2 | 可獨立完成，但速度或穩定度不足 |
 | 3 | 流暢、獨立完成；不代表永久 Mastered |
 
-v2.3 另外記錄 Assistance、Independent、Novelty、Timed 與 Curriculum Placement，並以 `Skill × Track` adaptive memory 估計 Stability / Retrievability。固定 1/3/7/30/60/90 天與固定 review-count graduation 已退出新架構。
+若 Published Placement 尚不存在，Attempt 仍會保存，但不會從 repo Tags 猜 Skill Evidence。
 
-可額外記錄時間：
+A2–A5 強制 Independent=false；A0/A1 仍由使用者明確確認，避免把 Assistance 誤當成能力證據。
 
-```powershell
-python tools/apcs.py finish b130 2 --minutes 18
-```
+完成紀錄會先進 durable local outbox，再更新可重建 adaptive memory。Notion writeback 失敗不代表要重做題目。
 
 ---
 
-## 4. 複習
+## 4. 今日學習與 Adaptive Review
 
-日常使用 APCS 控制中心的「今日複習」查看並開啟到期題目。
-
-重解後，由控制中心依序記錄：
+使用：
 
 ```text
-Result → Recall → Minutes
+Ctrl+Alt+A
+→ 今日學習
 ```
 
-Result 支援 `AC`、`WA`、`TLE`、`RE`、`MLE`、`CE`。Minutes 可略過；非 AC 不允許 Recall 3。
+Today 會先從 durable Evidence reconciliation 出 Skill × Track memory，再建立 capacity-aware review plan。
 
-CLI 等價操作：
+預設 60 分鐘 session：
 
-```bash
-python tools/apcs.py today
-python tools/apcs.py review b130 3 --minutes 7
-python tools/apcs.py review b130 1 --result WA --minutes 11
+- Review target：18 分鐘；
+- Review hard max：依 policy 限制；
+- New learning：保留至少 42 分鐘；
+- 超出容量的 due Skills：deferred，不算 backlog debt。
+
+Review priority 使用透明排序：recent failure → curriculum importance → 較低 Retrievability → 較久 overdue → 能塞入剩餘時間的較短任務。
+
+Implementation review 會優先選 Published Placement 的 fresh / unattempted representative problem，並建立：
+
+```text
+.apcs/runtime/review/<date>/<problem_id>__<placement_uid>.cpp
 ```
 
-Review 失敗不會移除既有首次 AC。`solved_on` 表示首次完成日期；`last_review_on`、`last_result` 與 `recall` 則描述最近一次複習狀態。
+這是空白 retrieval scratch，不會打開歷史 solution。完成 Judge 後回 Control Center 選「複習題目」，Placement UID 會沿用到 Evidence。
 
-Review 完成後，v2.3 會把 Attempt facts 寫入本機 durable outbox；若有 Published Placement，才建立 explicit Primary Skill × Implementation Evidence。Supporting Skills 不會因為題目相關就自動獲得 Evidence。
+Reading review 不自動開歷史 solution，也不在正式回答前執行程式驗證。
 
-這些相容性紀錄仍會寫入：
-
-- `data/progress.csv`：目前學習狀態快照。
-- `data/reviews.csv`：Finish / Review 的事件歷史，包括 Result、Recall 與 Minutes。
+v2.2 的 problem-level due state 仍暫時保留作相容資料，但已不是 learner-facing Today scheduler。
 
 ---
 
@@ -212,13 +228,19 @@ v2.2 使用 canonical multi-tag taxonomy：
 ```text
 Ctrl+Alt+A
   ↓
-今日複習
+今日學習
   ↓
-完成到期／逾期題
+Adaptive review（只有真的需要的 Skill）
+  +
+保留新學習容量
   ↓
-做新題
+依 Published Curriculum 學下一個 Ready Skill / Lesson
   ↓
-AC → 完成題目
+Practice / Judge
+  ↓
+完成題目或複習題目
+  ↓
+Attempt → Evidence outbox → adaptive memory
   ↓
 必要時建立題目筆記
   ↓
@@ -229,6 +251,7 @@ Quality Gate PASS
 Commit / Push
 ```
 
-一般日常操作不需要手動編輯 CSV，也不需要記住 CLI 指令。CLI 保留給 debugging、自動化與進階操作。
+一般日常操作不需要手動編輯 CSV，也不應手動維護 next review。CLI 只保留 engineering / validation / sync 類操作；learner-facing Finish / Review / Today 以 Control Center 為準。
 
-Dashboard、Problem Index 與 Review Queue 由 `tools/apcs.py sync` 與 GitHub Actions 維持。
+GitHub 上的 generated Dashboard / Review Queue 目前仍包含 v2.2 compatibility 資訊，不代表本機 v2.3 adaptive Today 的個人排程。
+
