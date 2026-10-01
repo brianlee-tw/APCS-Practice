@@ -346,6 +346,12 @@ def print_problem_context(problem) -> None:
 
 
 def today_state():
+    """Legacy v2.2 problem-level due state.
+
+    Kept only for compatibility surfaces while v2.3 transitions generated
+    artifacts. Learner-facing Today uses adaptive_today_snapshot().
+    """
+
     today = dt.date.today()
 
     due = [
@@ -361,6 +367,158 @@ def today_state():
     ]
 
     return due, overdue
+
+
+def session_capacity_minutes() -> int:
+    raw = os.environ.get(
+        "APCS_SESSION_MINUTES",
+        str(DEFAULT_SESSION_MINUTES),
+    )
+
+    try:
+        value = int(raw)
+    except ValueError:
+        return DEFAULT_SESSION_MINUTES
+
+    return max(
+        15,
+        min(value, 240),
+    )
+
+
+def curriculum_target() -> str:
+    value = os.environ.get(
+        "APCS_TARGET",
+        "3+3",
+    ).strip()
+
+    return (
+        "5+5"
+        if value == "5+5"
+        else "3+3"
+    )
+
+
+def adaptive_today_snapshot(
+    *,
+    on_date: dt.date | None = None,
+    total_capacity_minutes: int | None = None,
+):
+    on_date = on_date or dt.date.today()
+    total_capacity_minutes = (
+        total_capacity_minutes
+        if total_capacity_minutes is not None
+        else session_capacity_minutes()
+    )
+
+    reconcile_warning = None
+    reconcile_report = None
+
+    try:
+        reconcile_report = MEMORY.reconcile(
+            OUTBOX.all_envelopes()
+        )
+    except (
+        EvidenceOutboxError,
+        OSError,
+        ValueError,
+    ) as exc:
+        reconcile_warning = str(exc)
+
+    try:
+        due_states = MEMORY.due_states(
+            on_date=on_date
+        )
+    except (
+        OSError,
+        ValueError,
+    ) as exc:
+        due_states = ()
+        if reconcile_warning is None:
+            reconcile_warning = str(exc)
+
+    target = curriculum_target()
+    candidates = []
+
+    for state, value, due_on in due_states:
+        try:
+            importance = (
+                CURRICULUM
+                .importance_for_skill(
+                    state.skill_uid,
+                    target=target,
+                )
+            )
+        except RuntimeCurriculumError:
+            importance = "supporting"
+
+        estimated_minutes = (
+            DEFAULT_READING_REVIEW_MINUTES
+            if state.track == "Reading"
+            else DEFAULT_IMPLEMENTATION_REVIEW_MINUTES
+        )
+
+        candidates.append(
+            ReviewCandidate(
+                skill_uid=state.skill_uid,
+                track=state.track,
+                retrievability=value,
+                due_on=due_on,
+                estimated_minutes=estimated_minutes,
+                importance=importance,
+                recent_failure=(
+                    state.last_outcome
+                    == "FAIL"
+                ),
+            )
+        )
+
+    plan = select_review_plan(
+        candidates,
+        today=on_date,
+        total_capacity_minutes=total_capacity_minutes,
+    )
+
+    try:
+        memory_states = MEMORY.load_states()
+    except (
+        OSError,
+        ValueError,
+    ):
+        memory_states = {}
+
+    return {
+        "date": on_date,
+        "capacity_minutes": total_capacity_minutes,
+        "target": target,
+        "plan": plan,
+        "due_count": len(candidates),
+        "memory_count": len(memory_states),
+        "reconcile_report": reconcile_report,
+        "warning": reconcile_warning,
+    }
+
+
+def skill_display_name(
+    skill_uid: str,
+) -> str:
+    try:
+        context = CURRICULUM.skill_context(
+            skill_uid
+        )
+    except RuntimeCurriculumError:
+        context = None
+
+    if (
+        context is None
+        or not context.name
+    ):
+        return skill_uid
+
+    return (
+        f"{skill_uid} · "
+        f"{context.name}"
+    )
 
 
 # ============================================================
