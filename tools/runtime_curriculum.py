@@ -554,6 +554,12 @@ class RuntimeCurriculum:
                             "",
                         )
                     ).strip(),
+                    url=str(
+                        problem.get(
+                            "url",
+                            "",
+                        )
+                    ).strip(),
                     difficulty=str(
                         problem.get(
                             "difficulty",
