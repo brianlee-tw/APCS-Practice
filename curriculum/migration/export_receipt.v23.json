@@ -1,0 +1,58 @@
+{
+  "schema_version": "v2.3-export-receipt-1",
+  "captured_on": "2026-10-01",
+  "curriculum_version": "2026-10-01-publish-1",
+  "authority": "Notion manual Markdown & CSV export, plus exact live Notion readback of three post-export authoring repairs.",
+  "exports": [
+    {
+      "filename": "8865cc10-f5b8-4ead-a011-ed5de9562e94_ExportBlock-1d70b074-6353-4817-bcbb-5e3edfbb4829.zip",
+      "sha256": "7dcb6b3ec28e023a9f6ec88c922be35ed6b590f77eba24152317376b5247deb8",
+      "size_bytes": 598523
+    },
+    {
+      "filename": "af77da8b-30bb-425a-9033-e256ffbed1c3_ExportBlock-8a7c1dfb-ebbb-4f7b-95b2-47de72643e52.zip",
+      "sha256": "e3e6cc5af9285082880c1b63fd1b9f32f337183e665d6ea1eea7c37921b6cde3",
+      "size_bytes": 80200
+    },
+    {
+      "filename": "b7c89e68-1ced-4427-a213-6db34041bb57_ExportBlock-79129d96-5e48-4dde-990f-dac1215ab1e1.zip",
+      "sha256": "2949ad7891a7a05afefde220f63418beead023c00b63d19d2290b8026a9ffe26",
+      "size_bytes": 32878
+    }
+  ],
+  "counts": {
+    "skill_rows": 39,
+    "problem_bank_rows": 181,
+    "formal_main_problems": 125,
+    "formal_main_placements": 125,
+    "main_lessons_with_formal_oj": 51,
+    "main_lessons_total": 52,
+    "mix04_formal_oj": 0
+  },
+  "live_repairs": [
+    {
+      "pb_uid": "PB-119",
+      "notion_page_id": "3c643be9-58cd-81d4-9d6a-f5a152b716ba",
+      "added_skill_relation": "S30_Complexity",
+      "reason": "Align L-MIX-01 constraints/subtask/complexity-decision process target."
+    },
+    {
+      "pb_uid": "PB-125",
+      "notion_page_id": "3c643be9-58cd-81bc-be2f-cc06c4ce35d6",
+      "added_skill_relation": "S39_Code_Reasoning",
+      "reason": "Align L-MIX-03 testing/debug Guided process target."
+    },
+    {
+      "pb_uid": "PB-116",
+      "notion_page_id": "3c643be9-58cd-81f5-b560-c8fa6e130c71",
+      "added_skill_relation": "S39_Code_Reasoning",
+      "reason": "Align L-MIX-03 testing/debug Transfer process target."
+    }
+  ],
+  "boundaries": [
+    "The legacy search locator contains 126 candidates; exact export/readback criteria produce 125 formal main placements.",
+    "U-GPH X01-X04 are excluded from this first main-lesson projection.",
+    "L-MIX-04 is portfolio-only and has no Formal OJ placement by design.",
+    "Primary Skill is never inferred from legacy relation order."
+  ]
+}
