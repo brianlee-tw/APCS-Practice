@@ -1247,6 +1247,24 @@ def placement_for_record(
             "本次只保存 Attempt，不建立 Skill Evidence。",
         )
 
+    requested_uid = problem.get(
+        "placement_uid"
+    )
+
+    if requested_uid:
+        exact = next(
+            (
+                context
+                for context in contexts
+                if context.placement_uid
+                == requested_uid
+            ),
+            None,
+        )
+
+        if exact is not None:
+            return exact, None
+
     if len(contexts) == 1:
         return contexts[0], None
 
