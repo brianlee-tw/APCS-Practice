@@ -30,6 +30,7 @@ def sample_envelope(**overrides):
         "independent": True,
         "attempt_count": 1,
         "active_minutes": 18,
+        "timed": False,
         "novelty": "transfer",
         "activity": "Core Independent",
         "evidence": [
@@ -331,7 +332,22 @@ class EvidenceOutboxV23Test(unittest.TestCase):
                 ]
             )
 
-    def test_naive_timestamp_is_rejected(self):
+    def test_unknown_start_time_is_preserved(self):
+        envelope = sample_envelope(
+            started_at=None,
+        )
+
+        self.store.enqueue(envelope)
+
+        loaded = self.store.load(
+            envelope.writeback_id
+        )
+
+        self.assertIsNone(
+            loaded.attempt.started_at
+        )
+
+    def test_naive_known_timestamp_is_rejected(self):
         with self.assertRaisesRegex(
             EvidenceOutboxError,
             "timezone-aware",
@@ -345,6 +361,20 @@ class EvidenceOutboxV23Test(unittest.TestCase):
                     0,
                 )
             )
+
+    def test_active_minutes_does_not_imply_timed_condition(self):
+        envelope = sample_envelope(
+            active_minutes=18,
+            timed=False,
+        )
+
+        converted = memory_evidence(
+            envelope
+        )
+
+        self.assertFalse(
+            converted[0].timed
+        )
 
     def test_finish_cannot_precede_start(self):
         with self.assertRaisesRegex(
