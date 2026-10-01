@@ -227,13 +227,11 @@ def current_problem(filename: str | None):
         return None
 
     path = Path(filename)
-    match = ID_RE.match(path.stem)
-
-    if not match:
-        return None
-
-    pid = match.group(1).lower()
-    candidate = path if path.is_absolute() else ROOT / path
+    candidate = (
+        path
+        if path.is_absolute()
+        else ROOT / path
+    )
     resolved = candidate.resolve()
 
     placement_match = re.search(
@@ -246,33 +244,136 @@ def current_problem(filename: str | None):
         else None
     )
 
+    record_action = None
+
+    try:
+        relative_runtime = (
+            resolved.relative_to(
+                RUNTIME_DIR.resolve()
+            )
+        )
+
+        if (
+            relative_runtime.parts
+            and relative_runtime.parts[0]
+            == "review"
+        ):
+            record_action = "review"
+        elif (
+            relative_runtime.parts
+            and relative_runtime.parts[0]
+            == "learn"
+        ):
+            record_action = "finish"
+    except ValueError:
+        pass
+
+    if placement_uid:
+        try:
+            placement = (
+                CURRICULUM
+                .placement_by_uid(
+                    placement_uid
+                )
+            )
+        except RuntimeCurriculumError:
+            placement = None
+
+        if placement is not None:
+            compatibility_row = next(
+                (
+                    row
+                    for row in all_rows()
+                    if row[0].lower()
+                    == placement.problem_id.lower()
+                ),
+                None,
+            )
+
+            state = (
+                compatibility_row[3]
+                if compatibility_row
+                else None
+            )
+            due = (
+                compatibility_row[5]
+                if compatibility_row
+                else None
+            )
+
+            return {
+                "id": placement.problem_id,
+                "title": placement.title,
+                "path": resolved,
+                "state": state,
+                "due": due,
+                "placement_uid": (
+                    placement_uid
+                ),
+                "catalog_known": (
+                    compatibility_row
+                    is not None
+                ),
+                "record_action": (
+                    record_action
+                ),
+            }
+
+    match = ID_RE.match(
+        path.stem
+    )
+
+    if not match:
+        return None
+
+    pid = match.group(1).lower()
+
     for row in all_rows():
         if row[0] == pid:
             matched_path = next(
                 (
                     solution.path
                     for solution in row[1]
-                    if solution.path.resolve() == resolved
+                    if solution.path.resolve()
+                    == resolved
                 ),
                 resolved,
             )
 
             return {
                 "id": pid,
-                "title": clean_title(pid, row[2].title),
+                "title": clean_title(
+                    pid,
+                    row[2].title,
+                ),
                 "path": matched_path,
                 "state": row[3],
                 "due": row[5],
-                "placement_uid": placement_uid,
+                "placement_uid": (
+                    placement_uid
+                ),
+                "catalog_known": True,
+                "record_action": (
+                    record_action
+                ),
             }
 
     return {
         "id": pid,
-        "title": clean_title(pid, path.stem),
+        "title": clean_title(
+            pid,
+            path.stem,
+        ),
         "path": path,
         "state": None,
         "due": None,
-        "placement_uid": placement_uid,
+        "placement_uid": (
+            placement_uid
+        ),
+        "catalog_known": False,
+        "record_action": (
+            record_action
+        ),
     }
 
 
