@@ -153,6 +153,23 @@ This avoids turning every unfinished authoring edit into a production runtime in
 
 The compiler and publish invariants are implemented before any destructive Notion migration.
 
+### Initial legacy projection gate
+
+The first real v2.3 snapshot may project the current Notion v3 authoring model without changing Notion in place, but the projection is fail-closed:
+
+- only rows whose exact `Primary Lesson` belongs to the 52 main Lessons are formal-placement candidates;
+- every such row must still be `教材狀態 = Active` and `Placement QA = PASS`;
+- extension, deferred, Needs QA, benchmark-only, and no-Primary-Lesson rows do not enter this learner runtime projection;
+- the old `技能節點` relation is not allowed to define Primary Skill by list order;
+- every formal PB must have an explicit reviewed `PB UID -> Primary Skill UID` migration resolution;
+- the resolved Primary Skill must already be present in that PB's current Skill relations;
+- all remaining current Skill relations become supporting Skills;
+- any ambiguity fails the projection instead of silently publishing guessed metadata.
+
+`tools/curriculum_migration.py` implements this boundary.  It has no Notion API dependency; extraction remains a separate read-only step.
+
+MIX-04 may legitimately have no Formal OJ placement. Benchmark-only assets remain outside the main-Lesson projection so their novelty is not consumed by daily learning runtime.
+
 The next live-data step is:
 
 1. extract current Skill Map / Problem Bank into the normalized authoring shape;
