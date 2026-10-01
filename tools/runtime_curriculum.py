@@ -486,118 +486,15 @@ class RuntimeCurriculum:
         if not skill_uid:
             return ()
 
-        data = self.load()
-
-        problem_by_uid = {
-            str(
-                row.get(
-                    "pb_uid",
-                    "",
-                )
-            ).strip(): row
-            for row in (
-                data.get("problems")
-                or []
-            )
-        }
-
-        result: list[
-            PlacementContext
-        ] = []
-
-        for placement in (
-            data.get("placements")
-            or []
-        ):
-            primary = str(
-                placement.get(
-                    "primary_skill",
-                    "",
-                )
-            ).strip()
-
-            if primary != skill_uid:
-                continue
-
-            pb_uid = str(
-                placement.get(
-                    "pb_uid",
-                    "",
-                )
-            ).strip()
-
-            problem = problem_by_uid.get(
-                pb_uid
-            )
-
-            if problem is None:
-                continue
-
-            result.append(
-                PlacementContext(
-                    placement_uid=str(
-                        placement.get(
-                            "placement_uid",
-                            "",
-                        )
-                    ).strip(),
-                    pb_uid=pb_uid,
-                    problem_id=str(
-                        problem.get(
-                            "problem_id",
-                            "",
-                        )
-                    ).strip().lower(),
-                    title=str(
-                        problem.get(
-                            "title",
-                            "",
-                        )
-                    ).strip(),
-                    url=str(
-                        problem.get(
-                            "url",
-                            "",
-                        )
-                    ).strip(),
-                    difficulty=str(
-                        problem.get(
-                            "difficulty",
-                            "",
-                        )
-                    ).strip(),
-                    primary_skill=primary,
-                    supporting_skills=tuple(
-                        str(item).strip()
-                        for item in (
-                            placement.get(
-                                "supporting_skills"
-                            )
-                            or []
-                        )
-                        if str(item).strip()
-                    ),
-                    role=str(
-                        placement.get(
-                            "role",
-                            "",
-                        )
-                    ).strip(),
-                    lesson_uid=str(
-                        placement.get(
-                            "lesson_uid",
-                            "",
-                        )
-                    ).strip(),
-                    lesson_order=placement.get(
-                        "lesson_order"
-                    ),
-                )
-            )
-
         return tuple(
             sorted(
-                result,
+                (
+                    item
+                    for item
+                    in self.all_placements()
+                    if item.primary_skill
+                    == skill_uid
+                ),
                 key=lambda item: (
                     float("inf")
                     if item.lesson_order is None
@@ -688,26 +585,20 @@ class RuntimeCurriculum:
         *,
         target: str = "3+3",
     ) -> str:
-        context = self.skill_context(
-            skill_uid
-        )
+        skill_uid = str(
+            skill_uid or ""
+        ).strip()
 
-        if context is None:
+        if not skill_uid:
             return "supporting"
 
-        value = (
-            context.relevance_33
-            if target == "3+3"
-            else context.relevance_55
-        ).strip().lower()
+        return (
+            self.skill_importance(
+                target=target
+            )
+            .get(
+                skill_uid,
+                "supporting",
+            )
+        )
 
-        if "required" in value:
-            return "required"
-
-        if (
-            "extension" in value
-            or "optional" in value
-        ):
-            return "extension"
-
-        return "supporting"
