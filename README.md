@@ -28,23 +28,16 @@ Ctrl+Alt+A
 APCS 控制中心提供：
 
 - **今日複習**：查看並開啟已到期或逾期的題目。
-- **完成題目**：首次 AC 後記錄 Recall 與解題分鐘數。
-- **複習題目**：記錄 AC / WA / TLE / RE / MLE / CE、Recall 與分鐘數。
+- **完成題目**：記錄 Result、Recall、Minutes、Assistance、Independent、Novelty；若存在 Published Placement，建立 Primary Skill × Implementation Evidence。
+- **複習題目**：同樣保存完整 attempt facts；Evidence 由 Published Placement 明確決定，不從舊 Tags 猜測。
 - **題目筆記**：建立或開啟 `notes/<id>.md`。
 - **檢查與提交**：檢視 Git 變更、stage、commit，以及確認後 push。
 
-Recall 自評：
+Recall 0–3 暫時保留作 v2.2 相容自評資料，但 **不再決定 v2.3 的固定複習天數**。
 
-| Recall | 定義 | 基礎複習間隔 |
-| ---: | --- | ---: |
-| 0 | 幾乎不會／需要看答案 | 1 天 |
-| 1 | 需要提示 | 3 天 |
-| 2 | 可獨立完成但偏慢 | 7 天 |
-| 3 | 流暢、獨立完成 | 30 天起 |
+v2.3 使用 Published curriculum 的 `Skill × Track` Evidence、實際 elapsed interval、Assistance、Independent、Novelty 與結果更新 Stability / Retrievability。不存在「複習 N 次 = 畢業」或固定 30/60/90 天序列。
 
-正式 Review 若連續在不同日期取得 `AC + Recall 3`，間隔依序延長為 30、60、90 天。
-
-分鐘數屬於每次 Finish / Review 的事件資料，可略過；不會覆蓋先前的練習時間紀錄。
+分鐘數屬於每次 attempt 的事件資料，可略過；不會覆蓋先前的練習時間紀錄。若 Published curriculum snapshot 尚未提供目前題目的 Placement，Control Center 仍會保存 attempt，但不會猜測 Skill Evidence。
 
 ### CLI
 
