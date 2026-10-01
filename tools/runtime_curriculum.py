@@ -22,6 +22,17 @@ class RuntimeCurriculumError(ValueError):
 
 
 @dataclass(frozen=True)
+class SkillContext:
+    uid: str
+    name: str
+    unit: str
+    path_stage: str
+    path_order: int | float
+    relevance_33: str
+    relevance_55: str
+
+
+@dataclass(frozen=True)
 class PlacementContext:
     placement_uid: str
     pb_uid: str
@@ -197,3 +208,109 @@ class RuntimeCurriculum:
                 ),
             )
         )
+
+
+    def skill_context(
+        self,
+        skill_uid: str,
+    ) -> SkillContext | None:
+        skill_uid = str(
+            skill_uid or ""
+        ).strip()
+
+        if not skill_uid:
+            return None
+
+        data = self.load()
+
+        for row in data.get("skills") or []:
+            if str(
+                row.get(
+                    "uid",
+                    "",
+                )
+            ).strip() != skill_uid:
+                continue
+
+            relevance = (
+                row.get("relevance")
+                or {}
+            )
+
+            order = row.get(
+                "path_order",
+                10**9,
+            )
+
+            if not isinstance(
+                order,
+                (int, float),
+            ):
+                order = 10**9
+
+            return SkillContext(
+                uid=skill_uid,
+                name=str(
+                    row.get(
+                        "name",
+                        "",
+                    )
+                ).strip(),
+                unit=str(
+                    row.get(
+                        "unit",
+                        "",
+                    )
+                ).strip(),
+                path_stage=str(
+                    row.get(
+                        "path_stage",
+                        "",
+                    )
+                ).strip(),
+                path_order=order,
+                relevance_33=str(
+                    relevance.get(
+                        "3+3",
+                        "",
+                    )
+                ).strip(),
+                relevance_55=str(
+                    relevance.get(
+                        "5+5",
+                        "",
+                    )
+                ).strip(),
+            )
+
+        return None
+
+    def importance_for_skill(
+        self,
+        skill_uid: str,
+        *,
+        target: str = "3+3",
+    ) -> str:
+        context = self.skill_context(
+            skill_uid
+        )
+
+        if context is None:
+            return "supporting"
+
+        value = (
+            context.relevance_33
+            if target == "3+3"
+            else context.relevance_55
+        ).strip().lower()
+
+        if "required" in value:
+            return "required"
+
+        if (
+            "extension" in value
+            or "optional" in value
+        ):
+            return "extension"
+
+        return "supporting"
