@@ -9,6 +9,7 @@ from tools.remote_writeback import (
     build_remote_writeback_bundle,
     derive_rec_stage,
     notion_projection,
+    validate_remote_receipt,
 )
 
 
@@ -321,6 +322,118 @@ class RemoteWritebackV23Test(
             first,
             second,
         )
+
+    def test_complete_receipt_accepts_exact_event_set(self):
+        bundle = (
+            build_remote_writeback_bundle(
+                sample_envelope()
+            )
+        )
+        receipt = {
+            "schema_version": "v2.3-remote-receipt-1",
+            "writeback_id": bundle.writeback_id,
+            "complete": True,
+            "rec": {
+                "page_id": "rec-page-1",
+                "duplicate": False,
+            },
+            "evidence": [
+                {
+                    "event_id": (
+                        bundle.evidence[0].event_id
+                    ),
+                    "page_id": "ev-page-1",
+                    "duplicate": False,
+                }
+            ],
+        }
+
+        self.assertEqual(
+            validate_remote_receipt(
+                bundle,
+                receipt,
+            ),
+            receipt,
+        )
+
+    def test_partial_receipt_is_rejected(self):
+        bundle = (
+            build_remote_writeback_bundle(
+                sample_envelope()
+            )
+        )
+
+        with self.assertRaisesRegex(
+            RemoteWritebackError,
+            "not complete",
+        ):
+            validate_remote_receipt(
+                bundle,
+                {
+                    "schema_version": "v2.3-remote-receipt-1",
+                    "writeback_id": bundle.writeback_id,
+                    "complete": False,
+                    "rec": {
+                        "page_id": "rec-page-1",
+                    },
+                    "evidence": [],
+                },
+            )
+
+    def test_receipt_missing_expected_event_is_rejected(self):
+        bundle = (
+            build_remote_writeback_bundle(
+                sample_envelope()
+            )
+        )
+
+        with self.assertRaisesRegex(
+            RemoteWritebackError,
+            "Evidence identity mismatch",
+        ):
+            validate_remote_receipt(
+                bundle,
+                {
+                    "schema_version": "v2.3-remote-receipt-1",
+                    "writeback_id": bundle.writeback_id,
+                    "complete": True,
+                    "rec": {
+                        "page_id": "rec-page-1",
+                    },
+                    "evidence": [],
+                },
+            )
+
+    def test_receipt_wrong_writeback_id_is_rejected(self):
+        bundle = (
+            build_remote_writeback_bundle(
+                sample_envelope()
+            )
+        )
+
+        with self.assertRaisesRegex(
+            RemoteWritebackError,
+            "writeback_id mismatch",
+        ):
+            validate_remote_receipt(
+                bundle,
+                {
+                    "schema_version": "v2.3-remote-receipt-1",
+                    "writeback_id": "wb_wrong",
+                    "complete": True,
+                    "rec": {
+                        "page_id": "rec-page-1",
+                    },
+                    "evidence": [
+                        {
+                            "event_id": (
+                                bundle.evidence[0].event_id
+                            ),
+                            "page_id": "ev-page-1",
+                        }
+                    ],
+                },
+            )
 
     def test_stage_is_derived_from_attempt_context_not_capability(self):
         self.assertEqual(
