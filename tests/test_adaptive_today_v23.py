@@ -141,6 +141,52 @@ class AdaptiveTodayV23Test(unittest.TestCase):
             encoding="utf-8",
         )
 
+    def test_missing_published_curriculum_surfaces_new_learning_blocker(self):
+        missing = RuntimeCurriculum(
+            self.root / "missing-published.v23.json"
+        )
+
+        with (
+            patch.object(
+                control,
+                "OUTBOX",
+                self.outbox,
+            ),
+            patch.object(
+                control,
+                "MEMORY",
+                self.memory,
+            ),
+            patch.object(
+                control,
+                "CURRICULUM",
+                missing,
+            ),
+        ):
+            snapshot = (
+                control.adaptive_today_snapshot(
+                    on_date=dt.date(
+                        2026,
+                        10,
+                        1,
+                    ),
+                    total_capacity_minutes=60,
+                )
+            )
+
+        self.assertEqual(
+            snapshot[
+                "curriculum_blocker"
+            ],
+            "Published curriculum snapshot 尚未建立。",
+        )
+        self.assertEqual(
+            snapshot[
+                "plan"
+            ].budget_minutes,
+            18,
+        )
+
     def test_adaptive_today_reconciles_evidence_and_selects_due_skill(self):
         self.write_curriculum()
 
@@ -208,6 +254,11 @@ class AdaptiveTodayV23Test(unittest.TestCase):
                 "plan"
             ].selected[0].importance,
             "required",
+        )
+        self.assertIsNone(
+            snapshot[
+                "curriculum_blocker"
+            ]
         )
 
     def test_review_placement_prefers_unattempted_transfer(self):
