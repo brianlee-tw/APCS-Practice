@@ -418,6 +418,8 @@ def adaptive_today_snapshot(
 
     target = curriculum_target()
 
+    curriculum_blocker = None
+
     try:
         importance = (
             CURRICULUM
@@ -425,8 +427,9 @@ def adaptive_today_snapshot(
                 target=target
             )
         )
-    except RuntimeCurriculumError:
+    except RuntimeCurriculumError as exc:
         importance = {}
+        curriculum_blocker = str(exc)
 
     try:
         reconcile_report = MEMORY.reconcile(
@@ -491,6 +494,9 @@ def adaptive_today_snapshot(
         ),
         "latest_problem": (
             latest_problem
+        ),
+        "curriculum_blocker": (
+            curriculum_blocker
         ),
         "warning": warning,
     }
@@ -724,6 +730,20 @@ def choose_menu(
                 f"新學習保留 ≥ {protected} min"
                 f"{RESET}"
             )
+
+            if snapshot[
+                "curriculum_blocker"
+            ]:
+                print(
+                    f"{YELLOW}"
+                    "新學習 · BLOCKED"
+                    f"{RESET}"
+                )
+                print(
+                    f"{GRAY}"
+                    f"{fit(snapshot['curriculum_blocker'], ui_width() - 2)}"
+                    f"{RESET}"
+                )
 
             if snapshot["warning"]:
                 print(
