@@ -134,7 +134,13 @@ class RuntimeCurriculum:
                 )
             ).strip().lower()
 
-            if any(
+            if raw in {
+                "not required",
+                "not-required",
+                "n/a",
+            }:
+                value = "supporting"
+            elif any(
                 token in raw
                 for token in (
                     "required",
@@ -465,6 +471,18 @@ class RuntimeCurriculum:
                         difficulty=str(
                             problem.get(
                                 "difficulty",
+                                "",
+                            )
+                        ).strip(),
+                        source_platform=str(
+                            problem.get(
+                                "source_platform",
+                                "",
+                            )
+                        ).strip(),
+                        judge_platform=str(
+                            problem.get(
+                                "judge_platform",
                                 "",
                             )
                         ).strip(),
