@@ -27,6 +27,9 @@ try:
         RuntimeCurriculum,
         RuntimeCurriculumError,
     )
+    from .learning_route import (
+        select_new_learning_plan,
+    )
     from .skill_memory_store import (
         SkillMemoryStore,
     )
@@ -42,6 +45,9 @@ except ImportError:
     from runtime_curriculum import (
         RuntimeCurriculum,
         RuntimeCurriculumError,
+    )
+    from learning_route import (
+        select_new_learning_plan,
     )
     from skill_memory_store import (
         SkillMemoryStore,
@@ -227,13 +233,11 @@ def current_problem(filename: str | None):
         return None
 
     path = Path(filename)
-    match = ID_RE.match(path.stem)
-
-    if not match:
-        return None
-
-    pid = match.group(1).lower()
-    candidate = path if path.is_absolute() else ROOT / path
+    candidate = (
+        path
+        if path.is_absolute()
+        else ROOT / path
+    )
     resolved = candidate.resolve()
 
     placement_match = re.search(
@@ -246,33 +250,89 @@ def current_problem(filename: str | None):
         else None
     )
 
+    # v2.3 runtime scratch identity is the Published Placement, not the
+    # legacy local-catalog filename convention.  This allows CF / CSES /
+    # LeetCode / APCS canonical Problem IDs to participate in B4 without
+    # inventing a second local Problem identity.
+    if placement_uid:
+        try:
+            placement = (
+                CURRICULUM
+                .placement_by_uid(
+                    placement_uid
+                )
+            )
+        except RuntimeCurriculumError:
+            placement = None
+
+        if placement is not None:
+            return {
+                "id": (
+                    placement.problem_id
+                    .strip()
+                    .lower()
+                ),
+                "title": placement.title,
+                "path": path,
+                "state": None,
+                "due": None,
+                "placement_uid": (
+                    placement_uid
+                ),
+                "pb_uid": placement.pb_uid,
+                "published_runtime": True,
+                "url": placement.url,
+            }
+
+    match = ID_RE.match(
+        path.stem
+    )
+
+    if not match:
+        return None
+
+    pid = match.group(1).lower()
+
     for row in all_rows():
         if row[0] == pid:
             matched_path = next(
                 (
                     solution.path
                     for solution in row[1]
-                    if solution.path.resolve() == resolved
+                    if solution.path.resolve()
+                    == resolved
                 ),
                 resolved,
             )
 
             return {
                 "id": pid,
-                "title": clean_title(pid, row[2].title),
+                "title": clean_title(
+                    pid,
+                    row[2].title,
+                ),
                 "path": matched_path,
                 "state": row[3],
                 "due": row[5],
-                "placement_uid": placement_uid,
+                "placement_uid": (
+                    placement_uid
+                ),
+                "published_runtime": False,
             }
 
     return {
         "id": pid,
-        "title": clean_title(pid, path.stem),
+        "title": clean_title(
+            pid,
+            path.stem,
+        ),
         "path": path,
         "state": None,
         "due": None,
-        "placement_uid": placement_uid,
+        "placement_uid": (
+            placement_uid
+        ),
+        "published_runtime": False,
     }
 
 
@@ -419,6 +479,7 @@ def adaptive_today_snapshot(
     target = curriculum_target()
 
     curriculum_blocker = None
+    new_learning = None
 
     try:
         importance = (
@@ -430,6 +491,23 @@ def adaptive_today_snapshot(
     except RuntimeCurriculumError as exc:
         importance = {}
         curriculum_blocker = str(exc)
+
+    if curriculum_blocker is None:
+        try:
+            new_learning = (
+                select_new_learning_plan(
+                    CURRICULUM,
+                    envelopes,
+                    target=target,
+                )
+            )
+        except (
+            RuntimeCurriculumError,
+            ValueError,
+        ) as exc:
+            curriculum_blocker = str(
+                exc
+            )
 
     try:
         reconcile_report = MEMORY.reconcile(
@@ -497,6 +575,9 @@ def adaptive_today_snapshot(
         ),
         "curriculum_blocker": (
             curriculum_blocker
+        ),
+        "new_learning": (
+            new_learning
         ),
         "warning": warning,
     }
@@ -640,6 +721,81 @@ def create_review_scratch(
     return target
 
 
+def _safe_runtime_filename(
+    value: str,
+) -> str:
+    cleaned = re.sub(
+        r"[^A-Za-z0-9_.-]+",
+        "_",
+        str(value or "").strip(),
+    ).strip("._")
+
+    return cleaned or "problem"
+
+
+def create_learning_scratch(
+    placement,
+) -> Path:
+    folder = (
+        RUNTIME_DIR
+        / "learn"
+        / dt.date.today().isoformat()
+    )
+    folder.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    target = (
+        folder
+        / (
+            f"{_safe_runtime_filename(placement.problem_id)}"
+            f"__{placement.placement_uid}"
+            ".cpp"
+        )
+    )
+
+    if target.exists():
+        return target
+
+    lines = [
+        "// APCS B4 new-learning scratch",
+        f"// Skill: {placement.primary_skill}",
+        (
+            f"// Lesson: "
+            f"{placement.lesson_uid or '—'}"
+        ),
+        (
+            f"// Problem: "
+            f"{placement.problem_id} · "
+            f"{placement.title}"
+        ),
+        f"// Role: {placement.role}",
+    ]
+
+    if placement.url:
+        lines.append(
+            f"// Judge: {placement.url}"
+        )
+
+    lines += [
+        "//",
+        "// 先依 Lesson 建立 model，再自行完成本題。",
+        "// Core / Transfer pre-attempt 不查看舊解答或關鍵觀察。",
+        "",
+    ]
+
+    target.write_text(
+        "\n".join(lines)
+        + solution_template(
+            "cpp"
+        ),
+        encoding="utf-8",
+    )
+
+    return target
+
+
 # ============================================================
 # Generic menu
 # ============================================================
@@ -744,6 +900,43 @@ def choose_menu(
                     f"{fit(snapshot['curriculum_blocker'], ui_width() - 2)}"
                     f"{RESET}"
                 )
+            elif snapshot[
+                "new_learning"
+            ] is not None:
+                route = snapshot[
+                    "new_learning"
+                ]
+
+                if route.skill is not None:
+                    print(
+                        f"{CYAN}"
+                        "新學習 · "
+                        f"{route.skill.uid}"
+                        f"{RESET}"
+                    )
+                    print(
+                        f"{GRAY}"
+                        f"{fit(route.why_now, ui_width() - 2)}"
+                        f"{RESET}"
+                    )
+                elif route.blocked_skill is not None:
+                    print(
+                        f"{YELLOW}"
+                        "新學習 · BLOCKED · "
+                        f"{route.blocked_skill.uid}"
+                        f"{RESET}"
+                    )
+                    print(
+                        f"{GRAY}"
+                        f"{fit(route.why_now, ui_width() - 2)}"
+                        f"{RESET}"
+                    )
+                elif route.route_complete:
+                    print(
+                        f"{GREEN}"
+                        "✓ Required route 已達 start threshold"
+                        f"{RESET}"
+                    )
 
             if snapshot["warning"]:
                 print(
@@ -1824,37 +2017,50 @@ def record_problem(action: str, problem) -> None:
     print()
     print(f"{GRAY}正在更新學習紀錄…{RESET}")
 
+    published_runtime = bool(
+        problem.get(
+            "published_runtime",
+            False,
+        )
+    )
+
     try:
-        with contextlib.redirect_stdout(io.StringIO()):
-            if action == "finish":
-                command_result = (
-                    finish_with_optional_complexity(
+        if published_runtime:
+            # The durable v2.3 outbox / Evidence envelope is the authoritative
+            # local learning mutation for Published Curriculum scratch files.
+            # Legacy progress.csv cannot represent namespaced CF/CSES/LC IDs.
+            command_result = 0
+        else:
+            with contextlib.redirect_stdout(io.StringIO()):
+                if action == "finish":
+                    command_result = (
+                        finish_with_optional_complexity(
+                            problem["id"],
+                            score,
+                            minutes=minutes,
+                            complexity_solution=(
+                                complexity_solution
+                            ),
+                            complexity=finish_complexity,
+                            finish_runner=(
+                                lambda pid, recall, *, minutes=None:
+                                core.finish_cmd(
+                                    pid,
+                                    recall,
+                                    minutes=minutes,
+                                    sync_after=False,
+                                )
+                            ),
+                        )
+                    )
+                else:
+                    command_result = core.review_cmd(
                         problem["id"],
                         score,
+                        result=result,
                         minutes=minutes,
-                        complexity_solution=(
-                            complexity_solution
-                        ),
-                        complexity=finish_complexity,
-                        finish_runner=(
-                            lambda pid, recall, *, minutes=None:
-                            core.finish_cmd(
-                                pid,
-                                recall,
-                                minutes=minutes,
-                                sync_after=False,
-                            )
-                        ),
+                        sync_after=False,
                     )
-                )
-            else:
-                command_result = core.review_cmd(
-                    problem["id"],
-                    score,
-                    result=result,
-                    minutes=minutes,
-                    sync_after=False,
-                )
 
     except (
         SystemExit,
@@ -1929,9 +2135,10 @@ def record_problem(action: str, problem) -> None:
             ) as exc:
                 memory_warning = str(exc)
 
-        sync_warning = (
-            core.sync_generated_best_effort()
-        )
+        if not published_runtime:
+            sync_warning = (
+                core.sync_generated_best_effort()
+            )
 
     print()
 
