@@ -1,0 +1,247 @@
+{
+  "schema_version": "v2.3-notion-extract-locator-1",
+  "captured_on": "2026-10-01",
+  "source": "Live Notion Problem Bank v3 scoped search performed in this migration transaction.",
+  "purpose": "Migration-only exact page locator for first real v2.3 curriculum publish. This file is not runtime curriculum truth.",
+  "problem_bank_data_source": "collection://5e0d55cd-c617-4bf2-ac94-5e4e643e5aa6",
+  "main_lesson_count": 52,
+  "candidate_page_count": 126,
+  "constraints": [
+    "Only main 52 Lesson identities are included.",
+    "U-GPH X01-X04 extensions are excluded.",
+    "L-MIX-04 intentionally has no formal OJ candidate.",
+    "Each page must still be exact-readback and pass Active + Placement QA PASS + Primary Lesson checks before publish.",
+    "No Primary Skill is inferred by this locator."
+  ],
+  "lessons": {
+    "L-FND-01": [
+      "3c843be9-58cd-81ec-8514-ec1bbff866e3",
+      "3c843be9-58cd-8148-b552-fb9eaed125b7",
+      "3c843be9-58cd-819c-93e2-f7919b274f72"
+    ],
+    "L-FND-02": [
+      "3c643be9-58cd-812b-9a45-f15c3243df04",
+      "3c643be9-58cd-8134-a8da-e7d5f4a2d361",
+      "3c643be9-58cd-8170-8b5a-e24515b21473"
+    ],
+    "L-FND-03": [
+      "3c843be9-58cd-8131-b556-e8d14e0c781a",
+      "3c843be9-58cd-814c-921f-d4a33b15fcca",
+      "3c843be9-58cd-81a0-9b8d-ea557aa7aa7d",
+      "3c843be9-58cd-8169-88ef-e4420013ea9e"
+    ],
+    "L-FND-04": [
+      "3c843be9-58cd-81ae-95d6-c4e4fdaa04d8",
+      "3c643be9-58cd-81f7-bdeb-f87fc6588080",
+      "3c843be9-58cd-81e7-b723-c20f50f06607",
+      "3c843be9-58cd-814d-a010-dce2c26e82b1"
+    ],
+    "L-DAT-01": [
+      "3c643be9-58cd-8110-a218-cc30347f882e",
+      "3c943be9-58cd-81a3-a9fd-f8a4e054785f",
+      "3c943be9-58cd-81ab-9dc8-eec807d2ecf0"
+    ],
+    "L-DAT-02": [
+      "3c643be9-58cd-8147-9fc2-f4ff269fa0a8",
+      "3c643be9-58cd-813f-b446-f1dcf34b48bd",
+      "3c643be9-58cd-8112-afd3-e829a5f2f2b6"
+    ],
+    "L-DAT-03": [
+      "3c643be9-58cd-81e5-99ea-cdd74fead7c7",
+      "3c943be9-58cd-816d-af61-f01c5258f408",
+      "3c643be9-58cd-8134-b28b-def25f8b9b00"
+    ],
+    "L-DAT-04": [
+      "3c643be9-58cd-8167-b178-f2fd2f4a1e1f",
+      "3c643be9-58cd-819a-8c2a-f7e6a44b7c2a",
+      "3c943be9-58cd-81df-809e-ef2c2a374512",
+      "3c643be9-58cd-813f-b5d3-f02e4386e39c"
+    ],
+    "L-PSV-01": [
+      "3c943be9-58cd-811c-9fe5-e1eb2bc5450b",
+      "3c943be9-58cd-81f8-87e1-db5db5f8df15",
+      "3c943be9-58cd-8150-a52c-c4b9fbbc8c50"
+    ],
+    "L-PSV-02": [
+      "3c943be9-58cd-8176-8f2b-ebea9b2b912f",
+      "3c943be9-58cd-81df-8a69-c3d10bb05330",
+      "3c943be9-58cd-81dd-be28-c0d3e6b7b1cb"
+    ],
+    "L-PSV-03": [
+      "3c943be9-58cd-8116-ae73-e73350cfcc15",
+      "3c943be9-58cd-81b7-ad0a-e6ffab0aca3e",
+      "3c943be9-58cd-81ca-8efc-eae2242050e6",
+      "3c943be9-58cd-812a-8faf-f4f5ee725506"
+    ],
+    "L-PSV-04": [
+      "3c943be9-58cd-81e2-a2cc-c95197adbc64",
+      "3c643be9-58cd-8135-a8c9-cae57f3bd8e6",
+      "3c943be9-58cd-81a7-9467-feb11f71a016",
+      "3c943be9-58cd-81a7-a64d-dde64148220b"
+    ],
+    "L-ORD-01": [
+      "3c643be9-58cd-81c8-8eec-f98c4ecd80f3",
+      "3c643be9-58cd-8116-91f0-e5be94acf6f8"
+    ],
+    "L-ORD-02": [
+      "3cb43be9-58cd-81b6-aaae-e1e261a48cca",
+      "3c643be9-58cd-81c4-9034-d84805f5db6b"
+    ],
+    "L-ORD-03": [
+      "3c643be9-58cd-81ad-a0ee-d16ef8a79d45",
+      "3c643be9-58cd-818d-8adb-fc28431d74d6",
+      "3c643be9-58cd-814f-b8b0-d0b4ac3c0079",
+      "3c643be9-58cd-817f-916e-dd80a8b60a50"
+    ],
+    "L-PFX-01": [
+      "3c643be9-58cd-817c-8370-d3ec3a4253fc",
+      "3c643be9-58cd-8195-823c-f7af5c9e809e",
+      "3c643be9-58cd-81b2-8d1b-c83e49f67d22"
+    ],
+    "L-PFX-02": [
+      "3c643be9-58cd-81a9-b251-fb72494f4716",
+      "3c643be9-58cd-8106-9cc2-c2e667f04b74"
+    ],
+    "L-PFX-03": [
+      "3c643be9-58cd-81aa-b460-d89c09bd4672",
+      "3c643be9-58cd-8174-8152-f61d384a4a1d"
+    ],
+    "L-PFX-04": [
+      "3c643be9-58cd-81e4-9591-efc9955abb8e",
+      "3c643be9-58cd-8109-b96a-c34120d4f3a1",
+      "3c643be9-58cd-8179-bc06-ff930101f4b1"
+    ],
+    "L-WIN-01": [
+      "3c643be9-58cd-81c3-8f14-f701f8f35cef",
+      "3c643be9-58cd-81d8-aa8a-e94617eafeeb"
+    ],
+    "L-WIN-02": [
+      "3c643be9-58cd-81dc-8cea-c29365923675",
+      "3c643be9-58cd-8126-81a2-e4e38bf34af1",
+      "3c643be9-58cd-8194-ab72-e3327caa5b19",
+      "3c643be9-58cd-81fe-ba36-c962be7d3771"
+    ],
+    "L-WIN-03": [
+      "3c643be9-58cd-8179-a07b-fbc2797bf2e4"
+    ],
+    "L-BIN-01": [
+      "3c643be9-58cd-8190-b12f-cd480ea94fa2",
+      "3c643be9-58cd-819b-bb1b-f594726a90bb",
+      "3c643be9-58cd-8107-861b-c9c964203b64"
+    ],
+    "L-BIN-02": [
+      "3c643be9-58cd-8196-8178-c48ec181da3d",
+      "3c643be9-58cd-812f-90c0-ebd78f9395ab",
+      "3c643be9-58cd-8114-9f00-eeb5e4f92bc2"
+    ],
+    "L-BIN-03": [
+      "3c643be9-58cd-8191-be96-fb3f9134fa22",
+      "3c643be9-58cd-8158-bac3-ec3d8456db0a"
+    ],
+    "L-REC-01": [
+      "3c643be9-58cd-811f-91fc-e29060de7f28",
+      "3c643be9-58cd-81de-8e58-fbc9ad483797"
+    ],
+    "L-REC-02": [
+      "3c743be9-58cd-8178-b71d-c24e17413404",
+      "3c643be9-58cd-8169-a82e-fa33e3e90460"
+    ],
+    "L-REC-03": [
+      "3c643be9-58cd-81db-b4b3-e08378a7e87d"
+    ],
+    "L-REC-04": [
+      "3c643be9-58cd-8105-88f8-c43f204e9831",
+      "3c643be9-58cd-81bc-b004-d0ad7f09c6b4"
+    ],
+    "L-REC-05": [
+      "3c643be9-58cd-8128-a25e-cb58070599fd",
+      "3c643be9-58cd-81a4-8ad9-f9bc2ce81278"
+    ],
+    "L-DS-01": [
+      "3c643be9-58cd-8183-b139-c886ea104ef8",
+      "3c643be9-58cd-810d-9d2d-fe9eab6ba286"
+    ],
+    "L-DS-02": [
+      "3c643be9-58cd-817f-87f5-d763963f633a",
+      "3c643be9-58cd-8122-b2ed-c38ef7524cac",
+      "3c643be9-58cd-8113-ad61-c24c997c6fd8"
+    ],
+    "L-DS-03": [
+      "3c643be9-58cd-81f1-b5bd-c58e1c2b6646"
+    ],
+    "L-GPH-01": [
+      "3c643be9-58cd-8105-93d3-f441ddec5d51"
+    ],
+    "L-GPH-02": [
+      "3c643be9-58cd-8185-a1ff-e1fd3b1e781f",
+      "3c643be9-58cd-8113-9523-e63ab90d58c2"
+    ],
+    "L-GPH-03": [
+      "3c643be9-58cd-81d8-99ef-edffbb28a0c2",
+      "3c643be9-58cd-8104-a76d-f8392841f91e",
+      "3c643be9-58cd-8148-85db-e2cb542862c7"
+    ],
+    "L-GPH-04": [
+      "3c643be9-58cd-81cd-8d5d-eb672b96b236",
+      "3c643be9-58cd-81de-a333-c539091b0904",
+      "3c643be9-58cd-817e-b1d9-c94c21dcf202"
+    ],
+    "L-GRD-01": [
+      "3c643be9-58cd-81e1-bd4d-e951e5a1041f",
+      "3c643be9-58cd-81b9-917e-f6608aa5c7b1",
+      "3c643be9-58cd-81ab-b585-ff6de92eb170"
+    ],
+    "L-GRD-02": [
+      "3c643be9-58cd-8144-ab86-c2041e0be1ee",
+      "3c643be9-58cd-81dc-a651-d02210e9e922",
+      "3c643be9-58cd-81a3-92ca-da2c90119faf"
+    ],
+    "L-GRD-03": [
+      "3c643be9-58cd-81f5-ba40-c9454996b78f",
+      "3c643be9-58cd-8116-af21-f793eb61caa0",
+      "3c643be9-58cd-812a-b659-efe281e47048"
+    ],
+    "L-DP-01": [
+      "3c643be9-58cd-811b-b29d-d747daba46cc",
+      "3c643be9-58cd-8149-8b0d-e8c9b8fd948c"
+    ],
+    "L-DP-02": [
+      "3c643be9-58cd-8170-adf7-e4b27fc23706",
+      "3c643be9-58cd-8126-b67e-e8d7fd98a1d2"
+    ],
+    "L-DP-03": [
+      "3c643be9-58cd-819e-81e1-f501c9a2cfd3",
+      "3c643be9-58cd-81f5-ab6f-ef96629e57eb",
+      "3c643be9-58cd-8163-9575-eda7e26ebb1e"
+    ],
+    "L-DP-04": [
+      "3c643be9-58cd-8127-af2b-cd859b8092af",
+      "3c643be9-58cd-8112-8f5c-e8680045f89d",
+      "3c643be9-58cd-81b2-95ce-ca000cfce21a"
+    ],
+    "L-RNG-01": [
+      "3cb43be9-58cd-81ff-ae32-f8cf924a2276"
+    ],
+    "L-RNG-02": [
+      "3cb43be9-58cd-81b6-8f66-ea66e9a2b1ef"
+    ],
+    "L-RNG-03": [
+      "3cb43be9-58cd-8145-97d3-e85c8e263e96"
+    ],
+    "L-RNG-04": [
+      "3cb43be9-58cd-815c-b5df-f538a1feee60"
+    ],
+    "L-MIX-01": [
+      "3c643be9-58cd-81d4-9d6a-f5a152b716ba"
+    ],
+    "L-MIX-02": [
+      "3c643be9-58cd-817b-b0fa-ff7f2fc95975",
+      "3c643be9-58cd-81a4-a7b1-efcb8c28afee"
+    ],
+    "L-MIX-03": [
+      "3c643be9-58cd-81bc-be2f-cc06c4ce35d6",
+      "3c643be9-58cd-81f5-b560-c8fa6e130c71"
+    ],
+    "L-MIX-04": []
+  }
+}
