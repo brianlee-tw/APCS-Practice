@@ -1096,27 +1096,28 @@ def main(argv=None):
             args.strict
         )
 
+    # Low-level compatibility CLI remains available for regression,
+    # migration, and automation.  Learner-facing daily use must go through
+    # the VS Code Control Center so v2.3 Evidence context is captured.
     if args.cmd == "today":
-        print(
-            "v2.3 的 learner-facing Today 已移至 VS Code Control Center。"
-        )
-        print(
-            "請按 Ctrl+Alt+A，選擇「今日學習」。"
-        )
-        return 0
+        return today_cmd()
 
-    if args.cmd in {"finish", "review"}:
-        print(
-            "v2.3 已停用 CLI 直接 Finish / Review："
-            "此路徑缺少 Assistance、Independent、Novelty、"
-            "Placement、Evidence outbox 與 adaptive memory。",
-            file=sys.stderr,
+    if args.cmd == "finish":
+        return finish_cmd(
+            args.problem_id,
+            args.score,
+            minutes=args.minutes,
+            note=args.note,
         )
-        print(
-            "請按 Ctrl+Alt+A，在 Control Center 完成紀錄。",
-            file=sys.stderr,
+
+    if args.cmd == "review":
+        return review_cmd(
+            args.problem_id,
+            args.score,
+            result=args.result,
+            minutes=args.minutes,
+            note=args.note,
         )
-        return 2
 
     if args.cmd == "note":
         return note_cmd(
