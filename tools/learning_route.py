@@ -511,8 +511,8 @@ def _new_learning_placement(
         if current_level >= 1
         else {
             "Guided Drill": 0,
-            "Worked Example": 1,
-            "Core Independent": 2,
+            "Core Independent": 1,
+            "Worked Example": 2,
             "Transfer Challenge": 3,
             "Mock": 4,
         }
