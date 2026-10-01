@@ -41,13 +41,13 @@ The client sends canonical PB UID / Skill UID / writeback ID, not Notion page UR
 
 ## REC-v3.1 projection
 
-VS Code Direct requires the live schema to preserve `Writeback ID`, `PB UID`, `Problem ID`, Judge result including MLE, `紀錄來源 = VS Code Direct`, `紀錄性質 = 正式紀錄`, and `Attempt Finished At`, plus optional language / Assistance / Independent / attempts / time. The original attempt timestamp is preserved even if remote sync happens later.
+VS Code Direct requires the live schema to preserve `Writeback ID`, `PB UID`, `Problem ID`, Judge result including MLE, `紀錄來源 = VS Code Direct`, `紀錄性質 = 正式紀錄`, `Attempt Started At`, `Attempt Finished At`, and `Independent Known`, plus optional language / Assistance / Independent / attempts / time. The original attempt timestamps are preserved even if remote sync happens later; `Independent Known` distinguishes an explicit false from an unknown checkbox value.
 
 `學習階段` is presentation metadata derived from explicit Activity / Timed / Independent attempt facts; it is not a capability axis.
 
 ## EV-v1 projection
 
-The live Evidence Ledger supports `Event ID`, Track, Activity, Outcome, Judge Result including MLE, Assistance, Independent, Timed, Time min, Date, relations, Evidence Note, and Novelty values New / Seen / Delayed Retest / Transfer / Mixed / Same Problem Repeat.
+The live Evidence Ledger supports `Event ID`, Track, Activity, Outcome, Judge Result including MLE, Assistance, Independent, Independent Known, Timed, Timed Known, Time min, Date, relations, Evidence Note, and Novelty values New / Seen / Delayed Retest / Transfer / Mixed / Same Problem Repeat. The Known flags preserve unknown-vs-false semantics for Notion checkboxes.
 
 ## Gate boundary
 
