@@ -3142,42 +3142,98 @@ def today_view(current_filename: str | None):
     clear()
     heading("今日學習")
     print()
+
     print(
-        f"容量 {snapshot['capacity_minutes']} min"
-        f" · Review budget {plan.budget_minutes} min"
+        f"目標    {snapshot['target']}"
     )
     print(
-        f"已選 {len(plan.selected)} 項"
-        f" · {plan.selected_minutes} min"
+        f"容量    {snapshot['capacity_minutes']} min"
+    )
+    print(
+        f"Review  {plan.selected_minutes}/"
+        f"{plan.budget_minutes} min"
+    )
+
+    protected = max(
+        0,
+        snapshot["capacity_minutes"]
+        - plan.budget_minutes,
+    )
+
+    print(
+        f"新學習  ≥ {protected} min 保留"
     )
 
     if plan.deferred:
         print(
             f"{GRAY}"
-            f"安全延後 {len(plan.deferred)} 項"
-            "（不是欠題）"
+            f"Deferred {len(plan.deferred)} Skill"
+            " · 不計為欠作業"
             f"{RESET}"
         )
 
     if snapshot["warning"]:
+        print()
         print(
             f"{YELLOW}"
-            f"⚠ {fit(snapshot['warning'], ui_width() - 2)}"
-            f"{RESET}"
-        )
-
-    if not plan.selected:
-        print()
-        rule()
-        print()
-        print(
-            f"{GREEN}"
-            "✓ 今天沒有需要排入容量的 adaptive review。"
+            "⚠ Adaptive memory reconciliation 有問題"
             f"{RESET}"
         )
         print(
             f"{GRAY}"
-            "主要時間保留給新學習與 deliberate practice。"
+            f"{fit(snapshot['warning'], ui_width())}"
+            f"{RESET}"
+        )
+
+    print()
+    rule()
+    print()
+
+    if snapshot["memory_count"] == 0:
+        print(
+            f"{GREEN}"
+            "✓ 尚無 adaptive Skill memory"
+            f"{RESET}"
+        )
+        print()
+        print(
+            f"{GRAY}"
+            "目前應把容量用在新學習與正式 Practice；"
+            "完成有 Published Placement 的題目後，"
+            "系統會開始建立 Skill × Track retention state。"
+            f"{RESET}"
+        )
+        pause()
+        return current_filename
+
+    if snapshot["due_count"] == 0:
+        print(
+            f"{GREEN}"
+            "✓ 今天沒有 Skill 到達 review threshold"
+            f"{RESET}"
+        )
+        print()
+        print(
+            f"{GRAY}"
+            "不需要為了維持 streak 額外刷舊題；"
+            "直接進行新學習／Transfer。"
+            f"{RESET}"
+        )
+        pause()
+        return current_filename
+
+    if not plan.selected:
+        print(
+            f"{GREEN}"
+            "✓ 今日 review budget 不安排專門複習"
+            f"{RESET}"
+        )
+        print()
+        print(
+            f"{GRAY}"
+            f"目前有 {snapshot['due_count']} 個候選，"
+            "但都超出本次 review 容量；"
+            "已安全延後，不形成 backlog debt。"
             f"{RESET}"
         )
         pause()
@@ -3186,91 +3242,25 @@ def today_view(current_filename: str | None):
     options = []
 
     for candidate in plan.selected:
-        placement = None
-        path = None
-
-        if candidate.track == "Implementation":
-            previous = snapshot[
-                "latest_problem"
-            ].get(
-                (
-                    candidate.skill_uid,
-                    candidate.track,
-                )
-            )
-
-            try:
-                placement = (
-                    CURRICULUM
-                    .review_placement_for_skill(
-                        candidate.skill_uid,
-                        exclude_problem_ids=(
-                            {previous}
-                            if previous
-                            else set()
-                        ),
-                    )
-                )
-            except RuntimeCurriculumError:
-                placement = None
-
-        if placement is not None:
-            for row in all_rows():
-                if row[0] == placement.problem_id:
-                    path = row[2].path
-                    break
-
-        detail = (
-            f"R {candidate.retrievability:.0%}"
-            f" · due {candidate.due_on:%m/%d}"
-            f" · ~{candidate.estimated_minutes} min"
+        label = skill_display_name(
+            candidate.skill_uid
         )
 
-        if placement is not None:
-            detail += (
-                f" · {placement.problem_id}"
-                f" · {placement.role}"
-            )
-        else:
-            detail += " · 尚無可啟動 Published Placement"
+        detail = (
+            f"{candidate.track}"
+            f" · R≈{candidate.retrievability:.0%}"
+            f" · due {candidate.due_on:%m/%d}"
+            f" · {candidate.estimated_minutes} min"
+        )
 
         options.append(
             {
-                "label": (
-                    skill_display_name(
-                        candidate.skill_uid
-                    )
-                    + f" × {candidate.track}"
-                ),
+                "label": label,
                 "detail": detail,
-                "enabled": (
-                    path is not None
-                ),
-                "path": path,
-                "placement": placement,
+                "enabled": True,
+                "candidate": candidate,
             }
         )
-
-    if not any(
-        item["enabled"]
-        for item in options
-    ):
-        print()
-        rule()
-        print()
-        print(
-            f"{YELLOW}"
-            "目前有 adaptive review，但 Published curriculum "
-            "尚無可安全啟動的代表題。"
-            f"{RESET}"
-        )
-        print(
-            f"{GRAY}"
-            "不會退回舊式 problem-level 到期佇列。"
-            f"{RESET}"
-        )
-        pause()
-        return current_filename
 
     selected = choose_menu(
         "今日學習 · Adaptive Review",
@@ -3281,9 +3271,95 @@ def today_view(current_filename: str | None):
     if selected is None:
         return current_filename
 
-    path = options[selected][
-        "path"
-    ]
+    candidate = options[
+        selected
+    ]["candidate"]
+
+    placement = review_placement_for_skill(
+        candidate.skill_uid,
+        track=candidate.track,
+    )
+
+    clear()
+    heading("開始 Adaptive Review")
+    print()
+
+    print(
+        f"{WHITE}{BOLD}"
+        f"{skill_display_name(candidate.skill_uid)}"
+        f"{RESET}"
+    )
+    print(
+        f"Track   {candidate.track}"
+    )
+    print(
+        f"R       ≈ {candidate.retrievability:.0%}"
+    )
+    print(
+        f"到期    {candidate.due_on}"
+    )
+    print(
+        f"預估    {candidate.estimated_minutes} min"
+    )
+    print()
+
+    if placement is None:
+        print(
+            f"{YELLOW}"
+            "⚠ Published curriculum 尚無可用 Placement。"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            "不從舊 Tags 猜題；保留這個 Skill review 候選，"
+            "待 curriculum publish 後再選代表題。"
+            f"{RESET}"
+        )
+        pause()
+        return current_filename
+
+    print(
+        f"題目    {placement.problem_id} · "
+        f"{fit(placement.title, max(10, ui_width() - 8))}"
+    )
+    print(
+        f"Role    {placement.role}"
+    )
+
+    if placement.url:
+        print(
+            f"Judge   {placement.url}"
+        )
+
+    if candidate.track == "Reading":
+        print()
+        print(
+            f"{YELLOW}"
+            "Reading review 不自動開啟舊 solution。"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            "請依題面先完成 trace / reasoning，"
+            "正式作答前不要執行程式驗證。"
+            f"{RESET}"
+        )
+        pause()
+        return current_filename
+
+    try:
+        path = create_review_scratch(
+            placement
+        )
+    except OSError as exc:
+        print()
+        print(
+            f"{RED}"
+            f"✕ 無法建立 retrieval scratch：{exc}"
+            f"{RESET}"
+        )
+        pause()
+        return current_filename
 
     result = subprocess.run(
         [
@@ -3296,40 +3372,30 @@ def today_view(current_filename: str | None):
         stderr=subprocess.DEVNULL,
     )
 
-    clear()
-    heading("Adaptive Review")
     print()
 
     if result.returncode == 0:
         print(
             f"{GREEN}"
-            "✓ 已開啟代表題"
+            "✓ 已開啟空白 retrieval scratch"
             f"{RESET}"
         )
         print(
-            fit(
-                options[selected][
-                    "label"
-                ],
-                ui_width(),
-            )
-        )
-        print()
-        print(
             f"{GRAY}"
-            "完成後回控制中心 → 複習題目。"
+            "不會打開歷史 solution；完成 Judge 後"
+            "回控制中心選「複習題目」。"
             f"{RESET}"
         )
     else:
         print(
             f"{RED}"
-            "✕ 無法開啟代表題"
+            "✕ 無法在 VS Code 開啟 scratch"
             f"{RESET}"
         )
 
     pause()
-    return str(path)
 
+    return str(path)
 
 def open_note(problem) -> None:
     pid = problem["id"]
