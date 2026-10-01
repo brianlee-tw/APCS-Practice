@@ -194,6 +194,32 @@ class RuntimeCurriculumV23Test(unittest.TestCase):
             "extension",
         )
 
+    def test_placements_for_skill_returns_primary_skill_placements(self):
+        self.write_snapshot(
+            self.base_snapshot()
+        )
+
+        runtime = RuntimeCurriculum(
+            self.snapshot
+        )
+
+        contexts = runtime.placements_for_skill(
+            "S22_Prefix_Sum"
+        )
+
+        self.assertEqual(
+            len(contexts),
+            1,
+        )
+        self.assertEqual(
+            contexts[0].problem_id,
+            "a693",
+        )
+        self.assertEqual(
+            contexts[0].role,
+            "Core Independent",
+        )
+
     def test_unknown_skill_falls_back_to_supporting_importance(self):
         self.write_snapshot(
             self.base_snapshot()
