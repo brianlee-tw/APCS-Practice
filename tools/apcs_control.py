@@ -27,6 +27,9 @@ try:
         RuntimeCurriculum,
         RuntimeCurriculumError,
     )
+    from .learning_route import (
+        select_new_learning_plan,
+    )
     from .skill_memory_store import (
         SkillMemoryStore,
     )
@@ -42,6 +45,9 @@ except ImportError:
     from runtime_curriculum import (
         RuntimeCurriculum,
         RuntimeCurriculumError,
+    )
+    from learning_route import (
+        select_new_learning_plan,
     )
     from skill_memory_store import (
         SkillMemoryStore,
@@ -227,13 +233,11 @@ def current_problem(filename: str | None):
         return None
 
     path = Path(filename)
-    match = ID_RE.match(path.stem)
-
-    if not match:
-        return None
-
-    pid = match.group(1).lower()
-    candidate = path if path.is_absolute() else ROOT / path
+    candidate = (
+        path
+        if path.is_absolute()
+        else ROOT / path
+    )
     resolved = candidate.resolve()
 
     placement_match = re.search(
@@ -246,33 +250,89 @@ def current_problem(filename: str | None):
         else None
     )
 
+    # v2.3 runtime scratch identity is the Published Placement, not the
+    # legacy local-catalog filename convention.  This allows CF / CSES /
+    # LeetCode / APCS canonical Problem IDs to participate in B4 without
+    # inventing a second local Problem identity.
+    if placement_uid:
+        try:
+            placement = (
+                CURRICULUM
+                .placement_by_uid(
+                    placement_uid
+                )
+            )
+        except RuntimeCurriculumError:
+            placement = None
+
+        if placement is not None:
+            return {
+                "id": (
+                    placement.problem_id
+                    .strip()
+                    .lower()
+                ),
+                "title": placement.title,
+                "path": path,
+                "state": None,
+                "due": None,
+                "placement_uid": (
+                    placement_uid
+                ),
+                "pb_uid": placement.pb_uid,
+                "published_runtime": True,
+                "url": placement.url,
+            }
+
+    match = ID_RE.match(
+        path.stem
+    )
+
+    if not match:
+        return None
+
+    pid = match.group(1).lower()
+
     for row in all_rows():
         if row[0] == pid:
             matched_path = next(
                 (
                     solution.path
                     for solution in row[1]
-                    if solution.path.resolve() == resolved
+                    if solution.path.resolve()
+                    == resolved
                 ),
                 resolved,
             )
 
             return {
                 "id": pid,
-                "title": clean_title(pid, row[2].title),
+                "title": clean_title(
+                    pid,
+                    row[2].title,
+                ),
                 "path": matched_path,
                 "state": row[3],
                 "due": row[5],
-                "placement_uid": placement_uid,
+                "placement_uid": (
+                    placement_uid
+                ),
+                "published_runtime": False,
             }
 
     return {
         "id": pid,
-        "title": clean_title(pid, path.stem),
+        "title": clean_title(
+            pid,
+            path.stem,
+        ),
         "path": path,
         "state": None,
         "due": None,
-        "placement_uid": placement_uid,
+        "placement_uid": (
+            placement_uid
+        ),
+        "published_runtime": False,
     }
 
 
@@ -419,6 +479,7 @@ def adaptive_today_snapshot(
     target = curriculum_target()
 
     curriculum_blocker = None
+    new_learning = None
 
     try:
         importance = (
@@ -430,6 +491,23 @@ def adaptive_today_snapshot(
     except RuntimeCurriculumError as exc:
         importance = {}
         curriculum_blocker = str(exc)
+
+    if curriculum_blocker is None:
+        try:
+            new_learning = (
+                select_new_learning_plan(
+                    CURRICULUM,
+                    envelopes,
+                    target=target,
+                )
+            )
+        except (
+            RuntimeCurriculumError,
+            ValueError,
+        ) as exc:
+            curriculum_blocker = str(
+                exc
+            )
 
     try:
         reconcile_report = MEMORY.reconcile(
@@ -497,6 +575,9 @@ def adaptive_today_snapshot(
         ),
         "curriculum_blocker": (
             curriculum_blocker
+        ),
+        "new_learning": (
+            new_learning
         ),
         "warning": warning,
     }
@@ -640,6 +721,81 @@ def create_review_scratch(
     return target
 
 
+def _safe_runtime_filename(
+    value: str,
+) -> str:
+    cleaned = re.sub(
+        r"[^A-Za-z0-9_.-]+",
+        "_",
+        str(value or "").strip(),
+    ).strip("._")
+
+    return cleaned or "problem"
+
+
+def create_learning_scratch(
+    placement,
+) -> Path:
+    folder = (
+        RUNTIME_DIR
+        / "learn"
+        / dt.date.today().isoformat()
+    )
+    folder.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    target = (
+        folder
+        / (
+            f"{_safe_runtime_filename(placement.problem_id)}"
+            f"__{placement.placement_uid}"
+            ".cpp"
+        )
+    )
+
+    if target.exists():
+        return target
+
+    lines = [
+        "// APCS B4 new-learning scratch",
+        f"// Skill: {placement.primary_skill}",
+        (
+            f"// Lesson: "
+            f"{placement.lesson_uid or '—'}"
+        ),
+        (
+            f"// Problem: "
+            f"{placement.problem_id} · "
+            f"{placement.title}"
+        ),
+        f"// Role: {placement.role}",
+    ]
+
+    if placement.url:
+        lines.append(
+            f"// Judge: {placement.url}"
+        )
+
+    lines += [
+        "//",
+        "// 先依 Lesson 建立 model，再自行完成本題。",
+        "// Core / Transfer pre-attempt 不查看舊解答或關鍵觀察。",
+        "",
+    ]
+
+    target.write_text(
+        "\n".join(lines)
+        + solution_template(
+            "cpp"
+        ),
+        encoding="utf-8",
+    )
+
+    return target
+
+
 # ============================================================
 # Generic menu
 # ============================================================
@@ -744,6 +900,43 @@ def choose_menu(
                     f"{fit(snapshot['curriculum_blocker'], ui_width() - 2)}"
                     f"{RESET}"
                 )
+            elif snapshot[
+                "new_learning"
+            ] is not None:
+                route = snapshot[
+                    "new_learning"
+                ]
+
+                if route.skill is not None:
+                    print(
+                        f"{CYAN}"
+                        "新學習 · "
+                        f"{route.skill.uid}"
+                        f"{RESET}"
+                    )
+                    print(
+                        f"{GRAY}"
+                        f"{fit(route.why_now, ui_width() - 2)}"
+                        f"{RESET}"
+                    )
+                elif route.blocked_skill is not None:
+                    print(
+                        f"{YELLOW}"
+                        "新學習 · BLOCKED · "
+                        f"{route.blocked_skill.uid}"
+                        f"{RESET}"
+                    )
+                    print(
+                        f"{GRAY}"
+                        f"{fit(route.why_now, ui_width() - 2)}"
+                        f"{RESET}"
+                    )
+                elif route.route_complete:
+                    print(
+                        f"{GREEN}"
+                        "✓ Required route 已達 start threshold"
+                        f"{RESET}"
+                    )
 
             if snapshot["warning"]:
                 print(
@@ -1824,37 +2017,50 @@ def record_problem(action: str, problem) -> None:
     print()
     print(f"{GRAY}正在更新學習紀錄…{RESET}")
 
+    published_runtime = bool(
+        problem.get(
+            "published_runtime",
+            False,
+        )
+    )
+
     try:
-        with contextlib.redirect_stdout(io.StringIO()):
-            if action == "finish":
-                command_result = (
-                    finish_with_optional_complexity(
+        if published_runtime:
+            # The durable v2.3 outbox / Evidence envelope is the authoritative
+            # local learning mutation for Published Curriculum scratch files.
+            # Legacy progress.csv cannot represent namespaced CF/CSES/LC IDs.
+            command_result = 0
+        else:
+            with contextlib.redirect_stdout(io.StringIO()):
+                if action == "finish":
+                    command_result = (
+                        finish_with_optional_complexity(
+                            problem["id"],
+                            score,
+                            minutes=minutes,
+                            complexity_solution=(
+                                complexity_solution
+                            ),
+                            complexity=finish_complexity,
+                            finish_runner=(
+                                lambda pid, recall, *, minutes=None:
+                                core.finish_cmd(
+                                    pid,
+                                    recall,
+                                    minutes=minutes,
+                                    sync_after=False,
+                                )
+                            ),
+                        )
+                    )
+                else:
+                    command_result = core.review_cmd(
                         problem["id"],
                         score,
+                        result=result,
                         minutes=minutes,
-                        complexity_solution=(
-                            complexity_solution
-                        ),
-                        complexity=finish_complexity,
-                        finish_runner=(
-                            lambda pid, recall, *, minutes=None:
-                            core.finish_cmd(
-                                pid,
-                                recall,
-                                minutes=minutes,
-                                sync_after=False,
-                            )
-                        ),
+                        sync_after=False,
                     )
-                )
-            else:
-                command_result = core.review_cmd(
-                    problem["id"],
-                    score,
-                    result=result,
-                    minutes=minutes,
-                    sync_after=False,
-                )
 
     except (
         SystemExit,
@@ -1929,9 +2135,10 @@ def record_problem(action: str, problem) -> None:
             ) as exc:
                 memory_warning = str(exc)
 
-        sync_warning = (
-            core.sync_generated_best_effort()
-        )
+        if not published_runtime:
+            sync_warning = (
+                core.sync_generated_best_effort()
+            )
 
     print()
 
@@ -3124,9 +3331,355 @@ def catalog_center(problem, current_filename: str | None):
 # Today / Notes
 # ============================================================
 
+def _print_new_learning_summary(
+    route,
+) -> None:
+    if route is None:
+        return
+
+    if route.skill is not None:
+        skill = route.skill
+
+        print(
+            f"{CYAN}{BOLD}"
+            f"New Learning · {skill.uid}"
+            f"{RESET}"
+        )
+        print(
+            f"{WHITE}"
+            f"{skill.name}"
+            f"{RESET}"
+        )
+        print(
+            f"Unit     {skill.unit}"
+        )
+        print(
+            f"Stage    {skill.path_stage}"
+        )
+        print(
+            f"Status   {route.status}"
+        )
+        print(
+            f"Evidence "
+            + (
+                route.skill_evidence.label()
+                if route.skill_evidence
+                is not None
+                else "—"
+            )
+        )
+        print(
+            f"Why now  "
+            f"{fit(route.why_now, max(10, ui_width() - 9))}"
+        )
+
+        if route.prerequisites:
+            print("Prerequisite")
+
+            for item in route.prerequisites:
+                mark = (
+                    f"{GREEN}✓{RESET}"
+                    if item.satisfied
+                    else f"{YELLOW}•{RESET}"
+                )
+                print(
+                    f"  {mark} {item.skill_uid}"
+                    f" · {item.evidence_label}"
+                )
+        else:
+            print(
+                f"Prerequisite  {GRAY}none{RESET}"
+            )
+
+        if route.placement is not None:
+            placement = route.placement
+            print(
+                f"Lesson   {placement.lesson_uid or '—'}"
+            )
+            print(
+                f"Next     {placement.role}"
+            )
+            print(
+                f"Problem  {placement.problem_id}"
+                f" · {fit(placement.title, max(10, ui_width() - 12))}"
+            )
+        else:
+            print(
+                f"{YELLOW}"
+                "Next     Published Placement 不足"
+                f"{RESET}"
+            )
+
+        return
+
+    if route.blocked_skill is not None:
+        print(
+            f"{YELLOW}{BOLD}"
+            "New Learning · BLOCKED"
+            f"{RESET}"
+        )
+        print(
+            f"{WHITE}"
+            f"{route.blocked_skill.uid}"
+            " · "
+            f"{route.blocked_skill.name}"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            f"{fit(route.why_now, ui_width())}"
+            f"{RESET}"
+        )
+
+        for item in route.blocked_by:
+            print(
+                f"  {RED}✕{RESET} "
+                f"{item.skill_uid}"
+                f" · {item.evidence_label}"
+            )
+
+        return
+
+    if route.route_complete:
+        print(
+            f"{GREEN}"
+            "✓ Required route 已達 B4 start threshold"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            f"{fit(route.why_now, ui_width())}"
+            f"{RESET}"
+        )
+
+
+def _start_new_learning(
+    route,
+    current_filename: str | None,
+):
+    clear()
+    heading("開始 New Learning")
+    print()
+
+    _print_new_learning_summary(
+        route
+    )
+
+    placement = route.placement
+
+    if placement is None:
+        print()
+        print(
+            f"{YELLOW}"
+            "⚠ 沒有可安全啟動的 Published Placement。"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            "不從 legacy Tags 或題名猜題；"
+            "請先修正 Published Curriculum。"
+            f"{RESET}"
+        )
+        pause()
+        return current_filename
+
+    print()
+    rule()
+    print()
+
+    if placement.role == "Worked Example":
+        print(
+            f"{YELLOW}"
+            "本次 Placement 是 Worked Example。"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            "先依 Lesson 完成 prediction → walkthrough → "
+            "hide reference → reconstruction；"
+            "Worked 不建立獨立 Gate Evidence。"
+            f"{RESET}"
+        )
+        pause()
+        return current_filename
+
+    if placement.role == "Transfer Challenge":
+        print(
+            f"{YELLOW}"
+            "Transfer Challenge：pre-attempt 不提供演算法名稱、"
+            "關鍵 observation 或完整 state list。"
+            f"{RESET}"
+        )
+        print()
+
+    try:
+        scratch = (
+            create_learning_scratch(
+                placement
+            )
+        )
+    except OSError as exc:
+        print(
+            f"{RED}"
+            f"✕ 無法建立 new-learning scratch：{exc}"
+            f"{RESET}"
+        )
+        pause()
+        return current_filename
+
+    opened = open_in_vscode(
+        scratch
+    )
+
+    if opened:
+        print(
+            f"{GREEN}"
+            "✓ 已開啟 B4 learning scratch"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            "完成外部 Judge 後回 Control Center 選「完成題目」；"
+            "Placement UID 會直接接回 EV-v1 outbox。"
+            f"{RESET}"
+        )
+    else:
+        print(
+            f"{RED}"
+            "✕ 無法在 VS Code 開啟 scratch"
+            f"{RESET}"
+        )
+
+    pause()
+    return str(scratch)
+
+
+def _start_adaptive_review(
+    candidate,
+    current_filename: str | None,
+):
+    placement = review_placement_for_skill(
+        candidate.skill_uid,
+        track=candidate.track,
+    )
+
+    clear()
+    heading("開始 Adaptive Review")
+    print()
+
+    print(
+        f"{WHITE}{BOLD}"
+        f"{skill_display_name(candidate.skill_uid)}"
+        f"{RESET}"
+    )
+    print(
+        f"Track   {candidate.track}"
+    )
+    print(
+        f"R       ≈ {candidate.retrievability:.0%}"
+    )
+    print(
+        f"到期    {candidate.due_on}"
+    )
+    print(
+        f"預估    {candidate.estimated_minutes} min"
+    )
+    print()
+
+    if placement is None:
+        print(
+            f"{YELLOW}"
+            "⚠ Published curriculum 尚無可用 Placement。"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            "不從舊 Tags 猜題；保留這個 Skill review 候選，"
+            "待 curriculum 修復後再選代表題。"
+            f"{RESET}"
+        )
+        pause()
+        return current_filename
+
+    print(
+        f"題目    {placement.problem_id} · "
+        f"{fit(placement.title, max(10, ui_width() - 8))}"
+    )
+    print(
+        f"Role    {placement.role}"
+    )
+
+    if placement.url:
+        print(
+            f"Judge   {placement.url}"
+        )
+
+    if candidate.track == "Reading":
+        print()
+        print(
+            f"{YELLOW}"
+            "Reading review 不自動開啟舊 solution。"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            "請依題面先完成 trace / reasoning，"
+            "正式作答前不要執行程式驗證。"
+            f"{RESET}"
+        )
+        pause()
+        return current_filename
+
+    try:
+        scratch = create_review_scratch(
+            placement
+        )
+    except OSError as exc:
+        print()
+        print(
+            f"{RED}"
+            f"✕ 無法建立 retrieval scratch：{exc}"
+            f"{RESET}"
+        )
+        pause()
+        return current_filename
+
+    opened = open_in_vscode(
+        scratch
+    )
+
+    print()
+
+    if opened:
+        print(
+            f"{GREEN}"
+            "✓ 已開啟空白 retrieval scratch"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            "不會打開歷史 solution；完成 Judge 後"
+            "回控制中心選「複習題目」。"
+            f"{RESET}"
+        )
+    else:
+        print(
+            f"{RED}"
+            "✕ 無法在 VS Code 開啟 scratch"
+            f"{RESET}"
+        )
+
+    pause()
+
+    return str(scratch)
+
+
 def today_view(current_filename: str | None):
     snapshot = adaptive_today_snapshot()
     plan = snapshot["plan"]
+    route = snapshot[
+        "new_learning"
+    ]
 
     clear()
     heading("今日學習")
@@ -3178,81 +3731,125 @@ def today_view(current_filename: str | None):
     rule()
     print()
 
-    if snapshot["memory_count"] == 0:
+    if snapshot[
+        "curriculum_blocker"
+    ]:
         print(
-            f"{GREEN}"
-            "✓ 尚無 adaptive Skill memory"
+            f"{YELLOW}{BOLD}"
+            "New Learning · BLOCKED"
             f"{RESET}"
         )
-        print()
         print(
             f"{GRAY}"
-            "目前應把容量用在新學習與正式 Practice；"
-            "完成有 Published Placement 的題目後，"
-            "系統會開始建立 Skill × Track retention state。"
+            f"{fit(snapshot['curriculum_blocker'], ui_width())}"
             f"{RESET}"
         )
-        pause()
-        return current_filename
+    else:
+        _print_new_learning_summary(
+            route
+        )
 
-    if snapshot["due_count"] == 0:
-        print(
-            f"{GREEN}"
-            "✓ 今天沒有 Skill 到達 review threshold"
-            f"{RESET}"
-        )
+    if plan.selected:
+        print()
+        rule()
         print()
         print(
-            f"{GRAY}"
-            "不需要為了維持 streak 額外刷舊題；"
-            "直接進行新學習／Transfer。"
+            f"{YELLOW}{BOLD}"
+            f"Adaptive Review · {len(plan.selected)}"
             f"{RESET}"
         )
-        pause()
-        return current_filename
 
-    if not plan.selected:
-        print(
-            f"{GREEN}"
-            "✓ 今日 review budget 不安排專門複習"
-            f"{RESET}"
-        )
-        print()
-        print(
-            f"{GRAY}"
-            f"目前有 {snapshot['due_count']} 個候選，"
-            "但都超出本次 review 容量；"
-            "已安全延後，不形成 backlog debt。"
-            f"{RESET}"
-        )
-        pause()
-        return current_filename
+        for candidate in plan.selected:
+            print(
+                f"  {candidate.skill_uid}"
+                f" × {candidate.track}"
+                f" · R≈{candidate.retrievability:.0%}"
+                f" · {candidate.estimated_minutes} min"
+            )
 
     options = []
 
-    for candidate in plan.selected:
-        label = skill_display_name(
-            candidate.skill_uid
-        )
-
-        detail = (
-            f"{candidate.track}"
-            f" · R≈{candidate.retrievability:.0%}"
-            f" · due {candidate.due_on:%m/%d}"
-            f" · {candidate.estimated_minutes} min"
-        )
-
+    if (
+        route is not None
+        and route.skill is not None
+        and route.placement is not None
+    ):
         options.append(
             {
-                "label": label,
-                "detail": detail,
+                "label": (
+                    "新學習 · "
+                    f"{route.skill.uid}"
+                    " · "
+                    f"{route.placement.role}"
+                ),
+                "detail": (
+                    f"{route.placement.lesson_uid}"
+                    f" · {route.placement.problem_id}"
+                ),
                 "enabled": True,
+                "kind": "new",
+                "route": route,
+            }
+        )
+
+    for candidate in plan.selected:
+        options.append(
+            {
+                "label": (
+                    "複習 · "
+                    f"{candidate.skill_uid}"
+                    f" × {candidate.track}"
+                ),
+                "detail": (
+                    f"R≈{candidate.retrievability:.0%}"
+                    f" · due {candidate.due_on:%m/%d}"
+                    f" · {candidate.estimated_minutes} min"
+                ),
+                "enabled": True,
+                "kind": "review",
                 "candidate": candidate,
             }
         )
 
+    if not options:
+        print()
+        rule()
+        print()
+
+        if (
+            route is not None
+            and route.route_complete
+        ):
+            print(
+                f"{GRAY}"
+                "目前沒有新的 Required Skill start action；"
+                "這不代表 RR/IR readiness 已通過。"
+                f"{RESET}"
+            )
+        elif (
+            route is not None
+            and route.blocked_skill
+            is not None
+        ):
+            print(
+                f"{GRAY}"
+                "先建立上列 prerequisite Evidence；"
+                "系統不會以 Skill Status 或單次 AC 強制解鎖。"
+                f"{RESET}"
+            )
+        else:
+            print(
+                f"{GRAY}"
+                "目前沒有可安全啟動的 Today action。"
+                f"{RESET}"
+            )
+
+        pause()
+        return current_filename
+
+    print()
     selected = choose_menu(
-        "今日學習 · Adaptive Review",
+        "今日學習 · 下一步",
         options,
         main=False,
     )
@@ -3260,131 +3857,21 @@ def today_view(current_filename: str | None):
     if selected is None:
         return current_filename
 
-    candidate = options[
+    option = options[
         selected
-    ]["candidate"]
+    ]
 
-    placement = review_placement_for_skill(
-        candidate.skill_uid,
-        track=candidate.track,
+    if option["kind"] == "new":
+        return _start_new_learning(
+            option["route"],
+            current_filename,
+        )
+
+    return _start_adaptive_review(
+        option["candidate"],
+        current_filename,
     )
 
-    clear()
-    heading("開始 Adaptive Review")
-    print()
-
-    print(
-        f"{WHITE}{BOLD}"
-        f"{skill_display_name(candidate.skill_uid)}"
-        f"{RESET}"
-    )
-    print(
-        f"Track   {candidate.track}"
-    )
-    print(
-        f"R       ≈ {candidate.retrievability:.0%}"
-    )
-    print(
-        f"到期    {candidate.due_on}"
-    )
-    print(
-        f"預估    {candidate.estimated_minutes} min"
-    )
-    print()
-
-    if placement is None:
-        print(
-            f"{YELLOW}"
-            "⚠ Published curriculum 尚無可用 Placement。"
-            f"{RESET}"
-        )
-        print(
-            f"{GRAY}"
-            "不從舊 Tags 猜題；保留這個 Skill review 候選，"
-            "待 curriculum publish 後再選代表題。"
-            f"{RESET}"
-        )
-        pause()
-        return current_filename
-
-    print(
-        f"題目    {placement.problem_id} · "
-        f"{fit(placement.title, max(10, ui_width() - 8))}"
-    )
-    print(
-        f"Role    {placement.role}"
-    )
-
-    if placement.url:
-        print(
-            f"Judge   {placement.url}"
-        )
-
-    if candidate.track == "Reading":
-        print()
-        print(
-            f"{YELLOW}"
-            "Reading review 不自動開啟舊 solution。"
-            f"{RESET}"
-        )
-        print(
-            f"{GRAY}"
-            "請依題面先完成 trace / reasoning，"
-            "正式作答前不要執行程式驗證。"
-            f"{RESET}"
-        )
-        pause()
-        return current_filename
-
-    try:
-        path = create_review_scratch(
-            placement
-        )
-    except OSError as exc:
-        print()
-        print(
-            f"{RED}"
-            f"✕ 無法建立 retrieval scratch：{exc}"
-            f"{RESET}"
-        )
-        pause()
-        return current_filename
-
-    result = subprocess.run(
-        [
-            "code",
-            "--reuse-window",
-            str(path),
-        ],
-        cwd=ROOT,
-        stdout=subprocess.DEVNULL,
-        stderr=subprocess.DEVNULL,
-    )
-
-    print()
-
-    if result.returncode == 0:
-        print(
-            f"{GREEN}"
-            "✓ 已開啟空白 retrieval scratch"
-            f"{RESET}"
-        )
-        print(
-            f"{GRAY}"
-            "不會打開歷史 solution；完成 Judge 後"
-            "回控制中心選「複習題目」。"
-            f"{RESET}"
-        )
-    else:
-        print(
-            f"{RED}"
-            "✕ 無法在 VS Code 開啟 scratch"
-            f"{RESET}"
-        )
-
-    pause()
-
-    return str(path)
 
 def open_note(problem) -> None:
     pid = problem["id"]

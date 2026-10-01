@@ -187,6 +187,64 @@ class AdaptiveTodayV23Test(unittest.TestCase):
             18,
         )
 
+    def test_today_surfaces_new_learning_even_without_memory(self):
+        self.write_curriculum()
+
+        with (
+            patch.object(
+                control,
+                "OUTBOX",
+                self.outbox,
+            ),
+            patch.object(
+                control,
+                "MEMORY",
+                self.memory,
+            ),
+            patch.object(
+                control,
+                "CURRICULUM",
+                RuntimeCurriculum(
+                    self.snapshot
+                ),
+            ),
+        ):
+            snapshot = (
+                control.adaptive_today_snapshot(
+                    on_date=dt.date(
+                        2026,
+                        10,
+                        1,
+                    ),
+                    total_capacity_minutes=60,
+                )
+            )
+
+        self.assertEqual(
+            snapshot["memory_count"],
+            0,
+        )
+        self.assertIsNotNone(
+            snapshot["new_learning"],
+        )
+        self.assertEqual(
+            snapshot[
+                "new_learning"
+            ].skill.uid,
+            "S22_Prefix_Sum",
+        )
+        self.assertEqual(
+            snapshot[
+                "new_learning"
+            ].status,
+            "Ready",
+        )
+        self.assertIsNone(
+            snapshot[
+                "curriculum_blocker"
+            ]
+        )
+
     def test_adaptive_today_reconciles_evidence_and_selects_due_skill(self):
         self.write_curriculum()
 
