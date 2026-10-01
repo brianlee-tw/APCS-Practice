@@ -3,6 +3,7 @@ import json
 import tempfile
 import unittest
 from pathlib import Path
+from types import SimpleNamespace
 from unittest.mock import patch
 
 from tools.adaptive_memory import MemoryPolicy
@@ -304,6 +305,68 @@ class AdaptiveTodayV23Test(unittest.TestCase):
         self.assertIn(
             "__PL-FRESH.cpp",
             path.name,
+        )
+
+    def test_current_problem_preserves_review_scratch_and_placement(self):
+        folder = self.runtime / "review" / "2026-10-01"
+        folder.mkdir(
+            parents=True,
+            exist_ok=True,
+        )
+        scratch = (
+            folder
+            / "b001__PL-FRESH.cpp"
+        )
+        scratch.write_text(
+            "int main() {}\n",
+            encoding="utf-8",
+        )
+
+        historical = (
+            self.root
+            / "solutions"
+            / "b001.cpp"
+        )
+
+        primary = SimpleNamespace(
+            path=historical,
+            title="Prefix Sum Transfer",
+        )
+        solution = SimpleNamespace(
+            path=historical,
+        )
+
+        row = (
+            "b001",
+            [solution],
+            primary,
+            None,
+            None,
+            None,
+        )
+
+        with patch.object(
+            control,
+            "all_rows",
+            return_value=[row],
+        ):
+            current = control.current_problem(
+                str(scratch)
+            )
+
+        self.assertEqual(
+            current["id"],
+            "b001",
+        )
+        self.assertEqual(
+            current["placement_uid"],
+            "PL-FRESH",
+        )
+        self.assertEqual(
+            Path(
+                current["path"]
+            ).resolve(),
+            scratch.resolve(),
         )
 
     def test_session_capacity_is_bounded(self):
