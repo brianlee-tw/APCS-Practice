@@ -1,3 +1,6 @@
+# APCS local runtime state / unsent durable outbox
+.apcs/
+
 # APCS / competitive-programming local artifacts
 **/.cph/
 .cph/
