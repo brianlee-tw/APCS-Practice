@@ -86,6 +86,258 @@ class RuntimeCurriculum:
 
         return value
 
+    def skill_importance(
+        self,
+        *,
+        target: str = "3+3",
+    ) -> dict[str, str]:
+        """Map published relevance into scheduler importance.
+
+        Unknown wording intentionally falls back to supporting rather than
+        inventing a stronger requirement.
+        """
+
+        data = self.load()
+        result: dict[str, str] = {}
+
+        for row in data.get(
+            "skills"
+        ) or []:
+            uid = str(
+                row.get(
+                    "uid",
+                    "",
+                )
+            ).strip()
+
+            if not uid:
+                continue
+
+            relevance = (
+                row.get(
+                    "relevance"
+                )
+                or {}
+            )
+
+            raw = str(
+                relevance.get(
+                    target,
+                    "",
+                )
+            ).strip().lower()
+
+            if any(
+                token in raw
+                for token in (
+                    "required",
+                    "critical",
+                    "core",
+                )
+            ):
+                value = "required"
+            elif any(
+                token in raw
+                for token in (
+                    "extension",
+                    "optional",
+                )
+            ):
+                value = "extension"
+            else:
+                value = "supporting"
+
+            result[uid] = value
+
+        return result
+
+    def all_placements(
+        self,
+    ) -> tuple[
+        PlacementContext,
+        ...,
+    ]:
+        data = self.load()
+        problems = {
+            str(
+                row.get(
+                    "pb_uid",
+                    "",
+                )
+            ).strip(): row
+            for row in (
+                data.get(
+                    "problems"
+                )
+                or []
+            )
+            if str(
+                row.get(
+                    "pb_uid",
+                    "",
+                )
+            ).strip()
+        }
+
+        result = []
+
+        for placement in (
+            data.get(
+                "placements"
+            )
+            or []
+        ):
+            pb_uid = str(
+                placement.get(
+                    "pb_uid",
+                    "",
+                )
+            ).strip()
+            problem = problems.get(
+                pb_uid
+            )
+
+            if problem is None:
+                continue
+
+            result.append(
+                PlacementContext(
+                    placement_uid=str(
+                        placement.get(
+                            "placement_uid",
+                            "",
+                        )
+                    ).strip(),
+                    pb_uid=pb_uid,
+                    problem_id=str(
+                        problem.get(
+                            "problem_id",
+                            "",
+                        )
+                    ).strip().lower(),
+                    title=str(
+                        problem.get(
+                            "title",
+                            "",
+                        )
+                    ).strip(),
+                    difficulty=str(
+                        problem.get(
+                            "difficulty",
+                            "",
+                        )
+                    ).strip(),
+                    primary_skill=str(
+                        placement.get(
+                            "primary_skill",
+                            "",
+                        )
+                    ).strip(),
+                    supporting_skills=tuple(
+                        str(item).strip()
+                        for item in (
+                            placement.get(
+                                "supporting_skills"
+                            )
+                            or []
+                        )
+                        if str(item).strip()
+                    ),
+                    role=str(
+                        placement.get(
+                            "role",
+                            "",
+                        )
+                    ).strip(),
+                    lesson_uid=str(
+                        placement.get(
+                            "lesson_uid",
+                            "",
+                        )
+                    ).strip(),
+                    lesson_order=(
+                        placement.get(
+                            "lesson_order"
+                        )
+                    ),
+                )
+            )
+
+        return tuple(result)
+
+    def review_placement_for_skill(
+        self,
+        skill_uid: str,
+        *,
+        exclude_problem_ids: (
+            set[str]
+            | None
+        ) = None,
+    ) -> PlacementContext | None:
+        """Pick a deterministic representative Implementation review item.
+
+        Prefer transfer/core placements and, when possible, avoid the most
+        recently used Problem.  Falling back to a seen Problem is allowed when
+        the published curriculum has no alternative.
+        """
+
+        skill_uid = str(
+            skill_uid
+            or ""
+        ).strip()
+        exclude = {
+            str(item).strip().lower()
+            for item in (
+                exclude_problem_ids
+                or set()
+            )
+        }
+
+        candidates = [
+            item
+            for item in self.all_placements()
+            if item.primary_skill
+            == skill_uid
+        ]
+
+        if not candidates:
+            return None
+
+        role_rank = {
+            "Transfer Challenge": 0,
+            "Core Independent": 1,
+            "Guided Drill": 2,
+            "Worked Example": 3,
+            "Mock": 4,
+        }
+
+        candidates.sort(
+            key=lambda item: (
+                role_rank.get(
+                    item.role,
+                    99,
+                ),
+                item.lesson_order
+                if item.lesson_order
+                is not None
+                else float("inf"),
+                item.placement_uid,
+            )
+        )
+
+        fresh = [
+            item
+            for item in candidates
+            if item.problem_id
+            not in exclude
+        ]
+
+        return (
+            fresh[0]
+            if fresh
+            else candidates[0]
+        )
+
     def placements_for_problem(
         self,
         problem_id: str,
