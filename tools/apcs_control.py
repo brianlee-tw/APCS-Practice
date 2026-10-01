@@ -252,7 +252,7 @@ def current_problem(filename: str | None):
                     for solution in row[1]
                     if solution.path.resolve() == resolved
                 ),
-                row[2].path,
+                resolved,
             )
 
             return {
