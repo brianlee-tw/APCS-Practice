@@ -25,9 +25,11 @@ def envelope(
     novelty="transfer",
     skill_uid="S22_Prefix_Sum",
     track="Implementation",
+    minutes=12,
+    problem_id="a693",
 ):
     return build_envelope(
-        problem_id="a693",
+        problem_id=problem_id,
         pb_uid="PB-001",
         started_at=None,
         finished_at=finished_at,
@@ -36,7 +38,7 @@ def envelope(
         assistance=assistance,
         independent=independent,
         attempt_count=1,
-        active_minutes=12,
+        active_minutes=minutes,
         timed=False,
         novelty=novelty,
         activity="Review",
@@ -327,6 +329,122 @@ class SkillMemoryStoreV23Test(unittest.TestCase):
             ).date(),
         )
 
+
+    def test_review_plan_respects_capacity_with_large_backlog(self):
+        items = [
+            envelope(
+                writeback_id=f"wb_{index:03d}",
+                finished_at=DAY0,
+                skill_uid=f"S{index:03d}",
+                minutes=6,
+                problem_id=f"p{index:03d}",
+            )
+            for index in range(100)
+        ]
+
+        plan = self.store.review_plan(
+            items,
+            on_date=(
+                DAY0
+                + dt.timedelta(days=200)
+            ).date(),
+            total_capacity_minutes=60,
+        )
+
+        self.assertEqual(
+            plan.budget_minutes,
+            18,
+        )
+        self.assertEqual(
+            plan.selected_minutes,
+            18,
+        )
+        self.assertEqual(
+            len(plan.selected),
+            3,
+        )
+        self.assertEqual(
+            len(plan.deferred),
+            97,
+        )
+
+    def test_review_plan_uses_recent_single_claim_time_estimate(self):
+        items = [
+            envelope(
+                writeback_id="wb1",
+                finished_at=DAY0,
+                minutes=8,
+            ),
+            envelope(
+                writeback_id="wb2",
+                finished_at=(
+                    DAY0
+                    + dt.timedelta(days=20)
+                ),
+                minutes=12,
+            ),
+            envelope(
+                writeback_id="wb3",
+                finished_at=(
+                    DAY0
+                    + dt.timedelta(days=50)
+                ),
+                minutes=10,
+            ),
+        ]
+
+        plan = self.store.review_plan(
+            items,
+            on_date=(
+                DAY0
+                + dt.timedelta(days=500)
+            ).date(),
+            total_capacity_minutes=60,
+        )
+
+        self.assertEqual(
+            len(plan.selected),
+            1,
+        )
+        self.assertEqual(
+            plan.selected[0]
+            .estimated_minutes,
+            10,
+        )
+
+    def test_latest_problem_by_skill_track_is_derived(self):
+        items = [
+            envelope(
+                writeback_id="wb1",
+                finished_at=DAY0,
+                problem_id="a001",
+            ),
+            envelope(
+                writeback_id="wb2",
+                finished_at=(
+                    DAY0
+                    + dt.timedelta(days=9)
+                ),
+                problem_id="a002",
+            ),
+        ]
+
+        latest = (
+            self.store
+            .latest_problem_by_key(
+                items
+            )
+        )
+
+        self.assertEqual(
+            latest[
+                (
+                    "S22_Prefix_Sum",
+                    "Implementation",
+                )
+            ],
+            "a002",
+        )
 
 if __name__ == "__main__":
     unittest.main()
