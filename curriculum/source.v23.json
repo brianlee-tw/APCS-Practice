@@ -1,0 +1,4470 @@
+{
+  "schema_version": "v2.3-authoring-1",
+  "curriculum_version": "2026-10-01-publish-1",
+  "skills": [
+    {
+      "uid": "S01_IO",
+      "name": "I/O、型別與運算式",
+      "unit": "U-FND",
+      "cl": "CL1 基礎語法",
+      "path_stage": "Foundation",
+      "path_order": 1,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [],
+      "relevance": {
+        "3+3": "Required",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解 C++17 基本型別、運算式、整數除法/overflow、I/O 與基礎 bitwise 語意。",
+      "implementation_requirement": "能獨立完成正確輸入輸出、型別選擇與基本運算，避免格式與 overflow 錯誤。",
+      "recommended_problem_types": "I/O transformation / expression trace / overflow / formatting / basic bitwise",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S02_Conditionals",
+      "name": "條件判斷",
+      "unit": "U-FND",
+      "cl": "CL1 基礎語法",
+      "path_stage": "Foundation",
+      "path_order": 2,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S01_IO"
+      ],
+      "relevance": {
+        "3+3": "Required",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解 if/else、布林條件、分支覆蓋與互斥/優先順序。",
+      "implementation_requirement": "能將題意條件轉成完整分支並處理邊界與重疊條件。",
+      "recommended_problem_types": "branching / classification / condition trace / boundary logic",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S03_Loops",
+      "name": "迴圈",
+      "unit": "U-FND",
+      "cl": "CL1 基礎語法",
+      "path_stage": "Foundation",
+      "path_order": 3,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S02_Conditionals"
+      ],
+      "relevance": {
+        "3+3": "Required",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解 for/while、nested loops、loop invariant、迭代次數與 off-by-one。",
+      "implementation_requirement": "能用迴圈完成掃描、累積、計數與巢狀資料處理並正確控制索引。",
+      "recommended_problem_types": "scan / counting / nested loop trace / off-by-one / accumulation",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S04_Functions",
+      "name": "函式、作用域與傳值／參考",
+      "unit": "U-FND",
+      "cl": "CL2 基礎實作",
+      "path_stage": "Foundation",
+      "path_order": 4,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S03_Loops"
+      ],
+      "relevance": {
+        "3+3": "Required",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解函式分解、scope、parameter、return、value/reference 對狀態的影響。",
+      "implementation_requirement": "能把重複邏輯拆成函式並正確傳遞/修改資料。",
+      "recommended_problem_types": "function trace / modular implementation / scope bug / pass-by-reference",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S05_Array",
+      "name": "Array",
+      "unit": "U-DAT",
+      "cl": "CL2 基礎實作",
+      "path_stage": "Foundation",
+      "path_order": 5,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S03_Loops"
+      ],
+      "relevance": {
+        "3+3": "Required",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解連續索引資料、0-based index、固定大小與遍歷語意。",
+      "implementation_requirement": "能用 Array 完成讀取、掃描、統計、更新與邊界安全處理。",
+      "recommended_problem_types": "1D array scan / frequency / index mapping / boundary",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S06_Vector",
+      "name": "Vector",
+      "unit": "U-DAT",
+      "cl": "CL2 基礎實作",
+      "path_stage": "Foundation",
+      "path_order": 6,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S05_Array"
+      ],
+      "relevance": {
+        "3+3": "Required",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解 dynamic sequence、size/index、push/pop 與 traversal。",
+      "implementation_requirement": "能以 vector 儲存與處理不定長序列，正確操作索引與元素。",
+      "recommended_problem_types": "sequence processing / dynamic input / transformation / indexing",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S07_String",
+      "name": "String",
+      "unit": "U-DAT",
+      "cl": "CL2 基礎實作",
+      "path_stage": "Foundation",
+      "path_order": 7,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S03_Loops"
+      ],
+      "relevance": {
+        "3+3": "Required",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解 string 的字元索引、長度、substring 與文字轉換語意。",
+      "implementation_requirement": "能獨立完成字串掃描、解析、重組、計數與邊界處理。",
+      "recommended_problem_types": "string scan / decode / transform / parsing-lite / frequency",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S34_Matrix_2D",
+      "name": "Matrix / 2D Data",
+      "unit": "U-DAT",
+      "cl": "CL2 基礎實作",
+      "path_stage": "Foundation",
+      "path_order": 8,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S05_Array"
+      ],
+      "relevance": {
+        "3+3": "Required",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解 row/column index、2D traversal、neighborhood 與矩陣資料表示。",
+      "implementation_requirement": "能獨立完成 2D array/vector 的讀取、掃描、排序/統計與 grid simulation。",
+      "recommended_problem_types": "2D scan / grid simulation / row-column processing / matrix boundary",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S23_Simulation",
+      "name": "Simulation",
+      "unit": "U-DAT",
+      "cl": "CL2 基礎實作",
+      "path_stage": "Foundation",
+      "path_order": 9,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S03_Loops",
+        "S05_Array"
+      ],
+      "relevance": {
+        "3+3": "Required",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解 state、transition、event/order 與逐步流程模擬。",
+      "implementation_requirement": "能把題目規則轉成可驗證 state update，處理 1D/2D 流程與邊界。",
+      "recommended_problem_types": "process simulation / state machine / grid simulation / event sequence",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S12_Brute_Force",
+      "name": "Brute Force / Baseline",
+      "unit": "U-PSV",
+      "cl": "CL2 基礎實作",
+      "path_stage": "APCS 3+3 Core",
+      "path_order": 10,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S03_Loops",
+        "S05_Array"
+      ],
+      "relevance": {
+        "3+3": "Required",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解先建立可行 baseline，再用 constraints 與 bottleneck 判斷是否需要優化。",
+      "implementation_requirement": "能寫出正確 brute-force/baseline，估算工作量並作為優化比較基準。",
+      "recommended_problem_types": "enumeration / baseline / constraint-to-complexity / bottleneck diagnosis",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S30_Complexity",
+      "name": "Complexity Analysis",
+      "unit": "U-PSV",
+      "cl": "CL2 基礎實作",
+      "path_stage": "APCS 3+3 Core",
+      "path_order": 11,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S12_Brute_Force"
+      ],
+      "relevance": {
+        "3+3": "Required",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解 operation counting、Big-O、input size 與常見時間/空間瓶頸。",
+      "implementation_requirement": "能由 constraints 判斷方法是否可行，說明自己程式的主要 time/space complexity。",
+      "recommended_problem_types": "operation count / TLE diagnosis / compare algorithms / constraint analysis",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S14_Math",
+      "name": "Math Modeling",
+      "unit": "U-PSV",
+      "cl": "CL2 基礎實作",
+      "path_stage": "APCS 3+3 Core",
+      "path_order": 12,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S01_IO",
+        "S02_Conditionals"
+      ],
+      "relevance": {
+        "3+3": "Supporting",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "能把文字關係轉成變數、式子、座標/計數等可計算模型。",
+      "implementation_requirement": "能選擇合適數值表示並將推導轉成穩健程式。",
+      "recommended_problem_types": "formula modeling / counting / coordinate reasoning / arithmetic simulation",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S15_Number_Theory",
+      "name": "Number Theory 基礎",
+      "unit": "U-PSV",
+      "cl": "CL2 基礎實作",
+      "path_stage": "APCS 3+3 Core",
+      "path_order": 13,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S03_Loops",
+        "S14_Math"
+      ],
+      "relevance": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "conceptual_requirement": "理解 gcd、質因數/倍數、模運算等基礎整數性質與適用情境。",
+      "implementation_requirement": "能正確實作常見基礎數論操作並控制型別/複雜度。",
+      "recommended_problem_types": "gcd / divisibility / modular arithmetic / factor counting",
+      "evidence_suitability": "Supporting only"
+    },
+    {
+      "uid": "S39_Code_Reasoning",
+      "name": "Program Tracing / Debugging / Testing",
+      "unit": "U-PSV",
+      "cl": "CL2 基礎實作",
+      "path_stage": "APCS 3+3 Core",
+      "path_order": 13.5,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S01_IO",
+        "S02_Conditionals",
+        "S03_Loops",
+        "S05_Array"
+      ],
+      "relevance": {
+        "3+3": "Required",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "能逐步追蹤變數、控制流程與容器狀態；辨認第一個 divergence、root cause、boundary/invariant 破壞與測資覆蓋缺口。",
+      "implementation_requirement": "能用最小反例、trace、boundary cases 與 targeted tests 定位並修正自己的 C++17 程式，不靠完整答案替換。",
+      "recommended_problem_types": "code trace / output prediction / bug hunt / code completion / boundary testing / wrong-answer diagnosis / mixed implementation debugging",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S08_Struct",
+      "name": "Struct / Pair 建模",
+      "unit": "U-ORD",
+      "cl": "CL2 基礎實作",
+      "path_stage": "APCS 3+3 Core",
+      "path_order": 14,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S04_Functions",
+        "S05_Array"
+      ],
+      "relevance": {
+        "3+3": "Required",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解 pair/struct 將多欄位資料組成一個 record，以及比較/排序 key 的意義。",
+      "implementation_requirement": "能建立結構化紀錄並依指定 key 排序、掃描與輸出。",
+      "recommended_problem_types": "record modeling / multi-key sort / structured data",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S09_Sorting",
+      "name": "Sorting",
+      "unit": "U-ORD",
+      "cl": "CL2 基礎實作",
+      "path_stage": "APCS 3+3 Core",
+      "path_order": 15,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S05_Array",
+        "S30_Complexity"
+      ],
+      "relevance": {
+        "3+3": "Required",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解排序後資料關係、comparator 與排序成本。",
+      "implementation_requirement": "能使用 sort 與自訂比較完成資料整理，並利用排序後結構解題。",
+      "recommended_problem_types": "sorting / custom comparator / rank / adjacent relation",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S24_Map_Set",
+      "name": "Map / Set",
+      "unit": "U-ORD",
+      "cl": "CL3 核心演算法",
+      "path_stage": "APCS 3+3 Core",
+      "path_order": 16,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S05_Array",
+        "S09_Sorting"
+      ],
+      "relevance": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "conceptual_requirement": "理解 key→value / uniqueness / ordered associative container 的語意與成本。",
+      "implementation_requirement": "能用 map/set 完成 frequency、dedupe、lookup 等資料處理，並知道何時 array/vector 更合適。",
+      "recommended_problem_types": "frequency map / dedup / lookup / ordered keys",
+      "evidence_suitability": "Supporting only"
+    },
+    {
+      "uid": "S22_Prefix_Sum",
+      "name": "Prefix Sum",
+      "unit": "U-PFX",
+      "cl": "CL3 核心演算法",
+      "path_stage": "Bridge｜3+3→5+5",
+      "path_order": 17,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S05_Array",
+        "S30_Complexity"
+      ],
+      "relevance": {
+        "3+3": "Not Required",
+        "5+5": "Bridge"
+      },
+      "conceptual_requirement": "理解 preprocessing：把重複區間加總轉成 prefix state 差值，並能自行推導索引關係。",
+      "implementation_requirement": "能正確建立 prefix array、處理 l/r 邊界與多次 range query。",
+      "recommended_problem_types": "range sum / prefix frequency / repeated query / invariant derivation",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S31_Difference",
+      "name": "Difference Array",
+      "unit": "U-PFX",
+      "cl": "CL3 核心演算法",
+      "path_stage": "Bridge｜3+3→5+5",
+      "path_order": 18,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S22_Prefix_Sum"
+      ],
+      "relevance": {
+        "3+3": "Not Required",
+        "5+5": "Bridge"
+      },
+      "conceptual_requirement": "理解 range update 可轉成端點事件，再以 prefix 重建最終狀態。",
+      "implementation_requirement": "能正確標記 l/r+1、重建 array 並處理多次區間更新。",
+      "recommended_problem_types": "range updates / event endpoints / difference+prefix",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S13_Two_Pointers",
+      "name": "Two Pointers / Sliding Window",
+      "unit": "U-WIN",
+      "cl": "CL3 核心演算法",
+      "path_stage": "Bridge｜3+3→5+5",
+      "path_order": 19,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S05_Array",
+        "S30_Complexity"
+      ],
+      "relevance": {
+        "3+3": "Not Required",
+        "5+5": "Bridge"
+      },
+      "conceptual_requirement": "理解左右指標單調移動、window invariant 與何時可避免重複掃描。",
+      "implementation_requirement": "能維護 two-pointer/window 狀態並證明每個元素移動次數受限。",
+      "recommended_problem_types": "two pointers / fixed-variable window / monotonic window / pair constraints",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S10_Binary_Search",
+      "name": "Binary Search",
+      "unit": "U-BIN",
+      "cl": "CL3 核心演算法",
+      "path_stage": "Bridge｜3+3→5+5",
+      "path_order": 20,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S09_Sorting",
+        "S30_Complexity"
+      ],
+      "relevance": {
+        "3+3": "Supporting",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解有序性、搜尋區間不變量、exact/boundary search 與單調 predicate。",
+      "implementation_requirement": "能正確寫出 binary search，避免邊界/overflow/termination 錯誤，並能建模 answer search。",
+      "recommended_problem_types": "exact search / lower-upper boundary / monotonic predicate / answer search",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S16_Recursion",
+      "name": "Recursion / Divide & Conquer",
+      "unit": "U-REC",
+      "cl": "CL3 核心演算法",
+      "path_stage": "Bridge｜3+3→5+5",
+      "path_order": 21,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S04_Functions",
+        "S30_Complexity"
+      ],
+      "relevance": {
+        "3+3": "Supporting",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解 base case、recursive state、call stack、divide→solve→combine 與 recursion tree。",
+      "implementation_requirement": "能設計 terminating recursion / basic divide-and-conquer，追蹤狀態並避免重複/爆棧。",
+      "recommended_problem_types": "recursive trace / divide-and-conquer / tree recursion / recursive simulation",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S32_Backtracking",
+      "name": "Backtracking",
+      "unit": "U-REC",
+      "cl": "CL3 核心演算法",
+      "path_stage": "Bridge｜3+3→5+5",
+      "path_order": 22,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S05_Array",
+        "S16_Recursion"
+      ],
+      "relevance": {
+        "3+3": "Not Required",
+        "5+5": "Bridge"
+      },
+      "conceptual_requirement": "理解搜尋樹、choice/state、undo 與 pruning 對狀態空間的影響。",
+      "implementation_requirement": "能寫出基本 backtracking，正確恢復狀態並用 constraint 剪枝。",
+      "recommended_problem_types": "permutation/combination search / constraint search / pruning",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S29_Bitmask",
+      "name": "Bitmask / Bitwise State",
+      "unit": "U-REC",
+      "cl": "CL5 進階競程",
+      "path_stage": "Bridge｜3+3→5+5",
+      "path_order": 23,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S01_IO",
+        "S32_Backtracking"
+      ],
+      "relevance": {
+        "3+3": "Not Required",
+        "5+5": "Supporting"
+      },
+      "conceptual_requirement": "理解 bit set/clear/check 與以 bitmask 表示有限集合/狀態。",
+      "implementation_requirement": "能正確枚舉 subset/state 並控制位移、型別與狀態空間。",
+      "recommended_problem_types": "subset enumeration / state compression intro / bit operations",
+      "evidence_suitability": "Supporting only"
+    },
+    {
+      "uid": "S38_Parsing",
+      "name": "Expression Parsing / Recursive Descent",
+      "unit": "U-REC",
+      "cl": "CL3 核心演算法",
+      "path_stage": "Bridge｜3+3→5+5",
+      "path_order": 23.5,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S07_String",
+        "S16_Recursion"
+      ],
+      "relevance": {
+        "3+3": "Not Required",
+        "5+5": "Supporting"
+      },
+      "conceptual_requirement": "理解 expression grammar、operator precedence、nested structure 與 recursive descent 的 state progression。",
+      "implementation_requirement": "能解析基本巢狀表達式/語法結構並正確處理 token、優先序與遞迴終止。",
+      "recommended_problem_types": "expression parsing / nested syntax / recursive descent / parser trace",
+      "evidence_suitability": "Supporting only"
+    },
+    {
+      "uid": "S17_Stack_Queue",
+      "name": "Stack / Queue / Deque",
+      "unit": "U-DS",
+      "cl": "CL3 核心演算法",
+      "path_stage": "Bridge｜3+3→5+5",
+      "path_order": 24,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S05_Array"
+      ],
+      "relevance": {
+        "3+3": "Supporting",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解 LIFO/FIFO/deque 操作語意、成本與適合的狀態處理順序。",
+      "implementation_requirement": "能使用 stack/queue/deque 完成順序控制、括號/流程、BFS 前置等模型。",
+      "recommended_problem_types": "stack simulation / queue process / deque / bracket-state / monotonic-structure intro",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S33_Priority_Queue",
+      "name": "Priority Queue",
+      "unit": "U-DS",
+      "cl": "CL4 綜合實作",
+      "path_stage": "Bridge｜3+3→5+5",
+      "path_order": 25,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S09_Sorting",
+        "S17_Stack_Queue"
+      ],
+      "relevance": {
+        "3+3": "Not Required",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解 priority-based frontier、heap 操作與 top/min/max selection 成本。",
+      "implementation_requirement": "能以 priority_queue 處理動態最值、排程/frontier 類問題並正確定義 comparator。",
+      "recommended_problem_types": "dynamic min/max / scheduling / best-first frontier / heap operations",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S21_Graph_Tree",
+      "name": "Graph / Tree Modeling",
+      "unit": "U-GPH",
+      "cl": "CL3 核心演算法",
+      "path_stage": "APCS 5+5 Core",
+      "path_order": 26,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S05_Array",
+        "S17_Stack_Queue"
+      ],
+      "relevance": {
+        "3+3": "Not Required",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解 vertex/edge、directed/undirected、tree、adjacency list 與圖模型選擇。",
+      "implementation_requirement": "能把關係資料轉為 graph/tree representation，正確建立 adjacency 並配合 traversal。",
+      "recommended_problem_types": "graph modeling / tree modeling / adjacency construction / relation-to-graph",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S18_DFS",
+      "name": "DFS",
+      "unit": "U-GPH",
+      "cl": "CL3 核心演算法",
+      "path_stage": "APCS 5+5 Core",
+      "path_order": 27,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S16_Recursion",
+        "S21_Graph_Tree"
+      ],
+      "relevance": {
+        "3+3": "Not Required",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解 DFS 的 visited/state、連通性、遞迴/顯式 stack 與遍歷樹。",
+      "implementation_requirement": "能以 adjacency list 實作 DFS，處理 component/flood-fill/tree traversal。",
+      "recommended_problem_types": "connected components / flood fill / tree traversal / reachability",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S19_BFS",
+      "name": "BFS",
+      "unit": "U-GPH",
+      "cl": "CL3 核心演算法",
+      "path_stage": "APCS 5+5 Core",
+      "path_order": 28,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S17_Stack_Queue",
+        "S21_Graph_Tree"
+      ],
+      "relevance": {
+        "3+3": "Not Required",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解 BFS layer、queue frontier 與 unweighted shortest-path 性質。",
+      "implementation_requirement": "能以 adjacency/grid 實作 BFS，正確維護 visited/distance 與多層狀態。",
+      "recommended_problem_types": "unweighted shortest path / grid BFS / multi-source intro / reachability",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S11_Greedy",
+      "name": "Greedy",
+      "unit": "U-GRD",
+      "cl": "CL3 核心演算法",
+      "path_stage": "APCS 5+5 Core",
+      "path_order": 29,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S09_Sorting",
+        "S30_Complexity"
+      ],
+      "relevance": {
+        "3+3": "Not Required",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解 greedy choice、局部決策何時可延伸成全域正確，以及 counterexample / exchange reasoning。",
+      "implementation_requirement": "能從排序/選擇結構建立 greedy criterion，實作並說明 correctness。",
+      "recommended_problem_types": "interval/activity choice / ordering greedy / counterexample / exchange argument",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S20_DP",
+      "name": "Dynamic Programming",
+      "unit": "U-DP",
+      "cl": "CL3 核心演算法",
+      "path_stage": "APCS 5+5 Core",
+      "path_order": 30,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S12_Brute_Force",
+        "S16_Recursion",
+        "S30_Complexity"
+      ],
+      "relevance": {
+        "3+3": "Not Required",
+        "5+5": "Required"
+      },
+      "conceptual_requirement": "理解 DP 的 State → Transition → Base → Order → Answer，以及 overlapping subproblems。",
+      "implementation_requirement": "能從小型狀態推導 1D/2D DP，正確初始化、排序計算順序並分析複雜度。",
+      "recommended_problem_types": "1D DP / 2D DP / grid DP / sequence-state transfer",
+      "evidence_suitability": "Gate-grade"
+    },
+    {
+      "uid": "S35_LIS",
+      "name": "Longest Increasing Subsequence",
+      "unit": "U-DP",
+      "cl": "CL4 綜合實作",
+      "path_stage": "APCS 5+5 Core",
+      "path_order": 31,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S10_Binary_Search",
+        "S20_DP"
+      ],
+      "relevance": {
+        "3+3": "Not Required",
+        "5+5": "Supporting"
+      },
+      "conceptual_requirement": "理解 LIS 作為 sequence DP / monotonic optimization 的典型狀態模型。",
+      "implementation_requirement": "至少能完成 O(n²) LIS DP；進一步 O(n log n) 方法可作 transfer evidence。",
+      "recommended_problem_types": "sequence DP / LIS / monotonic optimization transfer",
+      "evidence_suitability": "Supporting only"
+    },
+    {
+      "uid": "S37_Offline_Order",
+      "name": "Offline Counting / Coordinate Compression",
+      "unit": "U-RNG",
+      "cl": "CL4 綜合實作",
+      "path_stage": "APCS 5+5 Core",
+      "path_order": 32,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S09_Sorting",
+        "S30_Complexity"
+      ],
+      "relevance": {
+        "3+3": "Not Required",
+        "5+5": "Supporting"
+      },
+      "conceptual_requirement": "理解 coordinate compression / offline ordering 是重新表達資料以降低狀態或查詢成本。",
+      "implementation_requirement": "能在 constraints 需要時壓縮座標、排序離線事件並保持原問題關係。",
+      "recommended_problem_types": "coordinate compression / offline queries / sweep-order counting",
+      "evidence_suitability": "Supporting only"
+    },
+    {
+      "uid": "S36_Range_Tree",
+      "name": "Fenwick Tree / Segment Tree 基礎",
+      "unit": "U-RNG",
+      "cl": "CL4 綜合實作",
+      "path_stage": "Extension",
+      "path_order": 33,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S05_Array",
+        "S30_Complexity"
+      ],
+      "relevance": {
+        "3+3": "Not Required",
+        "5+5": "Extension"
+      },
+      "conceptual_requirement": "理解動態區間查詢/更新的對數分解與聚合。",
+      "implementation_requirement": "能在題目需要時實作 Fenwick 或 Segment Tree 基礎操作；不作 universal 5+5 Gate。",
+      "recommended_problem_types": "point update / prefix-range query / dynamic range aggregate",
+      "evidence_suitability": "Extension evidence"
+    },
+    {
+      "uid": "S25_Dijkstra",
+      "name": "Dijkstra",
+      "unit": "U-GPH",
+      "cl": "CL4 綜合實作",
+      "path_stage": "Extension",
+      "path_order": 101,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S19_BFS",
+        "S33_Priority_Queue"
+      ],
+      "relevance": {
+        "3+3": "Not Required",
+        "5+5": "Extension"
+      },
+      "conceptual_requirement": "理解非負權重最短路、relaxation 與 priority queue frontier。",
+      "implementation_requirement": "能正確實作 Dijkstra 並分析 O((V+E)logV) 類成本與 stale entry。",
+      "recommended_problem_types": "weighted shortest path / relaxation / sparse graph",
+      "evidence_suitability": "Extension evidence"
+    },
+    {
+      "uid": "S26_Topo",
+      "name": "Topological Sort",
+      "unit": "U-GPH",
+      "cl": "CL4 綜合實作",
+      "path_stage": "Extension",
+      "path_order": 102,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S17_Stack_Queue",
+        "S21_Graph_Tree"
+      ],
+      "relevance": {
+        "3+3": "Not Required",
+        "5+5": "Extension"
+      },
+      "conceptual_requirement": "理解 DAG、indegree 與 partial order。",
+      "implementation_requirement": "能以 Kahn/DFS 類方法完成 topological ordering 並偵測 cycle。",
+      "recommended_problem_types": "dependency order / DAG / scheduling",
+      "evidence_suitability": "Extension evidence"
+    },
+    {
+      "uid": "S27_DSU",
+      "name": "DSU",
+      "unit": "U-GPH",
+      "cl": "CL4 綜合實作",
+      "path_stage": "Extension",
+      "path_order": 103,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S21_Graph_Tree"
+      ],
+      "relevance": {
+        "3+3": "Not Required",
+        "5+5": "Extension"
+      },
+      "conceptual_requirement": "理解 disjoint sets、representative、path compression / union by rank。",
+      "implementation_requirement": "能用 DSU 維護動態連通分量並正確處理 union/find。",
+      "recommended_problem_types": "dynamic connectivity / component merge / Kruskal support",
+      "evidence_suitability": "Extension evidence"
+    },
+    {
+      "uid": "S28_MST",
+      "name": "Minimum Spanning Tree",
+      "unit": "U-GPH",
+      "cl": "CL4 綜合實作",
+      "path_stage": "Extension",
+      "path_order": 104,
+      "tracks": [
+        "Implementation",
+        "Reading"
+      ],
+      "prerequisites": [
+        "S09_Sorting",
+        "S27_DSU"
+      ],
+      "relevance": {
+        "3+3": "Not Required",
+        "5+5": "Extension"
+      },
+      "conceptual_requirement": "理解 spanning tree、cut/edge choice 與 Kruskal/Prim 基本正確性直覺。",
+      "implementation_requirement": "能在已具 DSU/PQ 前置下實作基本 MST。",
+      "recommended_problem_types": "MST / network connection / Kruskal / Prim",
+      "evidence_suitability": "Extension evidence"
+    }
+  ],
+  "problems": [
+    {
+      "pb_uid": "PB-10",
+      "problem_id": "ZJ-q182",
+      "title": "q182 字串操作",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=q182",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DAT-02 Guided：練習 string index mapping 與逐步 transformation；先 A0 建立 index relation，再以 A1→A4 處理 boundary / output mapping。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-100",
+      "problem_id": "CF-580B",
+      "title": "Kefa and Company",
+      "source_platform": "Codeforces",
+      "judge_platform": "Codeforces",
+      "url": "https://codeforces.com/problemset/problem/580/B",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "Phase A 候選；Primary U-WIN（provisional）。Candidate concepts: sort + two pointers/sliding window, window sum, long long；secondary: U-ORD / U-PFX。Role / D / Skill relation 待 Phase B QA。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-101",
+      "problem_id": "CF-279B",
+      "title": "Books",
+      "source_platform": "Codeforces",
+      "judge_platform": "Codeforces",
+      "url": "https://codeforces.com/problemset/problem/279/B",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "Phase A 候選；Primary U-WIN（provisional）。Candidate concepts: two pointers, positive-sum window, maximum valid segment；secondary: U-PFX / U-BIN。Role / D / Skill relation 待 Phase B QA。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-102",
+      "problem_id": "CF-474B",
+      "title": "Worms",
+      "source_platform": "Codeforces",
+      "judge_platform": "Codeforces",
+      "url": "https://codeforces.com/problemset/problem/474/B",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "Phase A 候選；Primary U-BIN（provisional）。Candidate concepts: cumulative boundaries, lower_bound, query mapping；secondary: U-PFX。Role / D / Skill relation 待 Phase B QA。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-103",
+      "problem_id": "CF-706B",
+      "title": "Interesting drink",
+      "source_platform": "Codeforces",
+      "judge_platform": "Codeforces",
+      "url": "https://codeforces.com/problemset/problem/706/B",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "Phase A 候選；Primary U-BIN（provisional）。Candidate concepts: sorting, upper_bound, repeated threshold queries；secondary: U-ORD。Role / D / Skill relation 待 Phase B QA。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-104",
+      "problem_id": "CF-363B",
+      "title": "Fence",
+      "source_platform": "Codeforces",
+      "judge_platform": "Codeforces",
+      "url": "https://codeforces.com/problemset/problem/363/B",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "High",
+      "training_purpose": "Phase B defer：固定長度區間和可用 prefix 或 rolling window。保留為 U-PFX↔U-WIN cross-unit Transfer candidate；因 S13 Two Pointers / Sliding Window 尚未完成 U-WIN Phase B，暫維持 Needs QA，不作 U-PFX gate。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-107",
+      "problem_id": "CF-115A",
+      "title": "Party",
+      "source_platform": "Codeforces",
+      "judge_platform": "Codeforces",
+      "url": "https://codeforces.com/problemset/problem/115/A",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-GPH-04 Guided Drill：把 parent relation 建成 forest/tree state，追蹤 root、depth 與 parent-chain；作為 tree-state representation 練習。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-109",
+      "problem_id": "CF-977C",
+      "title": "Less or Equal",
+      "source_platform": "Codeforces",
+      "judge_platform": "Codeforces",
+      "url": "https://codeforces.com/problemset/problem/977/C",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-ORD-01 Core Independent：利用排序後的 order relation 與 duplicate boundary 完成 Less or Equal；clean A0 下可作 S09 Gate-grade candidate。Pre-A0 不揭露排序後取第 k 個或 duplicate-boundary observation；A2+ 時 independent=false。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-111",
+      "problem_id": "CF-996A",
+      "title": "Hit the Lottery",
+      "source_platform": "Codeforces",
+      "judge_platform": "Codeforces",
+      "url": "https://codeforces.com/problemset/problem/996/A",
+      "difficulty": "D1",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-GRD-01 Worked Example：用 canonical coin system 觀察局部選最大面額何時可行，重點是 prediction→reference→hide→reconstruction，並主動對比非 canonical coin system 的反例。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-112",
+      "problem_id": "APCS-ZJ-m931",
+      "title": "m931 遊戲選角",
+      "source_platform": "APCS",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=m931",
+      "difficulty": "D1",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "High",
+      "training_purpose": "L-ORD-02 Worked Example：以 APCS m931 示範多欄位 record、derived key、record identity 與 comparator；完成 prediction → walkthrough/reference → hide → reconstruction → debrief。因存在不排序的 second-maximum 解法，只作 Learning-only，不作 clean Gate evidence。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-114",
+      "problem_id": "APCS-ZJ-o711",
+      "title": "o711 裝飲料",
+      "source_platform": "APCS",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=o711",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DAT-04 Guided：把杯子幾何規則轉成 piecewise state transition，逐次更新水位並維護最大單次上升量；重點是 state definition / transition order / cap boundary。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-115",
+      "problem_id": "APCS-ZJ-o712",
+      "title": "o712 蒐集寶石",
+      "source_platform": "APCS",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=o712",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DAT-04 Optional Transfer：把 2D grid、direction、mutable cell state、score-triggered turns、wall/boundary avoidance 與 termination 組合成陌生 simulation；驗證跨 L-DAT-03→04 transfer。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-116",
+      "problem_id": "APCS-ZJ-o713",
+      "title": "o713 連鎖反應",
+      "source_platform": "APCS",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=o713",
+      "difficulty": "D5",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "High",
+      "training_purpose": "L-MIX-03 Transfer：在未提示核心方法前，先設計極端案例與狀態 trace，再用 failure class / first divergence 收斂錯誤；actual algorithm 可為 simulation/graph/monotone search 組合。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-117",
+      "problem_id": "APCS-ZJ-o714",
+      "title": "o714 搭到終點",
+      "source_platform": "APCS",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=o714",
+      "difficulty": "D5",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "High",
+      "training_purpose": "L-MIX-02 Transfer：APCS 高負荷混合題；從 representation→baseline→bottleneck→method 自主組合 DP / prefix / sorting / lookup，pre-attempt 不指出核心分解。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-119",
+      "problem_id": "APCS-ZJ-q184",
+      "title": "q184 分組開會",
+      "source_platform": "APCS",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=q184",
+      "difficulty": "D4",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "High",
+      "training_purpose": "L-MIX-01 Guided：先讀 constraints / subtasks，寫出可證明正確的 baseline 與分數範圍，再討論完整解法；不在 pre-attempt 洩漏完整 mixed solution。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-12",
+      "problem_id": "ZJ-e699",
+      "title": "e699 Fire!",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=e699",
+      "difficulty": "D4",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-GPH-03 Transfer Challenge：多源 BFS；把多個 fire source 視為同一 distance-0 frontier，再處理 learner state / escape timing。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-120",
+      "problem_id": "APCS-ZJ-q836",
+      "title": "q836 小心陷阱",
+      "source_platform": "APCS",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=q836",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DAT-04 Core：獨立定義 position/life state、依固定順序移動→觸發陷阱→扣血→判斷終止；驗證 while simulation、雙條件可同時觸發與 termination reasoning。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-123",
+      "problem_id": "APCS-ZJ-c471",
+      "title": "c471 物品堆疊",
+      "source_platform": "APCS",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=c471",
+      "difficulty": "D4",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-GRD-03 Core Independent：從 pairwise swap 推導 custom comparator / ordering criterion，要求能寫出 exchange argument 並處理 long long 累積。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-125",
+      "problem_id": "APCS-ZJ-i401",
+      "title": "i401 雷射測試",
+      "source_platform": "APCS",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=i401",
+      "difficulty": "D4",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "High",
+      "training_purpose": "L-MIX-03 Guided：以複雜 simulation/lookup 程式練 sample→edge→adversarial testcase、first-divergence trace、CE/RE/TLE/WA triage 與 time-boxed repair。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-126",
+      "problem_id": "APCS-ZJ-b967",
+      "title": "b967 血緣關係",
+      "source_platform": "APCS",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=b967",
+      "difficulty": "D4",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-GPH-04 Core Independent：從 tree modeling 建立 parent/depth/subtree traversal state，處理 deepest-branch / diameter 類 reasoning，要求能 trace tree DFS 與 state combine。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-129",
+      "problem_id": "APCS-ZJ-f314",
+      "title": "f314 勇者修煉",
+      "source_platform": "APCS",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=f314",
+      "difficulty": "D4",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DP-02 Core Independent：APCS grid DP；自行定義格子 state、合法來源方向、計算 order、negative-value handling 與 answer extraction。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-131",
+      "problem_id": "CSES-1713",
+      "title": "Counting Divisors",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1713",
+      "difficulty": "D3",
+      "exam_band": "EB2 中級",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-PSV-04 Optional Transfer：Counting Divisors；在基礎 divisor reasoning 後，結合 q≤1e5、x≤1e6 做 complexity-aware implementation。未完成不得阻擋 Lesson/U-PSV completion。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-134",
+      "problem_id": "LC-1109",
+      "title": "Corporate Flight Bookings",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/corporate-flight-bookings/",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-PFX-04 Core Independent：把大量 inclusive range increment 轉成端點事件，再以 prefix 還原最終 array；驗證 diff[l]+=x、diff[r+1]-=x 的邊界模型。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-135",
+      "problem_id": "LC-1094",
+      "title": "Car Pooling",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/car-pooling/",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "High",
+      "training_purpose": "L-PFX-04 Transfer：把乘客上下車建模成 half-open endpoint events，使用 difference/prefix occupancy 判斷容量；重點是 endpoint semantics 與 simulation modeling，而不是套公式。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-136",
+      "problem_id": "LC-78",
+      "title": "Subsets",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/subsets/",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "High",
+      "training_purpose": "L-REC-05 Guided Drill：把 subset membership 對應到 mask bits，練習 check/set/clear、mask 0..2^n-1 與 subset reconstruction；backtracking 解法合法，因此只作 bitmask Learning-only。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-137",
+      "problem_id": "CSES-3221",
+      "title": "Sliding Window Minimum",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/3221",
+      "difficulty": "D4",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-DS-02 Optional Transfer：在 fixed-window minimum 中自行辨認 expired index 與被更小新值永久支配的 back candidates，推導 monotone deque；pre-attempt 不提示 deque / monotonicity observation。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-138",
+      "problem_id": "LC-347",
+      "title": "Top K Frequent Elements",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/top-k-frequent-elements/",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "High",
+      "training_purpose": "L-DS-03 Core Independent：在 frequency map 之後自行選擇 priority queue 維護目前最值得保留的 k 個候選，說明 min/max heap ordering、top meaning 與 O(M log K)；sorting/bucket 解法合法但不證明 S33。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-140",
+      "problem_id": "LC-304",
+      "title": "Range Sum Query 2D - Immutable",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/range-sum-query-2d-immutable/",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-PFX-03 Guided Drill：以 0-index matrix query API 練習 2D prefix 的四項 inclusion-exclusion，先穩定 row/column convention，再進 CSES-1652 Core Independent。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-141",
+      "problem_id": "APCS-ZJ-j607",
+      "title": "j607 先加後乘與函數",
+      "source_platform": "APCS",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=j607",
+      "difficulty": "D4",
+      "exam_band": "EB3 中高級",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "High",
+      "training_purpose": "完整 expression parser：自訂 precedence、nested f(...)、多參數、cursor/token state、recursive descent / syntax-tree evaluation、long long；驗證 S38 Parsing 在陌生巢狀結構下能獨立使用。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-142",
+      "problem_id": "ZJ-a002",
+      "title": "a002 簡易加法",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=a002",
+      "difficulty": "D1",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "建立最小 C++ I/O mental model：兩個有型別的整數值由 cin 進入變數，經 + 形成新值，再由 cout 輸出；可用來重建 int / expression / stdin / stdout 的最小完整資料流。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-143",
+      "problem_id": "ZJ-d050",
+      "title": "d050 妳那裡現在幾點了？",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=d050",
+      "difficulty": "D1",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "用單一整數輸入建立變數與 expression，透過加法與 % 24 做時區轉換；刻意要求不用 if，讓學生在第一課練習把規則寫成純算術 expression。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-144",
+      "problem_id": "CF-1A",
+      "title": "Theatre Square",
+      "source_platform": "Codeforces",
+      "judge_platform": "Codeforces",
+      "url": "https://codeforces.com/problemset/problem/1/A",
+      "difficulty": "D2",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "從 n,m,a 的數值範圍自主選擇 long long，推導整數向上取整 (x+a-1)/a，組合成兩個 expression 後相乘；驗證型別、integer division、precedence 與 overflow awareness，而不依賴 condition/loop。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-145",
+      "problem_id": "LC-2235",
+      "title": "Add Two Integers",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/add-two-integers/",
+      "difficulty": "D1",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "最小 function contract：由 judge 提供兩個 int parameters，learner 在函式內形成 expression 並 return；建立 parameter → local expression → return value → caller 的最小呼叫模型。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-146",
+      "problem_id": "LC-2894",
+      "title": "Divisible and Non-divisible Sums Difference",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/divisible-and-non-divisible-sums-difference/",
+      "difficulty": "D2",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "在既有 condition/loop 上加入 function boundary：從 parameters n,m 建立 local accumulators，完成 loop 後 return 單一結果；練習 local state 與 return contract。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-147",
+      "problem_id": "LC-2520",
+      "title": "Count the Digits That Divide a Number",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/count-the-digits-that-divide-a-number/",
+      "difficulty": "D2",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "獨立完成有 parameter、local copy/state、while、condition、accumulator 與 return 的完整小函式；可不使用 array/string，直接以 /10、%10 掃描 digits。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-148",
+      "problem_id": "CF-977A",
+      "title": "Wrong Subtraction",
+      "source_platform": "Codeforces",
+      "judge_platform": "Codeforces",
+      "url": "https://codeforces.com/problemset/problem/977/A",
+      "difficulty": "D1",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "用固定 k 次 state update 做 boundary-debug worked example：每輪先檢查 n%10，再選 n-- 或 n/=10；練習 exact iteration count、branch boundary 與 trace 第一個 divergence。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-149",
+      "problem_id": "CF-486A",
+      "title": "Calculating Function",
+      "source_platform": "Codeforces",
+      "judge_platform": "Codeforces",
+      "url": "https://codeforces.com/problemset/problem/486/A",
+      "difficulty": "D2",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-FND-04 optional Transfer：把既有 long long、parity、boundary 與 small-case tracing 遷移到巨大 n；從 constraints 自主發現逐項處理不可行，再以小案例找規律。題目用於 transfer / extension，不再承擔 Foundation Core Gate。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-150",
+      "problem_id": "CSES-1094",
+      "title": "Increasing Array",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1094",
+      "difficulty": "D2",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-FND-04 Core Independent：把 n 個輸入值以 scalar streaming 處理，維持上一個有效值與 long long 累積修正量；驗證 first-element boundary、x<prev / x>=prev 分支、equal case、loop count、aggregate range 與不必要儲存的避免。題目文字雖稱 array，但 Foundation 解法不需要 C++ Array/Vector。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-151",
+      "problem_id": "CUSTOM-FND03-REF-SCOPE-01",
+      "title": "Reference / Scope Repair",
+      "source_platform": "Custom",
+      "judge_platform": "Custom",
+      "url": "https://app.notion.com/p/3c843be958cd816988efe4420013ea9e",
+      "difficulty": "D2",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-FND-03 第二個 Guided Drill：專門補足 scope / pass-by-value / pass-by-reference / alias / side effect coverage。learner 先在 A0 判斷 caller state 是否被修改，再逐層修復 function contract；最後分辨 shadowing 與 local lifetime。此題不是演算法題，不應用 OJ 難度取代 conceptual diagnosis。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-152",
+      "problem_id": "CUSTOM-DAT01-INDEX-01",
+      "title": "Array / Vector Boundary Trace",
+      "source_platform": "Custom",
+      "judge_platform": "Custom",
+      "url": "https://apcs-rec-writeback.main-1h9k2.workers.dev/learn/dat/array-vector?pb=PB-152",
+      "difficulty": "D1",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DAT-01 Worked：預測 index/size/push_back 後的 sequence state，辨識合法範圍與 off-by-one；看 walkthrough 後關掉 reference，從空白重建同一段 traversal。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-153",
+      "problem_id": "CUSTOM-DAT01-VECTOR-CORE-01",
+      "title": "Vector Index / Update / Push Challenge",
+      "source_platform": "Custom",
+      "judge_platform": "Custom",
+      "url": "https://apcs-rec-writeback.main-1h9k2.workers.dev/learn/dat/array-vector?pb=PB-153",
+      "difficulty": "D2",
+      "exam_band": "EB1 初級, EB2 中級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DAT-01 Core：獨立維護 dynamic sequence 的 size/index，正確完成 GET/SET/PUSH 類基本操作與最後 traversal；題目刻意要求 random access + size-changing operation，降低 streaming alternate-solution risk。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-154",
+      "problem_id": "CUSTOM-DAT03-COORD-01",
+      "title": "2D Coordinate / Boundary Trace",
+      "source_platform": "Custom",
+      "judge_platform": "Custom",
+      "url": "https://apcs-rec-writeback.main-1h9k2.workers.dev/learn/dat/matrix-2d?pb=PB-154",
+      "difficulty": "D1",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DAT-03 Worked：建立 row/column coordinate、nested traversal 與 neighbor boundary invariant；reference 後必須關掉並重建。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-155",
+      "problem_id": "CUSTOM-DAT04-STATE-01",
+      "title": "Simulation State / Transition Trace",
+      "source_platform": "Custom",
+      "judge_platform": "Custom",
+      "url": "https://apcs-rec-writeback.main-1h9k2.workers.dev/learn/dat/simulation?pb=PB-155",
+      "difficulty": "D1",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DAT-04 Worked：把長規則拆成 state variables、單一步 transition、事件順序與 termination；先 trace 再 reconstruction。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-156",
+      "problem_id": "CUSTOM-PSV01-BASELINE-01",
+      "title": "Baseline Before Optimization",
+      "source_platform": "Custom",
+      "judge_platform": "Custom",
+      "url": "https://apcs-rec-writeback.main-1h9k2.workers.dev/learn/psv/constraints-baseline?pb=PB-156",
+      "difficulty": "D1",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-PSV-01 Worked：先建立正確 baseline，再用 exact enumeration count 與 constraints 判斷瓶頸；reference 後必須關閉並重建 reasoning。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-157",
+      "problem_id": "CUSTOM-PSV01-PAIR-01",
+      "title": "All-Pairs Baseline Drill",
+      "source_platform": "Custom",
+      "judge_platform": "Custom",
+      "url": "https://apcs-rec-writeback.main-1h9k2.workers.dev/learn/psv/constraints-baseline?pb=PB-157",
+      "difficulty": "D2",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-PSV-01 Guided：在 n≤2000 的 constraint 下，用已學 Array/loop 建立 all-pairs baseline，說明完整性與 O(n²) bottleneck。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-158",
+      "problem_id": "CUSTOM-PSV01-CORE-01",
+      "title": "Constraint-to-Baseline Decision",
+      "source_platform": "Custom",
+      "judge_platform": "Custom",
+      "url": "https://apcs-rec-writeback.main-1h9k2.workers.dev/learn/psv/constraints-baseline?pb=PB-158",
+      "difficulty": "D2",
+      "exam_band": "EB2 中級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "S12 Gate-grade candidate：在未預演的連續區間 enumeration domain，自主建立 correct baseline、描述 candidate space、拆解重複工作並由 constraints 判斷可行性；不要求提出尚未學的優化方法。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-159",
+      "problem_id": "CUSTOM-PSV02-COUNT-01",
+      "title": "Operation Count Walkthrough",
+      "source_platform": "Custom",
+      "judge_platform": "Custom",
+      "url": "https://apcs-rec-writeback.main-1h9k2.workers.dev/learn/psv/complexity?pb=PB-159",
+      "difficulty": "D1",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-PSV-02 Worked：從 exact operation count 推導 O(1)/O(n)/O(n²)，避免把 Big-O 背成標籤。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-160",
+      "problem_id": "CUSTOM-PSV02-BUDGET-01",
+      "title": "Complexity Budget Drill",
+      "source_platform": "Custom",
+      "judge_platform": "Custom",
+      "url": "https://apcs-rec-writeback.main-1h9k2.workers.dev/learn/psv/complexity?pb=PB-160",
+      "difficulty": "D2",
+      "exam_band": "EB2 中級",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "Guided complexity diagnosis：operation count、dominant term、space、constraint budget；不靠執行時間猜。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-161",
+      "problem_id": "CUSTOM-PSV02-CORE-01",
+      "title": "Time / Space Review Packet",
+      "source_platform": "Custom",
+      "judge_platform": "Custom",
+      "url": "https://apcs-rec-writeback.main-1h9k2.workers.dev/learn/psv/complexity?pb=PB-161",
+      "difficulty": "D2",
+      "exam_band": "EB2 中級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "S30 Gate-grade candidate：獨立從 code/constraints 推導 time-space，辨識 dominant operation、O(n)/O(n²) 與 amortized vector growth。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-162",
+      "problem_id": "CUSTOM-PSV03-TRACE-01",
+      "title": "Trace Table / First Divergence Walkthrough",
+      "source_platform": "Custom",
+      "judge_platform": "Custom",
+      "url": "https://apcs-rec-writeback.main-1h9k2.workers.dev/learn/psv/code-reasoning?pb=PB-162",
+      "difficulty": "D1",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "S39 Worked：用 trace table 記錄 state，從 expected/actual 第一次分歧定位 root cause。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-163",
+      "problem_id": "CUSTOM-PSV03-DEBUG-01",
+      "title": "Boundary Bug Hunt Drill",
+      "source_platform": "Custom",
+      "judge_platform": "Custom",
+      "url": "https://apcs-rec-writeback.main-1h9k2.workers.dev/learn/psv/code-reasoning?pb=PB-163",
+      "difficulty": "D2",
+      "exam_band": "EB2 中級",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "Guided S39：從 WA/RE 表象建立最小 testcase，辨識 off-by-one/empty-like/duplicate/max-value，先找 root cause 再修。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-164",
+      "problem_id": "CUSTOM-PSV03-CORE-READ-01",
+      "title": "Code Reasoning Core：Trace + Completion",
+      "source_platform": "Custom",
+      "judge_platform": "Custom",
+      "url": "https://apcs-rec-writeback.main-1h9k2.workers.dev/learn/psv/code-reasoning?pb=PB-164",
+      "difficulty": "D2",
+      "exam_band": "EB2 中級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "S39 Reading Gate candidate：獨立 trace unfamiliar code、預測輸出、依 invariant 補一個缺失 statement，並說明 boundary。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-165",
+      "problem_id": "CUSTOM-PSV03-CORE-DEBUG-01",
+      "title": "Debug / Testing Core：Minimal Counterexample",
+      "source_platform": "Custom",
+      "judge_platform": "Custom",
+      "url": "https://apcs-rec-writeback.main-1h9k2.workers.dev/learn/psv/code-reasoning?pb=PB-165",
+      "difficulty": "D2",
+      "exam_band": "EB2 中級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "S39 Implementation/Testing Gate candidate：從錯誤程式建立最小反例、first divergence、root cause、minimal patch，再補 boundary regression tests。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-166",
+      "problem_id": "CUSTOM-PSV04-NT-01",
+      "title": "GCD / LCM / Divisibility Walkthrough",
+      "source_platform": "Custom",
+      "judge_platform": "Custom",
+      "url": "https://apcs-rec-writeback.main-1h9k2.workers.dev/learn/psv/math-correctness?pb=PB-166",
+      "difficulty": "D1",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "Worked：從 divisibility/factor relation 建立 GCD/LCM 與模運算的可驗證模型；強調 overflow-safe lcm order。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-167",
+      "problem_id": "CSES-1754",
+      "title": "Coin Piles",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1754",
+      "difficulty": "D3",
+      "exam_band": "EB2 中級",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-PSV-04 Guided：由 move rules 推導 necessary/sufficient arithmetic conditions；t≤1e5, a,b≤1e9 迫使離開逐步 simulation。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-168",
+      "problem_id": "CSES-1618",
+      "title": "Trailing Zeros",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1618",
+      "difficulty": "D2",
+      "exam_band": "EB2 中級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "S14 Gate-grade candidate + S15 supporting：n≤1e9，需把 factorial trailing-zero 語意轉成可計算的整數模型並控制 overflow/complexity。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-169",
+      "problem_id": "CUSTOM-ORD02-RANK-01",
+      "title": "多鍵榜單與穩定排序",
+      "source_platform": "Custom",
+      "judge_platform": "Custom",
+      "url": "https://apcs-rec-writeback.main-1h9k2.workers.dev/learn/ord/struct-pair?pb=PB-169",
+      "difficulty": "D2",
+      "exam_band": "EB2 中級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-ORD-02 Core Independent：把多欄位資料建模成 record，依 score 降冪、penalty 升冪排序；score/penalty 同時相等時保持原輸入順序。要求 learner 自行處理 multi-key comparator、tie handling、stable ordering 與 record identity，不以 map/two-pointers 取代 target behavior。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-17",
+      "problem_id": "ZJ-k313",
+      "title": "k313 行李超重",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=k313",
+      "difficulty": "D4",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-DP-03 Transfer：在不同敘事中辨認 knapsack-style state / capacity constraint；pre-attempt 不提示背包模型或 iteration order。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-173",
+      "problem_id": "LC-1331",
+      "title": "Rank Transform of an Array",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/rank-transform-of-an-array/",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "Coordinate compression Guided：sort+unique、rank mapping、duplicates；先口述『只保留大小關係』再實作。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-174",
+      "problem_id": "CSES-2169",
+      "title": "Nested Ranges Count",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/2169",
+      "difficulty": "D4",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-RNG-02 Core：range containment offline ordering、tie handling、counting state、O(N log N)。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-175",
+      "problem_id": "CSES-1648",
+      "title": "Dynamic Range Sum Queries",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1648",
+      "difficulty": "D4",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Extension"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-RNG-03 Extension Core：point update + dynamic range sum；trace lowbit or segment intervals and explain O(log N) touched nodes.",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-176",
+      "problem_id": "LC-315",
+      "title": "Count of Smaller Numbers After Self",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/count-of-smaller-numbers-after-self/",
+      "difficulty": "D5",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "High",
+      "training_purpose": "L-RNG-04 Transfer：把 right-smaller counting 拆成 left/right/cross 或等價 offline structure；驗 unfamiliar O(N log N) modeling。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-18",
+      "problem_id": "APCS-ZJ-f640",
+      "title": "f640 函數運算式求值",
+      "source_platform": "APCS",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=f640",
+      "difficulty": "D2",
+      "exam_band": "EB3 中高級",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "Recursive-descent 入門：依 token stream 與 cursor 解析 prefix-style nested function expression；建立 parser state、recursive return 與 syntax-tree evaluation 心智模型。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-2",
+      "problem_id": "ZJ-a290",
+      "title": "a290 新手訓練系列～圖論",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=a290",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-GPH-01 Guided Drill：把 directed reachability 情境翻成 vertex / directed edge / adjacency list，先驗證 representation 與 traversal input state，不把單題 AC 當 S18/S19 Gate。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-20",
+      "problem_id": "ZJ-j605",
+      "title": "j605 程式考試",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=j605",
+      "difficulty": "D2",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "APCS 基礎 control-flow gate：逐筆讀取提交紀錄，維持最高分、第一次達到最高分的時間與嚴重錯誤次數，最後套用下限 0；驗證 loop state、condition priority、strict > tie behavior 與 post-processing boundary。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-21",
+      "problem_id": "ZJ-e340",
+      "title": "e340 差分練習",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=e340",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-PFX-04 Guided Drill：從「逐格做 Q 次 range update」的 repeated work 推導端點差分；建立 diff 是變化量、prefix 是還原器的 mental model。既有 D2 / Guided / S31+S22 metadata 保留。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-23",
+      "problem_id": "ZJ-i213",
+      "title": "i213 stack 練習",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=i213",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DS-01 Worked Example：用 stack API 建立 LIFO 操作語意、top/pop empty safety 與操作序列 trace；reference 關閉後必須自行重建。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-24",
+      "problem_id": "ZJ-f679",
+      "title": "f679 公會成員",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=f679",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "大量 query",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-25",
+      "problem_id": "ZJ-e339",
+      "title": "e339 前綴和練習",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=e339",
+      "difficulty": "D1",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "建立 prefix",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-27",
+      "problem_id": "ZJ-d732",
+      "title": "d732 二分搜尋法",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=d732",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "手寫 binary search",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-28",
+      "problem_id": "ZJ-a219",
+      "title": "a219 限制排列",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=a219",
+      "difficulty": "D4",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-REC-04 Transfer Challenge：在不預告 backtracking / pruning observation 的 clean attempt 中，自行建構排列 state、限制檢查與安全 pruning；實際使用 S32 且 Assistance 低時才可形成 Gate-grade transfer evidence。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-32",
+      "problem_id": "ZJ-a233",
+      "title": "a233 排序法",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=a233",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "排序複雜度",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-33",
+      "problem_id": "ZJ-b517",
+      "title": "b517 是否為樹",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=b517",
+      "difficulty": "D4",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "High",
+      "training_purpose": "L-GPH-04 Transfer Challenge：驗證一個無向結構是否為 tree；需同時處理 connectedness、cycle 與 parent edge semantics。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-35",
+      "problem_id": "ZJ-p013",
+      "title": "p013 Fibonacci process",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=p013",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-REC-01 Guided：用 Fibonacci process 畫 call stack / recursion tree，辨認 base case、recursive case、return order 與重複子問題；重點是 trace recursion，不把 Fibonacci 當成背公式題。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-36",
+      "problem_id": "ZJ-d418",
+      "title": "d418 Product of digits",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=d418",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-GRD-01 Guided Drill：提出 greedy criterion、用最小反例檢查失敗情況，再說明為何合法局部選擇不破壞後續。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-37",
+      "problem_id": "ZJ-b266",
+      "title": "b266 矩陣翻轉",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=b266",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DAT-03 Guided：以 APCS 矩陣翻轉練 row/column dimension、旋轉/翻轉後的新座標與多次 transformation state；重點是 representation correctness，不是背矩陣模板。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-39",
+      "problem_id": "ZJ-b184",
+      "title": "b184 裝貨櫃問題",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=b184",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DP-03 Guided：以 0/1 knapsack 練 capacity state、take/skip 與『每件只能用一次』的 iteration-order 語意。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-4",
+      "problem_id": "ZJ-e447",
+      "title": "e447 queue 練習",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=e447",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DS-01 Guided Drill：由事件順序自行判斷 FIFO，正確使用 queue front/push/pop 與 empty guard；A1 只問『最早還沒處理的是誰』，不直接給 API 序列。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-40",
+      "problem_id": "CSES-1068",
+      "title": "Weird Algorithm",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1068",
+      "difficulty": "D2",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "用 while + if/else 重複更新同一個整數 state，直到 termination condition n==1；練習每輪 state transition、loop condition、輸出時點與 long long 更新。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-41",
+      "problem_id": "CSES-1083",
+      "title": "Missing Number",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1083",
+      "difficulty": "D2",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "由 n<=2e5 推導累積總和需要 long long；以 streaming loop 讀入 n-1 個值並從 expected total 中扣除，不必先學 array/set。練習 overflow-before-assignment、loop count 與 missing boundary。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-42",
+      "problem_id": "CSES-1069",
+      "title": "Repetitions",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1069",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DAT-02 Core：獨立掃描長字串並維護 longest-run state；驗證 char indexing、first-element initialization、state update 與 O(n) traversal。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-43",
+      "problem_id": "CSES-2165",
+      "title": "Tower of Hanoi",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/2165",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-REC-01 Core Independent：從『搬 n 個盤子』自行拆成較小同型子問題，設 base case，追蹤 call/return，並完成輸出構造；驗證 recursion decomposition，不預先提供 Hanoi canonical code。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-44",
+      "problem_id": "CSES-1622",
+      "title": "Creating Strings",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1622",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "High",
+      "training_purpose": "L-REC-03 Guided Drill：由 permutation baseline 建立 partial path / used state / Choose→Explore→Undo；duplicate output 需有明確去重策略。因可用 next_permutation 等替代法，僅作 Learning-only，不以 AC 推論 S32 mastery。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-45",
+      "problem_id": "CSES-1623",
+      "title": "Apple Division",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1623",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "High",
+      "training_purpose": "L-REC-05 Core Independent：在小 n 限制下自行辨認 2^n subset state space，以 mask 表示分組並計算兩組差值；只有實際使用 bitmask / equivalent bit-state reasoning 才支援 S29 evidence。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-46",
+      "problem_id": "CSES-1624",
+      "title": "Chessboard and Queens",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1624",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-REC-04 Core Independent：自行設計 row/column/diagonal state，證明衝突分支可提前停止，維持 choose/undo 一致性；clean A0 不提供 queens canonical recursion skeleton。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-47",
+      "problem_id": "CSES-1621",
+      "title": "Distinct Numbers",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1621",
+      "difficulty": "D1",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-ORD-03 Guided：distinct counting / dedupe / association representation；可比較 sort-scan 與 set，但 S24 僅 Supporting。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-48",
+      "problem_id": "CSES-1084",
+      "title": "Apartments",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1084",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "Phase A 候選；Primary U-WIN（provisional）。Candidate concepts: sorting + two pointers, monotone pointer movement；secondary: U-ORD / U-GRD。Role / D / Skill relation 待 Phase B QA。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-49",
+      "problem_id": "CSES-1090",
+      "title": "Ferris Wheel",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1090",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-GRD-01 Core Independent：自行提出 pairing criterion，結合 sorting / two-pointer state，並用 exchange-style reasoning 說明為何局部配對不會使答案變差。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-5",
+      "problem_id": "ZJ-d242",
+      "title": "d242 What Goes Up",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=d242",
+      "difficulty": "D4",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-DP-04 Transfer：在需要 LIS 與序列重建的不同介面中保留 predecessor / position state；pre-attempt 不提示 canonical reconstruction arrays。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-50",
+      "problem_id": "CSES-1091",
+      "title": "Concert Tickets",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1091",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-ORD-03 Optional Transfer：從 ordered lookup + delete-once constraints 自行辨認適合的 ordered association representation；pre-attempt 不揭露 multiset / upper_bound / predecessor。S24 為 Supporting，本題不作 3+3 blocker；A2+ 時 independent=false。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-52",
+      "problem_id": "CSES-1629",
+      "title": "Movie Festival",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1629",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-GRD-02 Core Independent：interval scheduling；自行提出 finish-time criterion、處理 tie/boundary，並用 exchange argument 說明其最優性。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-54",
+      "problem_id": "CSES-2183",
+      "title": "Missing Coin Sum",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/2183",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-GRD-03 Guided Drill：用 sorted-prefix reachable interval 建立 invariant，練『目前已保證可構成到哪裡』與第一個 gap 為何不可跨越。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-57",
+      "problem_id": "CSES-1164",
+      "title": "Room Allocation",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1164",
+      "difficulty": "D4",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-GRD-02 Transfer Challenge：interval/resource reuse；結合 sorted event order + priority queue 維護最早可釋放資源，驗證跨 U-GRD × U-DS 的 greedy frontier。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-58",
+      "problem_id": "CSES-1620",
+      "title": "Factory Machines",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1620",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "Phase A 候選；Primary U-BIN（provisional）。Candidate concepts: binary search on answer, monotone feasibility, overflow in production count；secondary: U-PSV。Role / D / Skill relation 待 Phase B QA。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-6",
+      "problem_id": "ZJ-f680",
+      "title": "f680 色塊數量",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=f680",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-GPH-02 Guided Drill：用 recursive DFS 探索 grid connected component，練 visited timing、四方向 boundary 與 component count。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-60",
+      "problem_id": "CSES-1645",
+      "title": "Nearest Smaller Values",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1645",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DS-02 Core Independent：自行維護尚未被右側新值淘汰的候選 index，推導 monotone stack 的 pop condition、nearest-smaller answer 與 amortized O(N)；clean A0 不提供 canonical while-pop skeleton。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-61",
+      "problem_id": "CSES-1662",
+      "title": "Subarray Divisibility",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1662",
+      "difficulty": "D4",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-PFX-02 Transfer：從 prefix difference 推導「同餘 prefix pair」計數，處理負數 modulo normalization 與 frequency counting；屬 Prefix + Map/Set + Number Theory 的新情境遷移。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-63",
+      "problem_id": "CSES-1633",
+      "title": "Dice Combinations",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1633",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DP-01 Guided：用簡單 1D counting DP 練習 State→Transition→Base→Order→Answer 五問法；scaffolded learning-only，不把套出 recurrence 當 independent DP mastery。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-64",
+      "problem_id": "CSES-1634",
+      "title": "Minimizing Coins",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1634",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DP-02 Guided：練 minimum-value DP、impossible sentinel、每格表格語意與 transition trace；scaffolded learning-only。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-65",
+      "problem_id": "CSES-1158",
+      "title": "Book Shop",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1158",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DP-03 Core Independent：自行完成 0/1 knapsack state compression，並能解釋為何 capacity 必須由大到小更新。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-66",
+      "problem_id": "CSES-1145",
+      "title": "Increasing Subsequence",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1145",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DP-04 Core Independent：從 LIS state baseline 自主推導 tails invariant + lower_bound，完成 O(N log N)；需說明 strict increasing 對 boundary search 的影響。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-67",
+      "problem_id": "CSES-1192",
+      "title": "Counting Rooms",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1192",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "High",
+      "training_purpose": "L-GPH-02 Core Independent：自行把 grid 建模為鄰接關係，以 DFS 完整走訪每個未訪問區域並計算 connected components；要求 visited / boundary / complexity reasoning。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-68",
+      "problem_id": "CSES-1193",
+      "title": "Labyrinth",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1193",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-GPH-03 Guided Drill：grid BFS shortest path + parent reconstruction；練 enqueue/visited timing、distance layer 與 path parent state。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-69",
+      "problem_id": "CSES-1667",
+      "title": "Message Route",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1667",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-GPH-03 Core Independent：自行以 BFS 解 unweighted shortest path，維護 queue / visited / parent，並重建最短路徑。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-71",
+      "problem_id": "CSES-1194",
+      "title": "Monsters",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1194",
+      "difficulty": "D4",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-MIX-02 Core Independent：陌生 grid/timing 題先建 representation、baseline、bottleneck，再自行選 multi-source BFS + path state；不靠題型關鍵字提示。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-76",
+      "problem_id": "CSES-1646",
+      "title": "Static Range Sum Queries",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1646",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-PFX-01 Core Independent 候選：在 n,q ≤ 2×10^5 與大數值下，自主完成 static range sum；重點驗證 preprocessing、inclusive query、index conversion、long long 與 O(N+Q)。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-77",
+      "problem_id": "CSES-1652",
+      "title": "Forest Queries",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/1652",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-PFX-03 Core Independent：自行建立 2D prefix 並從 inclusion-exclusion 推導矩形查詢；同時驗證 row/column indexing 與 S34 Matrix/2D prerequisite。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-78",
+      "problem_id": "CSES-3220",
+      "title": "Sliding Window Sum",
+      "source_platform": "CSES",
+      "judge_platform": "CSES",
+      "url": "https://cses.fi/problemset/task/3220",
+      "difficulty": "D1",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "Phase A 候選；Primary U-WIN（provisional）。Candidate concepts: fixed-size sliding window, rolling update, O(1) window transition；secondary: U-PFX。Role / D / Skill relation 待 Phase B QA。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-8",
+      "problem_id": "APCS-ZJ-q838",
+      "title": "q838 貪心闖關",
+      "source_platform": "APCS",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=q838",
+      "difficulty": "D4",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-GRD-03 Transfer Challenge：APCS 2025-06 q838；保留既有 D4 / Transfer / Skill relations，作陌生 greedy optimization 與 problem-specific invariant 的綜合 transfer。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-80",
+      "problem_id": "LC-3",
+      "title": "Longest Substring Without Repeating Characters",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/longest-substring-without-repeating-characters/",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "Phase A 候選；Primary U-WIN（provisional）。Candidate concepts: sliding window, set/map, window invariant；secondary: U-DAT / U-ORD。Role / D / Skill relation 待 Phase B QA。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-81",
+      "problem_id": "LC-20",
+      "title": "Valid Parentheses",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/valid-parentheses/",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DS-02 Guided Drill：把左括號視為等待配對 state，遇右括號時只與最近未配對者比較；建立 nested delimiter invariant 與 empty/mismatch boundary。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-84",
+      "problem_id": "LC-198",
+      "title": "House Robber",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/house-robber/",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DP-01 Core Independent：從 adjacent-exclusion 情境自行定義 state、take/skip transition、base、order、answer；不得只背 House Robber 模板。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-87",
+      "problem_id": "LC-875",
+      "title": "Koko Eating Bananas",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/koko-eating-bananas/",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "Phase A 候選；Primary U-BIN（provisional）。Candidate concepts: binary search on answer, monotone feasibility, ceiling arithmetic, overflow awareness；secondary: U-PSV。Role / D / Skill relation 待 Phase B QA。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-89",
+      "problem_id": "LC-300",
+      "title": "Longest Increasing Subsequence",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/longest-increasing-subsequence/",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-DP-04 Guided：先以 O(N²) DP 定義『以 i 結尾的 LIS』，再比較 tails representation；Learning-only，避免直接把 optimized template 當理解。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-9",
+      "problem_id": "ZJ-j606",
+      "title": "j606 造字程式",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=j606",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DAT-03 Core：獨立處理多次 permutation-based string transformation 與 R×Q output，驗證 source/destination index mapping、二維 result organization 與跨步 state update。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-90",
+      "problem_id": "LC-560",
+      "title": "Subarray Sum Equals K",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/subarray-sum-equals-k/",
+      "difficulty": "D3",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-PFX-02 Core Independent：把 subarray sum 條件改寫為兩個 prefix states 的差，使用 prefix-frequency map 計數；重點是推導關係與 map[0]=1 的意義，不背模板。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-91",
+      "problem_id": "LC-1",
+      "title": "Two Sum",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/two-sum/",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "High",
+      "training_purpose": "L-ORD-03 Core Independent（Supporting）：Two Sum 用於 lookup / complement modeling 與 index preservation。保留 clean A0，不在題前指定 map/hash/complement，也不提前引入 U-WIN two-pointers；多解風險高，因此只作 S24 Learning-only / Supporting evidence，A2+ 時 independent=false。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-92",
+      "problem_id": "LC-704",
+      "title": "Binary Search",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/binary-search/",
+      "difficulty": "D1",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "Phase A 候選；Primary U-BIN（provisional）。Candidate concepts: exact binary search, loop invariant, boundary update, midpoint safety；secondary: U-PSV。Role / D / Skill relation 待 Phase B QA。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-93",
+      "problem_id": "LC-303",
+      "title": "Range Sum Query - Immutable",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/range-sum-query-immutable/",
+      "difficulty": "D1",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-PFX-01 補充 Worked Example：以 0-index API 對照 pre[k]=前 k 個元素總和與 inclusive [l,r] 查詢；主要用於讀碼與 indexing 對照，不作 RM3/IM3 gate。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-94",
+      "problem_id": "LC-167",
+      "title": "Two Sum II - Input Array Is Sorted",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/two-sum-ii-input-array-is-sorted/",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Not for 3+3",
+        "5+5": "Bridge"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "Phase A 候選；Primary U-WIN（provisional）。Candidate concepts: two pointers on sorted array, monotone movement, binary-search alternative；secondary: U-BIN / U-ORD。Role / D / Skill relation 待 Phase B QA。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-95",
+      "problem_id": "LC-34",
+      "title": "Find First and Last Position of Element in Sorted Array",
+      "source_platform": "LeetCode",
+      "judge_platform": "LeetCode",
+      "url": "https://leetcode.com/problems/find-first-and-last-position-of-element-in-sorted-array/",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "Phase A 候選；Primary U-BIN（provisional）。Candidate concepts: lower/upper boundary binary search, duplicates, half-open boundary reasoning；secondary: U-PSV。Role / D / Skill relation 待 Phase B QA。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-96",
+      "problem_id": "CF-4A",
+      "title": "Watermelon",
+      "source_platform": "Codeforces",
+      "judge_platform": "Codeforces",
+      "url": "https://codeforces.com/problemset/problem/4/A",
+      "difficulty": "D1",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "最小 condition model：先判斷是否存在兩個正偶數部分；練習把「偶數」與「兩部分都必須 >0」合成完整 bool condition，特別抓 w=2 邊界。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-97",
+      "problem_id": "CF-71A",
+      "title": "Way Too Long Words",
+      "source_platform": "Codeforces",
+      "judge_platform": "Codeforces",
+      "url": "https://codeforces.com/problemset/problem/71/A",
+      "difficulty": "D1",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-DAT-02 Worked：由 string length、first/last index 與格式轉換建立字串是可索引 sequence 的心智模型；prediction 後看 walkthrough，再關閉 reference 重建。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-98",
+      "problem_id": "CF-580A",
+      "title": "Kefa and First Steps",
+      "source_platform": "Codeforces",
+      "judge_platform": "Codeforces",
+      "url": "https://codeforces.com/problemset/problem/580/A",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Supporting"
+      },
+      "alternate_solution_risk": "High",
+      "training_purpose": "L-DAT-01 Guided：在已會 index/traversal 後，維護 current non-decreasing run 與 best；重點是逐元素 state update。此題可 streaming，因此不作 Array/Vector Gate-grade evidence。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    },
+    {
+      "pb_uid": "PB-99",
+      "problem_id": "CF-230A",
+      "title": "Dragons",
+      "source_platform": "Codeforces",
+      "judge_platform": "Codeforces",
+      "url": "https://codeforces.com/problemset/problem/230/A",
+      "difficulty": "D2",
+      "exam_band": "",
+      "suitability": {
+        "3+3": "Supporting",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-GRD-02 Guided Drill：先排序出安全的 decision order，再逐步模擬資源變化；理解 sorting 只是建立承諾順序，Greedy correctness 仍需理由。",
+      "assessment_only": false,
+      "publish_state": "Published"
+    }
+  ],
+  "placements": [
+    {
+      "placement_uid": "PL-PB-10-L-DAT-02",
+      "pb_uid": "PB-10",
+      "primary_skill": "S07_String",
+      "supporting_skills": [
+        "S23_Simulation"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-DAT-02",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-100-L-WIN-02",
+      "pb_uid": "PB-100",
+      "primary_skill": "S13_Two_Pointers",
+      "supporting_skills": [
+        "S09_Sorting",
+        "S22_Prefix_Sum"
+      ],
+      "role": "Transfer Challenge",
+      "lesson_uid": "L-WIN-02",
+      "lesson_order": 4
+    },
+    {
+      "placement_uid": "PL-PB-101-L-WIN-02",
+      "pb_uid": "PB-101",
+      "primary_skill": "S13_Two_Pointers",
+      "supporting_skills": [
+        "S30_Complexity"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-WIN-02",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-102-L-BIN-02",
+      "pb_uid": "PB-102",
+      "primary_skill": "S10_Binary_Search",
+      "supporting_skills": [
+        "S22_Prefix_Sum"
+      ],
+      "role": "Transfer Challenge",
+      "lesson_uid": "L-BIN-02",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-103-L-BIN-02",
+      "pb_uid": "PB-103",
+      "primary_skill": "S10_Binary_Search",
+      "supporting_skills": [
+        "S09_Sorting"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-BIN-02",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-104-L-WIN-03",
+      "pb_uid": "PB-104",
+      "primary_skill": "S13_Two_Pointers",
+      "supporting_skills": [
+        "S22_Prefix_Sum"
+      ],
+      "role": "Transfer Challenge",
+      "lesson_uid": "L-WIN-03",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-107-L-GPH-04",
+      "pb_uid": "PB-107",
+      "primary_skill": "S21_Graph_Tree",
+      "supporting_skills": [
+        "S18_DFS"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-GPH-04",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-109-L-ORD-01",
+      "pb_uid": "PB-109",
+      "primary_skill": "S09_Sorting",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-ORD-01",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-111-L-GRD-01",
+      "pb_uid": "PB-111",
+      "primary_skill": "S11_Greedy",
+      "supporting_skills": [],
+      "role": "Worked Example",
+      "lesson_uid": "L-GRD-01",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-112-L-ORD-02",
+      "pb_uid": "PB-112",
+      "primary_skill": "S08_Struct",
+      "supporting_skills": [
+        "S09_Sorting"
+      ],
+      "role": "Worked Example",
+      "lesson_uid": "L-ORD-02",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-114-L-DAT-04",
+      "pb_uid": "PB-114",
+      "primary_skill": "S23_Simulation",
+      "supporting_skills": [],
+      "role": "Guided Drill",
+      "lesson_uid": "L-DAT-04",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-115-L-DAT-04",
+      "pb_uid": "PB-115",
+      "primary_skill": "S23_Simulation",
+      "supporting_skills": [
+        "S34_Matrix_2D"
+      ],
+      "role": "Transfer Challenge",
+      "lesson_uid": "L-DAT-04",
+      "lesson_order": 4
+    },
+    {
+      "placement_uid": "PL-PB-116-L-MIX-03",
+      "pb_uid": "PB-116",
+      "primary_skill": "S39_Code_Reasoning",
+      "supporting_skills": [
+        "S10_Binary_Search",
+        "S21_Graph_Tree"
+      ],
+      "role": "Transfer Challenge",
+      "lesson_uid": "L-MIX-03",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-117-L-MIX-02",
+      "pb_uid": "PB-117",
+      "primary_skill": "S20_DP",
+      "supporting_skills": [
+        "S09_Sorting",
+        "S10_Binary_Search",
+        "S22_Prefix_Sum"
+      ],
+      "role": "Transfer Challenge",
+      "lesson_uid": "L-MIX-02",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-119-L-MIX-01",
+      "pb_uid": "PB-119",
+      "primary_skill": "S30_Complexity",
+      "supporting_skills": [
+        "S09_Sorting",
+        "S20_DP",
+        "S22_Prefix_Sum"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-MIX-01",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-12-L-GPH-03",
+      "pb_uid": "PB-12",
+      "primary_skill": "S19_BFS",
+      "supporting_skills": [
+        "S17_Stack_Queue",
+        "S21_Graph_Tree"
+      ],
+      "role": "Transfer Challenge",
+      "lesson_uid": "L-GPH-03",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-120-L-DAT-04",
+      "pb_uid": "PB-120",
+      "primary_skill": "S23_Simulation",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-DAT-04",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-123-L-GRD-03",
+      "pb_uid": "PB-123",
+      "primary_skill": "S11_Greedy",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-GRD-03",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-125-L-MIX-03",
+      "pb_uid": "PB-125",
+      "primary_skill": "S39_Code_Reasoning",
+      "supporting_skills": [
+        "S09_Sorting",
+        "S10_Binary_Search"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-MIX-03",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-126-L-GPH-04",
+      "pb_uid": "PB-126",
+      "primary_skill": "S21_Graph_Tree",
+      "supporting_skills": [
+        "S18_DFS"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-GPH-04",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-129-L-DP-02",
+      "pb_uid": "PB-129",
+      "primary_skill": "S20_DP",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-DP-02",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-131-L-PSV-04",
+      "pb_uid": "PB-131",
+      "primary_skill": "S15_Number_Theory",
+      "supporting_skills": [
+        "S30_Complexity"
+      ],
+      "role": "Transfer Challenge",
+      "lesson_uid": "L-PSV-04",
+      "lesson_order": 4
+    },
+    {
+      "placement_uid": "PL-PB-134-L-PFX-04",
+      "pb_uid": "PB-134",
+      "primary_skill": "S31_Difference",
+      "supporting_skills": [
+        "S05_Array",
+        "S22_Prefix_Sum"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-PFX-04",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-135-L-PFX-04",
+      "pb_uid": "PB-135",
+      "primary_skill": "S31_Difference",
+      "supporting_skills": [
+        "S22_Prefix_Sum",
+        "S23_Simulation"
+      ],
+      "role": "Transfer Challenge",
+      "lesson_uid": "L-PFX-04",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-136-L-REC-05",
+      "pb_uid": "PB-136",
+      "primary_skill": "S29_Bitmask",
+      "supporting_skills": [],
+      "role": "Guided Drill",
+      "lesson_uid": "L-REC-05",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-137-L-DS-02",
+      "pb_uid": "PB-137",
+      "primary_skill": "S17_Stack_Queue",
+      "supporting_skills": [],
+      "role": "Transfer Challenge",
+      "lesson_uid": "L-DS-02",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-138-L-DS-03",
+      "pb_uid": "PB-138",
+      "primary_skill": "S33_Priority_Queue",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-DS-03",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-140-L-PFX-03",
+      "pb_uid": "PB-140",
+      "primary_skill": "S22_Prefix_Sum",
+      "supporting_skills": [
+        "S34_Matrix_2D"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-PFX-03",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-141-L-REC-02",
+      "pb_uid": "PB-141",
+      "primary_skill": "S38_Parsing",
+      "supporting_skills": [
+        "S07_String",
+        "S16_Recursion"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-REC-02",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-142-L-FND-01",
+      "pb_uid": "PB-142",
+      "primary_skill": "S01_IO",
+      "supporting_skills": [],
+      "role": "Worked Example",
+      "lesson_uid": "L-FND-01",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-143-L-FND-01",
+      "pb_uid": "PB-143",
+      "primary_skill": "S01_IO",
+      "supporting_skills": [],
+      "role": "Guided Drill",
+      "lesson_uid": "L-FND-01",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-144-L-FND-01",
+      "pb_uid": "PB-144",
+      "primary_skill": "S01_IO",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-FND-01",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-145-L-FND-03",
+      "pb_uid": "PB-145",
+      "primary_skill": "S04_Functions",
+      "supporting_skills": [
+        "S01_IO"
+      ],
+      "role": "Worked Example",
+      "lesson_uid": "L-FND-03",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-146-L-FND-03",
+      "pb_uid": "PB-146",
+      "primary_skill": "S04_Functions",
+      "supporting_skills": [
+        "S02_Conditionals",
+        "S03_Loops"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-FND-03",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-147-L-FND-03",
+      "pb_uid": "PB-147",
+      "primary_skill": "S04_Functions",
+      "supporting_skills": [
+        "S02_Conditionals",
+        "S03_Loops"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-FND-03",
+      "lesson_order": 4
+    },
+    {
+      "placement_uid": "PL-PB-148-L-FND-04",
+      "pb_uid": "PB-148",
+      "primary_skill": "S01_IO",
+      "supporting_skills": [
+        "S02_Conditionals",
+        "S03_Loops"
+      ],
+      "role": "Worked Example",
+      "lesson_uid": "L-FND-04",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-149-L-FND-04",
+      "pb_uid": "PB-149",
+      "primary_skill": "S01_IO",
+      "supporting_skills": [
+        "S02_Conditionals"
+      ],
+      "role": "Transfer Challenge",
+      "lesson_uid": "L-FND-04",
+      "lesson_order": 4
+    },
+    {
+      "placement_uid": "PL-PB-150-L-FND-04",
+      "pb_uid": "PB-150",
+      "primary_skill": "S01_IO",
+      "supporting_skills": [
+        "S02_Conditionals",
+        "S03_Loops"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-FND-04",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-151-L-FND-03",
+      "pb_uid": "PB-151",
+      "primary_skill": "S04_Functions",
+      "supporting_skills": [],
+      "role": "Guided Drill",
+      "lesson_uid": "L-FND-03",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-152-L-DAT-01",
+      "pb_uid": "PB-152",
+      "primary_skill": "S05_Array",
+      "supporting_skills": [
+        "S06_Vector"
+      ],
+      "role": "Worked Example",
+      "lesson_uid": "L-DAT-01",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-153-L-DAT-01",
+      "pb_uid": "PB-153",
+      "primary_skill": "S06_Vector",
+      "supporting_skills": [
+        "S05_Array"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-DAT-01",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-154-L-DAT-03",
+      "pb_uid": "PB-154",
+      "primary_skill": "S34_Matrix_2D",
+      "supporting_skills": [],
+      "role": "Worked Example",
+      "lesson_uid": "L-DAT-03",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-155-L-DAT-04",
+      "pb_uid": "PB-155",
+      "primary_skill": "S23_Simulation",
+      "supporting_skills": [],
+      "role": "Worked Example",
+      "lesson_uid": "L-DAT-04",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-156-L-PSV-01",
+      "pb_uid": "PB-156",
+      "primary_skill": "S12_Brute_Force",
+      "supporting_skills": [],
+      "role": "Worked Example",
+      "lesson_uid": "L-PSV-01",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-157-L-PSV-01",
+      "pb_uid": "PB-157",
+      "primary_skill": "S12_Brute_Force",
+      "supporting_skills": [],
+      "role": "Guided Drill",
+      "lesson_uid": "L-PSV-01",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-158-L-PSV-01",
+      "pb_uid": "PB-158",
+      "primary_skill": "S12_Brute_Force",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-PSV-01",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-159-L-PSV-02",
+      "pb_uid": "PB-159",
+      "primary_skill": "S30_Complexity",
+      "supporting_skills": [],
+      "role": "Worked Example",
+      "lesson_uid": "L-PSV-02",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-160-L-PSV-02",
+      "pb_uid": "PB-160",
+      "primary_skill": "S30_Complexity",
+      "supporting_skills": [],
+      "role": "Guided Drill",
+      "lesson_uid": "L-PSV-02",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-161-L-PSV-02",
+      "pb_uid": "PB-161",
+      "primary_skill": "S30_Complexity",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-PSV-02",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-162-L-PSV-03",
+      "pb_uid": "PB-162",
+      "primary_skill": "S39_Code_Reasoning",
+      "supporting_skills": [],
+      "role": "Worked Example",
+      "lesson_uid": "L-PSV-03",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-163-L-PSV-03",
+      "pb_uid": "PB-163",
+      "primary_skill": "S39_Code_Reasoning",
+      "supporting_skills": [],
+      "role": "Guided Drill",
+      "lesson_uid": "L-PSV-03",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-164-L-PSV-03",
+      "pb_uid": "PB-164",
+      "primary_skill": "S39_Code_Reasoning",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-PSV-03",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-165-L-PSV-03",
+      "pb_uid": "PB-165",
+      "primary_skill": "S39_Code_Reasoning",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-PSV-03",
+      "lesson_order": 4
+    },
+    {
+      "placement_uid": "PL-PB-166-L-PSV-04",
+      "pb_uid": "PB-166",
+      "primary_skill": "S14_Math",
+      "supporting_skills": [
+        "S15_Number_Theory"
+      ],
+      "role": "Worked Example",
+      "lesson_uid": "L-PSV-04",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-167-L-PSV-04",
+      "pb_uid": "PB-167",
+      "primary_skill": "S14_Math",
+      "supporting_skills": [],
+      "role": "Guided Drill",
+      "lesson_uid": "L-PSV-04",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-168-L-PSV-04",
+      "pb_uid": "PB-168",
+      "primary_skill": "S14_Math",
+      "supporting_skills": [
+        "S15_Number_Theory"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-PSV-04",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-169-L-ORD-02",
+      "pb_uid": "PB-169",
+      "primary_skill": "S08_Struct",
+      "supporting_skills": [
+        "S09_Sorting"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-ORD-02",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-17-L-DP-03",
+      "pb_uid": "PB-17",
+      "primary_skill": "S20_DP",
+      "supporting_skills": [],
+      "role": "Transfer Challenge",
+      "lesson_uid": "L-DP-03",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-173-L-RNG-01",
+      "pb_uid": "PB-173",
+      "primary_skill": "S37_Offline_Order",
+      "supporting_skills": [],
+      "role": "Guided Drill",
+      "lesson_uid": "L-RNG-01",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-174-L-RNG-02",
+      "pb_uid": "PB-174",
+      "primary_skill": "S37_Offline_Order",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-RNG-02",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-175-L-RNG-03",
+      "pb_uid": "PB-175",
+      "primary_skill": "S36_Range_Tree",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-RNG-03",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-176-L-RNG-04",
+      "pb_uid": "PB-176",
+      "primary_skill": "S16_Recursion",
+      "supporting_skills": [
+        "S37_Offline_Order"
+      ],
+      "role": "Transfer Challenge",
+      "lesson_uid": "L-RNG-04",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-18-L-REC-02",
+      "pb_uid": "PB-18",
+      "primary_skill": "S38_Parsing",
+      "supporting_skills": [
+        "S07_String",
+        "S16_Recursion"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-REC-02",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-2-L-GPH-01",
+      "pb_uid": "PB-2",
+      "primary_skill": "S21_Graph_Tree",
+      "supporting_skills": [
+        "S18_DFS",
+        "S19_BFS"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-GPH-01",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-20-L-FND-02",
+      "pb_uid": "PB-20",
+      "primary_skill": "S03_Loops",
+      "supporting_skills": [
+        "S02_Conditionals"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-FND-02",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-21-L-PFX-04",
+      "pb_uid": "PB-21",
+      "primary_skill": "S31_Difference",
+      "supporting_skills": [
+        "S22_Prefix_Sum"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-PFX-04",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-23-L-DS-01",
+      "pb_uid": "PB-23",
+      "primary_skill": "S17_Stack_Queue",
+      "supporting_skills": [],
+      "role": "Worked Example",
+      "lesson_uid": "L-DS-01",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-24-L-BIN-01",
+      "pb_uid": "PB-24",
+      "primary_skill": "S10_Binary_Search",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-BIN-01",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-25-L-PFX-01",
+      "pb_uid": "PB-25",
+      "primary_skill": "S22_Prefix_Sum",
+      "supporting_skills": [
+        "S05_Array"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-PFX-01",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-27-L-BIN-01",
+      "pb_uid": "PB-27",
+      "primary_skill": "S10_Binary_Search",
+      "supporting_skills": [
+        "S30_Complexity"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-BIN-01",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-28-L-REC-04",
+      "pb_uid": "PB-28",
+      "primary_skill": "S32_Backtracking",
+      "supporting_skills": [
+        "S12_Brute_Force",
+        "S16_Recursion"
+      ],
+      "role": "Transfer Challenge",
+      "lesson_uid": "L-REC-04",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-32-L-ORD-01",
+      "pb_uid": "PB-32",
+      "primary_skill": "S09_Sorting",
+      "supporting_skills": [
+        "S30_Complexity"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-ORD-01",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-33-L-GPH-04",
+      "pb_uid": "PB-33",
+      "primary_skill": "S21_Graph_Tree",
+      "supporting_skills": [
+        "S18_DFS"
+      ],
+      "role": "Transfer Challenge",
+      "lesson_uid": "L-GPH-04",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-35-L-REC-01",
+      "pb_uid": "PB-35",
+      "primary_skill": "S16_Recursion",
+      "supporting_skills": [],
+      "role": "Guided Drill",
+      "lesson_uid": "L-REC-01",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-36-L-GRD-01",
+      "pb_uid": "PB-36",
+      "primary_skill": "S11_Greedy",
+      "supporting_skills": [
+        "S14_Math"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-GRD-01",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-37-L-DAT-03",
+      "pb_uid": "PB-37",
+      "primary_skill": "S34_Matrix_2D",
+      "supporting_skills": [
+        "S23_Simulation"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-DAT-03",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-39-L-DP-03",
+      "pb_uid": "PB-39",
+      "primary_skill": "S20_DP",
+      "supporting_skills": [],
+      "role": "Guided Drill",
+      "lesson_uid": "L-DP-03",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-4-L-DS-01",
+      "pb_uid": "PB-4",
+      "primary_skill": "S17_Stack_Queue",
+      "supporting_skills": [],
+      "role": "Guided Drill",
+      "lesson_uid": "L-DS-01",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-40-L-FND-02",
+      "pb_uid": "PB-40",
+      "primary_skill": "S03_Loops",
+      "supporting_skills": [
+        "S02_Conditionals"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-FND-02",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-41-L-FND-04",
+      "pb_uid": "PB-41",
+      "primary_skill": "S01_IO",
+      "supporting_skills": [
+        "S03_Loops"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-FND-04",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-42-L-DAT-02",
+      "pb_uid": "PB-42",
+      "primary_skill": "S07_String",
+      "supporting_skills": [
+        "S23_Simulation"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-DAT-02",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-43-L-REC-01",
+      "pb_uid": "PB-43",
+      "primary_skill": "S16_Recursion",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-REC-01",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-44-L-REC-03",
+      "pb_uid": "PB-44",
+      "primary_skill": "S32_Backtracking",
+      "supporting_skills": [],
+      "role": "Guided Drill",
+      "lesson_uid": "L-REC-03",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-45-L-REC-05",
+      "pb_uid": "PB-45",
+      "primary_skill": "S29_Bitmask",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-REC-05",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-46-L-REC-04",
+      "pb_uid": "PB-46",
+      "primary_skill": "S32_Backtracking",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-REC-04",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-47-L-ORD-03",
+      "pb_uid": "PB-47",
+      "primary_skill": "S24_Map_Set",
+      "supporting_skills": [],
+      "role": "Guided Drill",
+      "lesson_uid": "L-ORD-03",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-48-L-WIN-01",
+      "pb_uid": "PB-48",
+      "primary_skill": "S13_Two_Pointers",
+      "supporting_skills": [
+        "S09_Sorting"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-WIN-01",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-49-L-GRD-01",
+      "pb_uid": "PB-49",
+      "primary_skill": "S11_Greedy",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-GRD-01",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-5-L-DP-04",
+      "pb_uid": "PB-5",
+      "primary_skill": "S35_LIS",
+      "supporting_skills": [
+        "S10_Binary_Search",
+        "S20_DP"
+      ],
+      "role": "Transfer Challenge",
+      "lesson_uid": "L-DP-04",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-50-L-ORD-03",
+      "pb_uid": "PB-50",
+      "primary_skill": "S24_Map_Set",
+      "supporting_skills": [],
+      "role": "Transfer Challenge",
+      "lesson_uid": "L-ORD-03",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-52-L-GRD-02",
+      "pb_uid": "PB-52",
+      "primary_skill": "S11_Greedy",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-GRD-02",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-54-L-GRD-03",
+      "pb_uid": "PB-54",
+      "primary_skill": "S11_Greedy",
+      "supporting_skills": [],
+      "role": "Guided Drill",
+      "lesson_uid": "L-GRD-03",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-57-L-GRD-02",
+      "pb_uid": "PB-57",
+      "primary_skill": "S11_Greedy",
+      "supporting_skills": [
+        "S33_Priority_Queue"
+      ],
+      "role": "Transfer Challenge",
+      "lesson_uid": "L-GRD-02",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-58-L-BIN-03",
+      "pb_uid": "PB-58",
+      "primary_skill": "S10_Binary_Search",
+      "supporting_skills": [
+        "S30_Complexity"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-BIN-03",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-6-L-GPH-02",
+      "pb_uid": "PB-6",
+      "primary_skill": "S18_DFS",
+      "supporting_skills": [
+        "S16_Recursion",
+        "S21_Graph_Tree"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-GPH-02",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-60-L-DS-02",
+      "pb_uid": "PB-60",
+      "primary_skill": "S17_Stack_Queue",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-DS-02",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-61-L-PFX-02",
+      "pb_uid": "PB-61",
+      "primary_skill": "S22_Prefix_Sum",
+      "supporting_skills": [
+        "S15_Number_Theory",
+        "S24_Map_Set"
+      ],
+      "role": "Transfer Challenge",
+      "lesson_uid": "L-PFX-02",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-63-L-DP-01",
+      "pb_uid": "PB-63",
+      "primary_skill": "S20_DP",
+      "supporting_skills": [],
+      "role": "Guided Drill",
+      "lesson_uid": "L-DP-01",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-64-L-DP-02",
+      "pb_uid": "PB-64",
+      "primary_skill": "S20_DP",
+      "supporting_skills": [],
+      "role": "Guided Drill",
+      "lesson_uid": "L-DP-02",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-65-L-DP-03",
+      "pb_uid": "PB-65",
+      "primary_skill": "S20_DP",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-DP-03",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-66-L-DP-04",
+      "pb_uid": "PB-66",
+      "primary_skill": "S35_LIS",
+      "supporting_skills": [
+        "S10_Binary_Search",
+        "S20_DP"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-DP-04",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-67-L-GPH-02",
+      "pb_uid": "PB-67",
+      "primary_skill": "S18_DFS",
+      "supporting_skills": [
+        "S21_Graph_Tree"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-GPH-02",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-68-L-GPH-03",
+      "pb_uid": "PB-68",
+      "primary_skill": "S19_BFS",
+      "supporting_skills": [
+        "S21_Graph_Tree"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-GPH-03",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-69-L-GPH-03",
+      "pb_uid": "PB-69",
+      "primary_skill": "S19_BFS",
+      "supporting_skills": [
+        "S21_Graph_Tree"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-GPH-03",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-71-L-MIX-02",
+      "pb_uid": "PB-71",
+      "primary_skill": "S19_BFS",
+      "supporting_skills": [
+        "S21_Graph_Tree"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-MIX-02",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-76-L-PFX-01",
+      "pb_uid": "PB-76",
+      "primary_skill": "S22_Prefix_Sum",
+      "supporting_skills": [
+        "S30_Complexity"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-PFX-01",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-77-L-PFX-03",
+      "pb_uid": "PB-77",
+      "primary_skill": "S22_Prefix_Sum",
+      "supporting_skills": [
+        "S34_Matrix_2D"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-PFX-03",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-78-L-WIN-02",
+      "pb_uid": "PB-78",
+      "primary_skill": "S13_Two_Pointers",
+      "supporting_skills": [
+        "S22_Prefix_Sum"
+      ],
+      "role": "Worked Example",
+      "lesson_uid": "L-WIN-02",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-8-L-GRD-03",
+      "pb_uid": "PB-8",
+      "primary_skill": "S11_Greedy",
+      "supporting_skills": [
+        "S30_Complexity"
+      ],
+      "role": "Transfer Challenge",
+      "lesson_uid": "L-GRD-03",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-80-L-WIN-02",
+      "pb_uid": "PB-80",
+      "primary_skill": "S13_Two_Pointers",
+      "supporting_skills": [
+        "S24_Map_Set"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-WIN-02",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-81-L-DS-02",
+      "pb_uid": "PB-81",
+      "primary_skill": "S17_Stack_Queue",
+      "supporting_skills": [],
+      "role": "Guided Drill",
+      "lesson_uid": "L-DS-02",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-84-L-DP-01",
+      "pb_uid": "PB-84",
+      "primary_skill": "S20_DP",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-DP-01",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-87-L-BIN-03",
+      "pb_uid": "PB-87",
+      "primary_skill": "S10_Binary_Search",
+      "supporting_skills": [
+        "S30_Complexity"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-BIN-03",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-89-L-DP-04",
+      "pb_uid": "PB-89",
+      "primary_skill": "S35_LIS",
+      "supporting_skills": [
+        "S10_Binary_Search",
+        "S20_DP"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-DP-04",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-9-L-DAT-03",
+      "pb_uid": "PB-9",
+      "primary_skill": "S34_Matrix_2D",
+      "supporting_skills": [
+        "S07_String",
+        "S23_Simulation"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-DAT-03",
+      "lesson_order": 3
+    },
+    {
+      "placement_uid": "PL-PB-90-L-PFX-02",
+      "pb_uid": "PB-90",
+      "primary_skill": "S22_Prefix_Sum",
+      "supporting_skills": [
+        "S24_Map_Set"
+      ],
+      "role": "Core Independent",
+      "lesson_uid": "L-PFX-02",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-91-L-ORD-03",
+      "pb_uid": "PB-91",
+      "primary_skill": "S24_Map_Set",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-ORD-03",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-92-L-BIN-01",
+      "pb_uid": "PB-92",
+      "primary_skill": "S10_Binary_Search",
+      "supporting_skills": [
+        "S30_Complexity"
+      ],
+      "role": "Worked Example",
+      "lesson_uid": "L-BIN-01",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-93-L-PFX-01",
+      "pb_uid": "PB-93",
+      "primary_skill": "S22_Prefix_Sum",
+      "supporting_skills": [],
+      "role": "Worked Example",
+      "lesson_uid": "L-PFX-01",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-94-L-WIN-01",
+      "pb_uid": "PB-94",
+      "primary_skill": "S13_Two_Pointers",
+      "supporting_skills": [
+        "S09_Sorting"
+      ],
+      "role": "Guided Drill",
+      "lesson_uid": "L-WIN-01",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-95-L-BIN-02",
+      "pb_uid": "PB-95",
+      "primary_skill": "S10_Binary_Search",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-BIN-02",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-96-L-FND-02",
+      "pb_uid": "PB-96",
+      "primary_skill": "S02_Conditionals",
+      "supporting_skills": [],
+      "role": "Worked Example",
+      "lesson_uid": "L-FND-02",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-97-L-DAT-02",
+      "pb_uid": "PB-97",
+      "primary_skill": "S07_String",
+      "supporting_skills": [],
+      "role": "Worked Example",
+      "lesson_uid": "L-DAT-02",
+      "lesson_order": 1
+    },
+    {
+      "placement_uid": "PL-PB-98-L-DAT-01",
+      "pb_uid": "PB-98",
+      "primary_skill": "S05_Array",
+      "supporting_skills": [],
+      "role": "Guided Drill",
+      "lesson_uid": "L-DAT-01",
+      "lesson_order": 2
+    },
+    {
+      "placement_uid": "PL-PB-99-L-GRD-02",
+      "pb_uid": "PB-99",
+      "primary_skill": "S11_Greedy",
+      "supporting_skills": [],
+      "role": "Guided Drill",
+      "lesson_uid": "L-GRD-02",
+      "lesson_order": 1
+    }
+  ]
+}
