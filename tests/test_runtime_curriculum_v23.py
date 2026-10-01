@@ -61,6 +61,7 @@ class RuntimeCurriculumV23Test(unittest.TestCase):
                     "pb_uid": "PB-001",
                     "problem_id": "a693",
                     "title": "Prefix Sum",
+                    "url": "https://example.invalid/a693",
                     "difficulty": "D2",
                 }
             ],
@@ -133,6 +134,10 @@ class RuntimeCurriculumV23Test(unittest.TestCase):
         self.assertEqual(
             first.primary_skill,
             "S22_Prefix_Sum",
+        )
+        self.assertEqual(
+            first.url,
+            "https://example.invalid/a693",
         )
         self.assertEqual(
             first.supporting_skills,
