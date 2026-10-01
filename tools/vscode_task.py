@@ -28,10 +28,10 @@ RECALL_TEXT = {
 }
 
 RECALL_NEXT = {
-    0: "1 天後",
-    1: "3 天後",
-    2: "7 天後",
-    3: "30 天後起",
+    0: "adaptive",
+    1: "adaptive",
+    2: "adaptive",
+    3: "adaptive",
 }
 
 
@@ -181,7 +181,7 @@ def record_current(action: str, filename: str, choice: str) -> int:
     print(f"題號    {pid}")
     print(f"Recall  {score}")
     print(f"程度    {RECALL_TEXT[score]}")
-    print(f"下次    {RECALL_NEXT[score]}")
+    print(f"排程    {RECALL_NEXT[score]}")
     rule()
 
     buf = io.StringIO()
