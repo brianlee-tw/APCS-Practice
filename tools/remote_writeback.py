@@ -369,7 +369,16 @@ def notion_projection(
         "Attempt Finished At": (
             attempt.finished_at
         ),
+        "Independent Known": (
+            attempt.independent
+            is not None
+        ),
     }
+
+    if attempt.started_at is not None:
+        rec_properties[
+            "Attempt Started At"
+        ] = attempt.started_at
 
     if (
         attempt.notion_language
@@ -439,6 +448,14 @@ def notion_projection(
                 event.judge_result
             ),
             "日期": event.occurred_at,
+            "Independent Known": (
+                event.independent
+                is not None
+            ),
+            "Timed Known": (
+                event.timed
+                is not None
+            ),
         }
 
         if (
