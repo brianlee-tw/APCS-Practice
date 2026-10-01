@@ -16,6 +16,7 @@ from __future__ import annotations
 import datetime as dt
 import json
 import os
+import statistics
 import uuid
 from dataclasses import asdict, dataclass
 from pathlib import Path
@@ -25,8 +26,11 @@ try:
     from .adaptive_memory import (
         MemoryPolicy,
         MemoryState,
+        ReviewCandidate,
+        ReviewPlan,
         next_due_on,
         retrievability,
+        select_review_plan,
         update_memory,
     )
     from .evidence_outbox import (
@@ -38,8 +42,11 @@ except ImportError:
     from adaptive_memory import (
         MemoryPolicy,
         MemoryState,
+        ReviewCandidate,
+        ReviewPlan,
         next_due_on,
         retrievability,
+        select_review_plan,
         update_memory,
     )
     from evidence_outbox import (
@@ -502,6 +509,239 @@ class SkillMemoryStore:
             ),
             rebuilt=False,
             states=len(states),
+        )
+
+    @staticmethod
+    def _estimate_minutes_by_key(
+        envelopes: Iterable[
+            OutboxEnvelope
+        ],
+    ) -> dict[
+        tuple[str, str],
+        int,
+    ]:
+        samples: dict[
+            tuple[str, str],
+            list[int],
+        ] = {}
+
+        for envelope in envelopes:
+            # Full attempt time cannot be safely attributed to each Skill
+            # when one mixed attempt emits multiple claims.
+            if len(envelope.evidence) != 1:
+                continue
+
+            minutes = (
+                envelope.attempt
+                .active_minutes
+            )
+
+            if (
+                minutes is None
+                or minutes <= 0
+            ):
+                continue
+
+            try:
+                converted = (
+                    memory_evidence(
+                        envelope
+                    )
+                )
+            except EvidenceOutboxError:
+                continue
+
+            if len(converted) != 1:
+                continue
+
+            evidence = converted[0]
+            key = (
+                evidence.skill_uid,
+                evidence.track,
+            )
+
+            samples.setdefault(
+                key,
+                [],
+            ).append(
+                int(minutes)
+            )
+
+        result = {}
+
+        for key, values in samples.items():
+            recent = values[-3:]
+            estimate = int(
+                round(
+                    statistics.median(
+                        recent
+                    )
+                )
+            )
+
+            result[key] = max(
+                5,
+                min(
+                    20,
+                    estimate,
+                ),
+            )
+
+        return result
+
+    @staticmethod
+    def latest_problem_by_key(
+        envelopes: Iterable[
+            OutboxEnvelope
+        ],
+    ) -> dict[
+        tuple[str, str],
+        str,
+    ]:
+        latest: dict[
+            tuple[str, str],
+            tuple[
+                dt.datetime,
+                str,
+            ],
+        ] = {}
+
+        for envelope in envelopes:
+            try:
+                evidence_items = (
+                    memory_evidence(
+                        envelope
+                    )
+                )
+            except EvidenceOutboxError:
+                continue
+
+            try:
+                finished_at = (
+                    dt.datetime.fromisoformat(
+                        envelope.attempt
+                        .finished_at
+                    )
+                )
+            except ValueError:
+                continue
+
+            for evidence in evidence_items:
+                key = (
+                    evidence.skill_uid,
+                    evidence.track,
+                )
+
+                current = latest.get(
+                    key
+                )
+
+                if (
+                    current is None
+                    or finished_at
+                    > current[0]
+                ):
+                    latest[key] = (
+                        finished_at,
+                        envelope.attempt
+                        .problem_id,
+                    )
+
+        return {
+            key: value[1]
+            for key, value
+            in latest.items()
+        }
+
+    def review_plan(
+        self,
+        envelopes: Iterable[
+            OutboxEnvelope
+        ],
+        *,
+        on_date: dt.date,
+        total_capacity_minutes: int,
+        importance_by_skill: (
+            dict[str, str]
+            | None
+        ) = None,
+    ) -> ReviewPlan:
+        envelopes = tuple(
+            envelopes
+        )
+
+        self.reconcile(
+            envelopes
+        )
+
+        estimates = (
+            self._estimate_minutes_by_key(
+                envelopes
+            )
+        )
+        importance_by_skill = (
+            importance_by_skill
+            or {}
+        )
+
+        candidates = []
+
+        for (
+            state,
+            current_retrievability,
+            due_on,
+        ) in self.due_states(
+            on_date=on_date
+        ):
+            key = (
+                state.skill_uid,
+                state.track,
+            )
+
+            fallback_minutes = (
+                6
+                if state.track
+                == "Reading"
+                else 10
+            )
+
+            candidates.append(
+                ReviewCandidate(
+                    skill_uid=(
+                        state.skill_uid
+                    ),
+                    track=state.track,
+                    retrievability=(
+                        current_retrievability
+                    ),
+                    due_on=due_on,
+                    estimated_minutes=(
+                        estimates.get(
+                            key,
+                            fallback_minutes,
+                        )
+                    ),
+                    importance=(
+                        importance_by_skill
+                        .get(
+                            state.skill_uid,
+                            "supporting",
+                        )
+                    ),
+                    recent_failure=(
+                        state.last_outcome
+                        == "FAIL"
+                    ),
+                )
+            )
+
+        return select_review_plan(
+            candidates,
+            today=on_date,
+            total_capacity_minutes=(
+                total_capacity_minutes
+            ),
+            policy=self.policy,
         )
 
     def due_states(
