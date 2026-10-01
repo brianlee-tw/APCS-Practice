@@ -576,5 +576,60 @@ class LearningRouteV23Test(unittest.TestCase):
         )
 
 
+class PublishedRouteSmokeTest(unittest.TestCase):
+    def test_real_3plus3_route_starts_at_s01_guided(self):
+        root = Path(
+            __file__
+        ).resolve().parents[1]
+        curriculum = RuntimeCurriculum(
+            root
+            / "curriculum"
+            / "published.v23.json"
+        )
+
+        route = (
+            select_new_learning_plan(
+                curriculum,
+                [],
+                target="3+3",
+            )
+        )
+
+        self.assertEqual(
+            route.skill.uid,
+            "S01_IO",
+        )
+        self.assertEqual(
+            len(
+                route.route_skill_uids
+            ),
+            14,
+        )
+        self.assertNotIn(
+            "S22_Prefix_Sum",
+            route.route_skill_uids,
+        )
+        self.assertNotIn(
+            "S36_Range_Tree",
+            route.route_skill_uids,
+        )
+        self.assertEqual(
+            route.placement.pb_uid,
+            "PB-143",
+        )
+        self.assertEqual(
+            route.placement.problem_id,
+            "zj-d050",
+        )
+        self.assertEqual(
+            route.placement.role,
+            "Guided Drill",
+        )
+        self.assertEqual(
+            route.placement.lesson_uid,
+            "L-FND-01",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
