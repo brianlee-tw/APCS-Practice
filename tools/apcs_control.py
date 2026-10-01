@@ -18,14 +18,38 @@ from pathlib import Path
 try:
     from . import apcs as core
     from .catalog_store import CatalogError, ProblemMeta, SolutionMeta
+    from .evidence_outbox import (
+        EvidenceOutbox,
+        EvidenceOutboxError,
+        build_envelope,
+    )
+    from .runtime_curriculum import (
+        RuntimeCurriculum,
+        RuntimeCurriculumError,
+    )
     from .tag_taxonomy import TAG_GROUPS, serialize_selection, split_tags
 except ImportError:
     import apcs as core
     from catalog_store import CatalogError, ProblemMeta, SolutionMeta
+    from evidence_outbox import (
+        EvidenceOutbox,
+        EvidenceOutboxError,
+        build_envelope,
+    )
+    from runtime_curriculum import (
+        RuntimeCurriculum,
+        RuntimeCurriculumError,
+    )
     from tag_taxonomy import TAG_GROUPS, serialize_selection, split_tags
 
 
 ROOT = Path(__file__).resolve().parents[1]
+RUNTIME_DIR = ROOT / ".apcs" / "runtime"
+PUBLISHED_CURRICULUM = ROOT / "curriculum" / "published.v23.json"
+
+OUTBOX = EvidenceOutbox(RUNTIME_DIR)
+CURRICULUM = RuntimeCurriculum(PUBLISHED_CURRICULUM)
+
 ID_RE = re.compile(r"^([A-Za-z]\d+|\d+)(?:_|$)")
 
 RESET = "\033[0m"
