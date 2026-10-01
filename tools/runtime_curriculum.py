@@ -38,6 +38,7 @@ class PlacementContext:
     pb_uid: str
     problem_id: str
     title: str
+    url: str
     difficulty: str
     primary_skill: str
     supporting_skills: tuple[str, ...]
@@ -218,6 +219,12 @@ class RuntimeCurriculum:
                     title=str(
                         problem.get(
                             "title",
+                            "",
+                        )
+                    ).strip(),
+                    url=str(
+                        problem.get(
+                            "url",
                             "",
                         )
                     ).strip(),
@@ -406,6 +413,12 @@ class RuntimeCurriculum:
                         title=str(
                             problem.get(
                                 "title",
+                                "",
+                            )
+                        ).strip(),
+                        url=str(
+                            problem.get(
+                                "url",
                                 "",
                             )
                         ).strip(),
