@@ -1250,6 +1250,16 @@ def record_problem(action: str, problem) -> None:
 
     minutes = minutes_result
 
+    evidence_context = (
+        evidence_context_menu(
+            action,
+            problem,
+        )
+    )
+
+    if evidence_context is None:
+        return
+
     complexity_solution = None
     finish_complexity = None
 
@@ -1335,6 +1345,78 @@ def record_problem(action: str, problem) -> None:
             f"{CYAN}{finish_complexity}{RESET}"
         )
 
+    placement = evidence_context[
+        "placement"
+    ]
+
+    assistance = evidence_context[
+        "assistance"
+    ]
+
+    assistance_label = next(
+        label
+        for value, label, _
+        in ASSISTANCE_OPTIONS
+        if value == assistance
+    )
+
+    print(
+        "Assistance  "
+        f"{CYAN}{assistance_label}{RESET}"
+    )
+    print(
+        "Independent "
+        + (
+            f"{GREEN}是{RESET}"
+            if evidence_context[
+                "independent"
+            ]
+            else f"{YELLOW}否{RESET}"
+        )
+    )
+    print(
+        "Novelty     "
+        f"{evidence_context['novelty']}"
+    )
+    print(
+        "Timed       "
+        + (
+            "是"
+            if evidence_context["timed"]
+            else "否"
+        )
+    )
+
+    if placement is not None:
+        print(
+            "Evidence    "
+            f"{CYAN}{placement.primary_skill}"
+            " × Implementation"
+            f"{RESET}"
+        )
+        print(
+            "Placement   "
+            f"{placement.role}"
+        )
+    else:
+        print(
+            f"{YELLOW}"
+            "Evidence    尚未建立（無 Published Placement）"
+            f"{RESET}"
+        )
+
+    placement_warning = evidence_context[
+        "placement_warning"
+    ]
+
+    if placement_warning:
+        print()
+        print(
+            f"{YELLOW}"
+            f"⚠ {fit(placement_warning, ui_width() - 2)}"
+            f"{RESET}"
+        )
+
     print()
     rule()
     print()
@@ -1392,8 +1474,45 @@ def record_problem(action: str, problem) -> None:
         return
 
     sync_warning = None
+    outbox_warning = None
+    outbox_envelope = None
 
     if command_result == 0:
+        try:
+            outbox_envelope = (
+                attempt_envelope_for_record(
+                    action=action,
+                    problem=problem,
+                    result=result,
+                    minutes=minutes,
+                    assistance=evidence_context[
+                        "assistance"
+                    ],
+                    independent=evidence_context[
+                        "independent"
+                    ],
+                    novelty=evidence_context[
+                        "novelty"
+                    ],
+                    timed=evidence_context[
+                        "timed"
+                    ],
+                    placement=evidence_context[
+                        "placement"
+                    ],
+                )
+            )
+
+            OUTBOX.enqueue(
+                outbox_envelope
+            )
+
+        except (
+            EvidenceOutboxError,
+            OSError,
+        ) as exc:
+            outbox_warning = str(exc)
+
         sync_warning = (
             core.sync_generated_best_effort()
         )
@@ -1412,6 +1531,51 @@ def record_problem(action: str, problem) -> None:
                 f"{GREEN}"
                 f"✓ Complexity 已寫入 Catalog："
                 f"{finish_complexity}"
+                f"{RESET}"
+            )
+
+        if (
+            outbox_envelope is not None
+            and outbox_warning is None
+        ):
+            print(
+                f"{GREEN}"
+                "✓ Attempt 已保存到 local evidence outbox"
+                f"{RESET}"
+            )
+
+            if outbox_envelope.evidence:
+                claim = outbox_envelope.evidence[0]
+                print(
+                    f"{GREEN}"
+                    f"✓ Evidence：{claim.skill_uid}"
+                    f" × {claim.track}"
+                    f"{RESET}"
+                )
+            else:
+                print(
+                    f"{YELLOW}"
+                    "⚠ 尚無 Published Placement；"
+                    "本次 Attempt 不更新 Skill Evidence"
+                    f"{RESET}"
+                )
+
+        if outbox_warning:
+            print()
+            print(
+                f"{YELLOW}"
+                "⚠ 學習紀錄已成功，但 local evidence outbox 寫入失敗。"
+                f"{RESET}"
+            )
+            print(
+                f"{GRAY}"
+                f"{fit(outbox_warning, ui_width())}"
+                f"{RESET}"
+            )
+            print(
+                f"{GRAY}"
+                "不要重做 Finish / Review；"
+                "之後使用 reconciliation 修復 Evidence。"
                 f"{RESET}"
             )
 
