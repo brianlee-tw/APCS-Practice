@@ -39,6 +39,13 @@ class RuntimeCurriculumV23Test(unittest.TestCase):
                     "unit": "U-PFX",
                     "path_stage": "Bridge",
                     "path_order": 22,
+                    "tracks": [
+                        "Reading",
+                        "Implementation",
+                    ],
+                    "prerequisites": [],
+                    "conceptual_requirement": "prefix model",
+                    "implementation_requirement": "build prefix",
                     "relevance": {
                         "3+3": "Required",
                         "5+5": "Required",
@@ -51,7 +58,7 @@ class RuntimeCurriculumV23Test(unittest.TestCase):
                     "path_stage": "Extension",
                     "path_order": 99,
                     "relevance": {
-                        "3+3": "Optional",
+                        "3+3": "Not Required",
                         "5+5": "Extension",
                     },
                 },
@@ -61,6 +68,8 @@ class RuntimeCurriculumV23Test(unittest.TestCase):
                     "pb_uid": "PB-001",
                     "problem_id": "a693",
                     "title": "Prefix Sum",
+                    "source_platform": "ZeroJudge",
+                    "judge_platform": "ZeroJudge",
                     "url": "https://example.invalid/a693",
                     "difficulty": "D2",
                 }
@@ -197,6 +206,93 @@ class RuntimeCurriculumV23Test(unittest.TestCase):
                 target="5+5",
             ),
             "extension",
+        )
+
+    def test_skill_context_exposes_prerequisite_contract_fields(self):
+        self.write_snapshot(
+            self.base_snapshot()
+        )
+
+        runtime = RuntimeCurriculum(
+            self.snapshot
+        )
+        context = runtime.skill_context(
+            "S22_Prefix_Sum"
+        )
+
+        self.assertEqual(
+            context.tracks,
+            (
+                "Reading",
+                "Implementation",
+            ),
+        )
+        self.assertEqual(
+            context.prerequisites,
+            (),
+        )
+        self.assertEqual(
+            context.conceptual_requirement,
+            "prefix model",
+        )
+        self.assertEqual(
+            context.implementation_requirement,
+            "build prefix",
+        )
+        self.assertEqual(
+            [
+                item.uid
+                for item in runtime.skill_contexts()
+            ],
+            [
+                "S22_Prefix_Sum",
+                "S99_Extension",
+            ],
+        )
+
+    def test_placement_uid_is_runtime_identity(self):
+        self.write_snapshot(
+            self.base_snapshot()
+        )
+
+        runtime = RuntimeCurriculum(
+            self.snapshot
+        )
+        placement = runtime.placement_by_uid(
+            "PL-001"
+        )
+
+        self.assertIsNotNone(
+            placement
+        )
+        self.assertEqual(
+            placement.problem_id,
+            "a693",
+        )
+        self.assertEqual(
+            placement.source_platform,
+            "ZeroJudge",
+        )
+        self.assertEqual(
+            placement.judge_platform,
+            "ZeroJudge",
+        )
+
+    def test_not_required_does_not_become_required_by_substring(self):
+        self.write_snapshot(
+            self.base_snapshot()
+        )
+
+        runtime = RuntimeCurriculum(
+            self.snapshot
+        )
+
+        self.assertEqual(
+            runtime.importance_for_skill(
+                "S99_Extension",
+                target="3+3",
+            ),
+            "supporting",
         )
 
     def test_placements_for_skill_returns_primary_skill_placements(self):
