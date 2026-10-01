@@ -17,10 +17,6 @@ from pathlib import Path
 
 try:
     from . import apcs as core
-    from .adaptive_memory import (
-        ReviewCandidate,
-        select_review_plan,
-    )
     from .catalog_store import CatalogError, ProblemMeta, SolutionMeta
     from .evidence_outbox import (
         EvidenceOutbox,
@@ -37,10 +33,6 @@ try:
     from .tag_taxonomy import TAG_GROUPS, serialize_selection, split_tags
 except ImportError:
     import apcs as core
-    from adaptive_memory import (
-        ReviewCandidate,
-        select_review_plan,
-    )
     from catalog_store import CatalogError, ProblemMeta, SolutionMeta
     from evidence_outbox import (
         EvidenceOutbox,
@@ -322,18 +314,6 @@ def problem_status(problem) -> str:
     if state.recall is not None:
         parts.append(f"Recall {state.recall}")
 
-    due = problem.get("due")
-
-    if due:
-        today = dt.date.today()
-
-        if due < today:
-            parts.append(f"逾期 {(today - due).days} 天")
-        elif due == today:
-            parts.append("今天到期")
-        else:
-            parts.append(f"下次 {due:%m/%d}")
-
     return " · ".join(parts)
 
 
@@ -423,93 +403,97 @@ def adaptive_today_snapshot(
         else session_capacity_minutes()
     )
 
-    reconcile_warning = None
+    warning = None
     reconcile_report = None
 
     try:
-        reconcile_report = MEMORY.reconcile(
-            OUTBOX.all_envelopes()
-        )
+        envelopes = OUTBOX.all_envelopes()
     except (
         EvidenceOutboxError,
         OSError,
         ValueError,
     ) as exc:
-        reconcile_warning = str(exc)
+        envelopes = ()
+        warning = str(exc)
+
+    target = curriculum_target()
 
     try:
-        due_states = MEMORY.due_states(
-            on_date=on_date
+        importance = (
+            CURRICULUM
+            .skill_importance(
+                target=target
+            )
         )
+    except RuntimeCurriculumError:
+        importance = {}
+
+    try:
+        reconcile_report = MEMORY.reconcile(
+            envelopes
+        )
+
+        plan = MEMORY.review_plan(
+            envelopes,
+            on_date=on_date,
+            total_capacity_minutes=(
+                total_capacity_minutes
+            ),
+            importance_by_skill=(
+                importance
+            ),
+        )
+
+        memory_states = (
+            MEMORY.load_states()
+        )
+
+        latest_problem = (
+            MEMORY
+            .latest_problem_by_key(
+                envelopes
+            )
+        )
+
     except (
+        EvidenceOutboxError,
         OSError,
         ValueError,
     ) as exc:
-        due_states = ()
-        if reconcile_warning is None:
-            reconcile_warning = str(exc)
+        from types import SimpleNamespace
 
-    target = curriculum_target()
-    candidates = []
-
-    for state, value, due_on in due_states:
-        try:
-            importance = (
-                CURRICULUM
-                .importance_for_skill(
-                    state.skill_uid,
-                    target=target,
-                )
-            )
-        except RuntimeCurriculumError:
-            importance = "supporting"
-
-        estimated_minutes = (
-            DEFAULT_READING_REVIEW_MINUTES
-            if state.track == "Reading"
-            else DEFAULT_IMPLEMENTATION_REVIEW_MINUTES
+        plan = SimpleNamespace(
+            budget_minutes=0,
+            selected=(),
+            deferred=(),
+            selected_minutes=0,
         )
-
-        candidates.append(
-            ReviewCandidate(
-                skill_uid=state.skill_uid,
-                track=state.track,
-                retrievability=value,
-                due_on=due_on,
-                estimated_minutes=estimated_minutes,
-                importance=importance,
-                recent_failure=(
-                    state.last_outcome
-                    == "FAIL"
-                ),
-            )
-        )
-
-    plan = select_review_plan(
-        candidates,
-        today=on_date,
-        total_capacity_minutes=total_capacity_minutes,
-    )
-
-    try:
-        memory_states = MEMORY.load_states()
-    except (
-        OSError,
-        ValueError,
-    ):
         memory_states = {}
+        latest_problem = {}
+
+        if warning is None:
+            warning = str(exc)
 
     return {
         "date": on_date,
         "capacity_minutes": total_capacity_minutes,
         "target": target,
         "plan": plan,
-        "due_count": len(candidates),
-        "memory_count": len(memory_states),
-        "reconcile_report": reconcile_report,
-        "warning": reconcile_warning,
+        "due_count": (
+            len(plan.selected)
+            + len(plan.deferred)
+        ),
+        "memory_count": len(
+            memory_states
+        ),
+        "reconcile_report": (
+            reconcile_report
+        ),
+        "latest_problem": (
+            latest_problem
+        ),
+        "warning": warning,
     }
-
 
 def skill_display_name(
     skill_uid: str,
@@ -580,17 +564,56 @@ def choose_menu(
             print()
 
         if main:
-            due, overdue = today_state()
+            snapshot = (
+                adaptive_today_snapshot()
+            )
+            plan = snapshot["plan"]
 
-            print(f"{GRAY}今日狀態{RESET}")
+            print(f"{GRAY}今日學習{RESET}")
+            print(
+                f"容量 {snapshot['capacity_minutes']} min"
+                f" · Review budget {plan.budget_minutes} min"
+            )
 
-            if due:
-                text = f"待複習 {len(due)} 題"
-                if overdue:
-                    text += f" · 逾期 {len(overdue)} 題"
-                print(f"{YELLOW}{text}{RESET}")
+            if plan.selected:
+                print(
+                    f"{YELLOW}"
+                    f"Adaptive review {len(plan.selected)} 項"
+                    f" · {plan.selected_minutes} min"
+                    f"{RESET}"
+                )
             else:
-                print(f"{GREEN}✓ 沒有到期複習{RESET}")
+                print(
+                    f"{GREEN}"
+                    "✓ 今天沒有已選定的 adaptive review"
+                    f"{RESET}"
+                )
+
+            if plan.deferred:
+                print(
+                    f"{GRAY}"
+                    f"安全延後 {len(plan.deferred)} 項"
+                    "（不是欠題）"
+                    f"{RESET}"
+                )
+
+            protected = max(
+                0,
+                snapshot["capacity_minutes"]
+                - plan.budget_minutes,
+            )
+            print(
+                f"{GRAY}"
+                f"新學習保留 ≥ {protected} min"
+                f"{RESET}"
+            )
+
+            if snapshot["warning"]:
+                print(
+                    f"{YELLOW}"
+                    f"⚠ {fit(snapshot['warning'], ui_width() - 2)}"
+                    f"{RESET}"
+                )
 
             print()
 
@@ -3826,8 +3849,8 @@ def main() -> int:
 
         options = [
             {
-                "label": "今日複習",
-                "detail": "開始今天排定的複習",
+                "label": "今日學習",
+                "detail": "Adaptive review + 保留新學習容量",
                 "enabled": True,
             },
             {
