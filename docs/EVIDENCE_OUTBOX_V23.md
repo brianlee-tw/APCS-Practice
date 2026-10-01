@@ -189,3 +189,24 @@ Those belong to the next gates.
 - incomplete evidence cannot alter adaptive memory;
 - remote sync failure does not invalidate the local attempt;
 - pending writeback is operational state, not learning debt.
+
+
+## v2.3 remote writeback contract hardening
+
+The outbox contract is now projected through `tools/remote_writeback.py`.
+
+Additional invariants:
+
+- Published PB UID is required before an envelope is remotely eligible;
+- local `writeback_id` becomes REC idempotency identity;
+- local `event_id` becomes EV-v1 idempotency identity;
+- exact `finished_at` is preserved for delayed/offline synchronization;
+- MLE, Transfer, Mixed, and Same Problem Repeat are preserved losslessly;
+- relations are sent as PB UID / Skill UID identities and resolved only by the
+  trusted server;
+- the client never supplies `Valid for Gate`;
+- a local receipt must represent one complete REC plus the exact expected
+  Event ID set before the envelope can leave the pending queue.
+
+The production network transport remains disabled until the active Cloudflare
+Worker source is patched and verified.  See `docs/REMOTE_WRITEBACK_V23.md`.
