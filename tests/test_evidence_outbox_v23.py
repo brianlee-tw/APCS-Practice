@@ -120,6 +120,28 @@ class EvidenceOutboxV23Test(unittest.TestCase):
         ):
             self.store.enqueue(second)
 
+    def test_all_envelopes_include_acknowledged_items(self):
+        envelope = sample_envelope()
+
+        self.store.enqueue(
+            envelope
+        )
+        self.store.mark_sent(
+            envelope.writeback_id,
+            {
+                "rec_page_id": "rec-123",
+            },
+        )
+
+        self.assertEqual(
+            self.store.pending(),
+            (),
+        )
+        self.assertEqual(
+            self.store.all_envelopes(),
+            (envelope,),
+        )
+
     def test_receipt_removes_item_from_pending_without_deleting_event(self):
         envelope = sample_envelope()
 
