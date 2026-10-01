@@ -30,6 +30,10 @@ class SkillContext:
     path_order: int | float
     relevance_33: str
     relevance_55: str
+    tracks: tuple[str, ...] = ()
+    prerequisites: tuple[str, ...] = ()
+    conceptual_requirement: str = ""
+    implementation_requirement: str = ""
 
 
 @dataclass(frozen=True)
@@ -45,6 +49,8 @@ class PlacementContext:
     role: str
     lesson_uid: str
     lesson_order: int | float | None
+    source_platform: str = ""
+    judge_platform: str = ""
 
 
 class RuntimeCurriculum:
@@ -234,6 +240,18 @@ class RuntimeCurriculum:
                             "",
                         )
                     ).strip(),
+                    source_platform=str(
+                        problem.get(
+                            "source_platform",
+                            "",
+                        )
+                    ).strip(),
+                    judge_platform=str(
+                        problem.get(
+                            "judge_platform",
+                            "",
+                        )
+                    ).strip(),
                     primary_skill=str(
                         placement.get(
                             "primary_skill",
@@ -271,6 +289,28 @@ class RuntimeCurriculum:
             )
 
         return tuple(result)
+
+    def placement_by_uid(
+        self,
+        placement_uid: str,
+    ) -> PlacementContext | None:
+        placement_uid = str(
+            placement_uid or ""
+        ).strip()
+
+        if not placement_uid:
+            return None
+
+        return next(
+            (
+                item
+                for item
+                in self.all_placements()
+                if item.placement_uid
+                == placement_uid
+            ),
+            None,
+        )
 
     def review_placement_for_skill(
         self,
@@ -575,9 +615,72 @@ class RuntimeCurriculum:
                         "",
                     )
                 ).strip(),
+                tracks=tuple(
+                    str(item).strip()
+                    for item in (
+                        row.get("tracks")
+                        or []
+                    )
+                    if str(item).strip()
+                ),
+                prerequisites=tuple(
+                    str(item).strip()
+                    for item in (
+                        row.get(
+                            "prerequisites"
+                        )
+                        or []
+                    )
+                    if str(item).strip()
+                ),
+                conceptual_requirement=str(
+                    row.get(
+                        "conceptual_requirement",
+                        "",
+                    )
+                ).strip(),
+                implementation_requirement=str(
+                    row.get(
+                        "implementation_requirement",
+                        "",
+                    )
+                ).strip(),
             )
 
         return None
+
+    def skill_contexts(
+        self,
+    ) -> tuple[SkillContext, ...]:
+        data = self.load()
+        result = []
+
+        for row in data.get("skills") or []:
+            uid = str(
+                row.get("uid", "")
+            ).strip()
+
+            if not uid:
+                continue
+
+            context = self.skill_context(
+                uid
+            )
+
+            if context is not None:
+                result.append(
+                    context
+                )
+
+        return tuple(
+            sorted(
+                result,
+                key=lambda item: (
+                    item.path_order,
+                    item.uid,
+                ),
+            )
+        )
 
     def importance_for_skill(
         self,
