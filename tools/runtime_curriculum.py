@@ -345,6 +345,26 @@ class RuntimeCurriculum:
             else candidates[0]
         )
 
+    def placement_by_uid(
+        self,
+        placement_uid: str,
+    ) -> PlacementContext | None:
+        placement_uid = str(
+            placement_uid or ""
+        ).strip()
+
+        if not placement_uid:
+            return None
+
+        for item in self.all_placements():
+            if (
+                item.placement_uid
+                == placement_uid
+            ):
+                return item
+
+        return None
+
     def placements_for_problem(
         self,
         problem_id: str,
