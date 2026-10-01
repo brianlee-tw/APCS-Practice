@@ -1741,7 +1741,13 @@ def record_problem(action: str, problem) -> None:
     complexity_solution = None
     finish_complexity = None
 
-    if action == "finish":
+    if (
+        action == "finish"
+        and problem.get(
+            "catalog_known",
+            True,
+        )
+    ):
         try:
             complexity_solution = (
                 missing_finish_complexity(
@@ -1906,36 +1912,46 @@ def record_problem(action: str, problem) -> None:
     print(f"{GRAY}正在更新學習紀錄…{RESET}")
 
     try:
-        with contextlib.redirect_stdout(io.StringIO()):
-            if action == "finish":
-                command_result = (
-                    finish_with_optional_complexity(
+        if not problem.get(
+            "catalog_known",
+            True,
+        ):
+            # Curriculum-only Problem: the v2.3 Attempt/Evidence outbox is
+            # authoritative for this learner event.  Do not force it through
+            # the v2.2 repo Catalog/progress compatibility layer.
+            command_result = 0
+
+        else:
+            with contextlib.redirect_stdout(io.StringIO()):
+                if action == "finish":
+                    command_result = (
+                        finish_with_optional_complexity(
+                            problem["id"],
+                            score,
+                            minutes=minutes,
+                            complexity_solution=(
+                                complexity_solution
+                            ),
+                            complexity=finish_complexity,
+                            finish_runner=(
+                                lambda pid, recall, *, minutes=None:
+                                core.finish_cmd(
+                                    pid,
+                                    recall,
+                                    minutes=minutes,
+                                    sync_after=False,
+                                )
+                            ),
+                        )
+                    )
+                else:
+                    command_result = core.review_cmd(
                         problem["id"],
                         score,
+                        result=result,
                         minutes=minutes,
-                        complexity_solution=(
-                            complexity_solution
-                        ),
-                        complexity=finish_complexity,
-                        finish_runner=(
-                            lambda pid, recall, *, minutes=None:
-                            core.finish_cmd(
-                                pid,
-                                recall,
-                                minutes=minutes,
-                                sync_after=False,
-                            )
-                        ),
+                        sync_after=False,
                     )
-                )
-            else:
-                command_result = core.review_cmd(
-                    problem["id"],
-                    score,
-                    result=result,
-                    minutes=minutes,
-                    sync_after=False,
-                )
 
     except (
         SystemExit,
@@ -2010,9 +2026,13 @@ def record_problem(action: str, problem) -> None:
             ) as exc:
                 memory_warning = str(exc)
 
-        sync_warning = (
-            core.sync_generated_best_effort()
-        )
+        if problem.get(
+            "catalog_known",
+            True,
+        ):
+            sync_warning = (
+                core.sync_generated_best_effort()
+            )
 
     print()
 
