@@ -17,6 +17,10 @@ from pathlib import Path
 
 try:
     from . import apcs as core
+    from .adaptive_memory import (
+        ReviewCandidate,
+        select_review_plan,
+    )
     from .catalog_store import CatalogError, ProblemMeta, SolutionMeta
     from .evidence_outbox import (
         EvidenceOutbox,
@@ -27,9 +31,16 @@ try:
         RuntimeCurriculum,
         RuntimeCurriculumError,
     )
+    from .skill_memory_store import (
+        SkillMemoryStore,
+    )
     from .tag_taxonomy import TAG_GROUPS, serialize_selection, split_tags
 except ImportError:
     import apcs as core
+    from adaptive_memory import (
+        ReviewCandidate,
+        select_review_plan,
+    )
     from catalog_store import CatalogError, ProblemMeta, SolutionMeta
     from evidence_outbox import (
         EvidenceOutbox,
@@ -40,6 +51,9 @@ except ImportError:
         RuntimeCurriculum,
         RuntimeCurriculumError,
     )
+    from skill_memory_store import (
+        SkillMemoryStore,
+    )
     from tag_taxonomy import TAG_GROUPS, serialize_selection, split_tags
 
 
@@ -49,6 +63,13 @@ PUBLISHED_CURRICULUM = ROOT / "curriculum" / "published.v23.json"
 
 OUTBOX = EvidenceOutbox(RUNTIME_DIR)
 CURRICULUM = RuntimeCurriculum(PUBLISHED_CURRICULUM)
+MEMORY = SkillMemoryStore(
+    RUNTIME_DIR / "skill_memory.json"
+)
+
+DEFAULT_SESSION_MINUTES = 60
+DEFAULT_IMPLEMENTATION_REVIEW_MINUTES = 12
+DEFAULT_READING_REVIEW_MINUTES = 6
 
 ID_RE = re.compile(r"^([A-Za-z]\d+|\d+)(?:_|$)")
 
