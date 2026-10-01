@@ -342,15 +342,16 @@ def build_remote_writeback_bundle(
 def notion_projection(
     bundle: RemoteWritebackBundle,
 ) -> dict[str, Any]:
-    """Describe the exact REC / EV-v1 property projection.
+    """Return logical Notion property + relation projection.
 
-    Relation values intentionally remain canonical UIDs here.  The remote
-    writer must resolve them to Notion relation page IDs/URLs at write time.
+    This is deliberately not raw Notion REST JSON.  Scalar properties use the
+    live REC / EV-v1 property names.  Relations remain canonical PB / Skill /
+    writeback identities and must be resolved by the trusted remote writer.
     """
 
     attempt = bundle.attempt
 
-    rec: dict[str, Any] = {
+    rec_properties: dict[str, Any] = {
         "Writeback ID": (
             attempt.writeback_id
         ),
@@ -374,38 +375,40 @@ def notion_projection(
         attempt.notion_language
         is not None
     ):
-        rec["使用語言"] = [
+        rec_properties[
+            "使用語言"
+        ] = [
             attempt.notion_language
         ]
 
     if attempt.assistance is not None:
-        rec["Assistance"] = (
-            attempt.assistance
-        )
+        rec_properties[
+            "Assistance"
+        ] = attempt.assistance
 
     if (
         attempt.independent
         is not None
     ):
-        rec["獨立完成"] = (
-            attempt.independent
-        )
+        rec_properties[
+            "獨立完成"
+        ] = attempt.independent
 
     if (
         attempt.attempt_count
         is not None
     ):
-        rec["嘗試次數"] = (
-            attempt.attempt_count
-        )
+        rec_properties[
+            "嘗試次數"
+        ] = attempt.attempt_count
 
     if (
         attempt.active_minutes
         is not None
     ):
-        rec["解題時間(分鐘)"] = (
-            attempt.active_minutes
-        )
+        rec_properties[
+            "解題時間(分鐘)"
+        ] = attempt.active_minutes
 
     stage = derive_rec_stage(
         activity=attempt.activity,
@@ -414,17 +417,19 @@ def notion_projection(
     )
 
     if stage is not None:
-        rec["學習階段"] = stage
+        rec_properties[
+            "學習階段"
+        ] = stage
 
     if attempt.note:
-        rec["核心收穫"] = (
-            attempt.note
-        )
+        rec_properties[
+            "核心收穫"
+        ] = attempt.note
 
     ev_rows = []
 
     for event in bundle.evidence:
-        row: dict[str, Any] = {
+        properties: dict[str, Any] = {
             "Event ID": (
                 event.event_id
             ),
@@ -433,13 +438,6 @@ def notion_projection(
             "Judge Result": (
                 event.judge_result
             ),
-            "Skill UID": (
-                event.skill_uid
-            ),
-            "PB UID": event.pb_uid,
-            "Writeback ID": (
-                event.writeback_id
-            ),
             "日期": event.occurred_at,
         }
 
@@ -447,67 +445,89 @@ def notion_projection(
             event.assistance
             is not None
         ):
-            row["Assistance"] = (
-                event.assistance
-            )
+            properties[
+                "Assistance"
+            ] = event.assistance
 
         if (
             event.independent
             is not None
         ):
-            row["Independent"] = (
-                event.independent
-            )
+            properties[
+                "Independent"
+            ] = event.independent
 
         if (
             event.active_minutes
             is not None
         ):
-            row["Time min"] = (
-                event.active_minutes
-            )
+            properties[
+                "Time min"
+            ] = event.active_minutes
 
         if event.timed is not None:
-            row["Timed"] = (
-                event.timed
-            )
+            properties[
+                "Timed"
+            ] = event.timed
 
         if (
             event.notion_novelty
             is not None
         ):
-            row["Novelty"] = (
-                event.notion_novelty
-            )
+            properties[
+                "Novelty"
+            ] = event.notion_novelty
 
         if event.activity is not None:
-            row["Activity"] = (
-                event.activity
-            )
+            properties[
+                "Activity"
+            ] = event.activity
 
         if event.note:
-            row["Evidence Note"] = (
-                event.note
-            )
+            properties[
+                "Evidence Note"
+            ] = event.note
 
         # Valid for Gate is intentionally absent.  It must be derived by the
         # versioned MEAS evaluator after the event has been durably written.
 
         ev_rows.append(
-            row
+            {
+                "event_id": (
+                    event.event_id
+                ),
+                "properties": (
+                    properties
+                ),
+                "relations": {
+                    "problem_pb_uid": (
+                        event.pb_uid
+                    ),
+                    "skill_uid": (
+                        event.skill_uid
+                    ),
+                    "solve_writeback_id": (
+                        event.writeback_id
+                    ),
+                },
+            }
         )
 
     return {
-        "rec": rec,
-        "evidence": ev_rows,
-        "relation_identity": {
-            "problem_pb_uid": (
-                attempt.pb_uid
+        "rec": {
+            "properties": (
+                rec_properties
             ),
-            "skill_uids": [
-                event.skill_uid
-                for event
-                in bundle.evidence
-            ],
+            "relations": {
+                "problem_pb_uid": (
+                    attempt.pb_uid
+                ),
+                "skill_uids": [
+                    event.skill_uid
+                    for event
+                    in bundle.evidence
+                ],
+            },
         },
+        "evidence": ev_rows,
     }
