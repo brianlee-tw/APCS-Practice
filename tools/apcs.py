@@ -1028,7 +1028,7 @@ def note_cmd(pid):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
-        description="APCS-Practice v2.2 catalog workflow"
+        description="APCS-Practice v2.3 engineering CLI"
     )
 
     sub = parser.add_subparsers(
@@ -1097,24 +1097,26 @@ def main(argv=None):
         )
 
     if args.cmd == "today":
-        return today_cmd()
-
-    if args.cmd == "finish":
-        return finish_cmd(
-            args.problem_id,
-            args.score,
-            minutes=args.minutes,
-            note=args.note,
+        print(
+            "v2.3 的 learner-facing Today 已移至 VS Code Control Center。"
         )
-
-    if args.cmd == "review":
-        return review_cmd(
-            args.problem_id,
-            args.score,
-            result=args.result,
-            minutes=args.minutes,
-            note=args.note,
+        print(
+            "請按 Ctrl+Alt+A，選擇「今日學習」。"
         )
+        return 0
+
+    if args.cmd in {"finish", "review"}:
+        print(
+            "v2.3 已停用 CLI 直接 Finish / Review："
+            "此路徑缺少 Assistance、Independent、Novelty、"
+            "Placement、Evidence outbox 與 adaptive memory。",
+            file=sys.stderr,
+        )
+        print(
+            "請按 Ctrl+Alt+A，在 Control Center 完成紀錄。",
+            file=sys.stderr,
+        )
+        return 2
 
     if args.cmd == "note":
         return note_cmd(
