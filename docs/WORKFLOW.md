@@ -35,59 +35,61 @@ solution source 不承載 `APCS Title`、`APCS Tag`、`APCS Complexity`、`APCS 
 
 ## 3. 做完一題
 
-確認 Online Judge 為 AC 後：
+日常使用 **APCS 控制中心**。確認 Judge 結果後，系統依序收集：
 
-```powershell
-python tools/apcs.py finish b130 2
+```text
+Result
+→ Recall（v2.2 相容自評）
+→ Minutes
+→ Assistance A0–A5
+→ Independent
+→ Novelty
+→ Published Placement / Primary Skill
 ```
 
-其中 Recall：
+Assistance 沿用 APCS Learning System 的 learner labels：
 
-| 分數 | 定義 | 下一次複習 |
-|---:|---|---:|
-| 0 | 幾乎不會 / 看答案才懂 | 1 天 |
-| 1 | 需要提示 | 3 天 |
-| 2 | 可獨立完成但偏慢 | 7 天 |
-| 3 | 流暢獨立完成 | 30 天 |
+- A0：完全獨立
+- A1：只有診斷
+- A2：概念提示
+- A3：方向提示
+- A4：骨架提示
+- A5：完整參考
 
-只有正式 Review 的 `AC + Recall 3` 才累積 streak，而且必須發生在不同日期。同一天多次 Review 只採最後一筆參與 streak 計算。第 1 次為 30 天、第 2 次為 60 天、第 3 次以上為 90 天；較低 Recall 或非 AC 會中斷 streak。
+重要 Evidence facts 不使用隱性預設。
 
-可額外記錄時間：
+如果 `curriculum/published.v23.json` 能明確解析目前題目的 Placement，系統只為 **Primary Skill × Implementation** 建立 Evidence；Supporting Skills 不因為同一題 AC 就自動獲得 mastery evidence。
 
-```powershell
-python tools/apcs.py finish b130 2 --minutes 18
+如果 Published Placement 缺失或 snapshot 尚未建立：
+
+```text
+Attempt 仍保存
+Skill Evidence = 不建立
 ```
+
+不得回退到舊 Tags 猜 Skill。
+
+本機先寫入：
+
+```text
+.apcs/runtime/outbox/
+```
+
+remote Notion writeback 失敗不會要求重做題目。
+
+Recall 0–3 暫時保留作 v2.2 相容欄位，但 **不再映射固定 1/3/7/30/60/90 天排程**。v2.3 的複習間隔由 Skill × Track Stability / Retrievability 與 Evidence quality 推導。
+
+CLI `finish/review` 目前仍屬 v2.2 compatibility path；正式 learner-facing Evidence capture 以 Control Center 為準。
 
 ---
 
 ## 4. 複習
 
-日常使用 APCS 控制中心的「今日複習」查看並開啟到期題目。
+Review 同樣由 Control Center 記錄完整 attempt facts。
 
-重解後，由控制中心依序記錄：
+v2.3 不把每一個歷史 Problem 永久排入自己的複習序列；成熟 Skill 將逐步轉向 representative transfer / mixed practice。
 
-```text
-Result → Recall → Minutes
-```
-
-Result 支援 `AC`、`WA`、`TLE`、`RE`、`MLE`、`CE`。Minutes 可略過；非 AC 不允許 Recall 3。
-
-CLI 等價操作：
-
-```bash
-python tools/apcs.py today
-python tools/apcs.py review b130 3 --minutes 7
-python tools/apcs.py review b130 1 --result WA --minutes 11
-```
-
-Review 失敗不會移除既有首次 AC。`solved_on` 表示首次完成日期；`last_review_on`、`last_result` 與 `recall` 則描述最近一次複習狀態。
-
-只有正式 Review 的 `AC + Recall 3` 會累積 streak，而且必須來自不同日期；同一天多次 Review 只採最後一筆。第 1、2、3 次連續成功分別對應 30、60、90 天。較低 Recall 或非 AC 會中斷 streak。
-
-這些紀錄會寫入：
-
-- `data/progress.csv`：目前學習狀態快照。
-- `data/reviews.csv`：Finish / Review 的事件歷史，包括 Result、Recall 與 Minutes。
+目前舊 `data/progress.csv` / `data/reviews.csv` 與 legacy Today queue 暫時保留作相容層，直到 Skill × Track memory store 與 capacity-aware Today plan 完成切換。它們不再被視為 v2.3 的最終 scheduling authority。
 
 ---
 
