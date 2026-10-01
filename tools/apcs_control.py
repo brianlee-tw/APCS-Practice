@@ -3136,52 +3136,144 @@ def catalog_center(problem, current_filename: str | None):
 # ============================================================
 
 def today_view(current_filename: str | None):
-    due, _ = today_state()
+    snapshot = adaptive_today_snapshot()
+    plan = snapshot["plan"]
 
-    if not due:
-        clear()
-        heading("今日複習")
+    clear()
+    heading("今日學習")
+    print()
+    print(
+        f"容量 {snapshot['capacity_minutes']} min"
+        f" · Review budget {plan.budget_minutes} min"
+    )
+    print(
+        f"已選 {len(plan.selected)} 項"
+        f" · {plan.selected_minutes} min"
+    )
+
+    if plan.deferred:
+        print(
+            f"{GRAY}"
+            f"安全延後 {len(plan.deferred)} 項"
+            "（不是欠題）"
+            f"{RESET}"
+        )
+
+    if snapshot["warning"]:
+        print(
+            f"{YELLOW}"
+            f"⚠ {fit(snapshot['warning'], ui_width() - 2)}"
+            f"{RESET}"
+        )
+
+    if not plan.selected:
         print()
-        print(f"{GREEN}✓ 今天沒有到期題目{RESET}")
+        rule()
         print()
-        print(f"{GRAY}可以直接進行新題。{RESET}")
+        print(
+            f"{GREEN}"
+            "✓ 今天沒有需要排入容量的 adaptive review。"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            "主要時間保留給新學習與 deliberate practice。"
+            f"{RESET}"
+        )
         pause()
         return current_filename
 
-    today = dt.date.today()
-
-    rows = sorted(
-        due,
-        key=lambda row: (row[5], row[0]),
-    )
-
     options = []
 
-    for row in rows:
-        pid = row[0]
-        title = clean_title(pid, row[2].title)
-        recall = (
-            row[3].recall
-            if row[3].recall is not None
-            else "—"
+    for candidate in plan.selected:
+        placement = None
+        path = None
+
+        if candidate.track == "Implementation":
+            previous = snapshot[
+                "latest_problem"
+            ].get(
+                (
+                    candidate.skill_uid,
+                    candidate.track,
+                )
+            )
+
+            try:
+                placement = (
+                    CURRICULUM
+                    .review_placement_for_skill(
+                        candidate.skill_uid,
+                        exclude_problem_ids=(
+                            {previous}
+                            if previous
+                            else set()
+                        ),
+                    )
+                )
+            except RuntimeCurriculumError:
+                placement = None
+
+        if placement is not None:
+            for row in all_rows():
+                if row[0] == placement.problem_id:
+                    path = row[2].path
+                    break
+
+        detail = (
+            f"R {candidate.retrievability:.0%}"
+            f" · due {candidate.due_on:%m/%d}"
+            f" · ~{candidate.estimated_minutes} min"
         )
 
-        if row[5] < today:
-            due_text = f"逾期 {(today - row[5]).days} 天"
+        if placement is not None:
+            detail += (
+                f" · {placement.problem_id}"
+                f" · {placement.role}"
+            )
         else:
-            due_text = "今天到期"
+            detail += " · 尚無可啟動 Published Placement"
 
         options.append(
             {
-                "label": f"{pid} · {title}",
-                "detail": f"Recall {recall} · {due_text}",
-                "enabled": True,
-                "path": row[2].path,
+                "label": (
+                    skill_display_name(
+                        candidate.skill_uid
+                    )
+                    + f" × {candidate.track}"
+                ),
+                "detail": detail,
+                "enabled": (
+                    path is not None
+                ),
+                "path": path,
+                "placement": placement,
             }
         )
 
+    if not any(
+        item["enabled"]
+        for item in options
+    ):
+        print()
+        rule()
+        print()
+        print(
+            f"{YELLOW}"
+            "目前有 adaptive review，但 Published curriculum "
+            "尚無可安全啟動的代表題。"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            "不會退回舊式 problem-level 到期佇列。"
+            f"{RESET}"
+        )
+        pause()
+        return current_filename
+
     selected = choose_menu(
-        "今日複習",
+        "今日學習 · Adaptive Review",
         options,
         main=False,
     )
@@ -3189,29 +3281,53 @@ def today_view(current_filename: str | None):
     if selected is None:
         return current_filename
 
-    path = options[selected]["path"]
+    path = options[selected][
+        "path"
+    ]
 
     result = subprocess.run(
-        ["code", "--reuse-window", str(path)],
+        [
+            "code",
+            "--reuse-window",
+            str(path),
+        ],
         cwd=ROOT,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
 
     clear()
-    heading("今日複習")
+    heading("Adaptive Review")
     print()
 
     if result.returncode == 0:
-        print(f"{GREEN}✓ 已開啟題目{RESET}")
-        print(fit(options[selected]["label"], ui_width()))
+        print(
+            f"{GREEN}"
+            "✓ 已開啟代表題"
+            f"{RESET}"
+        )
+        print(
+            fit(
+                options[selected][
+                    "label"
+                ],
+                ui_width(),
+            )
+        )
         print()
-        print(f"{GRAY}完成重解後回到控制中心，選擇「複習題目」。{RESET}")
+        print(
+            f"{GRAY}"
+            "完成後回控制中心 → 複習題目。"
+            f"{RESET}"
+        )
     else:
-        print(f"{RED}✕ 無法開啟題目{RESET}")
+        print(
+            f"{RED}"
+            "✕ 無法開啟代表題"
+            f"{RESET}"
+        )
 
     pause()
-
     return str(path)
 
 
