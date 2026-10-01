@@ -1,0 +1,1635 @@
+{
+  "schema_version": "v2.3-primary-skill-resolution-1",
+  "curriculum_version": "2026-10-01-publish-1",
+  "policy": "Every formal main placement has one reviewed Primary Skill already present in its current PB Skill relations; remaining relations are supporting. Relation order is never used to infer Primary.",
+  "count": 125,
+  "rows": [
+    {
+      "pb_uid": "PB-10",
+      "lesson_uid": "L-DAT-02",
+      "primary_skill": "S07_String",
+      "supporting_skills": [
+        "S23_Simulation"
+      ],
+      "relation_skills": [
+        "S07_String",
+        "S23_Simulation"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DAT-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-100",
+      "lesson_uid": "L-WIN-02",
+      "primary_skill": "S13_Two_Pointers",
+      "supporting_skills": [
+        "S09_Sorting",
+        "S22_Prefix_Sum"
+      ],
+      "relation_skills": [
+        "S09_Sorting",
+        "S13_Two_Pointers",
+        "S22_Prefix_Sum"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-WIN-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-101",
+      "lesson_uid": "L-WIN-02",
+      "primary_skill": "S13_Two_Pointers",
+      "supporting_skills": [
+        "S30_Complexity"
+      ],
+      "relation_skills": [
+        "S13_Two_Pointers",
+        "S30_Complexity"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-WIN-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-102",
+      "lesson_uid": "L-BIN-02",
+      "primary_skill": "S10_Binary_Search",
+      "supporting_skills": [
+        "S22_Prefix_Sum"
+      ],
+      "relation_skills": [
+        "S10_Binary_Search",
+        "S22_Prefix_Sum"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-BIN-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-103",
+      "lesson_uid": "L-BIN-02",
+      "primary_skill": "S10_Binary_Search",
+      "supporting_skills": [
+        "S09_Sorting"
+      ],
+      "relation_skills": [
+        "S09_Sorting",
+        "S10_Binary_Search"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-BIN-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-104",
+      "lesson_uid": "L-WIN-03",
+      "primary_skill": "S13_Two_Pointers",
+      "supporting_skills": [
+        "S22_Prefix_Sum"
+      ],
+      "relation_skills": [
+        "S13_Two_Pointers",
+        "S22_Prefix_Sum"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-WIN-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-107",
+      "lesson_uid": "L-GPH-04",
+      "primary_skill": "S21_Graph_Tree",
+      "supporting_skills": [
+        "S18_DFS"
+      ],
+      "relation_skills": [
+        "S18_DFS",
+        "S21_Graph_Tree"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-GPH-04 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-109",
+      "lesson_uid": "L-ORD-01",
+      "primary_skill": "S09_Sorting",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S09_Sorting"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-ORD-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-111",
+      "lesson_uid": "L-GRD-01",
+      "primary_skill": "S11_Greedy",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S11_Greedy"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-GRD-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-112",
+      "lesson_uid": "L-ORD-02",
+      "primary_skill": "S08_Struct",
+      "supporting_skills": [
+        "S09_Sorting"
+      ],
+      "relation_skills": [
+        "S08_Struct",
+        "S09_Sorting"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-ORD-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-114",
+      "lesson_uid": "L-DAT-04",
+      "primary_skill": "S23_Simulation",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S23_Simulation"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DAT-04 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-115",
+      "lesson_uid": "L-DAT-04",
+      "primary_skill": "S23_Simulation",
+      "supporting_skills": [
+        "S34_Matrix_2D"
+      ],
+      "relation_skills": [
+        "S23_Simulation",
+        "S34_Matrix_2D"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DAT-04 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-116",
+      "lesson_uid": "L-MIX-03",
+      "primary_skill": "S39_Code_Reasoning",
+      "supporting_skills": [
+        "S10_Binary_Search",
+        "S21_Graph_Tree"
+      ],
+      "relation_skills": [
+        "S10_Binary_Search",
+        "S21_Graph_Tree",
+        "S39_Code_Reasoning"
+      ],
+      "basis": "reviewed_exception",
+      "note": "L-MIX-03 testing/debug Transfer; live repair added S39. Algorithm relations remain context only."
+    },
+    {
+      "pb_uid": "PB-117",
+      "lesson_uid": "L-MIX-02",
+      "primary_skill": "S20_DP",
+      "supporting_skills": [
+        "S09_Sorting",
+        "S10_Binary_Search",
+        "S22_Prefix_Sum"
+      ],
+      "relation_skills": [
+        "S09_Sorting",
+        "S10_Binary_Search",
+        "S20_DP",
+        "S22_Prefix_Sum"
+      ],
+      "basis": "reviewed_exception",
+      "note": "L-MIX-02 high-alternate-solution Transfer uses DP as nominal Primary; actual-method evidence is required."
+    },
+    {
+      "pb_uid": "PB-119",
+      "lesson_uid": "L-MIX-01",
+      "primary_skill": "S30_Complexity",
+      "supporting_skills": [
+        "S09_Sorting",
+        "S20_DP",
+        "S22_Prefix_Sum"
+      ],
+      "relation_skills": [
+        "S09_Sorting",
+        "S20_DP",
+        "S22_Prefix_Sum",
+        "S30_Complexity"
+      ],
+      "basis": "reviewed_exception",
+      "note": "L-MIX-01 constraints/subtask/complexity-decision process target; live repair added S30. Learning-only, not an independent S30 gate."
+    },
+    {
+      "pb_uid": "PB-12",
+      "lesson_uid": "L-GPH-03",
+      "primary_skill": "S19_BFS",
+      "supporting_skills": [
+        "S17_Stack_Queue",
+        "S21_Graph_Tree"
+      ],
+      "relation_skills": [
+        "S17_Stack_Queue",
+        "S19_BFS",
+        "S21_Graph_Tree"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-GPH-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-120",
+      "lesson_uid": "L-DAT-04",
+      "primary_skill": "S23_Simulation",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S23_Simulation"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DAT-04 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-123",
+      "lesson_uid": "L-GRD-03",
+      "primary_skill": "S11_Greedy",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S11_Greedy"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-GRD-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-125",
+      "lesson_uid": "L-MIX-03",
+      "primary_skill": "S39_Code_Reasoning",
+      "supporting_skills": [
+        "S09_Sorting",
+        "S10_Binary_Search"
+      ],
+      "relation_skills": [
+        "S09_Sorting",
+        "S10_Binary_Search",
+        "S39_Code_Reasoning"
+      ],
+      "basis": "reviewed_exception",
+      "note": "L-MIX-03 testing/debug Guided; live repair added S39. Algorithm relations remain context only."
+    },
+    {
+      "pb_uid": "PB-126",
+      "lesson_uid": "L-GPH-04",
+      "primary_skill": "S21_Graph_Tree",
+      "supporting_skills": [
+        "S18_DFS"
+      ],
+      "relation_skills": [
+        "S18_DFS",
+        "S21_Graph_Tree"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-GPH-04 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-129",
+      "lesson_uid": "L-DP-02",
+      "primary_skill": "S20_DP",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S20_DP"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DP-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-131",
+      "lesson_uid": "L-PSV-04",
+      "primary_skill": "S15_Number_Theory",
+      "supporting_skills": [
+        "S30_Complexity"
+      ],
+      "relation_skills": [
+        "S15_Number_Theory",
+        "S30_Complexity"
+      ],
+      "basis": "reviewed_exception",
+      "note": "Optional L-PSV-04 Number Theory transfer; Complexity is supporting."
+    },
+    {
+      "pb_uid": "PB-134",
+      "lesson_uid": "L-PFX-04",
+      "primary_skill": "S31_Difference",
+      "supporting_skills": [
+        "S05_Array",
+        "S22_Prefix_Sum"
+      ],
+      "relation_skills": [
+        "S05_Array",
+        "S22_Prefix_Sum",
+        "S31_Difference"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-PFX-04 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-135",
+      "lesson_uid": "L-PFX-04",
+      "primary_skill": "S31_Difference",
+      "supporting_skills": [
+        "S22_Prefix_Sum",
+        "S23_Simulation"
+      ],
+      "relation_skills": [
+        "S22_Prefix_Sum",
+        "S23_Simulation",
+        "S31_Difference"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-PFX-04 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-136",
+      "lesson_uid": "L-REC-05",
+      "primary_skill": "S29_Bitmask",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S29_Bitmask"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-REC-05 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-137",
+      "lesson_uid": "L-DS-02",
+      "primary_skill": "S17_Stack_Queue",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S17_Stack_Queue"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DS-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-138",
+      "lesson_uid": "L-DS-03",
+      "primary_skill": "S33_Priority_Queue",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S33_Priority_Queue"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DS-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-140",
+      "lesson_uid": "L-PFX-03",
+      "primary_skill": "S22_Prefix_Sum",
+      "supporting_skills": [
+        "S34_Matrix_2D"
+      ],
+      "relation_skills": [
+        "S22_Prefix_Sum",
+        "S34_Matrix_2D"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-PFX-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-141",
+      "lesson_uid": "L-REC-02",
+      "primary_skill": "S38_Parsing",
+      "supporting_skills": [
+        "S07_String",
+        "S16_Recursion"
+      ],
+      "relation_skills": [
+        "S07_String",
+        "S16_Recursion",
+        "S38_Parsing"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-REC-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-142",
+      "lesson_uid": "L-FND-01",
+      "primary_skill": "S01_IO",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S01_IO"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-FND-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-143",
+      "lesson_uid": "L-FND-01",
+      "primary_skill": "S01_IO",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S01_IO"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-FND-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-144",
+      "lesson_uid": "L-FND-01",
+      "primary_skill": "S01_IO",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S01_IO"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-FND-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-145",
+      "lesson_uid": "L-FND-03",
+      "primary_skill": "S04_Functions",
+      "supporting_skills": [
+        "S01_IO"
+      ],
+      "relation_skills": [
+        "S01_IO",
+        "S04_Functions"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-FND-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-146",
+      "lesson_uid": "L-FND-03",
+      "primary_skill": "S04_Functions",
+      "supporting_skills": [
+        "S02_Conditionals",
+        "S03_Loops"
+      ],
+      "relation_skills": [
+        "S02_Conditionals",
+        "S03_Loops",
+        "S04_Functions"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-FND-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-147",
+      "lesson_uid": "L-FND-03",
+      "primary_skill": "S04_Functions",
+      "supporting_skills": [
+        "S02_Conditionals",
+        "S03_Loops"
+      ],
+      "relation_skills": [
+        "S02_Conditionals",
+        "S03_Loops",
+        "S04_Functions"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-FND-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-148",
+      "lesson_uid": "L-FND-04",
+      "primary_skill": "S01_IO",
+      "supporting_skills": [
+        "S02_Conditionals",
+        "S03_Loops"
+      ],
+      "relation_skills": [
+        "S01_IO",
+        "S02_Conditionals",
+        "S03_Loops"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-FND-04 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-149",
+      "lesson_uid": "L-FND-04",
+      "primary_skill": "S01_IO",
+      "supporting_skills": [
+        "S02_Conditionals"
+      ],
+      "relation_skills": [
+        "S01_IO",
+        "S02_Conditionals"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-FND-04 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-150",
+      "lesson_uid": "L-FND-04",
+      "primary_skill": "S01_IO",
+      "supporting_skills": [
+        "S02_Conditionals",
+        "S03_Loops"
+      ],
+      "relation_skills": [
+        "S01_IO",
+        "S02_Conditionals",
+        "S03_Loops"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-FND-04 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-151",
+      "lesson_uid": "L-FND-03",
+      "primary_skill": "S04_Functions",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S04_Functions"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-FND-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-152",
+      "lesson_uid": "L-DAT-01",
+      "primary_skill": "S05_Array",
+      "supporting_skills": [
+        "S06_Vector"
+      ],
+      "relation_skills": [
+        "S05_Array",
+        "S06_Vector"
+      ],
+      "basis": "reviewed_exception",
+      "note": "L-DAT-01 Worked baseline starts from indexed Array representation; Vector is supporting context."
+    },
+    {
+      "pb_uid": "PB-153",
+      "lesson_uid": "L-DAT-01",
+      "primary_skill": "S06_Vector",
+      "supporting_skills": [
+        "S05_Array"
+      ],
+      "relation_skills": [
+        "S05_Array",
+        "S06_Vector"
+      ],
+      "basis": "reviewed_exception",
+      "note": "L-DAT-01 Core targets dynamic Vector GET/SET/PUSH semantics."
+    },
+    {
+      "pb_uid": "PB-154",
+      "lesson_uid": "L-DAT-03",
+      "primary_skill": "S34_Matrix_2D",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S34_Matrix_2D"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DAT-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-155",
+      "lesson_uid": "L-DAT-04",
+      "primary_skill": "S23_Simulation",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S23_Simulation"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DAT-04 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-156",
+      "lesson_uid": "L-PSV-01",
+      "primary_skill": "S12_Brute_Force",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S12_Brute_Force"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-PSV-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-157",
+      "lesson_uid": "L-PSV-01",
+      "primary_skill": "S12_Brute_Force",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S12_Brute_Force"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-PSV-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-158",
+      "lesson_uid": "L-PSV-01",
+      "primary_skill": "S12_Brute_Force",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S12_Brute_Force"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-PSV-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-159",
+      "lesson_uid": "L-PSV-02",
+      "primary_skill": "S30_Complexity",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S30_Complexity"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-PSV-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-160",
+      "lesson_uid": "L-PSV-02",
+      "primary_skill": "S30_Complexity",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S30_Complexity"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-PSV-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-161",
+      "lesson_uid": "L-PSV-02",
+      "primary_skill": "S30_Complexity",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S30_Complexity"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-PSV-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-162",
+      "lesson_uid": "L-PSV-03",
+      "primary_skill": "S39_Code_Reasoning",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S39_Code_Reasoning"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-PSV-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-163",
+      "lesson_uid": "L-PSV-03",
+      "primary_skill": "S39_Code_Reasoning",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S39_Code_Reasoning"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-PSV-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-164",
+      "lesson_uid": "L-PSV-03",
+      "primary_skill": "S39_Code_Reasoning",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S39_Code_Reasoning"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-PSV-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-165",
+      "lesson_uid": "L-PSV-03",
+      "primary_skill": "S39_Code_Reasoning",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S39_Code_Reasoning"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-PSV-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-166",
+      "lesson_uid": "L-PSV-04",
+      "primary_skill": "S14_Math",
+      "supporting_skills": [
+        "S15_Number_Theory"
+      ],
+      "relation_skills": [
+        "S14_Math",
+        "S15_Number_Theory"
+      ],
+      "basis": "reviewed_exception",
+      "note": "L-PSV-04 Math Modeling target; Number Theory is supporting."
+    },
+    {
+      "pb_uid": "PB-167",
+      "lesson_uid": "L-PSV-04",
+      "primary_skill": "S14_Math",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S14_Math"
+      ],
+      "basis": "reviewed_exception",
+      "note": "L-PSV-04 Math Modeling target."
+    },
+    {
+      "pb_uid": "PB-168",
+      "lesson_uid": "L-PSV-04",
+      "primary_skill": "S14_Math",
+      "supporting_skills": [
+        "S15_Number_Theory"
+      ],
+      "relation_skills": [
+        "S14_Math",
+        "S15_Number_Theory"
+      ],
+      "basis": "reviewed_exception",
+      "note": "L-PSV-04 Math Modeling target; Number Theory is supporting."
+    },
+    {
+      "pb_uid": "PB-169",
+      "lesson_uid": "L-ORD-02",
+      "primary_skill": "S08_Struct",
+      "supporting_skills": [
+        "S09_Sorting"
+      ],
+      "relation_skills": [
+        "S08_Struct",
+        "S09_Sorting"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-ORD-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-17",
+      "lesson_uid": "L-DP-03",
+      "primary_skill": "S20_DP",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S20_DP"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DP-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-173",
+      "lesson_uid": "L-RNG-01",
+      "primary_skill": "S37_Offline_Order",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S37_Offline_Order"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-RNG-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-174",
+      "lesson_uid": "L-RNG-02",
+      "primary_skill": "S37_Offline_Order",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S37_Offline_Order"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-RNG-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-175",
+      "lesson_uid": "L-RNG-03",
+      "primary_skill": "S36_Range_Tree",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S36_Range_Tree"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-RNG-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-176",
+      "lesson_uid": "L-RNG-04",
+      "primary_skill": "S16_Recursion",
+      "supporting_skills": [
+        "S37_Offline_Order"
+      ],
+      "relation_skills": [
+        "S16_Recursion",
+        "S37_Offline_Order"
+      ],
+      "basis": "reviewed_exception",
+      "note": "L-RNG-04 canonical D&C left/right/cross merge counting; S37 is supporting and BIT is a legal alternate."
+    },
+    {
+      "pb_uid": "PB-18",
+      "lesson_uid": "L-REC-02",
+      "primary_skill": "S38_Parsing",
+      "supporting_skills": [
+        "S07_String",
+        "S16_Recursion"
+      ],
+      "relation_skills": [
+        "S07_String",
+        "S16_Recursion",
+        "S38_Parsing"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-REC-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-2",
+      "lesson_uid": "L-GPH-01",
+      "primary_skill": "S21_Graph_Tree",
+      "supporting_skills": [
+        "S18_DFS",
+        "S19_BFS"
+      ],
+      "relation_skills": [
+        "S18_DFS",
+        "S19_BFS",
+        "S21_Graph_Tree"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-GPH-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-20",
+      "lesson_uid": "L-FND-02",
+      "primary_skill": "S03_Loops",
+      "supporting_skills": [
+        "S02_Conditionals"
+      ],
+      "relation_skills": [
+        "S02_Conditionals",
+        "S03_Loops"
+      ],
+      "basis": "reviewed_exception",
+      "note": "L-FND-02 Core targets loop state; condition remains supporting."
+    },
+    {
+      "pb_uid": "PB-21",
+      "lesson_uid": "L-PFX-04",
+      "primary_skill": "S31_Difference",
+      "supporting_skills": [
+        "S22_Prefix_Sum"
+      ],
+      "relation_skills": [
+        "S22_Prefix_Sum",
+        "S31_Difference"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-PFX-04 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-23",
+      "lesson_uid": "L-DS-01",
+      "primary_skill": "S17_Stack_Queue",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S17_Stack_Queue"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DS-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-24",
+      "lesson_uid": "L-BIN-01",
+      "primary_skill": "S10_Binary_Search",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S10_Binary_Search"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-BIN-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-25",
+      "lesson_uid": "L-PFX-01",
+      "primary_skill": "S22_Prefix_Sum",
+      "supporting_skills": [
+        "S05_Array"
+      ],
+      "relation_skills": [
+        "S05_Array",
+        "S22_Prefix_Sum"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-PFX-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-27",
+      "lesson_uid": "L-BIN-01",
+      "primary_skill": "S10_Binary_Search",
+      "supporting_skills": [
+        "S30_Complexity"
+      ],
+      "relation_skills": [
+        "S10_Binary_Search",
+        "S30_Complexity"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-BIN-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-28",
+      "lesson_uid": "L-REC-04",
+      "primary_skill": "S32_Backtracking",
+      "supporting_skills": [
+        "S12_Brute_Force",
+        "S16_Recursion"
+      ],
+      "relation_skills": [
+        "S12_Brute_Force",
+        "S16_Recursion",
+        "S32_Backtracking"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-REC-04 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-32",
+      "lesson_uid": "L-ORD-01",
+      "primary_skill": "S09_Sorting",
+      "supporting_skills": [
+        "S30_Complexity"
+      ],
+      "relation_skills": [
+        "S09_Sorting",
+        "S30_Complexity"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-ORD-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-33",
+      "lesson_uid": "L-GPH-04",
+      "primary_skill": "S21_Graph_Tree",
+      "supporting_skills": [
+        "S18_DFS"
+      ],
+      "relation_skills": [
+        "S18_DFS",
+        "S21_Graph_Tree"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-GPH-04 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-35",
+      "lesson_uid": "L-REC-01",
+      "primary_skill": "S16_Recursion",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S16_Recursion"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-REC-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-36",
+      "lesson_uid": "L-GRD-01",
+      "primary_skill": "S11_Greedy",
+      "supporting_skills": [
+        "S14_Math"
+      ],
+      "relation_skills": [
+        "S11_Greedy",
+        "S14_Math"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-GRD-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-37",
+      "lesson_uid": "L-DAT-03",
+      "primary_skill": "S34_Matrix_2D",
+      "supporting_skills": [
+        "S23_Simulation"
+      ],
+      "relation_skills": [
+        "S23_Simulation",
+        "S34_Matrix_2D"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DAT-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-39",
+      "lesson_uid": "L-DP-03",
+      "primary_skill": "S20_DP",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S20_DP"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DP-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-4",
+      "lesson_uid": "L-DS-01",
+      "primary_skill": "S17_Stack_Queue",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S17_Stack_Queue"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DS-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-40",
+      "lesson_uid": "L-FND-02",
+      "primary_skill": "S03_Loops",
+      "supporting_skills": [
+        "S02_Conditionals"
+      ],
+      "relation_skills": [
+        "S02_Conditionals",
+        "S03_Loops"
+      ],
+      "basis": "reviewed_exception",
+      "note": "L-FND-02 Guided targets repeated loop state/termination; condition remains supporting."
+    },
+    {
+      "pb_uid": "PB-41",
+      "lesson_uid": "L-FND-04",
+      "primary_skill": "S01_IO",
+      "supporting_skills": [
+        "S03_Loops"
+      ],
+      "relation_skills": [
+        "S01_IO",
+        "S03_Loops"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-FND-04 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-42",
+      "lesson_uid": "L-DAT-02",
+      "primary_skill": "S07_String",
+      "supporting_skills": [
+        "S23_Simulation"
+      ],
+      "relation_skills": [
+        "S07_String",
+        "S23_Simulation"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DAT-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-43",
+      "lesson_uid": "L-REC-01",
+      "primary_skill": "S16_Recursion",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S16_Recursion"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-REC-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-44",
+      "lesson_uid": "L-REC-03",
+      "primary_skill": "S32_Backtracking",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S32_Backtracking"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-REC-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-45",
+      "lesson_uid": "L-REC-05",
+      "primary_skill": "S29_Bitmask",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S29_Bitmask"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-REC-05 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-46",
+      "lesson_uid": "L-REC-04",
+      "primary_skill": "S32_Backtracking",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S32_Backtracking"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-REC-04 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-47",
+      "lesson_uid": "L-ORD-03",
+      "primary_skill": "S24_Map_Set",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S24_Map_Set"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-ORD-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-48",
+      "lesson_uid": "L-WIN-01",
+      "primary_skill": "S13_Two_Pointers",
+      "supporting_skills": [
+        "S09_Sorting"
+      ],
+      "relation_skills": [
+        "S09_Sorting",
+        "S13_Two_Pointers"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-WIN-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-49",
+      "lesson_uid": "L-GRD-01",
+      "primary_skill": "S11_Greedy",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S11_Greedy"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-GRD-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-5",
+      "lesson_uid": "L-DP-04",
+      "primary_skill": "S35_LIS",
+      "supporting_skills": [
+        "S10_Binary_Search",
+        "S20_DP"
+      ],
+      "relation_skills": [
+        "S10_Binary_Search",
+        "S20_DP",
+        "S35_LIS"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DP-04 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-50",
+      "lesson_uid": "L-ORD-03",
+      "primary_skill": "S24_Map_Set",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S24_Map_Set"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-ORD-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-52",
+      "lesson_uid": "L-GRD-02",
+      "primary_skill": "S11_Greedy",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S11_Greedy"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-GRD-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-54",
+      "lesson_uid": "L-GRD-03",
+      "primary_skill": "S11_Greedy",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S11_Greedy"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-GRD-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-57",
+      "lesson_uid": "L-GRD-02",
+      "primary_skill": "S11_Greedy",
+      "supporting_skills": [
+        "S33_Priority_Queue"
+      ],
+      "relation_skills": [
+        "S11_Greedy",
+        "S33_Priority_Queue"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-GRD-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-58",
+      "lesson_uid": "L-BIN-03",
+      "primary_skill": "S10_Binary_Search",
+      "supporting_skills": [
+        "S30_Complexity"
+      ],
+      "relation_skills": [
+        "S10_Binary_Search",
+        "S30_Complexity"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-BIN-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-6",
+      "lesson_uid": "L-GPH-02",
+      "primary_skill": "S18_DFS",
+      "supporting_skills": [
+        "S16_Recursion",
+        "S21_Graph_Tree"
+      ],
+      "relation_skills": [
+        "S16_Recursion",
+        "S18_DFS",
+        "S21_Graph_Tree"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-GPH-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-60",
+      "lesson_uid": "L-DS-02",
+      "primary_skill": "S17_Stack_Queue",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S17_Stack_Queue"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DS-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-61",
+      "lesson_uid": "L-PFX-02",
+      "primary_skill": "S22_Prefix_Sum",
+      "supporting_skills": [
+        "S15_Number_Theory",
+        "S24_Map_Set"
+      ],
+      "relation_skills": [
+        "S15_Number_Theory",
+        "S22_Prefix_Sum",
+        "S24_Map_Set"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-PFX-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-63",
+      "lesson_uid": "L-DP-01",
+      "primary_skill": "S20_DP",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S20_DP"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DP-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-64",
+      "lesson_uid": "L-DP-02",
+      "primary_skill": "S20_DP",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S20_DP"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DP-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-65",
+      "lesson_uid": "L-DP-03",
+      "primary_skill": "S20_DP",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S20_DP"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DP-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-66",
+      "lesson_uid": "L-DP-04",
+      "primary_skill": "S35_LIS",
+      "supporting_skills": [
+        "S10_Binary_Search",
+        "S20_DP"
+      ],
+      "relation_skills": [
+        "S10_Binary_Search",
+        "S20_DP",
+        "S35_LIS"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DP-04 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-67",
+      "lesson_uid": "L-GPH-02",
+      "primary_skill": "S18_DFS",
+      "supporting_skills": [
+        "S21_Graph_Tree"
+      ],
+      "relation_skills": [
+        "S18_DFS",
+        "S21_Graph_Tree"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-GPH-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-68",
+      "lesson_uid": "L-GPH-03",
+      "primary_skill": "S19_BFS",
+      "supporting_skills": [
+        "S21_Graph_Tree"
+      ],
+      "relation_skills": [
+        "S19_BFS",
+        "S21_Graph_Tree"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-GPH-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-69",
+      "lesson_uid": "L-GPH-03",
+      "primary_skill": "S19_BFS",
+      "supporting_skills": [
+        "S21_Graph_Tree"
+      ],
+      "relation_skills": [
+        "S19_BFS",
+        "S21_Graph_Tree"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-GPH-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-71",
+      "lesson_uid": "L-MIX-02",
+      "primary_skill": "S19_BFS",
+      "supporting_skills": [
+        "S21_Graph_Tree"
+      ],
+      "relation_skills": [
+        "S19_BFS",
+        "S21_Graph_Tree"
+      ],
+      "basis": "reviewed_exception",
+      "note": "L-MIX-02 mixed-modeling Core has multi-source BFS as nominal Primary; actual-method evidence remains authoritative."
+    },
+    {
+      "pb_uid": "PB-76",
+      "lesson_uid": "L-PFX-01",
+      "primary_skill": "S22_Prefix_Sum",
+      "supporting_skills": [
+        "S30_Complexity"
+      ],
+      "relation_skills": [
+        "S22_Prefix_Sum",
+        "S30_Complexity"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-PFX-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-77",
+      "lesson_uid": "L-PFX-03",
+      "primary_skill": "S22_Prefix_Sum",
+      "supporting_skills": [
+        "S34_Matrix_2D"
+      ],
+      "relation_skills": [
+        "S22_Prefix_Sum",
+        "S34_Matrix_2D"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-PFX-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-78",
+      "lesson_uid": "L-WIN-02",
+      "primary_skill": "S13_Two_Pointers",
+      "supporting_skills": [
+        "S22_Prefix_Sum"
+      ],
+      "relation_skills": [
+        "S13_Two_Pointers",
+        "S22_Prefix_Sum"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-WIN-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-8",
+      "lesson_uid": "L-GRD-03",
+      "primary_skill": "S11_Greedy",
+      "supporting_skills": [
+        "S30_Complexity"
+      ],
+      "relation_skills": [
+        "S11_Greedy",
+        "S30_Complexity"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-GRD-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-80",
+      "lesson_uid": "L-WIN-02",
+      "primary_skill": "S13_Two_Pointers",
+      "supporting_skills": [
+        "S24_Map_Set"
+      ],
+      "relation_skills": [
+        "S13_Two_Pointers",
+        "S24_Map_Set"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-WIN-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-81",
+      "lesson_uid": "L-DS-02",
+      "primary_skill": "S17_Stack_Queue",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S17_Stack_Queue"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DS-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-84",
+      "lesson_uid": "L-DP-01",
+      "primary_skill": "S20_DP",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S20_DP"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DP-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-87",
+      "lesson_uid": "L-BIN-03",
+      "primary_skill": "S10_Binary_Search",
+      "supporting_skills": [
+        "S30_Complexity"
+      ],
+      "relation_skills": [
+        "S10_Binary_Search",
+        "S30_Complexity"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-BIN-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-89",
+      "lesson_uid": "L-DP-04",
+      "primary_skill": "S35_LIS",
+      "supporting_skills": [
+        "S10_Binary_Search",
+        "S20_DP"
+      ],
+      "relation_skills": [
+        "S10_Binary_Search",
+        "S20_DP",
+        "S35_LIS"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DP-04 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-9",
+      "lesson_uid": "L-DAT-03",
+      "primary_skill": "S34_Matrix_2D",
+      "supporting_skills": [
+        "S07_String",
+        "S23_Simulation"
+      ],
+      "relation_skills": [
+        "S07_String",
+        "S23_Simulation",
+        "S34_Matrix_2D"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DAT-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-90",
+      "lesson_uid": "L-PFX-02",
+      "primary_skill": "S22_Prefix_Sum",
+      "supporting_skills": [
+        "S24_Map_Set"
+      ],
+      "relation_skills": [
+        "S22_Prefix_Sum",
+        "S24_Map_Set"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-PFX-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-91",
+      "lesson_uid": "L-ORD-03",
+      "primary_skill": "S24_Map_Set",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S24_Map_Set"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-ORD-03 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-92",
+      "lesson_uid": "L-BIN-01",
+      "primary_skill": "S10_Binary_Search",
+      "supporting_skills": [
+        "S30_Complexity"
+      ],
+      "relation_skills": [
+        "S10_Binary_Search",
+        "S30_Complexity"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-BIN-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-93",
+      "lesson_uid": "L-PFX-01",
+      "primary_skill": "S22_Prefix_Sum",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S22_Prefix_Sum"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-PFX-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-94",
+      "lesson_uid": "L-WIN-01",
+      "primary_skill": "S13_Two_Pointers",
+      "supporting_skills": [
+        "S09_Sorting"
+      ],
+      "relation_skills": [
+        "S09_Sorting",
+        "S13_Two_Pointers"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-WIN-01 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-95",
+      "lesson_uid": "L-BIN-02",
+      "primary_skill": "S10_Binary_Search",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S10_Binary_Search"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-BIN-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-96",
+      "lesson_uid": "L-FND-02",
+      "primary_skill": "S02_Conditionals",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S02_Conditionals"
+      ],
+      "basis": "reviewed_exception",
+      "note": "L-FND-02 Worked baseline targets condition coverage."
+    },
+    {
+      "pb_uid": "PB-97",
+      "lesson_uid": "L-DAT-02",
+      "primary_skill": "S07_String",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S07_String"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-DAT-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-98",
+      "lesson_uid": "L-DAT-01",
+      "primary_skill": "S05_Array",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S05_Array"
+      ],
+      "basis": "reviewed_exception",
+      "note": "L-DAT-01 Guided is clean Array scan/index evidence."
+    },
+    {
+      "pb_uid": "PB-99",
+      "lesson_uid": "L-GRD-02",
+      "primary_skill": "S11_Greedy",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S11_Greedy"
+      ],
+      "basis": "lesson_target_review",
+      "note": "L-GRD-02 reviewed target Skill."
+    }
+  ]
+}
