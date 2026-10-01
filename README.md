@@ -1,6 +1,8 @@
 # APCS-Practice
 
-APCS 實作練習、複習與弱點追蹤倉庫。
+APCS 實作練習、教學、adaptive review 與能力證據追蹤倉庫。
+
+v2.3 正在把 VS Code 提升為日常學習 runtime：以 Published Curriculum、explicit Evidence、Skill × Track memory 與 capacity-aware Today 驅動學習；v2.2 的 Catalog / learning event 底座繼續保留。
 
 這個倉庫的 v2.2 設計將題目 metadata 與 solution code 分離：`data/problems.csv` 管理題目資料，`data/solutions.csv` 管理解答檔案與複雜度；資料夾只代表檔案位置，不再是能力分類或進度來源。
 
@@ -27,7 +29,7 @@ Ctrl+Alt+A
 
 APCS 控制中心提供：
 
-- **今日複習**：查看並開啟已到期或逾期的題目。
+- **今日學習**：依 Skill × Track retention 與今日容量安排 adaptive review，同時保留新學習時間。
 - **完成題目**：首次 AC 後記錄 Recall 與解題分鐘數。
 - **複習題目**：記錄 AC / WA / TLE / RE / MLE / CE、Recall 與分鐘數。
 - **題目筆記**：建立或開啟 `notes/<id>.md`。
@@ -46,6 +48,8 @@ v2.3 的複習方向改為 `Skill × Track` adaptive memory：間隔由實際 el
 
 Control Center 的 Finish / Review 會另外收集 A0–A5 Assistance、Independent、Novelty、Timed 與 Published Curriculum Placement；本機先寫入 `.apcs/runtime/outbox/`。若 Published Placement 尚未建立，Attempt 仍保存，但不會猜測 Skill Evidence。
 
+Evidence 會重建 `.apcs/runtime/skill_memory.json` 的 derived Skill × Track memory cache。Today 預設以 60 分鐘容量安排最多約 30% review，deferred Skills 不算欠題；Implementation review 會建立空白 retrieval scratch，而不是打開歷史 solution。
+
 分鐘數屬於每次 Attempt 的事件資料，可略過；「有記錄耗時」不等於 Timed。
 
 ### CLI
@@ -53,13 +57,12 @@ Control Center 的 Finish / Review 會另外收集 A0–A5 Assistance、Independ
 控制中心是日常入口；CLI 保留給除錯、自動化與進階操作，例如：
 
 ```bash
-python tools/apcs.py today
-python tools/apcs.py finish b130 2 --minutes 18
-python tools/apcs.py review b130 1 --result WA --minutes 11
 python tools/apcs.py note b130
 python tools/apcs.py validate
 python tools/apcs.py sync
 ```
+
+v2.3 的 Finish / Review / Today 不應繞過 Control Center；舊式 direct task path 已停用或保留為相容層，避免漏掉 Assistance、Placement、Evidence 與 adaptive memory。
 
 v2.2 以 `data/problems.csv` 與 `data/solutions.csv` 作為靜態 metadata 的唯一正式來源；solution code 不再承載 `APCS` metadata header，也不再提供 source-header fallback。
 

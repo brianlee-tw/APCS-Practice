@@ -27,6 +27,9 @@ try:
         RuntimeCurriculum,
         RuntimeCurriculumError,
     )
+    from .skill_memory_store import (
+        SkillMemoryStore,
+    )
     from .tag_taxonomy import TAG_GROUPS, serialize_selection, split_tags
 except ImportError:
     import apcs as core
@@ -40,6 +43,9 @@ except ImportError:
         RuntimeCurriculum,
         RuntimeCurriculumError,
     )
+    from skill_memory_store import (
+        SkillMemoryStore,
+    )
     from tag_taxonomy import TAG_GROUPS, serialize_selection, split_tags
 
 
@@ -49,6 +55,13 @@ PUBLISHED_CURRICULUM = ROOT / "curriculum" / "published.v23.json"
 
 OUTBOX = EvidenceOutbox(RUNTIME_DIR)
 CURRICULUM = RuntimeCurriculum(PUBLISHED_CURRICULUM)
+MEMORY = SkillMemoryStore(
+    RUNTIME_DIR / "skill_memory.json"
+)
+
+DEFAULT_SESSION_MINUTES = 60
+DEFAULT_IMPLEMENTATION_REVIEW_MINUTES = 12
+DEFAULT_READING_REVIEW_MINUTES = 6
 
 ID_RE = re.compile(r"^([A-Za-z]\d+|\d+)(?:_|$)")
 
@@ -223,6 +236,16 @@ def current_problem(filename: str | None):
     candidate = path if path.is_absolute() else ROOT / path
     resolved = candidate.resolve()
 
+    placement_match = re.search(
+        r"__([A-Za-z0-9_.:-]+)$",
+        path.stem,
+    )
+    placement_uid = (
+        placement_match.group(1)
+        if placement_match
+        else None
+    )
+
     for row in all_rows():
         if row[0] == pid:
             matched_path = next(
@@ -231,7 +254,7 @@ def current_problem(filename: str | None):
                     for solution in row[1]
                     if solution.path.resolve() == resolved
                 ),
-                row[2].path,
+                resolved,
             )
 
             return {
@@ -240,6 +263,7 @@ def current_problem(filename: str | None):
                 "path": matched_path,
                 "state": row[3],
                 "due": row[5],
+                "placement_uid": placement_uid,
             }
 
     return {
@@ -248,6 +272,7 @@ def current_problem(filename: str | None):
         "path": path,
         "state": None,
         "due": None,
+        "placement_uid": placement_uid,
     }
 
 
@@ -289,18 +314,6 @@ def problem_status(problem) -> str:
     if state.recall is not None:
         parts.append(f"Recall {state.recall}")
 
-    due = problem.get("due")
-
-    if due:
-        today = dt.date.today()
-
-        if due < today:
-            parts.append(f"逾期 {(today - due).days} 天")
-        elif due == today:
-            parts.append("今天到期")
-        else:
-            parts.append(f"下次 {due:%m/%d}")
-
     return " · ".join(parts)
 
 
@@ -325,6 +338,12 @@ def print_problem_context(problem) -> None:
 
 
 def today_state():
+    """Legacy v2.2 problem-level due state.
+
+    Kept only for compatibility surfaces while v2.3 transitions generated
+    artifacts. Learner-facing Today uses adaptive_today_snapshot().
+    """
+
     today = dt.date.today()
 
     due = [
@@ -340,6 +359,279 @@ def today_state():
     ]
 
     return due, overdue
+
+
+def session_capacity_minutes() -> int:
+    raw = os.environ.get(
+        "APCS_SESSION_MINUTES",
+        str(DEFAULT_SESSION_MINUTES),
+    )
+
+    try:
+        value = int(raw)
+    except ValueError:
+        return DEFAULT_SESSION_MINUTES
+
+    return max(
+        15,
+        min(value, 240),
+    )
+
+
+def curriculum_target() -> str:
+    value = os.environ.get(
+        "APCS_TARGET",
+        "3+3",
+    ).strip()
+
+    return (
+        "5+5"
+        if value == "5+5"
+        else "3+3"
+    )
+
+
+def adaptive_today_snapshot(
+    *,
+    on_date: dt.date | None = None,
+    total_capacity_minutes: int | None = None,
+):
+    on_date = on_date or dt.date.today()
+    total_capacity_minutes = (
+        total_capacity_minutes
+        if total_capacity_minutes is not None
+        else session_capacity_minutes()
+    )
+
+    warning = None
+    reconcile_report = None
+
+    try:
+        envelopes = OUTBOX.all_envelopes()
+    except (
+        EvidenceOutboxError,
+        OSError,
+        ValueError,
+    ) as exc:
+        envelopes = ()
+        warning = str(exc)
+
+    target = curriculum_target()
+
+    try:
+        importance = (
+            CURRICULUM
+            .skill_importance(
+                target=target
+            )
+        )
+    except RuntimeCurriculumError:
+        importance = {}
+
+    try:
+        reconcile_report = MEMORY.reconcile(
+            envelopes
+        )
+
+        plan = MEMORY.review_plan(
+            envelopes,
+            on_date=on_date,
+            total_capacity_minutes=(
+                total_capacity_minutes
+            ),
+            importance_by_skill=(
+                importance
+            ),
+        )
+
+        memory_states = (
+            MEMORY.load_states()
+        )
+
+        latest_problem = (
+            MEMORY
+            .latest_problem_by_key(
+                envelopes
+            )
+        )
+
+    except (
+        EvidenceOutboxError,
+        OSError,
+        ValueError,
+    ) as exc:
+        from types import SimpleNamespace
+
+        plan = SimpleNamespace(
+            budget_minutes=0,
+            selected=(),
+            deferred=(),
+            selected_minutes=0,
+        )
+        memory_states = {}
+        latest_problem = {}
+
+        if warning is None:
+            warning = str(exc)
+
+    return {
+        "date": on_date,
+        "capacity_minutes": total_capacity_minutes,
+        "target": target,
+        "plan": plan,
+        "due_count": (
+            len(plan.selected)
+            + len(plan.deferred)
+        ),
+        "memory_count": len(
+            memory_states
+        ),
+        "reconcile_report": (
+            reconcile_report
+        ),
+        "latest_problem": (
+            latest_problem
+        ),
+        "warning": warning,
+    }
+
+def skill_display_name(
+    skill_uid: str,
+) -> str:
+    try:
+        context = CURRICULUM.skill_context(
+            skill_uid
+        )
+    except RuntimeCurriculumError:
+        context = None
+
+    if (
+        context is None
+        or not context.name
+    ):
+        return skill_uid
+
+    return (
+        f"{skill_uid} · "
+        f"{context.name}"
+    )
+
+
+
+def attempted_problem_ids_for_skill(
+    skill_uid: str,
+    *,
+    track: str,
+) -> set[str]:
+    result = set()
+
+    try:
+        envelopes = (
+            OUTBOX.all_envelopes()
+        )
+    except (
+        EvidenceOutboxError,
+        OSError,
+    ):
+        return result
+
+    for envelope in envelopes:
+        if not any(
+            claim.skill_uid == skill_uid
+            and claim.track == track
+            for claim in envelope.evidence
+        ):
+            continue
+
+        result.add(
+            envelope.attempt.problem_id
+            .strip()
+            .lower()
+        )
+
+    return result
+
+
+def review_placement_for_skill(
+    skill_uid: str,
+    *,
+    track: str,
+):
+    attempted = (
+        attempted_problem_ids_for_skill(
+            skill_uid,
+            track=track,
+        )
+    )
+
+    try:
+        return (
+            CURRICULUM
+            .review_placement_for_skill(
+                skill_uid,
+                exclude_problem_ids=attempted,
+            )
+        )
+    except RuntimeCurriculumError:
+        return None
+
+
+def create_review_scratch(
+    placement,
+) -> Path:
+    folder = (
+        RUNTIME_DIR
+        / "review"
+        / dt.date.today().isoformat()
+    )
+    folder.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    target = (
+        folder
+        / (
+            f"{placement.problem_id}"
+            f"__{placement.placement_uid}"
+            ".cpp"
+        )
+    )
+
+    if target.exists():
+        return target
+
+    lines = [
+        "// APCS adaptive review scratch",
+        f"// Skill: {placement.primary_skill}",
+        (
+            f"// Problem: "
+            f"{placement.problem_id} · "
+            f"{placement.title}"
+        ),
+        f"// Role: {placement.role}",
+    ]
+
+    if placement.url:
+        lines.append(
+            f"// Judge: {placement.url}"
+        )
+
+    lines += [
+        "//",
+        "// 這是空白 retrieval scratch；不要查看舊 solution。",
+        "",
+    ]
+
+    target.write_text(
+        "\n".join(lines)
+        + solution_template(
+            "cpp"
+        ),
+        encoding="utf-8",
+    )
+
+    return target
 
 
 # ============================================================
@@ -389,17 +681,56 @@ def choose_menu(
             print()
 
         if main:
-            due, overdue = today_state()
+            snapshot = (
+                adaptive_today_snapshot()
+            )
+            plan = snapshot["plan"]
 
-            print(f"{GRAY}今日狀態{RESET}")
+            print(f"{GRAY}今日學習{RESET}")
+            print(
+                f"容量 {snapshot['capacity_minutes']} min"
+                f" · Review budget {plan.budget_minutes} min"
+            )
 
-            if due:
-                text = f"待複習 {len(due)} 題"
-                if overdue:
-                    text += f" · 逾期 {len(overdue)} 題"
-                print(f"{YELLOW}{text}{RESET}")
+            if plan.selected:
+                print(
+                    f"{YELLOW}"
+                    f"Adaptive review {len(plan.selected)} 項"
+                    f" · {plan.selected_minutes} min"
+                    f"{RESET}"
+                )
             else:
-                print(f"{GREEN}✓ 沒有到期複習{RESET}")
+                print(
+                    f"{GREEN}"
+                    "✓ 今天沒有已選定的 adaptive review"
+                    f"{RESET}"
+                )
+
+            if plan.deferred:
+                print(
+                    f"{GRAY}"
+                    f"安全延後 {len(plan.deferred)} 項"
+                    "（不是欠題）"
+                    f"{RESET}"
+                )
+
+            protected = max(
+                0,
+                snapshot["capacity_minutes"]
+                - plan.budget_minutes,
+            )
+            print(
+                f"{GRAY}"
+                f"新學習保留 ≥ {protected} min"
+                f"{RESET}"
+            )
+
+            if snapshot["warning"]:
+                print(
+                    f"{YELLOW}"
+                    f"⚠ {fit(snapshot['warning'], ui_width() - 2)}"
+                    f"{RESET}"
+                )
 
             print()
 
@@ -1056,6 +1387,24 @@ def placement_for_record(
             "本次只保存 Attempt，不建立 Skill Evidence。",
         )
 
+    requested_uid = problem.get(
+        "placement_uid"
+    )
+
+    if requested_uid:
+        exact = next(
+            (
+                context
+                for context in contexts
+                if context.placement_uid
+                == requested_uid
+            ),
+            None,
+        )
+
+        if exact is not None:
+            return exact, None
+
     if len(contexts) == 1:
         return contexts[0], None
 
@@ -1503,6 +1852,8 @@ def record_problem(action: str, problem) -> None:
 
     sync_warning = None
     outbox_warning = None
+    memory_warning = None
+    memory_report = None
     outbox_envelope = None
 
     if command_result == 0:
@@ -1540,6 +1891,23 @@ def record_problem(action: str, problem) -> None:
             OSError,
         ) as exc:
             outbox_warning = str(exc)
+
+        if (
+            outbox_envelope is not None
+            and outbox_warning is None
+        ):
+            try:
+                memory_report = (
+                    MEMORY.reconcile(
+                        OUTBOX.all_envelopes()
+                    )
+                )
+            except (
+                EvidenceOutboxError,
+                OSError,
+                ValueError,
+            ) as exc:
+                memory_warning = str(exc)
 
         sync_warning = (
             core.sync_generated_best_effort()
@@ -1587,6 +1955,35 @@ def record_problem(action: str, problem) -> None:
                     "本次 Attempt 不更新 Skill Evidence"
                     f"{RESET}"
                 )
+
+        if (
+            memory_report is not None
+            and outbox_envelope is not None
+            and outbox_envelope.evidence
+        ):
+            print(
+                f"{GREEN}"
+                "✓ Adaptive memory 已更新"
+                f"{RESET}"
+            )
+
+        if memory_warning:
+            print()
+            print(
+                f"{YELLOW}"
+                "⚠ Attempt 已保存，但 adaptive memory cache 更新失敗。"
+                f"{RESET}"
+            )
+            print(
+                f"{GRAY}"
+                f"{fit(memory_warning, ui_width())}"
+                f"{RESET}"
+            )
+            print(
+                f"{GRAY}"
+                "Evidence 不會遺失；下次開啟 Today 會重新 reconciliation。"
+                f"{RESET}"
+            )
 
         if outbox_warning:
             print()
@@ -2708,52 +3105,134 @@ def catalog_center(problem, current_filename: str | None):
 # ============================================================
 
 def today_view(current_filename: str | None):
-    due, _ = today_state()
+    snapshot = adaptive_today_snapshot()
+    plan = snapshot["plan"]
 
-    if not due:
-        clear()
-        heading("今日複習")
+    clear()
+    heading("今日學習")
+    print()
+
+    print(
+        f"目標    {snapshot['target']}"
+    )
+    print(
+        f"容量    {snapshot['capacity_minutes']} min"
+    )
+    print(
+        f"Review  {plan.selected_minutes}/"
+        f"{plan.budget_minutes} min"
+    )
+
+    protected = max(
+        0,
+        snapshot["capacity_minutes"]
+        - plan.budget_minutes,
+    )
+
+    print(
+        f"新學習  ≥ {protected} min 保留"
+    )
+
+    if plan.deferred:
+        print(
+            f"{GRAY}"
+            f"Deferred {len(plan.deferred)} Skill"
+            " · 不計為欠作業"
+            f"{RESET}"
+        )
+
+    if snapshot["warning"]:
         print()
-        print(f"{GREEN}✓ 今天沒有到期題目{RESET}")
+        print(
+            f"{YELLOW}"
+            "⚠ Adaptive memory reconciliation 有問題"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            f"{fit(snapshot['warning'], ui_width())}"
+            f"{RESET}"
+        )
+
+    print()
+    rule()
+    print()
+
+    if snapshot["memory_count"] == 0:
+        print(
+            f"{GREEN}"
+            "✓ 尚無 adaptive Skill memory"
+            f"{RESET}"
+        )
         print()
-        print(f"{GRAY}可以直接進行新題。{RESET}")
+        print(
+            f"{GRAY}"
+            "目前應把容量用在新學習與正式 Practice；"
+            "完成有 Published Placement 的題目後，"
+            "系統會開始建立 Skill × Track retention state。"
+            f"{RESET}"
+        )
         pause()
         return current_filename
 
-    today = dt.date.today()
+    if snapshot["due_count"] == 0:
+        print(
+            f"{GREEN}"
+            "✓ 今天沒有 Skill 到達 review threshold"
+            f"{RESET}"
+        )
+        print()
+        print(
+            f"{GRAY}"
+            "不需要為了維持 streak 額外刷舊題；"
+            "直接進行新學習／Transfer。"
+            f"{RESET}"
+        )
+        pause()
+        return current_filename
 
-    rows = sorted(
-        due,
-        key=lambda row: (row[5], row[0]),
-    )
+    if not plan.selected:
+        print(
+            f"{GREEN}"
+            "✓ 今日 review budget 不安排專門複習"
+            f"{RESET}"
+        )
+        print()
+        print(
+            f"{GRAY}"
+            f"目前有 {snapshot['due_count']} 個候選，"
+            "但都超出本次 review 容量；"
+            "已安全延後，不形成 backlog debt。"
+            f"{RESET}"
+        )
+        pause()
+        return current_filename
 
     options = []
 
-    for row in rows:
-        pid = row[0]
-        title = clean_title(pid, row[2].title)
-        recall = (
-            row[3].recall
-            if row[3].recall is not None
-            else "—"
+    for candidate in plan.selected:
+        label = skill_display_name(
+            candidate.skill_uid
         )
 
-        if row[5] < today:
-            due_text = f"逾期 {(today - row[5]).days} 天"
-        else:
-            due_text = "今天到期"
+        detail = (
+            f"{candidate.track}"
+            f" · R≈{candidate.retrievability:.0%}"
+            f" · due {candidate.due_on:%m/%d}"
+            f" · {candidate.estimated_minutes} min"
+        )
 
         options.append(
             {
-                "label": f"{pid} · {title}",
-                "detail": f"Recall {recall} · {due_text}",
+                "label": label,
+                "detail": detail,
                 "enabled": True,
-                "path": row[2].path,
+                "candidate": candidate,
             }
         )
 
     selected = choose_menu(
-        "今日複習",
+        "今日學習 · Adaptive Review",
         options,
         main=False,
     )
@@ -2761,31 +3240,131 @@ def today_view(current_filename: str | None):
     if selected is None:
         return current_filename
 
-    path = options[selected]["path"]
+    candidate = options[
+        selected
+    ]["candidate"]
+
+    placement = review_placement_for_skill(
+        candidate.skill_uid,
+        track=candidate.track,
+    )
+
+    clear()
+    heading("開始 Adaptive Review")
+    print()
+
+    print(
+        f"{WHITE}{BOLD}"
+        f"{skill_display_name(candidate.skill_uid)}"
+        f"{RESET}"
+    )
+    print(
+        f"Track   {candidate.track}"
+    )
+    print(
+        f"R       ≈ {candidate.retrievability:.0%}"
+    )
+    print(
+        f"到期    {candidate.due_on}"
+    )
+    print(
+        f"預估    {candidate.estimated_minutes} min"
+    )
+    print()
+
+    if placement is None:
+        print(
+            f"{YELLOW}"
+            "⚠ Published curriculum 尚無可用 Placement。"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            "不從舊 Tags 猜題；保留這個 Skill review 候選，"
+            "待 curriculum publish 後再選代表題。"
+            f"{RESET}"
+        )
+        pause()
+        return current_filename
+
+    print(
+        f"題目    {placement.problem_id} · "
+        f"{fit(placement.title, max(10, ui_width() - 8))}"
+    )
+    print(
+        f"Role    {placement.role}"
+    )
+
+    if placement.url:
+        print(
+            f"Judge   {placement.url}"
+        )
+
+    if candidate.track == "Reading":
+        print()
+        print(
+            f"{YELLOW}"
+            "Reading review 不自動開啟舊 solution。"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            "請依題面先完成 trace / reasoning，"
+            "正式作答前不要執行程式驗證。"
+            f"{RESET}"
+        )
+        pause()
+        return current_filename
+
+    try:
+        path = create_review_scratch(
+            placement
+        )
+    except OSError as exc:
+        print()
+        print(
+            f"{RED}"
+            f"✕ 無法建立 retrieval scratch：{exc}"
+            f"{RESET}"
+        )
+        pause()
+        return current_filename
 
     result = subprocess.run(
-        ["code", "--reuse-window", str(path)],
+        [
+            "code",
+            "--reuse-window",
+            str(path),
+        ],
         cwd=ROOT,
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
     )
 
-    clear()
-    heading("今日複習")
     print()
 
     if result.returncode == 0:
-        print(f"{GREEN}✓ 已開啟題目{RESET}")
-        print(fit(options[selected]["label"], ui_width()))
-        print()
-        print(f"{GRAY}完成重解後回到控制中心，選擇「複習題目」。{RESET}")
+        print(
+            f"{GREEN}"
+            "✓ 已開啟空白 retrieval scratch"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            "不會打開歷史 solution；完成 Judge 後"
+            "回控制中心選「複習題目」。"
+            f"{RESET}"
+        )
     else:
-        print(f"{RED}✕ 無法開啟題目{RESET}")
+        print(
+            f"{RED}"
+            "✕ 無法在 VS Code 開啟 scratch"
+            f"{RESET}"
+        )
 
     pause()
 
     return str(path)
-
 
 def open_note(problem) -> None:
     pid = problem["id"]
@@ -3617,8 +4196,8 @@ def main() -> int:
 
         options = [
             {
-                "label": "今日複習",
-                "detail": "開始今天排定的複習",
+                "label": "今日學習",
+                "detail": "Adaptive review + 保留新學習容量",
                 "enabled": True,
             },
             {

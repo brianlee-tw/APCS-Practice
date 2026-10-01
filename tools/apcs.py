@@ -1028,7 +1028,7 @@ def note_cmd(pid):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
-        description="APCS-Practice v2.2 catalog workflow"
+        description="APCS-Practice v2.3 engineering CLI"
     )
 
     sub = parser.add_subparsers(
@@ -1096,6 +1096,9 @@ def main(argv=None):
             args.strict
         )
 
+    # Low-level compatibility CLI remains available for regression,
+    # migration, and automation.  Learner-facing daily use must go through
+    # the VS Code Control Center so v2.3 Evidence context is captured.
     if args.cmd == "today":
         return today_cmd()
 

@@ -622,6 +622,27 @@ class EvidenceOutbox:
             writeback_id
         ).exists()
 
+    def all_envelopes(
+        self,
+    ) -> tuple[OutboxEnvelope, ...]:
+        """Return every durable local envelope, including acknowledged ones."""
+
+        self.ensure()
+        result = []
+
+        for path in sorted(
+            self.pending_dir.glob(
+                "*.json"
+            )
+        ):
+            result.append(
+                self.load(
+                    path.stem
+                )
+            )
+
+        return tuple(result)
+
     def pending(
         self,
     ) -> tuple[OutboxEnvelope, ...]:

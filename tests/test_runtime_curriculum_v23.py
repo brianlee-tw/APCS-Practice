@@ -32,12 +32,36 @@ class RuntimeCurriculumV23Test(unittest.TestCase):
             "schema_version": "v2.3-published-1",
             "contract_version": "v2.3-draft-0",
             "curriculum_version": "fixture",
-            "skills": [],
+            "skills": [
+                {
+                    "uid": "S22_Prefix_Sum",
+                    "name": "Prefix Sum",
+                    "unit": "U-PFX",
+                    "path_stage": "Bridge",
+                    "path_order": 22,
+                    "relevance": {
+                        "3+3": "Required",
+                        "5+5": "Required",
+                    },
+                },
+                {
+                    "uid": "S99_Extension",
+                    "name": "Extension",
+                    "unit": "U-MIX",
+                    "path_stage": "Extension",
+                    "path_order": 99,
+                    "relevance": {
+                        "3+3": "Optional",
+                        "5+5": "Extension",
+                    },
+                },
+            ],
             "problems": [
                 {
                     "pb_uid": "PB-001",
                     "problem_id": "a693",
                     "title": "Prefix Sum",
+                    "url": "https://example.invalid/a693",
                     "difficulty": "D2",
                 }
             ],
@@ -112,6 +136,10 @@ class RuntimeCurriculumV23Test(unittest.TestCase):
             "S22_Prefix_Sum",
         )
         self.assertEqual(
+            first.url,
+            "https://example.invalid/a693",
+        )
+        self.assertEqual(
             first.supporting_skills,
             ("S05_Array",),
         )
@@ -134,6 +162,88 @@ class RuntimeCurriculumV23Test(unittest.TestCase):
                 "b999"
             ),
             (),
+        )
+
+    def test_skill_context_and_importance_are_available(self):
+        self.write_snapshot(
+            self.base_snapshot()
+        )
+
+        runtime = RuntimeCurriculum(
+            self.snapshot
+        )
+
+        context = runtime.skill_context(
+            "S22_Prefix_Sum"
+        )
+
+        self.assertIsNotNone(
+            context
+        )
+        self.assertEqual(
+            context.name,
+            "Prefix Sum",
+        )
+        self.assertEqual(
+            runtime.importance_for_skill(
+                "S22_Prefix_Sum",
+                target="3+3",
+            ),
+            "required",
+        )
+        self.assertEqual(
+            runtime.importance_for_skill(
+                "S99_Extension",
+                target="5+5",
+            ),
+            "extension",
+        )
+
+    def test_placements_for_skill_returns_primary_skill_placements(self):
+        self.write_snapshot(
+            self.base_snapshot()
+        )
+
+        runtime = RuntimeCurriculum(
+            self.snapshot
+        )
+
+        contexts = runtime.placements_for_skill(
+            "S22_Prefix_Sum"
+        )
+
+        self.assertEqual(
+            len(contexts),
+            1,
+        )
+        self.assertEqual(
+            contexts[0].problem_id,
+            "a693",
+        )
+        self.assertEqual(
+            contexts[0].role,
+            "Core Independent",
+        )
+
+    def test_unknown_skill_falls_back_to_supporting_importance(self):
+        self.write_snapshot(
+            self.base_snapshot()
+        )
+
+        runtime = RuntimeCurriculum(
+            self.snapshot
+        )
+
+        self.assertIsNone(
+            runtime.skill_context(
+                "S404_Missing"
+            )
+        )
+        self.assertEqual(
+            runtime.importance_for_skill(
+                "S404_Missing"
+            ),
+            "supporting",
         )
 
     def test_invalid_schema_is_rejected(self):

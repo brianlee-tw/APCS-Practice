@@ -10,6 +10,7 @@ import sys
 from pathlib import Path
 
 import apcs as core
+import apcs_control as control
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -26,14 +27,6 @@ RECALL_TEXT = {
     2: "可獨立但偏慢",
     3: "流暢獨立",
 }
-
-RECALL_NEXT = {
-    0: "1 天後",
-    1: "3 天後",
-    2: "7 天後",
-    3: "30 天後起",
-}
-
 
 def rule() -> None:
     print("─" * UI_WIDTH)
@@ -142,67 +135,93 @@ def build_and_run(filename: str) -> int:
 
 
 def today_view() -> int:
-    header("今日複習")
+    header("今日學習")
 
-    rows, _ = core.build()
-    today = dt.date.today()
-    due = [r for r in rows if r[5] and r[5] <= today]
+    snapshot = (
+        control.adaptive_today_snapshot()
+    )
+    plan = snapshot["plan"]
 
-    if not due:
-        print("✓ 今天沒有到期題目")
+    print(
+        f"容量  {snapshot['capacity_minutes']} min"
+    )
+    print(
+        f"Review  {plan.selected_minutes}/"
+        f"{plan.budget_minutes} min"
+    )
+    print(
+        f"Skill due  {snapshot['due_count']}"
+    )
+    print(
+        f"Selected   {len(plan.selected)}"
+    )
+    print(
+        f"Deferred   {len(plan.deferred)}"
+    )
+
+    protected = max(
+        0,
+        snapshot["capacity_minutes"]
+        - plan.budget_minutes,
+    )
+    print(
+        f"New learning  >= {protected} min"
+    )
+
+    if snapshot["warning"]:
+        print(
+            f"Warning  {snapshot['warning']}"
+        )
+
+    if not plan.selected:
+        print(
+            "✓ 沒有需要透過這個非互動 Task 啟動的 review"
+        )
+        print(
+            "使用 Ctrl+Alt+A 開啟 Control Center 進行今日學習。"
+        )
         return 0
 
-    print(f"到期  {len(due)} 題")
-
-    for row in sorted(due, key=lambda x: (x[5], x[0])):
-        pid = row[0]
-        state = row[3]
-        title = row[2].title
-        recall = state.recall if state.recall is not None else "—"
-
+    for item in plan.selected:
         print()
-        print(f"{pid} · Recall {recall}")
-        print(clip(title, 25))
-        print(f"到期  {row[5]}")
+        print(
+            f"{item.skill_uid} x {item.track}"
+        )
+        print(
+            f"R≈{item.retrievability:.0%}"
+            f" · due {item.due_on}"
+            f" · {item.estimated_minutes} min"
+        )
 
+    print()
+    print(
+        "使用 Ctrl+Alt+A 開啟 Control Center 並選擇「今日學習」。"
+    )
     return 0
 
 
-def record_current(action: str, filename: str, choice: str) -> int:
-    try:
-        pid = problem_id(filename)
-        score = recall_score(choice)
-    except ValueError as exc:
-        return fail(str(exc))
+def record_current(
+    action: str,
+    filename: str,
+    choice: str,
+) -> int:
+    """Retired compatibility entry point.
 
-    title = "完成題目" if action == "finish" else "複習題目"
+    v2.3 Finish / Review must capture Assistance, Independent, Novelty,
+    Timed, Placement, durable outbox, and adaptive memory.  The old direct
+    `record(pid, recall)` path would silently bypass that evidence model.
+    """
 
-    header(title)
-    print(f"題號    {pid}")
-    print(f"Recall  {score}")
-    print(f"程度    {RECALL_TEXT[score]}")
-    print(f"下次    {RECALL_NEXT[score]}")
-    rule()
+    _ = (
+        action,
+        filename,
+        choice,
+    )
 
-    buf = io.StringIO()
-
-    try:
-        with contextlib.redirect_stdout(buf):
-            result = core.record(pid, score)
-    except SystemExit as exc:
-        output = buf.getvalue().strip()
-        if output:
-            print(output)
-        return fail("學習紀錄更新失敗。", int(exc.code or 1))
-
-    if result != 0:
-        output = buf.getvalue().strip()
-        if output:
-            print(output)
-        return fail("學習紀錄更新失敗。", result)
-
-    print("✓ 學習紀錄已更新")
-    return 0
+    return fail(
+        "v2.3 已停用舊式 Finish / Review Task；"
+        "請按 Ctrl+Alt+A，在 Control Center 使用「完成題目／複習題目」。"
+    )
 
 
 def create_note(filename: str) -> int:

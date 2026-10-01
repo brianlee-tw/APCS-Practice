@@ -39,6 +39,7 @@ def placement():
         pb_uid="PB-001",
         problem_id="a693",
         title="Prefix Sum",
+        url="https://example.invalid/a693",
         difficulty="D2",
         primary_skill="S22_Prefix_Sum",
         supporting_skills=(
