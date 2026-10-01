@@ -322,6 +322,10 @@ class SkillMemoryStore:
             OutboxEnvelope
         ],
     ) -> ReconcileReport:
+        envelopes = tuple(
+            envelopes
+        )
+
         states: dict[
             tuple[str, str],
             MemoryState,
@@ -355,11 +359,8 @@ class SkillMemoryStore:
         )
 
         total_envelopes = len(
-            tuple(envelopes)
-        ) if not isinstance(
-            envelopes,
-            tuple,
-        ) else len(envelopes)
+            envelopes
+        )
 
         eligible_envelopes = len(
             {
