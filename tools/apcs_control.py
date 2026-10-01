@@ -244,6 +244,16 @@ def current_problem(filename: str | None):
     candidate = path if path.is_absolute() else ROOT / path
     resolved = candidate.resolve()
 
+    placement_match = re.search(
+        r"__([A-Za-z0-9_.:-]+)$",
+        path.stem,
+    )
+    placement_uid = (
+        placement_match.group(1)
+        if placement_match
+        else None
+    )
+
     for row in all_rows():
         if row[0] == pid:
             matched_path = next(
@@ -261,6 +271,7 @@ def current_problem(filename: str | None):
                 "path": matched_path,
                 "state": row[3],
                 "due": row[5],
+                "placement_uid": placement_uid,
             }
 
     return {
@@ -269,6 +280,7 @@ def current_problem(filename: str | None):
         "path": path,
         "state": None,
         "due": None,
+        "placement_uid": placement_uid,
     }
 
 
