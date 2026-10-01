@@ -531,3 +531,147 @@ def notion_projection(
         },
         "evidence": ev_rows,
     }
+
+
+REMOTE_RECEIPT_SCHEMA = "v2.3-remote-receipt-1"
+
+
+def validate_remote_receipt(
+    bundle: RemoteWritebackBundle,
+    receipt: dict[str, Any],
+) -> dict[str, Any]:
+    """Validate a complete remote receipt before local acknowledgement."""
+
+    if not isinstance(
+        receipt,
+        dict,
+    ):
+        raise RemoteWritebackError(
+            "remote receipt must be an object"
+        )
+
+    if (
+        receipt.get(
+            "schema_version"
+        )
+        != REMOTE_RECEIPT_SCHEMA
+    ):
+        raise RemoteWritebackError(
+            "remote receipt schema mismatch"
+        )
+
+    if (
+        receipt.get(
+            "writeback_id"
+        )
+        != bundle.writeback_id
+    ):
+        raise RemoteWritebackError(
+            "remote receipt writeback_id mismatch"
+        )
+
+    if receipt.get(
+        "complete"
+    ) is not True:
+        raise RemoteWritebackError(
+            "remote receipt is not complete"
+        )
+
+    rec = receipt.get(
+        "rec"
+    )
+
+    if not isinstance(
+        rec,
+        dict,
+    ):
+        raise RemoteWritebackError(
+            "remote receipt rec must be an object"
+        )
+
+    if not str(
+        rec.get(
+            "page_id",
+            "",
+        )
+    ).strip():
+        raise RemoteWritebackError(
+            "remote receipt missing REC page_id"
+        )
+
+    raw_events = receipt.get(
+        "evidence"
+    )
+
+    if not isinstance(
+        raw_events,
+        list,
+    ):
+        raise RemoteWritebackError(
+            "remote receipt evidence must be an array"
+        )
+
+    expected = {
+        item.event_id
+        for item in bundle.evidence
+    }
+
+    seen: set[str] = set()
+
+    for item in raw_events:
+        if not isinstance(
+            item,
+            dict,
+        ):
+            raise RemoteWritebackError(
+                "remote evidence receipt must be an object"
+            )
+
+        event_id = str(
+            item.get(
+                "event_id",
+                "",
+            )
+        ).strip()
+
+        if not event_id:
+            raise RemoteWritebackError(
+                "remote evidence receipt missing event_id"
+            )
+
+        if event_id in seen:
+            raise RemoteWritebackError(
+                "duplicate event_id in remote receipt: "
+                f"{event_id}"
+            )
+
+        seen.add(
+            event_id
+        )
+
+        if not str(
+            item.get(
+                "page_id",
+                "",
+            )
+        ).strip():
+            raise RemoteWritebackError(
+                "remote evidence receipt missing page_id: "
+                f"{event_id}"
+            )
+
+    if seen != expected:
+        missing = sorted(
+            expected - seen
+        )
+        unexpected = sorted(
+            seen - expected
+        )
+
+        raise RemoteWritebackError(
+            "remote receipt Evidence identity mismatch; "
+            f"missing={missing} unexpected={unexpected}"
+        )
+
+    # Keep only JSON-compatible data supplied by the trusted transport.
+    return receipt
