@@ -41,16 +41,16 @@ solution source 不承載 `APCS Title`、`APCS Tag`、`APCS Complexity`、`APCS 
 python tools/apcs.py finish b130 2
 ```
 
-其中 Recall：
+其中 Recall 只描述本次主觀回憶品質，不再直接對應固定下一次複習日期：
 
-| 分數 | 定義 | 下一次複習 |
-|---:|---|---:|
-| 0 | 幾乎不會 / 看答案才懂 | 1 天 |
-| 1 | 需要提示 | 3 天 |
-| 2 | 可獨立完成但偏慢 | 7 天 |
-| 3 | 流暢獨立完成 | 30 天 |
+| 分數 | 定義 |
+|---:|---|
+| 0 | 幾乎無法自行重建／需要看答案 |
+| 1 | 有部分記憶，但需要提示 |
+| 2 | 可獨立完成，但速度或穩定度不足 |
+| 3 | 流暢、獨立完成；不代表永久 Mastered |
 
-只有正式 Review 的 `AC + Recall 3` 才累積 streak，而且必須發生在不同日期。同一天多次 Review 只採最後一筆參與 streak 計算。第 1 次為 30 天、第 2 次為 60 天、第 3 次以上為 90 天；較低 Recall 或非 AC 會中斷 streak。
+v2.3 另外記錄 Assistance、Independent、Novelty、Timed 與 Curriculum Placement，並以 `Skill × Track` adaptive memory 估計 Stability / Retrievability。固定 1/3/7/30/60/90 天與固定 review-count graduation 已退出新架構。
 
 可額外記錄時間：
 
@@ -82,9 +82,9 @@ python tools/apcs.py review b130 1 --result WA --minutes 11
 
 Review 失敗不會移除既有首次 AC。`solved_on` 表示首次完成日期；`last_review_on`、`last_result` 與 `recall` 則描述最近一次複習狀態。
 
-只有正式 Review 的 `AC + Recall 3` 會累積 streak，而且必須來自不同日期；同一天多次 Review 只採最後一筆。第 1、2、3 次連續成功分別對應 30、60、90 天。較低 Recall 或非 AC 會中斷 streak。
+Review 完成後，v2.3 會把 Attempt facts 寫入本機 durable outbox；若有 Published Placement，才建立 explicit Primary Skill × Implementation Evidence。Supporting Skills 不會因為題目相關就自動獲得 Evidence。
 
-這些紀錄會寫入：
+這些相容性紀錄仍會寫入：
 
 - `data/progress.csv`：目前學習狀態快照。
 - `data/reviews.csv`：Finish / Review 的事件歷史，包括 Result、Recall 與 Minutes。
