@@ -196,6 +196,56 @@ class RemoteWritebackV23Test(
             "MLE",
         )
 
+    def test_projection_preserves_attempt_start_and_known_flags(self):
+        started = END - dt.timedelta(
+            minutes=11
+        )
+        projection = notion_projection(
+            build_remote_writeback_bundle(
+                sample_envelope(
+                    started_at=started,
+                    independent=False,
+                    timed=False,
+                )
+            )
+        )
+
+        rec = projection[
+            "rec"
+        ][
+            "properties"
+        ]
+        ev = projection[
+            "evidence"
+        ][0][
+            "properties"
+        ]
+
+        self.assertEqual(
+            rec["Attempt Started At"],
+            started.isoformat(
+                timespec="seconds"
+            ),
+        )
+        self.assertTrue(
+            rec["Independent Known"]
+        )
+        self.assertFalse(
+            rec["獨立完成"]
+        )
+        self.assertTrue(
+            ev["Independent Known"]
+        )
+        self.assertFalse(
+            ev["Independent"]
+        )
+        self.assertTrue(
+            ev["Timed Known"]
+        )
+        self.assertFalse(
+            ev["Timed"]
+        )
+
     def test_unknown_facts_remain_unknown_not_defaulted(self):
         projection = notion_projection(
             build_remote_writeback_bundle(
@@ -228,6 +278,13 @@ class RemoteWritebackV23Test(
             "獨立完成",
             rec,
         )
+        self.assertFalse(
+            rec["Independent Known"]
+        )
+        self.assertNotIn(
+            "Attempt Started At",
+            rec,
+        )
         self.assertNotIn(
             "學習階段",
             rec,
@@ -237,8 +294,18 @@ class RemoteWritebackV23Test(
             ev,
         )
         self.assertNotIn(
+            "Independent",
+            ev,
+        )
+        self.assertFalse(
+            ev["Independent Known"]
+        )
+        self.assertNotIn(
             "Timed",
             ev,
+        )
+        self.assertFalse(
+            ev["Timed Known"]
         )
 
     def test_valid_for_gate_is_never_client_supplied(self):
