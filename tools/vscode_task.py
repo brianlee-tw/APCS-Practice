@@ -168,6 +168,68 @@ def today_view() -> int:
         f"New learning  >= {protected} min"
     )
 
+    route = snapshot[
+        "new_learning"
+    ]
+
+    if snapshot[
+        "curriculum_blocker"
+    ]:
+        print(
+            "New route  BLOCKED · "
+            f"{snapshot['curriculum_blocker']}"
+        )
+    elif (
+        route is not None
+        and route.skill is not None
+    ):
+        print(
+            "Next skill  "
+            f"{route.skill.uid} · "
+            f"{route.skill.name}"
+        )
+        print(
+            "Unit/Stage  "
+            f"{route.skill.unit} · "
+            f"{route.skill.path_stage}"
+        )
+        print(
+            "Why now     "
+            f"{route.why_now}"
+        )
+
+        if route.placement is not None:
+            print(
+                "Next action "
+                f"{route.placement.role}"
+                " · "
+                f"{route.placement.lesson_uid}"
+                " · "
+                f"{route.placement.problem_id}"
+            )
+    elif (
+        route is not None
+        and route.blocked_skill
+        is not None
+    ):
+        print(
+            "New route  BLOCKED · "
+            f"{route.blocked_skill.uid}"
+        )
+        print(
+            f"Why blocked {route.why_now}"
+        )
+    elif (
+        route is not None
+        and route.route_complete
+    ):
+        print(
+            "New route  Required start threshold complete"
+        )
+        print(
+            "Note       RR/IR readiness is still separate"
+        )
+
     if snapshot["warning"]:
         print(
             f"Warning  {snapshot['warning']}"
