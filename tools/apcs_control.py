@@ -18,14 +18,38 @@ from pathlib import Path
 try:
     from . import apcs as core
     from .catalog_store import CatalogError, ProblemMeta, SolutionMeta
+    from .evidence_outbox import (
+        EvidenceOutbox,
+        EvidenceOutboxError,
+        build_envelope,
+    )
+    from .runtime_curriculum import (
+        RuntimeCurriculum,
+        RuntimeCurriculumError,
+    )
     from .tag_taxonomy import TAG_GROUPS, serialize_selection, split_tags
 except ImportError:
     import apcs as core
     from catalog_store import CatalogError, ProblemMeta, SolutionMeta
+    from evidence_outbox import (
+        EvidenceOutbox,
+        EvidenceOutboxError,
+        build_envelope,
+    )
+    from runtime_curriculum import (
+        RuntimeCurriculum,
+        RuntimeCurriculumError,
+    )
     from tag_taxonomy import TAG_GROUPS, serialize_selection, split_tags
 
 
 ROOT = Path(__file__).resolve().parents[1]
+RUNTIME_DIR = ROOT / ".apcs" / "runtime"
+PUBLISHED_CURRICULUM = ROOT / "curriculum" / "published.v23.json"
+
+OUTBOX = EvidenceOutbox(RUNTIME_DIR)
+CURRICULUM = RuntimeCurriculum(PUBLISHED_CURRICULUM)
+
 ID_RE = re.compile(r"^([A-Za-z]\d+|\d+)(?:_|$)")
 
 RESET = "\033[0m"
@@ -577,16 +601,44 @@ def recall_menu(
 
     if result == "AC":
         entries = [
-            (0, "幾乎不會／需看答案", "1 天後再做"),
-            (1, "需要提示", "3 天後再做"),
-            (2, "可獨立但偏慢", "7 天後再做"),
-            (3, "流暢獨立", "30 天後起"),
+            (
+                0,
+                "幾乎不會／需看答案",
+                "無法自行重建；需要回到學習／修復",
+            ),
+            (
+                1,
+                "需要提示",
+                "有部分記憶，但不能穩定獨立完成",
+            ),
+            (
+                2,
+                "可獨立但偏慢",
+                "能完成，但流暢度／穩定度仍不足",
+            ),
+            (
+                3,
+                "流暢獨立",
+                "高 Recall；不代表永久 Mastered",
+            ),
         ]
     else:
         entries = [
-            (0, "幾乎不會／需看答案", "1 天後再做"),
-            (1, "需要提示才能推進", "3 天後再做"),
-            (2, "主要思路可獨立完成", "本次未 AC · 7 天後再做"),
+            (
+                0,
+                "幾乎不會／需看答案",
+                "本次失敗且無法自行重建",
+            ),
+            (
+                1,
+                "需要提示才能推進",
+                "有部分理解，但仍存在關鍵缺口",
+            ),
+            (
+                2,
+                "主要思路可獨立完成",
+                "方法大致成立，但本次 Judge 未通過",
+            ),
         ]
 
     selected = 0
@@ -751,6 +803,440 @@ def minutes_input(
                 value = candidate
 
 
+ASSISTANCE_OPTIONS = [
+    (
+        0,
+        "A0 · 無提示",
+        "完全沒有收到提示",
+    ),
+    (
+        1,
+        "A1 · 診斷問題",
+        "只收到定位問題的診斷提問",
+    ),
+    (
+        2,
+        "A2 · 概念／性質",
+        "收到關鍵概念、性質或表示提示",
+    ),
+    (
+        3,
+        "A3 · 演算法方向",
+        "收到方法或演算法方向",
+    ),
+    (
+        4,
+        "A4 · pseudocode / skeleton",
+        "收到偽碼、骨架或接近實作的提示",
+    ),
+    (
+        5,
+        "A5 · 完整解法 / reference",
+        "看過完整解法、reference 或等價答案",
+    ),
+]
+
+
+def assistance_menu(problem) -> int | None:
+    options = [
+        {
+            "label": label,
+            "detail": detail,
+            "enabled": True,
+        }
+        for _, label, detail
+        in ASSISTANCE_OPTIONS
+    ]
+
+    selected = choose_menu(
+        "最高 Assistance",
+        options,
+        problem=problem,
+        main=False,
+        back_text="取消本次紀錄",
+    )
+
+    if selected is None:
+        return None
+
+    return ASSISTANCE_OPTIONS[
+        selected
+    ][0]
+
+
+def yes_no_menu(
+    title: str,
+    problem,
+    *,
+    yes_detail: str,
+    no_detail: str,
+    default_yes: bool = True,
+) -> bool | None:
+    options = [
+        {
+            "label": "是",
+            "detail": yes_detail,
+            "enabled": True,
+        },
+        {
+            "label": "否",
+            "detail": no_detail,
+            "enabled": True,
+        },
+    ]
+
+    if not default_yes:
+        options.reverse()
+
+    selected = choose_menu(
+        title,
+        options,
+        problem=problem,
+        main=False,
+        footer_numbers=False,
+        back_text="取消本次紀錄",
+    )
+
+    if selected is None:
+        return None
+
+    return options[selected]["label"] == "是"
+
+
+def independent_menu(
+    problem,
+    assistance: int,
+) -> bool | None:
+    # Curriculum Authoring Standard: A2+ 不可標為 independent。
+    if assistance >= 2:
+        return False
+
+    return yes_no_menu(
+        "是否獨立完成",
+        problem,
+        yes_detail=(
+            "方法與實作主要由你自行完成；"
+            "A0/A1 可成立"
+        ),
+        no_detail=(
+            "雖然最高提示不超過 A1，"
+            "但實際完成仍依賴他人／AI"
+        ),
+        default_yes=True,
+    )
+
+
+def novelty_menu(
+    action: str,
+    problem,
+    *,
+    placement=None,
+) -> str | None:
+    if action == "review":
+        values = [
+            (
+                "delayed_retest",
+                "Delayed Retest",
+                "隔了一段時間後重新提取與完成",
+            ),
+            (
+                "seen",
+                "Seen",
+                "近期已看過或做過，本次再練習",
+            ),
+            (
+                "same_problem_repeat",
+                "Same-problem Repeat",
+                "同一段學習內立即／短期重做同題",
+            ),
+        ]
+    else:
+        values = [
+            (
+                "new",
+                "New",
+                "第一次正式接觸或沒有可用記憶",
+            ),
+            (
+                "transfer",
+                "Transfer",
+                "陌生變形；需要把既有技能遷移過來",
+            ),
+            (
+                "seen",
+                "Seen",
+                "以前已看過或做過這題",
+            ),
+            (
+                "mixed",
+                "Mixed",
+                "限時混合／Mock 中的一部分",
+            ),
+        ]
+
+        if (
+            placement is not None
+            and placement.role
+            == "Transfer Challenge"
+        ):
+            values = [
+                values[1],
+                values[0],
+                values[2],
+                values[3],
+            ]
+
+        if (
+            placement is not None
+            and placement.role == "Mock"
+        ):
+            values = [
+                values[3],
+                values[0],
+                values[1],
+                values[2],
+            ]
+
+    options = [
+        {
+            "label": label,
+            "detail": detail,
+            "enabled": True,
+        }
+        for _, label, detail in values
+    ]
+
+    selected = choose_menu(
+        "題目新鮮度",
+        options,
+        problem=problem,
+        main=False,
+        footer_numbers=False,
+        back_text="取消本次紀錄",
+    )
+
+    if selected is None:
+        return None
+
+    return values[selected][0]
+
+
+def timed_menu(problem) -> bool | None:
+    return yes_no_menu(
+        "是否限時",
+        problem,
+        yes_detail=(
+            "本次有事先明確設定 timebox / 正式限時"
+        ),
+        no_detail=(
+            "有記錄耗時不等於 Timed；"
+            "一般練習選否"
+        ),
+        default_yes=False,
+    )
+
+
+def placement_for_record(
+    problem,
+):
+    try:
+        contexts = (
+            CURRICULUM
+            .placements_for_problem(
+                problem["id"]
+            )
+        )
+    except RuntimeCurriculumError as exc:
+        return None, str(exc)
+
+    if not contexts:
+        return (
+            None,
+            "此題尚未出現在 Published curriculum；"
+            "本次只保存 Attempt，不建立 Skill Evidence。",
+        )
+
+    if len(contexts) == 1:
+        return contexts[0], None
+
+    options = []
+
+    for context in contexts:
+        supporting = (
+            ", ".join(
+                context.supporting_skills
+            )
+            if context.supporting_skills
+            else "—"
+        )
+
+        options.append(
+            {
+                "label": (
+                    f"{context.primary_skill}"
+                    f" · {context.role}"
+                ),
+                "detail": (
+                    f"{context.placement_uid}"
+                    f" · supporting {supporting}"
+                ),
+                "enabled": True,
+            }
+        )
+
+    selected = choose_menu(
+        "本次 Curriculum Placement",
+        options,
+        problem=problem,
+        main=False,
+        footer_numbers=False,
+        back_text="取消本次紀錄",
+    )
+
+    if selected is None:
+        return None, "__CANCEL__"
+
+    return contexts[selected], None
+
+
+def attempt_envelope_for_record(
+    *,
+    action: str,
+    problem,
+    result: str,
+    minutes: int | None,
+    assistance: int,
+    independent: bool,
+    novelty: str,
+    timed: bool,
+    placement=None,
+    finished_at: dt.datetime | None = None,
+):
+    if action not in {"finish", "review"}:
+        raise ValueError(
+            f"unsupported action={action!r}"
+        )
+
+    finished_at = (
+        finished_at
+        or dt.datetime.now().astimezone()
+    )
+
+    language = {
+        ".cpp": "cpp",
+        ".py": "python",
+    }.get(
+        Path(problem["path"])
+        .suffix
+        .lower(),
+        "unknown",
+    )
+
+    activity = (
+        "Review"
+        if action == "review"
+        else (
+            placement.role
+            if placement is not None
+            else None
+        )
+    )
+
+    evidence = []
+
+    if placement is not None:
+        evidence.append(
+            (
+                placement.primary_skill,
+                "Implementation",
+                (
+                    "PASS"
+                    if result == "AC"
+                    else "FAIL"
+                ),
+                (
+                    f"{activity or 'Practice'}"
+                    f" · {result}"
+                ),
+            )
+        )
+
+    return build_envelope(
+        problem_id=problem["id"],
+        pb_uid=(
+            placement.pb_uid
+            if placement is not None
+            else None
+        ),
+        started_at=None,
+        finished_at=finished_at,
+        language=language,
+        judge_result=result,
+        assistance=assistance,
+        independent=independent,
+        attempt_count=None,
+        active_minutes=minutes,
+        timed=timed,
+        novelty=novelty,
+        activity=activity,
+        evidence=evidence,
+    )
+
+
+def evidence_context_menu(
+    action: str,
+    problem,
+):
+    placement, placement_warning = (
+        placement_for_record(
+            problem
+        )
+    )
+
+    if placement_warning == "__CANCEL__":
+        return None
+
+    assistance = assistance_menu(
+        problem
+    )
+
+    if assistance is None:
+        return None
+
+    independent = independent_menu(
+        problem,
+        assistance,
+    )
+
+    if independent is None:
+        return None
+
+    novelty = novelty_menu(
+        action,
+        problem,
+        placement=placement,
+    )
+
+    if novelty is None:
+        return None
+
+    timed = timed_menu(
+        problem
+    )
+
+    if timed is None:
+        return None
+
+    return {
+        "placement": placement,
+        "placement_warning": placement_warning,
+        "assistance": assistance,
+        "independent": independent,
+        "novelty": novelty,
+        "timed": timed,
+    }
+
+
 def record_problem(action: str, problem) -> None:
     title = (
         "完成題目"
@@ -791,6 +1277,16 @@ def record_problem(action: str, problem) -> None:
         return
 
     minutes = minutes_result
+
+    evidence_context = (
+        evidence_context_menu(
+            action,
+            problem,
+        )
+    )
+
+    if evidence_context is None:
+        return
 
     complexity_solution = None
     finish_complexity = None
@@ -877,6 +1373,78 @@ def record_problem(action: str, problem) -> None:
             f"{CYAN}{finish_complexity}{RESET}"
         )
 
+    placement = evidence_context[
+        "placement"
+    ]
+
+    assistance = evidence_context[
+        "assistance"
+    ]
+
+    assistance_label = next(
+        label
+        for value, label, _
+        in ASSISTANCE_OPTIONS
+        if value == assistance
+    )
+
+    print(
+        "Assistance  "
+        f"{CYAN}{assistance_label}{RESET}"
+    )
+    print(
+        "Independent "
+        + (
+            f"{GREEN}是{RESET}"
+            if evidence_context[
+                "independent"
+            ]
+            else f"{YELLOW}否{RESET}"
+        )
+    )
+    print(
+        "Novelty     "
+        f"{evidence_context['novelty']}"
+    )
+    print(
+        "Timed       "
+        + (
+            "是"
+            if evidence_context["timed"]
+            else "否"
+        )
+    )
+
+    if placement is not None:
+        print(
+            "Evidence    "
+            f"{CYAN}{placement.primary_skill}"
+            " × Implementation"
+            f"{RESET}"
+        )
+        print(
+            "Placement   "
+            f"{placement.role}"
+        )
+    else:
+        print(
+            f"{YELLOW}"
+            "Evidence    尚未建立（無 Published Placement）"
+            f"{RESET}"
+        )
+
+    placement_warning = evidence_context[
+        "placement_warning"
+    ]
+
+    if placement_warning:
+        print()
+        print(
+            f"{YELLOW}"
+            f"⚠ {fit(placement_warning, ui_width() - 2)}"
+            f"{RESET}"
+        )
+
     print()
     rule()
     print()
@@ -934,8 +1502,45 @@ def record_problem(action: str, problem) -> None:
         return
 
     sync_warning = None
+    outbox_warning = None
+    outbox_envelope = None
 
     if command_result == 0:
+        try:
+            outbox_envelope = (
+                attempt_envelope_for_record(
+                    action=action,
+                    problem=problem,
+                    result=result,
+                    minutes=minutes,
+                    assistance=evidence_context[
+                        "assistance"
+                    ],
+                    independent=evidence_context[
+                        "independent"
+                    ],
+                    novelty=evidence_context[
+                        "novelty"
+                    ],
+                    timed=evidence_context[
+                        "timed"
+                    ],
+                    placement=evidence_context[
+                        "placement"
+                    ],
+                )
+            )
+
+            OUTBOX.enqueue(
+                outbox_envelope
+            )
+
+        except (
+            EvidenceOutboxError,
+            OSError,
+        ) as exc:
+            outbox_warning = str(exc)
+
         sync_warning = (
             core.sync_generated_best_effort()
         )
@@ -954,6 +1559,51 @@ def record_problem(action: str, problem) -> None:
                 f"{GREEN}"
                 f"✓ Complexity 已寫入 Catalog："
                 f"{finish_complexity}"
+                f"{RESET}"
+            )
+
+        if (
+            outbox_envelope is not None
+            and outbox_warning is None
+        ):
+            print(
+                f"{GREEN}"
+                "✓ Attempt 已保存到 local evidence outbox"
+                f"{RESET}"
+            )
+
+            if outbox_envelope.evidence:
+                claim = outbox_envelope.evidence[0]
+                print(
+                    f"{GREEN}"
+                    f"✓ Evidence：{claim.skill_uid}"
+                    f" × {claim.track}"
+                    f"{RESET}"
+                )
+            else:
+                print(
+                    f"{YELLOW}"
+                    "⚠ 尚無 Published Placement；"
+                    "本次 Attempt 不更新 Skill Evidence"
+                    f"{RESET}"
+                )
+
+        if outbox_warning:
+            print()
+            print(
+                f"{YELLOW}"
+                "⚠ 學習紀錄已成功，但 local evidence outbox 寫入失敗。"
+                f"{RESET}"
+            )
+            print(
+                f"{GRAY}"
+                f"{fit(outbox_warning, ui_width())}"
+                f"{RESET}"
+            )
+            print(
+                f"{GRAY}"
+                "不要重做 Finish / Review；"
+                "之後使用 reconciliation 修復 Evidence。"
                 f"{RESET}"
             )
 
@@ -2951,7 +3601,7 @@ def main() -> int:
             )
 
             review_detail = (
-                "重做後更新 Recall 與下次日期"
+                "重做後更新 Result、Recall 與 Evidence"
                 if review_enabled
                 else "需先完成題目並取得 AC"
             )

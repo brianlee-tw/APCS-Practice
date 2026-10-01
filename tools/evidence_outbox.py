@@ -137,7 +137,7 @@ class AttemptFacts:
     attempt_id: str
     problem_id: str
     pb_uid: str | None
-    started_at: str
+    started_at: str | None
     finished_at: str
     language: str
     judge_result: str
@@ -145,6 +145,7 @@ class AttemptFacts:
     independent: bool | None
     attempt_count: int | None
     active_minutes: int | None
+    timed: bool | None
     novelty: str | None
     activity: str | None
     source: str = "vscode"
@@ -161,10 +162,14 @@ class AttemptFacts:
         if self.pb_uid is not None:
             _validate_id(self.pb_uid, "pb_uid")
 
-        started = _parse_aware_iso(self.started_at)
+        started = (
+            _parse_aware_iso(self.started_at)
+            if self.started_at is not None
+            else None
+        )
         finished = _parse_aware_iso(self.finished_at)
 
-        if finished < started:
+        if started is not None and finished < started:
             raise EvidenceOutboxError(
                 "finished_at cannot be earlier than started_at"
             )
@@ -313,7 +318,7 @@ def _new_id(prefix: str) -> str:
 def build_envelope(
     *,
     problem_id: str,
-    started_at: dt.datetime,
+    started_at: dt.datetime | None,
     finished_at: dt.datetime,
     language: str,
     judge_result: str,
@@ -325,6 +330,7 @@ def build_envelope(
     independent: bool | None = None,
     attempt_count: int | None = None,
     active_minutes: int | None = None,
+    timed: bool | None = None,
     novelty: str | None = None,
     activity: str | None = None,
     note: str = "",
@@ -367,8 +373,10 @@ def build_envelope(
             attempt_id=attempt_id,
             problem_id=problem_id,
             pb_uid=pb_uid,
-            started_at=_aware_iso(
-                started_at
+            started_at=(
+                _aware_iso(started_at)
+                if started_at is not None
+                else None
             ),
             finished_at=_aware_iso(
                 finished_at
@@ -379,6 +387,7 @@ def build_envelope(
             independent=independent,
             attempt_count=attempt_count,
             active_minutes=active_minutes,
+            timed=timed,
             novelty=novelty,
             activity=activity,
             note=note,
@@ -430,8 +439,7 @@ def memory_evidence(
             independent=attempt.independent,
             novelty=attempt.novelty,
             timed=(
-                attempt.active_minutes
-                is not None
+                attempt.timed is True
             ),
             problem_id=attempt.problem_id,
         )

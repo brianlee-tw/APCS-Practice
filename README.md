@@ -33,18 +33,20 @@ APCS 控制中心提供：
 - **題目筆記**：建立或開啟 `notes/<id>.md`。
 - **檢查與提交**：檢視 Git 變更、stage、commit，以及確認後 push。
 
-Recall 自評：
+Recall 自評目前保留作為可觀察的主觀回憶品質，不再代表固定複習間隔：
 
-| Recall | 定義 | 基礎複習間隔 |
-| ---: | --- | ---: |
-| 0 | 幾乎不會／需要看答案 | 1 天 |
-| 1 | 需要提示 | 3 天 |
-| 2 | 可獨立完成但偏慢 | 7 天 |
-| 3 | 流暢、獨立完成 | 30 天起 |
+| Recall | 定義 |
+| ---: | --- |
+| 0 | 幾乎無法自行重建／需要看答案 |
+| 1 | 有部分記憶，但需要提示 |
+| 2 | 可獨立完成，但速度或穩定度不足 |
+| 3 | 流暢、獨立完成；不代表永久 Mastered |
 
-正式 Review 若連續在不同日期取得 `AC + Recall 3`，間隔依序延長為 30、60、90 天。
+v2.3 的複習方向改為 `Skill × Track` adaptive memory：間隔由實際 elapsed time、Assistance、Independent、Novelty、Outcome 與既有 Stability / Retrievability 推導，不使用固定 1/3/7/30/60/90 天，也不以「複習 N 次」畢業。
 
-分鐘數屬於每次 Finish / Review 的事件資料，可略過；不會覆蓋先前的練習時間紀錄。
+Control Center 的 Finish / Review 會另外收集 A0–A5 Assistance、Independent、Novelty、Timed 與 Published Curriculum Placement；本機先寫入 `.apcs/runtime/outbox/`。若 Published Placement 尚未建立，Attempt 仍保存，但不會猜測 Skill Evidence。
+
+分鐘數屬於每次 Attempt 的事件資料，可略過；「有記錄耗時」不等於 Timed。
 
 ### CLI
 
