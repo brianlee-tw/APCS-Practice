@@ -137,7 +137,8 @@ class AttemptFacts:
     attempt_id: str
     problem_id: str
     pb_uid: str | None
-    started_at: str
+    placement_uid: str | None
+    started_at: str | None
     finished_at: str
     language: str
     judge_result: str
@@ -161,10 +162,20 @@ class AttemptFacts:
         if self.pb_uid is not None:
             _validate_id(self.pb_uid, "pb_uid")
 
-        started = _parse_aware_iso(self.started_at)
+        if self.placement_uid is not None:
+            _validate_id(
+                self.placement_uid,
+                "placement_uid",
+            )
+
+        started = (
+            _parse_aware_iso(self.started_at)
+            if self.started_at is not None
+            else None
+        )
         finished = _parse_aware_iso(self.finished_at)
 
-        if finished < started:
+        if started is not None and finished < started:
             raise EvidenceOutboxError(
                 "finished_at cannot be earlier than started_at"
             )
@@ -313,14 +324,15 @@ def _new_id(prefix: str) -> str:
 def build_envelope(
     *,
     problem_id: str,
-    started_at: dt.datetime,
     finished_at: dt.datetime,
+    started_at: dt.datetime | None = None,
     language: str,
     judge_result: str,
     evidence: Iterable[
         tuple[str, str, str, str]
     ] = (),
     pb_uid: str | None = None,
+    placement_uid: str | None = None,
     assistance: int | None = None,
     independent: bool | None = None,
     attempt_count: int | None = None,
@@ -367,8 +379,11 @@ def build_envelope(
             attempt_id=attempt_id,
             problem_id=problem_id,
             pb_uid=pb_uid,
-            started_at=_aware_iso(
-                started_at
+            placement_uid=placement_uid,
+            started_at=(
+                _aware_iso(started_at)
+                if started_at is not None
+                else None
             ),
             finished_at=_aware_iso(
                 finished_at
