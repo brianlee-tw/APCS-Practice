@@ -517,6 +517,154 @@ def skill_display_name(
     )
 
 
+
+def attempted_problem_ids_for_skill(
+    skill_uid: str,
+    *,
+    track: str,
+) -> set[str]:
+    result = set()
+
+    try:
+        envelopes = (
+            OUTBOX.all_envelopes()
+        )
+    except (
+        EvidenceOutboxError,
+        OSError,
+    ):
+        return result
+
+    for envelope in envelopes:
+        if not any(
+            claim.skill_uid == skill_uid
+            and claim.track == track
+            for claim in envelope.evidence
+        ):
+            continue
+
+        result.add(
+            envelope.attempt.problem_id
+            .strip()
+            .lower()
+        )
+
+    return result
+
+
+def review_placement_for_skill(
+    skill_uid: str,
+    *,
+    track: str,
+):
+    try:
+        placements = (
+            CURRICULUM
+            .placements_for_skill(
+                skill_uid
+            )
+        )
+    except RuntimeCurriculumError:
+        return None
+
+    if not placements:
+        return None
+
+    attempted = (
+        attempted_problem_ids_for_skill(
+            skill_uid,
+            track=track,
+        )
+    )
+
+    role_rank = {
+        "Transfer Challenge": 0,
+        "Core Independent": 1,
+        "Guided Drill": 2,
+        "Worked Example": 3,
+        "Mock": 4,
+    }
+
+    return min(
+        placements,
+        key=lambda item: (
+            1
+            if item.problem_id
+            .lower()
+            in attempted
+            else 0,
+            role_rank.get(
+                item.role,
+                9,
+            ),
+            (
+                float("inf")
+                if item.lesson_order is None
+                else item.lesson_order
+            ),
+            item.placement_uid,
+        ),
+    )
+
+
+def create_review_scratch(
+    placement,
+) -> Path:
+    folder = (
+        RUNTIME_DIR
+        / "review"
+        / dt.date.today().isoformat()
+    )
+    folder.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+
+    target = (
+        folder
+        / (
+            f"{placement.problem_id}"
+            f"__{placement.placement_uid}"
+            ".cpp"
+        )
+    )
+
+    if target.exists():
+        return target
+
+    lines = [
+        "// APCS adaptive review scratch",
+        f"// Skill: {placement.primary_skill}",
+        (
+            f"// Problem: "
+            f"{placement.problem_id} · "
+            f"{placement.title}"
+        ),
+        f"// Role: {placement.role}",
+    ]
+
+    if placement.url:
+        lines.append(
+            f"// Judge: {placement.url}"
+        )
+
+    lines += [
+        "//",
+        "// 這是空白 retrieval scratch；不要查看舊 solution。",
+        "",
+    ]
+
+    target.write_text(
+        "\n".join(lines)
+        + solution_template(
+            "cpp"
+        ),
+        encoding="utf-8",
+    )
+
+    return target
+
+
 # ============================================================
 # Generic menu
 # ============================================================
