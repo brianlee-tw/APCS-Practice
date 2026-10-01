@@ -557,19 +557,6 @@ def review_placement_for_skill(
     *,
     track: str,
 ):
-    try:
-        placements = (
-            CURRICULUM
-            .placements_for_skill(
-                skill_uid
-            )
-        )
-    except RuntimeCurriculumError:
-        return None
-
-    if not placements:
-        return None
-
     attempted = (
         attempted_problem_ids_for_skill(
             skill_uid,
@@ -577,34 +564,16 @@ def review_placement_for_skill(
         )
     )
 
-    role_rank = {
-        "Transfer Challenge": 0,
-        "Core Independent": 1,
-        "Guided Drill": 2,
-        "Worked Example": 3,
-        "Mock": 4,
-    }
-
-    return min(
-        placements,
-        key=lambda item: (
-            1
-            if item.problem_id
-            .lower()
-            in attempted
-            else 0,
-            role_rank.get(
-                item.role,
-                9,
-            ),
-            (
-                float("inf")
-                if item.lesson_order is None
-                else item.lesson_order
-            ),
-            item.placement_uid,
-        ),
-    )
+    try:
+        return (
+            CURRICULUM
+            .review_placement_for_skill(
+                skill_uid,
+                exclude_problem_ids=attempted,
+            )
+        )
+    except RuntimeCurriculumError:
+        return None
 
 
 def create_review_scratch(
