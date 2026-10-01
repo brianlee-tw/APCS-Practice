@@ -346,6 +346,25 @@ class EvidenceOutboxV23Test(unittest.TestCase):
                 )
             )
 
+    def test_start_time_may_remain_unknown(self):
+        envelope = sample_envelope(
+            started_at=None,
+            placement_uid="PL-PFX-01-A693",
+        )
+
+        self.store.enqueue(envelope)
+        loaded = self.store.load(
+            envelope.writeback_id
+        )
+
+        self.assertIsNone(
+            loaded.attempt.started_at
+        )
+        self.assertEqual(
+            loaded.attempt.placement_uid,
+            "PL-PFX-01-A693",
+        )
+
     def test_finish_cannot_precede_start(self):
         with self.assertRaisesRegex(
             EvidenceOutboxError,
