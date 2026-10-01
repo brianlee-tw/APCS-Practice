@@ -1883,6 +1883,8 @@ def record_problem(action: str, problem) -> None:
 
     sync_warning = None
     outbox_warning = None
+    memory_warning = None
+    memory_report = None
     outbox_envelope = None
 
     if command_result == 0:
@@ -1920,6 +1922,23 @@ def record_problem(action: str, problem) -> None:
             OSError,
         ) as exc:
             outbox_warning = str(exc)
+
+        if (
+            outbox_envelope is not None
+            and outbox_warning is None
+        ):
+            try:
+                memory_report = (
+                    MEMORY.reconcile(
+                        OUTBOX.all_envelopes()
+                    )
+                )
+            except (
+                EvidenceOutboxError,
+                OSError,
+                ValueError,
+            ) as exc:
+                memory_warning = str(exc)
 
         sync_warning = (
             core.sync_generated_best_effort()
@@ -1967,6 +1986,35 @@ def record_problem(action: str, problem) -> None:
                     "本次 Attempt 不更新 Skill Evidence"
                     f"{RESET}"
                 )
+
+        if (
+            memory_report is not None
+            and outbox_envelope is not None
+            and outbox_envelope.evidence
+        ):
+            print(
+                f"{GREEN}"
+                "✓ Adaptive memory 已更新"
+                f"{RESET}"
+            )
+
+        if memory_warning:
+            print()
+            print(
+                f"{YELLOW}"
+                "⚠ Attempt 已保存，但 adaptive memory cache 更新失敗。"
+                f"{RESET}"
+            )
+            print(
+                f"{GRAY}"
+                f"{fit(memory_warning, ui_width())}"
+                f"{RESET}"
+            )
+            print(
+                f"{GRAY}"
+                "Evidence 不會遺失；下次開啟 Today 會重新 reconciliation。"
+                f"{RESET}"
+            )
 
         if outbox_warning:
             print()
