@@ -17,16 +17,35 @@ from pathlib import Path
 
 try:
     from . import apcs as core
+    from .attempt_capture import build_attempt_envelope
     from .catalog_store import CatalogError, ProblemMeta, SolutionMeta
+    from .evidence_outbox import EvidenceOutbox, EvidenceOutboxError
+    from .runtime_curriculum import (
+        RuntimeCurriculumError,
+        RuntimeCurriculumUnavailable,
+        default_curriculum,
+    )
     from .tag_taxonomy import TAG_GROUPS, serialize_selection, split_tags
 except ImportError:
     import apcs as core
+    from attempt_capture import build_attempt_envelope
     from catalog_store import CatalogError, ProblemMeta, SolutionMeta
+    from evidence_outbox import EvidenceOutbox, EvidenceOutboxError
+    from runtime_curriculum import (
+        RuntimeCurriculumError,
+        RuntimeCurriculumUnavailable,
+        default_curriculum,
+    )
     from tag_taxonomy import TAG_GROUPS, serialize_selection, split_tags
 
 
 ROOT = Path(__file__).resolve().parents[1]
 ID_RE = re.compile(r"^([A-Za-z]\d+|\d+)(?:_|$)")
+
+CURRICULUM = default_curriculum(ROOT)
+OUTBOX = EvidenceOutbox(
+    ROOT / ".apcs" / "runtime"
+)
 
 RESET = "\033[0m"
 BOLD = "\033[1m"
