@@ -5,6 +5,7 @@ import { scoreQuiz, levelBand, recommend, topErrorTags, buildReviewItems, valida
 
 const bank = JSON.parse(fs.readFileSync(new URL("../data/questions.v1.json", import.meta.url), "utf8"));
 const catalog = JSON.parse(fs.readFileSync(new URL("../data/products.v1.json", import.meta.url), "utf8"));
+const skillModel = JSON.parse(fs.readFileSync(new URL("../data/skill-model.v1.json", import.meta.url), "utf8"));
 
 test("question bank is structurally valid", () => {
   assert.deepEqual(validateQuestionBank(bank), []);
@@ -24,6 +25,15 @@ test("5 10 and 15 question modes stay balanced across five dimensions", () => {
 
 test("unsupported question counts are rejected", () => {
   assert.throws(() => selectBalancedQuestions(bank.questions, 7), /Unsupported quiz count/);
+});
+
+
+test("diagnostic model is explicitly non-readiness authority", () => {
+  assert.equal(skillModel.scope, "diagnostic-only");
+  assert.equal(skillModel.readinessAuthority, false);
+  assert.ok(skillModel.bands.every((band) => band.label.startsWith("本次題組：")));
+  assert.ok(!levelBand(73).label.includes("準備"));
+  assert.ok(!levelBand(100).label.includes("實戰"));
 });
 
 test("all-correct answers produce 100 across dimensions", () => {
