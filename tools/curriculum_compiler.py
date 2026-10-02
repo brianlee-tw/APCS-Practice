@@ -30,6 +30,18 @@ ROLES = {
     "Transfer Challenge",
     "Mock",
 }
+
+ROLE_EVIDENCE_LEVEL_CAP = {
+    "Worked Example": 0,
+    "Guided Drill": 2,
+    "Core Independent": 3,
+    "Transfer Challenge": 4,
+    "Mock": 0,
+}
+METHOD_CONFIRMATION_RISKS = {
+    "Medium",
+    "High",
+}
 DIFFICULTIES = {"D1", "D2", "D3", "D4", "D5"}
 UID_RE = re.compile(r"^[A-Za-z][A-Za-z0-9_.:-]*$")
 
@@ -282,6 +294,49 @@ def validate_source(data: dict[str, Any]) -> None:
                 f"placement {placement_uid}: invalid role={role!r}"
             )
 
+        raw_cap = row.get(
+            "evidence_level_cap"
+        )
+        role_cap = ROLE_EVIDENCE_LEVEL_CAP[
+            role
+        ]
+
+        if raw_cap is None:
+            evidence_level_cap = role_cap
+        elif (
+            isinstance(raw_cap, bool)
+            or not isinstance(raw_cap, int)
+        ):
+            raise CurriculumError(
+                f"placement {placement_uid}: "
+                "evidence_level_cap must be an integer"
+            )
+        else:
+            evidence_level_cap = raw_cap
+
+        if not 0 <= evidence_level_cap <= role_cap:
+            raise CurriculumError(
+                f"placement {placement_uid}: "
+                f"evidence_level_cap={evidence_level_cap} "
+                f"exceeds role cap {role_cap}"
+            )
+
+        raw_confirmation = row.get(
+            "method_confirmation_required"
+        )
+
+        if (
+            raw_confirmation is not None
+            and not isinstance(
+                raw_confirmation,
+                bool,
+            )
+        ):
+            raise CurriculumError(
+                f"placement {placement_uid}: "
+                "method_confirmation_required must be boolean"
+            )
+
         primary = _require_text(
             row,
             "primary_skill",
@@ -424,7 +479,47 @@ def _problem_projection(row: dict[str, Any]) -> dict[str, Any]:
 
 def _placement_projection(
     row: dict[str, Any],
+    *,
+    problem: dict[str, Any],
 ) -> dict[str, Any]:
+    role = _text(
+        row.get("role")
+    )
+    role_cap = ROLE_EVIDENCE_LEVEL_CAP[
+        role
+    ]
+    raw_cap = row.get(
+        "evidence_level_cap"
+    )
+    evidence_level_cap = (
+        role_cap
+        if raw_cap is None
+        else int(raw_cap)
+    )
+
+    raw_confirmation = row.get(
+        "method_confirmation_required"
+    )
+
+    if raw_confirmation is None:
+        method_confirmation_required = (
+            role
+            in {
+                "Core Independent",
+                "Transfer Challenge",
+            }
+            and _text(
+                problem.get(
+                    "alternate_solution_risk"
+                )
+            )
+            in METHOD_CONFIRMATION_RISKS
+        )
+    else:
+        method_confirmation_required = bool(
+            raw_confirmation
+        )
+
     return {
         "placement_uid": _text(
             row.get("placement_uid")
@@ -448,6 +543,10 @@ def _placement_projection(
             row.get("lesson_uid")
         ),
         "lesson_order": row.get("lesson_order"),
+        "evidence_level_cap": evidence_level_cap,
+        "method_confirmation_required": (
+            method_confirmation_required
+        ),
     }
 
 
@@ -489,9 +588,23 @@ def compile_source(
         ),
     )
 
+    published_problem_by_uid = {
+        _text(row.get("pb_uid")): row
+        for row in published_problems
+    }
+
     placements = sorted(
         (
-            _placement_projection(row)
+            _placement_projection(
+                row,
+                problem=(
+                    published_problem_by_uid[
+                        _text(
+                            row.get("pb_uid")
+                        )
+                    ]
+                ),
+            )
             for row in data.get("placements") or []
             if _text(row.get("pb_uid"))
             in published_pb_uids
