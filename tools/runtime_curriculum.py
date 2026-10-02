@@ -51,6 +51,8 @@ class PlacementContext:
     lesson_order: int | float | None
     source_platform: str = ""
     judge_platform: str = ""
+    evidence_level_cap: int = 0
+    method_confirmation_required: bool = False
 
 
 class RuntimeCurriculum:
@@ -291,6 +293,18 @@ class RuntimeCurriculum:
                             "lesson_order"
                         )
                     ),
+                    evidence_level_cap=int(
+                        placement.get(
+                            "evidence_level_cap",
+                            0,
+                        )
+                    ),
+                    method_confirmation_required=bool(
+                        placement.get(
+                            "method_confirmation_required",
+                            False,
+                        )
+                    ),
                 )
             )
 
@@ -517,6 +531,18 @@ class RuntimeCurriculum:
                         lesson_order=placement.get(
                             "lesson_order"
                         ),
+                        evidence_level_cap=int(
+                            placement.get(
+                                "evidence_level_cap",
+                                0,
+                            )
+                        ),
+                        method_confirmation_required=bool(
+                            placement.get(
+                                "method_confirmation_required",
+                                False,
+                            )
+                        ),
                     )
                 )
 
@@ -561,6 +587,41 @@ class RuntimeCurriculum:
                 ),
             )
         )
+
+    def evidence_level_cap(
+        self,
+        *,
+        pb_uid: str,
+        skill_uid: str,
+    ) -> int:
+        """Return the most conservative matching Published placement cap.
+
+        Current Notion migration emits one formal placement per PB.  Taking
+        the minimum keeps this fail-closed if a future snapshot legitimately
+        reuses one Problem in multiple placements for the same Primary Skill.
+        """
+
+        pb_uid = str(
+            pb_uid or ""
+        ).strip()
+        skill_uid = str(
+            skill_uid or ""
+        ).strip()
+
+        if not pb_uid or not skill_uid:
+            return 0
+
+        caps = [
+            item.evidence_level_cap
+            for item in self.all_placements()
+            if (
+                item.pb_uid == pb_uid
+                and item.primary_skill
+                == skill_uid
+            )
+        ]
+
+        return min(caps) if caps else 0
 
     def skill_context(
         self,
