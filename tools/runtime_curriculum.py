@@ -380,6 +380,7 @@ class RuntimeCurriculum:
 
         candidates.sort(
             key=lambda item: (
+                -item.evidence_level_cap,
                 role_rank.get(
                     item.role,
                     99,
