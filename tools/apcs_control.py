@@ -159,9 +159,9 @@ def wrap_display(text: str, width: int) -> list[str]:
             if last_space and last_space >= max(1, cut // 2):
                 cut = last_space
 
-            line = remaining[:cut].rstrip()
+            line = remaining[:cut]
             result.append(line)
-            remaining = remaining[cut:].lstrip()
+            remaining = remaining[cut:]
 
         result.append(remaining)
 
