@@ -97,6 +97,11 @@ def display_width(text: str) -> int:
 
 
 def fit(text: str, width: int) -> str:
+    """Single-line fallback for compact status fields.
+
+    Learner-facing prose should prefer wrap_display() so information is not
+    silently lost behind an ellipsis.
+    """
     text = str(text)
 
     if display_width(text) <= width:
@@ -115,9 +120,82 @@ def fit(text: str, width: int) -> str:
     return out + "…"
 
 
+def wrap_display(text: str, width: int) -> list[str]:
+    """Wrap text by terminal display width without dropping content."""
+    width = max(1, int(width))
+    result: list[str] = []
+
+    for paragraph in str(text).split("\n"):
+        if paragraph == "":
+            result.append("")
+            continue
+
+        remaining = paragraph
+
+        while display_width(remaining) > width:
+            used = 0
+            cut = 0
+            last_space = 0
+
+            for index, ch in enumerate(remaining):
+                w = char_width(ch)
+
+                if used + w > width:
+                    break
+
+                used += w
+                cut = index + 1
+
+                if ch.isspace():
+                    last_space = cut
+
+            if cut <= 0:
+                cut = 1
+
+            if last_space and last_space >= max(1, cut // 2):
+                cut = last_space
+
+            line = remaining[:cut].rstrip()
+            result.append(line)
+            remaining = remaining[cut:].lstrip()
+
+        result.append(remaining)
+
+    return result or [""]
+
+
+def print_wrapped(
+    text: str,
+    width: int,
+    *,
+    prefix: str = "",
+    continuation_prefix: str | None = None,
+    color: str = "",
+) -> None:
+    continuation_prefix = (
+        prefix
+        if continuation_prefix is None
+        else continuation_prefix
+    )
+    lines = wrap_display(
+        text,
+        max(1, width),
+    )
+
+    for index, line in enumerate(lines):
+        lead = (
+            prefix
+            if index == 0
+            else continuation_prefix
+        )
+        print(
+            f"{color}{lead}{line}{RESET if color else ''}"
+        )
+
+
 def ui_width() -> int:
-    columns = shutil.get_terminal_size((38, 24)).columns
-    return max(28, min(columns - 2, 42))
+    columns = shutil.get_terminal_size((80, 24)).columns
+    return max(28, columns - 2)
 
 
 def rule() -> None:
@@ -830,185 +908,233 @@ def choose_menu(
     main=False,
     footer_numbers=True,
     back_text: str | None = None,
+    selected_index: int | None = None,
 ):
-    selected = first_enabled(options)
+    if (
+        selected_index is not None
+        and 0 <= selected_index < len(options)
+        and options[selected_index].get("enabled", True)
+    ):
+        selected = selected_index
+    else:
+        selected = first_enabled(options)
+
+    # Nothing that changes while merely moving the cursor needs to be
+    # recomputed.  In particular, avoid re-reading adaptive state on every
+    # ↑/↓ keypress.
+    snapshot = (
+        adaptive_today_snapshot()
+        if main
+        else None
+    )
+    first_frame = True
 
     while True:
-        clear()
-        heading(title)
-        print()
+        output = io.StringIO()
 
-        if problem is not None:
-            print_problem_context(problem)
+        with contextlib.redirect_stdout(output):
+            heading(title)
             print()
 
-        if main:
-            snapshot = (
-                adaptive_today_snapshot()
-            )
-            plan = snapshot["plan"]
+            if problem is not None:
+                print_problem_context(problem)
+                print()
 
-            print(f"{GRAY}今日學習{RESET}")
-            print(
-                f"容量 {snapshot['capacity_minutes']} min"
-                f" · Review budget {plan.budget_minutes} min"
-            )
+            if main and snapshot is not None:
+                plan = snapshot["plan"]
 
-            if plan.selected:
+                print(f"{GRAY}今日學習{RESET}")
                 print(
-                    f"{YELLOW}"
-                    f"Adaptive review {len(plan.selected)} 項"
-                    f" · {plan.selected_minutes} min"
-                    f"{RESET}"
-                )
-            else:
-                print(
-                    f"{GREEN}"
-                    "✓ 今天沒有已選定的 adaptive review"
-                    f"{RESET}"
+                    f"容量 {snapshot['capacity_minutes']} min"
+                    f" · Review budget {plan.budget_minutes} min"
                 )
 
-            if plan.deferred:
-                print(
-                    f"{GRAY}"
-                    f"安全延後 {len(plan.deferred)} 項"
-                    "（不是欠題）"
-                    f"{RESET}"
-                )
-
-            protected = max(
-                0,
-                snapshot["capacity_minutes"]
-                - plan.budget_minutes,
-            )
-            print(
-                f"{GRAY}"
-                f"新學習保留 ≥ {protected} min"
-                f"{RESET}"
-            )
-
-            if snapshot[
-                "curriculum_blocker"
-            ]:
-                print(
-                    f"{YELLOW}"
-                    "新學習 · BLOCKED"
-                    f"{RESET}"
-                )
-                print(
-                    f"{GRAY}"
-                    f"{fit(snapshot['curriculum_blocker'], ui_width() - 2)}"
-                    f"{RESET}"
-                )
-            elif snapshot[
-                "new_learning"
-            ] is not None:
-                route = snapshot[
-                    "new_learning"
-                ]
-
-                if route.skill is not None:
-                    print(
-                        f"{CYAN}"
-                        "新學習 · "
-                        f"{route.skill.uid}"
-                        f"{RESET}"
-                    )
-                    print(
-                        f"{GRAY}"
-                        f"{fit(route.why_now, ui_width() - 2)}"
-                        f"{RESET}"
-                    )
-                elif route.blocked_skill is not None:
+                if plan.selected:
                     print(
                         f"{YELLOW}"
-                        "新學習 · BLOCKED · "
-                        f"{route.blocked_skill.uid}"
+                        f"Adaptive review {len(plan.selected)} 項"
+                        f" · {plan.selected_minutes} min"
                         f"{RESET}"
                     )
-                    print(
-                        f"{GRAY}"
-                        f"{fit(route.why_now, ui_width() - 2)}"
-                        f"{RESET}"
-                    )
-                elif route.route_complete:
+                else:
                     print(
                         f"{GREEN}"
-                        "✓ Required route 已達 start threshold"
+                        "✓ 今天沒有已選定的 adaptive review"
                         f"{RESET}"
                     )
 
-            if snapshot["warning"]:
+                if plan.deferred:
+                    print(
+                        f"{GRAY}"
+                        f"安全延後 {len(plan.deferred)} 項"
+                        "（不是欠題）"
+                        f"{RESET}"
+                    )
+
+                protected = max(
+                    0,
+                    snapshot["capacity_minutes"]
+                    - plan.budget_minutes,
+                )
                 print(
-                    f"{YELLOW}"
-                    f"⚠ {fit(snapshot['warning'], ui_width() - 2)}"
+                    f"{GRAY}"
+                    f"新學習保留 ≥ {protected} min"
                     f"{RESET}"
                 )
 
+                if snapshot["curriculum_blocker"]:
+                    print(
+                        f"{YELLOW}"
+                        "新學習 · BLOCKED"
+                        f"{RESET}"
+                    )
+                    print_wrapped(
+                        snapshot["curriculum_blocker"],
+                        ui_width() - 2,
+                        color=GRAY,
+                    )
+                elif snapshot["new_learning"] is not None:
+                    route = snapshot["new_learning"]
+
+                    if route.skill is not None:
+                        print(
+                            f"{CYAN}"
+                            "新學習 · "
+                            f"{route.skill.uid}"
+                            f"{RESET}"
+                        )
+                        print_wrapped(
+                            route.why_now,
+                            ui_width() - 2,
+                            color=GRAY,
+                        )
+                    elif route.blocked_skill is not None:
+                        print(
+                            f"{YELLOW}"
+                            "新學習 · BLOCKED · "
+                            f"{route.blocked_skill.uid}"
+                            f"{RESET}"
+                        )
+                        print_wrapped(
+                            route.why_now,
+                            ui_width() - 2,
+                            color=GRAY,
+                        )
+                    elif route.route_complete:
+                        print(
+                            f"{GREEN}"
+                            "✓ Required route 已達 start threshold"
+                            f"{RESET}"
+                        )
+
+                if snapshot["warning"]:
+                    print_wrapped(
+                        f"⚠ {snapshot['warning']}",
+                        ui_width() - 2,
+                        color=YELLOW,
+                    )
+
+                print()
+
+            rule()
             print()
 
-        rule()
-        print()
+            window = 6
 
-        # Keep long menus usable in the narrow right-side terminal.
-        window = 6
+            if len(options) <= window:
+                start = 0
+                end = len(options)
+            else:
+                start = max(0, selected - 2)
+                start = min(start, len(options) - window)
+                end = start + window
 
-        if len(options) <= window:
-            start = 0
-            end = len(options)
-        else:
-            start = max(0, selected - 2)
-            start = min(start, len(options) - window)
-            end = start + window
+            if start > 0:
+                print(f"{GRAY}  ↑ 還有 {start} 項{RESET}")
+                print()
 
-        if start > 0:
-            print(f"{GRAY}  ↑ 還有 {start} 項{RESET}")
-            print()
+            for index in range(start, end):
+                option = options[index]
+                enabled = option.get("enabled", True)
+                prefix = "›" if index == selected else " "
+                number = index + 1
 
-        for index in range(start, end):
-            option = options[index]
-            enabled = option.get("enabled", True)
+                label_lines = wrap_display(
+                    option["label"],
+                    max(1, ui_width() - 6),
+                )
 
-            prefix = "›" if index == selected else " "
-            number = index + 1
-            label = fit(option["label"], ui_width() - 6)
+                if not enabled:
+                    label_color = GRAY
+                elif index == selected:
+                    label_color = CYAN + BOLD
+                else:
+                    label_color = ""
 
-            if not enabled:
-                print(f"{GRAY}  {number}  {label}{RESET}")
-            elif index == selected:
+                for line_index, line in enumerate(label_lines):
+                    if line_index == 0:
+                        lead = f"{prefix} {number}  "
+                    else:
+                        lead = "     "
+
+                    if label_color:
+                        print(
+                            f"{label_color}{lead}{line}{RESET}"
+                        )
+                    else:
+                        print(f"{lead}{line}")
+
+                detail = option.get("detail", "")
+
+                if detail:
+                    detail_color = GRAY if enabled else RED
+                    print_wrapped(
+                        detail,
+                        max(1, ui_width() - 5),
+                        prefix="     ",
+                        continuation_prefix="     ",
+                        color=detail_color,
+                    )
+
+                print()
+
+            if end < len(options):
                 print(
-                    f"{CYAN}{BOLD}"
-                    f"{prefix} {number}  {label}"
+                    f"{GRAY}"
+                    f"  ↓ 還有 {len(options) - end} 項"
+                    f"{RESET}"
+                )
+                print()
+
+            rule()
+
+            if main:
+                print(f"{GRAY}↑↓ 選擇 · Enter 執行{RESET}")
+                print(
+                    f"{GRAY}"
+                    f"1–{len(options)} 直達 · Esc / Q 關閉"
                     f"{RESET}"
                 )
             else:
-                print(f"  {number}  {label}")
+                print(f"{GRAY}↑↓ 選擇 · Enter 執行{RESET}")
+                label = back_text or "返回控制中心"
+                print(f"{GRAY}Esc / Q {label}{RESET}")
 
-            detail = option.get("detail", "")
-
-            if detail:
-                detail = fit(detail, ui_width() - 5)
-
-                if enabled:
-                    print(f"     {GRAY}{detail}{RESET}")
-                else:
-                    print(f"     {RED}{detail}{RESET}")
-
-            print()
-
-        if end < len(options):
-            print(f"{GRAY}  ↓ 還有 {len(options) - end} 項{RESET}")
-            print()
-
-        rule()
-
-        if main:
-            print(f"{GRAY}↑↓ 選擇 · Enter 執行{RESET}")
-            print(f"{GRAY}1–{len(options)} 直達 · Esc / Q 關閉{RESET}")
-        else:
-            print(f"{GRAY}↑↓ 選擇 · Enter 執行{RESET}")
-            label = back_text or "返回控制中心"
-            print(f"{GRAY}Esc / Q {label}{RESET}")
+        # Render the completed frame in one write.  Subsequent cursor moves
+        # overwrite from HOME and clear only stale tail content, avoiding the
+        # visible blank frame caused by ESC[2J on every ↑/↓ keypress.
+        lead = (
+            "\033[2J\033[H"
+            if first_frame
+            else "\033[H"
+        )
+        sys.stdout.write(
+            lead
+            + output.getvalue()
+            + "\033[J"
+        )
+        sys.stdout.flush()
+        first_frame = False
 
         key = read_key()
 
