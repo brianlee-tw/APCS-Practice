@@ -106,9 +106,15 @@ Implemented and verified:
 
 Production client configuration:
 
+    export APCS_WRITEBACK_URL='https://apcs-rec-writeback.main-1h9k2.workers.dev/api/record'
     python3 tools/writeback_sync.py configure-key
     python3 tools/writeback_sync.py status
     python3 tools/writeback_sync.py sync-pending
+
+The write key may alternatively be supplied through the `APCS_WRITE_KEY`
+environment variable. The endpoint must be explicitly configured and must
+match the approved production URL; a missing or different endpoint fails
+closed before any network request.
 
 The learner must never repeat a problem solely to repair synchronization.
 `LEARNER_READINESS = NOT ASSESSED` remains unchanged.
