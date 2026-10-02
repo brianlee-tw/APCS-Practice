@@ -81,7 +81,10 @@ RED = "\033[91m"
 WHITE = "\033[97m"
 GRAY = "\033[90m"
 
-# Internal sentinel for returning to the previous record-wizard step.\n# None remains a valid field value (for example, skipped active minutes).\nRECORD_BACK = object()\n
+# Internal sentinel for returning to the previous record-wizard step.
+# None remains a valid field value (for example, skipped active minutes).
+RECORD_BACK = object()
+
 
 # ============================================================
 # Layout / text
