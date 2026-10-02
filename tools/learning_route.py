@@ -291,6 +291,8 @@ def _claim_lower_bound(
 
 def derive_evidence_lower_bounds(
     envelopes: Iterable[OutboxEnvelope],
+    *,
+    curriculum: RuntimeCurriculum | None = None,
 ) -> dict[str, SkillEvidenceLowerBound]:
     levels: dict[str, dict[str, int]] = {}
     counts: dict[str, int] = {}
@@ -322,6 +324,18 @@ def derive_evidence_lower_bounds(
                 track=claim.track,
                 outcome=claim.outcome,
             )
+
+            if curriculum is not None:
+                candidate = min(
+                    candidate,
+                    curriculum.evidence_level_cap(
+                        pb_uid=(
+                            envelope.attempt.pb_uid
+                            or ""
+                        ),
+                        skill_uid=skill_uid,
+                    ),
+                )
 
             row[claim.track] = max(
                 row.get(claim.track, 0),
@@ -565,7 +579,8 @@ def select_new_learning_plan(
 
     evidence = (
         derive_evidence_lower_bounds(
-            envelopes
+            envelopes,
+            curriculum=curriculum,
         )
     )
 
