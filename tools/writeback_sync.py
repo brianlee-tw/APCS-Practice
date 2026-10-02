@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import getpass
 import json
+import os
 from pathlib import Path
 
 try:
@@ -17,6 +18,7 @@ try:
         DEFAULT_TIMEOUT_SECONDS,
         KEY_FILE,
         PRODUCTION_ENDPOINT,
+        WRITEBACK_URL_ENV,
         WritebackTransportError,
         credential_source,
         install_write_key,
@@ -36,6 +38,7 @@ except ImportError:
         DEFAULT_TIMEOUT_SECONDS,
         KEY_FILE,
         PRODUCTION_ENDPOINT,
+        WRITEBACK_URL_ENV,
         WritebackTransportError,
         credential_source,
         install_write_key,
@@ -121,12 +124,18 @@ def status_cmd() -> int:
         credential_source()
         or "missing"
     )
+    endpoint = str(
+        os.environ.get(
+            WRITEBACK_URL_ENV,
+            "",
+        )
+    ).strip() or "missing"
 
     print(
         "REMOTE WRITEBACK · PRODUCTION TRANSPORT"
     )
     print(
-        f"endpoint={PRODUCTION_ENDPOINT}"
+        f"endpoint={endpoint}"
     )
     print(
         f"credential={source}"
