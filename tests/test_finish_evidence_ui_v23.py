@@ -1,12 +1,18 @@
 import datetime as dt
+import os
 import tempfile
 import unittest
 from pathlib import Path
 from unittest.mock import patch
 
 from tools.apcs_control import (
+    RECORD_BACK,
     attempt_envelope_for_record,
+    display_width,
+    evidence_context_menu,
     independent_menu,
+    ui_width,
+    wrap_display,
 )
 from tools.runtime_curriculum import (
     PlacementContext,
@@ -189,6 +195,70 @@ class FinishEvidenceUiV23Test(unittest.TestCase):
         self.assertEqual(
             envelope.attempt.active_minutes,
             18,
+        )
+
+    def test_ui_width_uses_available_terminal_width(self):
+        with patch(
+            "tools.apcs_control.shutil.get_terminal_size",
+            return_value=os.terminal_size((96, 24)),
+        ):
+            self.assertEqual(
+                ui_width(),
+                94,
+            )
+
+    def test_wrap_display_preserves_all_text(self):
+        text = (
+            "方法與實作主要由你自行完成；"
+            "A0/A1 可成立"
+        )
+
+        lines = wrap_display(
+            text,
+            12,
+        )
+
+        self.assertGreater(
+            len(lines),
+            1,
+        )
+        self.assertEqual(
+            "".join(lines),
+            text,
+        )
+        self.assertNotIn(
+            "…",
+            "".join(lines),
+        )
+        self.assertTrue(
+            all(
+                display_width(line) <= 12
+                for line in lines
+            )
+        )
+
+    def test_evidence_context_back_keeps_attempt_local(self):
+        with (
+            patch(
+                "tools.apcs_control.placement_for_record",
+                return_value=(
+                    placement(),
+                    None,
+                ),
+            ),
+            patch(
+                "tools.apcs_control.assistance_menu",
+                return_value=None,
+            ),
+        ):
+            value = evidence_context_menu(
+                "finish",
+                problem(),
+            )
+
+        self.assertIs(
+            value,
+            RECORD_BACK,
         )
 
     def test_a2_plus_is_never_marked_independent(self):
