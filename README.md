@@ -76,20 +76,22 @@ v2.2 以 `data/problems.csv` 與 `data/solutions.csv` 作為靜態 metadata 的�
 - Control Center 建立 commit 前會執行完整 regression 與 quality gate。
 
 <!-- APCS_DASHBOARD_START -->
-## APCS Training Dashboard
+## v2.2 Compatibility Dashboard
+
+> 相容觀測面：不代表 v2.3 Skill × Track mastery、Today 排程或 readiness。
 
 | 指標 | 數量 |
 | :--- | ---: |
 | 索引題目 | **58** |
 | 明確 AC | **0** |
-| Mastered | **0** |
-| 今日到期複習 | **0** |
+| v2.2 Mastered | **0** |
+| v2.2 problem due | **0** |
 
-### Canonical Tag 能力分布
+### v2.2 Tag 統計（compatibility）
 
 > 一題可同時計入多個 Tag，因此 Tag 題數加總可能大於索引題目總數。
 
-| 類別 | Tag | 題數 | AC | Mastered | Recall 0–1 | 到期 |
+| 類別 | Tag | 題數 | AC | v2.2 Mastered | Recall 0–1 | v2.2 due |
 | :--- | :--- | ---: | ---: | ---: | ---: | ---: |
 | 基礎 | Basic Syntax | 7 | 0 | 0 | 0 | 0 |
 | 基礎 | I/O | 25 | 0 | 0 | 0 | 0 |
@@ -102,11 +104,11 @@ v2.2 以 `data/problems.csv` 與 `data/solutions.csv` 作為靜態 metadata 的�
 | 演算法 | Sorting | 1 | 0 | 0 | 0 | 0 |
 | 演算法 | Greedy | 1 | 0 | 0 | 0 | 0 |
 
-### 弱項訊號
+### v2.2 觀測訊號
 
 > 只使用可觀察資料：Recall 0–1 或已到期題目；不使用黑箱分數。
 
-| Tag | 已 AC | Recall 0–1 | 到期 | Mastered |
+| Tag | 已 AC | Recall 0–1 | v2.2 due | v2.2 Mastered |
 | :--- | ---: | ---: | ---: | ---: |
 | — | — | — | — | 目前沒有明確弱項訊號 |
 
@@ -118,13 +120,13 @@ v2.2 以 `data/problems.csv` 與 `data/solutions.csv` 作為靜態 metadata 的�
 | :--- | ---: |
 | Math Theory | 19 |
 
-### 今日複習優先序
+### v2.2 Problem-level Due Queue
 
 | ID | 題目 | Tags | Recall | 到期日 |
 | :--- | :--- | :--- | ---: | :---: |
 | — | 目前沒有到期題目 | — | — | — |
 
-完整題庫見 [Problem Index](./docs/PROBLEM_INDEX.md)，複習佇列見 [Review Queue](./docs/REVIEW_QUEUE.md)。
+完整題庫見 [Problem Index](./docs/PROBLEM_INDEX.md)，相容佇列見 [Compatibility Review Queue](./docs/REVIEW_QUEUE.md)。
 <!-- APCS_DASHBOARD_END -->
 
 ## 資料來源與可信度
