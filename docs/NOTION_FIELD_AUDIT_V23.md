@@ -122,6 +122,8 @@ REC should represent one immutable attempt story, not a mutable scheduling objec
 | 難度（D1–D5） | DERIVE | Projection from Problem Bank placement/calibration. |
 | 練習日期 | SYSTEM-MANAGED | Notion row creation time; retained for compatibility, not used as exact offline attempt time. |
 | Attempt Finished At | SYSTEM-MANAGED | Exact timezone-aware attempt completion timestamp from the durable outbox; added for offline/retry correctness. |
+| Attempt Started At | SYSTEM-MANAGED | Exact timezone-aware attempt start timestamp when known; preserved independently from sync time. |
+| Independent Known | SYSTEM-MANAGED | Distinguishes an explicit false from an unknown Notion checkbox value. |
 | 使用語言 | KEEP | Attempt fact. |
 | 最新提交結果 | KEEP | Attempt fact. |
 | Assistance | KEEP | Attempt fact; unknown remains blank. |
@@ -156,7 +158,9 @@ One Evidence row should mean one observable claim about one **Skill x Track**.
 | Accuracy % | KEEP | Optional reading/assessment measure. |
 | Assistance | KEEP | Evidence-quality fact. |
 | Independent | KEEP | Evidence-quality fact. |
+| Independent Known | SYSTEM-MANAGED | Distinguishes explicit false from unknown. |
 | Timed | KEEP | Evidence-quality fact. |
+| Timed Known | SYSTEM-MANAGED | Distinguishes explicit false from unknown. |
 | Time min | KEEP | Workload/evidence fact. |
 | Novelty | KEEP | New / Seen / Delayed Retest / Transfer / Mixed / Same Problem Repeat. |
 | Skill | SYSTEM-MANAGED | Exactly one evaluated Skill per event in v2.3. |

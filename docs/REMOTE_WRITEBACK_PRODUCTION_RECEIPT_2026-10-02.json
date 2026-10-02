@@ -1,0 +1,19 @@
+{
+  "schema_version": "apcs-v23-production-release-receipt-2",
+  "date": "2026-10-02",
+  "worker": "apcs-rec-writeback",
+  "previous_baseline_version_id": "55c428b8-b3e6-4d84-b170-c550af84b7b1",
+  "production_version_id": "6c1e4f06-d7c5-4a33-91eb-9b788386a23d",
+  "production_version_number": 51,
+  "deployment_id": "e7641e63-7d35-4468-8369-5072b94b15f2",
+  "production_percentage": 100,
+  "deployment_authority": "GET readback",
+  "health": "PASS",
+  "asset_parity": "PASS",
+  "canonical_asset_sha256": "0f19c5ea09f9d2c763820af457385f277b5ff3413870fe11e0a0693be06b0d44",
+  "authenticated_rec_ev_e2e": "PASS",
+  "remote_retry_idempotency": "PASS",
+  "system_test_rows_cleaned": true,
+  "independent_notion_cleanup_readback": "PASS",
+  "client_network_transport": "THIS_BRANCH"
+}

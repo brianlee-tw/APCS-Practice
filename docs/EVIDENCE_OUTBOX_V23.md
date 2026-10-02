@@ -208,5 +208,4 @@ Additional invariants:
 - a local receipt must represent one complete REC plus the exact expected
   Event ID set before the envelope can leave the pending queue.
 
-The production network transport remains disabled until the active Cloudflare
-Worker source is patched and verified.  See `docs/REMOTE_WRITEBACK_V23.md`.
+The Cloudflare/Notion server path is production-active. This branch adds the local HTTPS adapter and `sync` / `sync-pending` commands. A remote receipt is persisted only after the existing exact-identity receipt validator passes. See `docs/REMOTE_WRITEBACK_V23.md` and the production release receipt.

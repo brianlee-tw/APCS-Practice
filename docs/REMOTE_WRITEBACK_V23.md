@@ -1,8 +1,8 @@
 # APCS v2.3 Remote Writeback Contract
 
-Status: **contract implemented; production transport not yet enabled**
+Status: **Cloudflare/Notion server production active; client transport implemented on this branch**
 
-This contract defines the boundary between the durable VS Code outbox and the existing Cloudflare / Notion Direct Write architecture. It does not claim that production remote synchronization is live.
+This contract defines the boundary between the durable VS Code outbox and the existing Cloudflare / Notion Direct Write architecture. Cloudflare Worker #51 is production-active for the v2.3 REC+EV bundle variant; this branch adds the local client transport that turns a validated remote receipt into a durable local acknowledgement.
 
 ## Flow
 
@@ -61,7 +61,7 @@ Successful sync means Evidence is durable. It does not mean mastery or RR/IR rea
 
 ## Existing /api/record compatibility
 
-The existing production browser request stays REC-only. The intended Worker extension is a second payload variant on the same versionless `POST /api/record`, selected by `schema_version = v2.3-remote-writeback-1`. Existing HTML Direct payloads remain unchanged.
+The existing production browser request stays REC-only. Production Worker #51 accepts a second payload variant on the same versionless `POST /api/record`, selected by `schema_version = v2.3-remote-writeback-1`. Existing HTML Direct payloads remain unchanged.
 
 The repository does not invent an auth header. The active Worker must reuse its existing trusted write-key mechanism; Notion credentials never move to the client.
 
@@ -86,18 +86,29 @@ Only a complete, identity-matching receipt may be persisted locally.
 Remote sync remains pending for missing/unresolvable PB or Skill identity, identity conflicts, partial response, auth failure, network failure, or invalid response shape. The learner does not repeat the problem to repair transport state.
 
 ## Current implementation boundary
+Implemented and verified:
 
-Implemented:
-- `tools/remote_writeback.py`: deterministic bundle and logical REC/EV projection.
-- `tools/writeback_sync.py status`: read-only pending / eligible / blocked inspection.
-- `tools/writeback_sync.py bundle <writeback_id>`: canonical JSON export.
-- `tools/writeback_sync.py bundle <writeback_id> --projection`: logical Notion projection.
+- `tools/remote_writeback.py`: deterministic canonical bundle, REC/EV
+  projection, and complete receipt validator.
+- production Cloudflare Worker #51:
+  `6c1e4f06-d7c5-4a33-91eb-9b788386a23d`.
+- production deployment:
+  `e7641e63-7d35-4468-8369-5072b94b15f2` at 100%.
+- authenticated live REC+EV creation and exact retry idempotency: PASS.
+- test-row cleanup plus independent Notion cleanup query: PASS.
+- `tools/remote_transport.py`: fixed-origin HTTPS adapter.
+- `tools/writeback_sync.py configure-key`: local credential setup without
+  storing authorization material in Git or outbox envelopes.
+- `tools/writeback_sync.py sync <writeback_id>`: one-envelope sync.
+- `tools/writeback_sync.py sync-pending [--limit N]`: durable-order retry.
+- HTTP/network/receipt failure leaves the envelope pending.
+- `validate_remote_receipt()` always runs before `mark_sent()`.
 
-Not yet implemented:
-- network POST;
-- Worker bundle variant;
-- write-key integration;
-- production receipt ingestion;
-- live REC+EV E2E.
+Production client configuration:
 
-Those final items require the active Cloudflare Worker source / deployment environment.
+    python3 tools/writeback_sync.py configure-key
+    python3 tools/writeback_sync.py status
+    python3 tools/writeback_sync.py sync-pending
+
+The learner must never repeat a problem solely to repair synchronization.
+`LEARNER_READINESS = NOT ASSESSED` remains unchanged.
