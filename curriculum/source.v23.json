@@ -3282,7 +3282,8 @@
       ],
       "role": "Transfer Challenge",
       "lesson_uid": "L-WIN-03",
-      "lesson_order": 1
+      "lesson_order": 1,
+      "evidence_level_cap": 2
     },
     {
       "placement_uid": "PL-PB-107-L-GPH-04",
@@ -3354,7 +3355,8 @@
       ],
       "role": "Transfer Challenge",
       "lesson_uid": "L-MIX-03",
-      "lesson_order": 2
+      "lesson_order": 2,
+      "evidence_level_cap": 2
     },
     {
       "placement_uid": "PL-PB-117-L-MIX-02",
@@ -4424,7 +4426,8 @@
       "supporting_skills": [],
       "role": "Core Independent",
       "lesson_uid": "L-ORD-03",
-      "lesson_order": 2
+      "lesson_order": 2,
+      "evidence_level_cap": 2
     },
     {
       "placement_uid": "PL-PB-92-L-BIN-01",
