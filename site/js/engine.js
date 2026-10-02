@@ -51,10 +51,10 @@ export function scoreQuiz(questions, answers) {
 }
 
 export function levelBand(overall) {
-  if (overall < 40) return { id: "foundation", label: "基礎需補強" };
-  if (overall < 60) return { id: "developing", label: "正在建立解題能力" };
-  if (overall < 80) return { id: "ready", label: "具備穩定基礎" };
-  return { id: "strong", label: "可往進階與模擬實戰" };
+  if (overall < 40) return { id: "foundation", label: "本次題組：基礎題需補強" };
+  if (overall < 60) return { id: "developing", label: "本次題組：核心能力建立中" };
+  if (overall < 80) return { id: "ready", label: "本次題組：表現較穩定" };
+  return { id: "strong", label: "本次題組：高分表現" };
 }
 
 export function recommend(result, products = []) {
