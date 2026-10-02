@@ -43,8 +43,8 @@ class PublishedCurriculumV23Test(unittest.TestCase):
             self.published["stats"],
             {
                 "skills": 39,
-                "problems": 125,
-                "placements": 125,
+                "problems": 127,
+                "placements": 127,
             },
         )
         lessons = {
@@ -59,7 +59,7 @@ class PublishedCurriculumV23Test(unittest.TestCase):
             row["pb_uid"]: row
             for row in self.resolution["rows"]
         }
-        self.assertEqual(len(rows), 125)
+        self.assertEqual(len(rows), 127)
 
         for placement in self.source["placements"]:
             pb_uid = placement["pb_uid"]
@@ -80,6 +80,67 @@ class PublishedCurriculumV23Test(unittest.TestCase):
                 placement["primary_skill"],
                 resolution["relation_skills"],
             )
+
+    def test_required_gate_grade_implementation_skills_have_core_primary_path(self):
+        required = {
+            row["uid"]
+            for row in self.published["skills"]
+            if (
+                row["relevance"]["3+3"] == "Required"
+                and row["evidence_suitability"] == "Gate-grade"
+                and "Implementation" in row["tracks"]
+            )
+        }
+        core_primary = {
+            row["primary_skill"]
+            for row in self.published["placements"]
+            if row["role"] == "Core Independent"
+        }
+
+        self.assertEqual(
+            required - core_primary,
+            set(),
+        )
+
+    def test_phase1b_condition_array_repairs_are_explicit(self):
+        placements = {
+            row["pb_uid"]: row
+            for row in self.published["placements"]
+        }
+        problems = {
+            row["pb_uid"]: row
+            for row in self.published["problems"]
+        }
+
+        self.assertEqual(
+            placements["PB-182"]["primary_skill"],
+            "S02_Conditionals",
+        )
+        self.assertEqual(
+            placements["PB-182"]["role"],
+            "Core Independent",
+        )
+        self.assertEqual(
+            problems["PB-182"]["problem_id"],
+            "ZJ-d067",
+        )
+
+        self.assertEqual(
+            placements["PB-183"]["primary_skill"],
+            "S05_Array",
+        )
+        self.assertEqual(
+            placements["PB-183"]["role"],
+            "Core Independent",
+        )
+        self.assertEqual(
+            problems["PB-183"]["problem_id"],
+            "ZJ-d097",
+        )
+        self.assertEqual(
+            problems["PB-183"]["alternate_solution_risk"],
+            "Medium",
+        )
 
     def test_mix_process_repairs_are_explicit(self):
         rows = {
