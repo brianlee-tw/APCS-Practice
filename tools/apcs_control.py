@@ -81,6 +81,7 @@ RED = "\033[91m"
 WHITE = "\033[97m"
 GRAY = "\033[90m"
 
+# Internal sentinel for returning to the previous record-wizard step.\n# None remains a valid field value (for example, skipped active minutes).\nRECORD_BACK = object()\n
 
 # ============================================================
 # Layout / text
@@ -1165,7 +1166,11 @@ def choose_menu(
 # Recall
 # ============================================================
 
-def review_result_menu(problem) -> str | None:
+def review_result_menu(
+    problem,
+    *,
+    initial: str | None = None,
+) -> str | None:
     options = [
         ("AC", "通過", "答案正確，完整通過測試"),
         ("WA", "答案錯誤", "程式可執行，但答案不正確"),
@@ -1175,7 +1180,14 @@ def review_result_menu(problem) -> str | None:
         ("CE", "編譯失敗", "本次程式無法成功編譯"),
     ]
 
-    selected = 0
+    selected = next(
+        (
+            index
+            for index, item in enumerate(options)
+            if item[0] == initial
+        ),
+        0,
+    )
 
     while True:
         clear()
@@ -1212,11 +1224,11 @@ def review_result_menu(problem) -> str | None:
         for index in range(first, last):
             result, label, detail = options[index]
             prefix = "›" if index == selected else " "
-
-            if index == selected:
-                color = CYAN + BOLD
-            else:
-                color = ""
+            color = (
+                CYAN + BOLD
+                if index == selected
+                else ""
+            )
 
             print(
                 f"{color}"
@@ -1224,11 +1236,12 @@ def review_result_menu(problem) -> str | None:
                 f"{result} · {label}"
                 f"{RESET}"
             )
-
-            print(
-                f"     {GRAY}"
-                f"{fit(detail, ui_width() - 5)}"
-                f"{RESET}"
+            print_wrapped(
+                detail,
+                max(1, ui_width() - 5),
+                prefix="     ",
+                continuation_prefix="     ",
+                color=GRAY,
             )
             print()
 
@@ -1242,22 +1255,22 @@ def review_result_menu(problem) -> str | None:
 
         rule()
         print(f"{GRAY}↑↓ 選擇 · Enter 確認{RESET}")
-        print(f"{GRAY}1–6 直達 · Esc / Q 取消{RESET}")
+        print(
+            f"{GRAY}"
+            "1–6 直達 · Esc / Q 返回上一步／取消"
+            f"{RESET}"
+        )
 
         key = read_key()
 
         if key == "UP":
             selected = (selected - 1) % len(options)
-
         elif key == "DOWN":
             selected = (selected + 1) % len(options)
-
         elif key == "ENTER":
             return options[selected][0]
-
         elif key in {"ESC", "q", "Q"}:
             return None
-
         elif key in {"1", "2", "3", "4", "5", "6"}:
             return options[int(key) - 1][0]
 
@@ -1267,8 +1280,8 @@ def recall_menu(
     problem,
     *,
     result: str = "AC",
+    initial: int | None = None,
 ) -> int | None:
-
     if result == "AC":
         entries = [
             (
@@ -1311,7 +1324,14 @@ def recall_menu(
             ),
         ]
 
-    selected = 0
+    selected = next(
+        (
+            index
+            for index, (score, _, _) in enumerate(entries)
+            if score == initial
+        ),
+        0,
+    )
 
     while True:
         clear()
@@ -1322,7 +1342,6 @@ def recall_menu(
 
         if title == "複習題目":
             color = GREEN if result == "AC" else YELLOW
-
             print(
                 f"{color}"
                 f"本次結果 · {result}"
@@ -1337,55 +1356,51 @@ def recall_menu(
 
         for index, (score, label, detail) in enumerate(entries):
             prefix = "›" if index == selected else " "
-
-            if index == selected:
-                color = CYAN + BOLD
-            else:
-                color = ""
+            color = (
+                CYAN + BOLD
+                if index == selected
+                else ""
+            )
 
             print(
                 f"{color}"
                 f"{prefix} {score}  {label}"
                 f"{RESET}"
             )
-
-            print(
-                f"     {GRAY}"
-                f"{fit(detail, ui_width() - 5)}"
-                f"{RESET}"
+            print_wrapped(
+                detail,
+                max(1, ui_width() - 5),
+                prefix="     ",
+                continuation_prefix="     ",
+                color=GRAY,
             )
             print()
 
         rule()
         print(f"{GRAY}↑↓ 選擇 · Enter 確認{RESET}")
-
-        if result == "AC":
-            print(f"{GRAY}0–3 直達 · Esc / Q 取消{RESET}")
-        else:
-            print(f"{GRAY}0–2 直達 · Esc / Q 取消{RESET}")
+        range_hint = "0–3" if result == "AC" else "0–2"
+        print(
+            f"{GRAY}"
+            f"{range_hint} 直達 · Esc / Q 返回上一步／取消"
+            f"{RESET}"
+        )
 
         key = read_key()
 
         if key == "UP":
             selected = (selected - 1) % len(entries)
-
         elif key == "DOWN":
             selected = (selected + 1) % len(entries)
-
         elif key == "ENTER":
             return entries[selected][0]
-
         elif key in {"ESC", "q", "Q"}:
             return None
-
         elif key.isdigit():
             value = int(key)
-
             allowed = {
                 score
                 for score, _, _ in entries
             }
-
             if value in allowed:
                 return value
 
@@ -1396,10 +1411,13 @@ def minutes_input(
     *,
     result: str = "AC",
     score: int,
+    initial: int | None = None,
 ) -> int | None | object:
-
-    CANCEL = object()
-    value = ""
+    value = (
+        str(initial)
+        if isinstance(initial, int)
+        else ""
+    )
 
     while True:
         clear()
@@ -1445,7 +1463,7 @@ def minutes_input(
         )
         print(
             f"{GRAY}"
-            "Esc / Q 取消整次紀錄"
+            "Esc / Q 返回上一步"
             f"{RESET}"
         )
 
@@ -1461,7 +1479,7 @@ def minutes_input(
                 return minutes
 
         elif key in {"ESC", "q", "Q"}:
-            return CANCEL
+            return RECORD_BACK
 
         elif key in {"\x7f", "\b"}:
             value = value[:-1]
@@ -1507,7 +1525,11 @@ ASSISTANCE_OPTIONS = [
 ]
 
 
-def assistance_menu(problem) -> int | None:
+def assistance_menu(
+    problem,
+    *,
+    initial: int | None = None,
+) -> int | None:
     options = [
         {
             "label": label,
@@ -1518,12 +1540,23 @@ def assistance_menu(problem) -> int | None:
         in ASSISTANCE_OPTIONS
     ]
 
+    selected_index = next(
+        (
+            index
+            for index, (value, _, _)
+            in enumerate(ASSISTANCE_OPTIONS)
+            if value == initial
+        ),
+        None,
+    )
+
     selected = choose_menu(
         "最高 Assistance",
         options,
         problem=problem,
         main=False,
-        back_text="取消本次紀錄",
+        back_text="返回上一步",
+        selected_index=selected_index,
     )
 
     if selected is None:
@@ -1541,6 +1574,7 @@ def yes_no_menu(
     yes_detail: str,
     no_detail: str,
     default_yes: bool = True,
+    initial: bool | None = None,
 ) -> bool | None:
     options = [
         {
@@ -1558,13 +1592,28 @@ def yes_no_menu(
     if not default_yes:
         options.reverse()
 
+    selected_index = None
+
+    if initial is not None:
+        wanted = "是" if initial else "否"
+        selected_index = next(
+            (
+                index
+                for index, option
+                in enumerate(options)
+                if option["label"] == wanted
+            ),
+            None,
+        )
+
     selected = choose_menu(
         title,
         options,
         problem=problem,
         main=False,
         footer_numbers=False,
-        back_text="取消本次紀錄",
+        back_text="返回上一步",
+        selected_index=selected_index,
     )
 
     if selected is None:
@@ -1576,6 +1625,8 @@ def yes_no_menu(
 def independent_menu(
     problem,
     assistance: int,
+    *,
+    initial: bool | None = None,
 ) -> bool | None:
     # Curriculum Authoring Standard: A2+ 不可標為 independent。
     if assistance >= 2:
@@ -1593,6 +1644,7 @@ def independent_menu(
             "但實際完成仍依賴他人／AI"
         ),
         default_yes=True,
+        initial=initial,
     )
 
 
@@ -1601,6 +1653,7 @@ def novelty_menu(
     problem,
     *,
     placement=None,
+    initial: str | None = None,
 ) -> str | None:
     if action == "review":
         values = [
@@ -1676,13 +1729,24 @@ def novelty_menu(
         for _, label, detail in values
     ]
 
+    selected_index = next(
+        (
+            index
+            for index, (value, _, _)
+            in enumerate(values)
+            if value == initial
+        ),
+        None,
+    )
+
     selected = choose_menu(
         "題目新鮮度",
         options,
         problem=problem,
         main=False,
         footer_numbers=False,
-        back_text="取消本次紀錄",
+        back_text="返回上一步",
+        selected_index=selected_index,
     )
 
     if selected is None:
@@ -1691,7 +1755,11 @@ def novelty_menu(
     return values[selected][0]
 
 
-def timed_menu(problem) -> bool | None:
+def timed_menu(
+    problem,
+    *,
+    initial: bool | None = None,
+) -> bool | None:
     return yes_no_menu(
         "是否限時",
         problem,
@@ -1703,6 +1771,7 @@ def timed_menu(problem) -> bool | None:
             "一般練習選否"
         ),
         default_yes=False,
+        initial=initial,
     )
 
 
@@ -1874,6 +1943,8 @@ def attempt_envelope_for_record(
 def evidence_context_menu(
     action: str,
     problem,
+    *,
+    initial: dict | None = None,
 ):
     placement, placement_warning = (
         placement_for_record(
@@ -1882,47 +1953,87 @@ def evidence_context_menu(
     )
 
     if placement_warning == "__CANCEL__":
-        return None
+        return RECORD_BACK
 
-    assistance = assistance_menu(
-        problem
-    )
+    state = dict(initial or {})
+    state["placement"] = placement
+    state["placement_warning"] = placement_warning
+    step = "assistance"
 
-    if assistance is None:
-        return None
+    while True:
+        if step == "assistance":
+            assistance = assistance_menu(
+                problem,
+                initial=state.get(
+                    "assistance"
+                ),
+            )
 
-    independent = independent_menu(
-        problem,
-        assistance,
-    )
+            if assistance is None:
+                return RECORD_BACK
 
-    if independent is None:
-        return None
+            state["assistance"] = assistance
 
-    novelty = novelty_menu(
-        action,
-        problem,
-        placement=placement,
-    )
+            if assistance >= 2:
+                state["independent"] = False
+                step = "novelty"
+            else:
+                step = "independent"
 
-    if novelty is None:
-        return None
+            continue
 
-    timed = timed_menu(
-        problem
-    )
+        if step == "independent":
+            independent = independent_menu(
+                problem,
+                state["assistance"],
+                initial=state.get(
+                    "independent"
+                ),
+            )
 
-    if timed is None:
-        return None
+            if independent is None:
+                step = "assistance"
+                continue
 
-    return {
-        "placement": placement,
-        "placement_warning": placement_warning,
-        "assistance": assistance,
-        "independent": independent,
-        "novelty": novelty,
-        "timed": timed,
-    }
+            state["independent"] = independent
+            step = "novelty"
+            continue
+
+        if step == "novelty":
+            novelty = novelty_menu(
+                action,
+                problem,
+                placement=placement,
+                initial=state.get(
+                    "novelty"
+                ),
+            )
+
+            if novelty is None:
+                step = (
+                    "independent"
+                    if state["assistance"] < 2
+                    else "assistance"
+                )
+                continue
+
+            state["novelty"] = novelty
+            step = "timed"
+            continue
+
+        timed = timed_menu(
+            problem,
+            initial=state.get(
+                "timed"
+            ),
+        )
+
+        if timed is None:
+            step = "novelty"
+            continue
+
+        state["timed"] = timed
+        return state
 
 
 def record_problem(action: str, problem) -> None:
@@ -1933,51 +2044,11 @@ def record_problem(action: str, problem) -> None:
     )
 
     result = "AC"
-
-    if action == "review":
-        result = review_result_menu(problem)
-
-        if result is None:
-            return
-
-    score = recall_menu(
-        title,
-        problem,
-        result=result,
-    )
-
-    if score is None:
-        return
-
-    minutes_result = minutes_input(
-        title,
-        problem,
-        result=result,
-        score=score,
-    )
-
-    # minutes_input 用 object sentinel 表示取消。
-    # int 或 None 才是有效結果。
-    if (
-        minutes_result is not None
-        and not isinstance(minutes_result, int)
-    ):
-        return
-
-    minutes = minutes_result
-
-    evidence_context = (
-        evidence_context_menu(
-            action,
-            problem,
-        )
-    )
-
-    if evidence_context is None:
-        return
-
-    complexity_solution = None
+    score = None
+    minutes = None
+    evidence_context = None
     finish_complexity = None
+    complexity_solution = None
 
     if action == "finish":
         try:
@@ -1998,7 +2069,93 @@ def record_problem(action: str, problem) -> None:
             pause()
             return
 
-        if complexity_solution is not None:
+    step = (
+        "result"
+        if action == "review"
+        else "recall"
+    )
+
+    while True:
+        if step == "result":
+            selected_result = (
+                review_result_menu(
+                    problem,
+                    initial=result,
+                )
+            )
+
+            if selected_result is None:
+                return
+
+            result = selected_result
+
+            if (
+                result != "AC"
+                and score not in {0, 1, 2}
+            ):
+                score = None
+
+            step = "recall"
+            continue
+
+        if step == "recall":
+            selected_score = recall_menu(
+                title,
+                problem,
+                result=result,
+                initial=score,
+            )
+
+            if selected_score is None:
+                if action == "review":
+                    step = "result"
+                    continue
+
+                return
+
+            score = selected_score
+            step = "minutes"
+            continue
+
+        if step == "minutes":
+            selected_minutes = minutes_input(
+                title,
+                problem,
+                result=result,
+                score=score,
+                initial=minutes,
+            )
+
+            if selected_minutes is RECORD_BACK:
+                step = "recall"
+                continue
+
+            minutes = selected_minutes
+            step = "evidence"
+            continue
+
+        if step == "evidence":
+            selected_context = (
+                evidence_context_menu(
+                    action,
+                    problem,
+                    initial=evidence_context,
+                )
+            )
+
+            if selected_context is RECORD_BACK:
+                step = "minutes"
+                continue
+
+            evidence_context = selected_context
+            step = (
+                "complexity"
+                if complexity_solution is not None
+                else "confirm"
+            )
+            continue
+
+        if step == "complexity":
             clear()
             heading("完成題目 · Complexity")
             print()
@@ -2015,130 +2172,148 @@ def record_problem(action: str, problem) -> None:
                 "O(1)、O(N)、O(N log N)。"
                 f"{RESET}"
             )
+            print(
+                f"{GRAY}"
+                "Ctrl+C / 空白 Enter 可返回上一步"
+                f"{RESET}"
+            )
             print()
 
-            finish_complexity = prompt_text(
+            value = prompt_text(
                 "Complexity（必填）",
+                current=finish_complexity,
                 required=True,
             )
 
-            if finish_complexity is None:
-                return
+            if value is None:
+                step = "evidence"
+                continue
 
-    clear()
-    heading(title)
-    print()
+            finish_complexity = value
+            step = "confirm"
+            continue
 
-    print(
-        f"{WHITE}"
-        f"{problem_line(problem)}"
-        f"{RESET}"
-    )
-    print()
-
-    if action == "review":
-        color = GREEN if result == "AC" else YELLOW
-
-        print(
-            f"結果    "
-            f"{color}{result}{RESET}"
-        )
-
-    print(f"Recall  {score}")
-
-    print(
-        "耗時    "
-        + (
-            f"{minutes} 分鐘"
-            if minutes is not None
-            else "未記錄"
-        )
-    )
-
-    if complexity_solution is not None:
-        print(
-            "Complexity  "
-            f"{CYAN}{finish_complexity}{RESET}"
-        )
-
-    placement = evidence_context[
-        "placement"
-    ]
-
-    assistance = evidence_context[
-        "assistance"
-    ]
-
-    assistance_label = next(
-        label
-        for value, label, _
-        in ASSISTANCE_OPTIONS
-        if value == assistance
-    )
-
-    print(
-        "Assistance  "
-        f"{CYAN}{assistance_label}{RESET}"
-    )
-    print(
-        "Independent "
-        + (
-            f"{GREEN}是{RESET}"
-            if evidence_context[
-                "independent"
-            ]
-            else f"{YELLOW}否{RESET}"
-        )
-    )
-    print(
-        "Novelty     "
-        f"{evidence_context['novelty']}"
-    )
-    print(
-        "Timed       "
-        + (
-            "是"
-            if evidence_context["timed"]
-            else "否"
-        )
-    )
-
-    if placement is not None:
-        print(
-            "Evidence    "
-            f"{CYAN}{placement.primary_skill}"
-            " × Implementation"
-            f"{RESET}"
-        )
-        print(
-            "Placement   "
-            f"{placement.role}"
-        )
-    else:
-        print(
-            f"{YELLOW}"
-            "Evidence    尚未建立（無 Published Placement）"
-            f"{RESET}"
-        )
-
-    placement_warning = evidence_context[
-        "placement_warning"
-    ]
-
-    if placement_warning:
+        clear()
+        heading(title)
         print()
+
         print(
-            f"{YELLOW}"
-            f"⚠ {fit(placement_warning, ui_width() - 2)}"
+            f"{WHITE}"
+            f"{problem_line(problem)}"
+            f"{RESET}"
+        )
+        print()
+
+        if action == "review":
+            color = GREEN if result == "AC" else YELLOW
+            print(
+                f"結果    "
+                f"{color}{result}{RESET}"
+            )
+
+        print(f"Recall  {score}")
+        print(
+            "耗時    "
+            + (
+                f"{minutes} 分鐘"
+                if minutes is not None
+                else "未記錄"
+            )
+        )
+
+        if complexity_solution is not None:
+            print(
+                "Complexity  "
+                f"{CYAN}{finish_complexity}{RESET}"
+            )
+
+        placement = evidence_context["placement"]
+        assistance = evidence_context["assistance"]
+        assistance_label = next(
+            label
+            for value, label, _
+            in ASSISTANCE_OPTIONS
+            if value == assistance
+        )
+
+        print(
+            "Assistance  "
+            f"{CYAN}{assistance_label}{RESET}"
+        )
+        print(
+            "Independent "
+            + (
+                f"{GREEN}是{RESET}"
+                if evidence_context["independent"]
+                else f"{YELLOW}否{RESET}"
+            )
+        )
+        print(
+            "Novelty     "
+            f"{evidence_context['novelty']}"
+        )
+        print(
+            "Timed       "
+            + (
+                "是"
+                if evidence_context["timed"]
+                else "否"
+            )
+        )
+
+        if placement is not None:
+            print(
+                "Evidence    "
+                f"{CYAN}{placement.primary_skill}"
+                " × Implementation"
+                f"{RESET}"
+            )
+            print(
+                "Placement   "
+                f"{placement.role}"
+            )
+        else:
+            print(
+                f"{YELLOW}"
+                "Evidence    尚未建立（無 Published Placement）"
+                f"{RESET}"
+            )
+
+        placement_warning = evidence_context[
+            "placement_warning"
+        ]
+
+        if placement_warning:
+            print()
+            print_wrapped(
+                f"⚠ {placement_warning}",
+                ui_width() - 2,
+                color=YELLOW,
+            )
+
+        print()
+        rule()
+        print(
+            f"{GRAY}"
+            "Enter / Y 寫入 · Esc 返回上一步 · Q 取消"
             f"{RESET}"
         )
 
-    print()
-    rule()
-    print()
+        key = read_key()
 
-    if not confirm("確認寫入這次學習紀錄？"):
-        return
+        if key in {"ENTER", "y", "Y"}:
+            break
+
+        if key == "ESC":
+            step = (
+                "complexity"
+                if complexity_solution is not None
+                else "evidence"
+            )
+            continue
+
+        if key in {"q", "Q"}:
+            return
 
     print()
     print(f"{GRAY}正在更新學習紀錄…{RESET}")
