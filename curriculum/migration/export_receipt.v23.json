@@ -1,8 +1,8 @@
 {
   "schema_version": "v2.3-export-receipt-1",
-  "captured_on": "2026-10-01",
-  "curriculum_version": "2026-10-01-publish-1",
-  "authority": "Notion manual Markdown & CSV export, plus exact live Notion readback of three post-export authoring repairs.",
+  "captured_on": "2026-10-02",
+  "curriculum_version": "2026-10-02-publish-2",
+  "authority": "Notion manual Markdown & CSV export, plus exact live Notion readback of post-export authoring repairs and Phase 1B evidence-coverage additions.",
   "exports": [
     {
       "filename": "8865cc10-f5b8-4ead-a011-ed5de9562e94_ExportBlock-1d70b074-6353-4817-bcbb-5e3edfbb4829.zip",
@@ -22,9 +22,9 @@
   ],
   "counts": {
     "skill_rows": 39,
-    "problem_bank_rows": 181,
-    "formal_main_problems": 125,
-    "formal_main_placements": 125,
+    "problem_bank_rows": 183,
+    "formal_main_problems": 127,
+    "formal_main_placements": 127,
     "main_lessons_with_formal_oj": 51,
     "main_lessons_total": 52,
     "mix04_formal_oj": 0
@@ -47,10 +47,26 @@
       "notion_page_id": "3c643be9-58cd-81f5-b560-c8fa6e130c71",
       "added_skill_relation": "S39_Code_Reasoning",
       "reason": "Align L-MIX-03 testing/debug Transfer process target."
+    },
+    {
+      "pb_uid": "PB-182",
+      "notion_page_id": "3ed43be9-58cd-8143-8640-cbe0f996627a",
+      "added_formal_problem": "ZJ-d067",
+      "primary_skill": "S02_Conditionals",
+      "primary_lesson": "L-FND-02",
+      "reason": "Phase 1B repair: add a dedicated condition-logic Core Independent path so S02 can produce IM3 evidence."
+    },
+    {
+      "pb_uid": "PB-183",
+      "notion_page_id": "3ed43be9-58cd-81e9-ad0d-f6c174d107fb",
+      "added_formal_problem": "ZJ-d097",
+      "primary_skill": "S05_Array",
+      "primary_lesson": "L-DAT-01",
+      "reason": "Phase 1B repair: add an indexed 1D-state Core Independent path so S05 can produce IM3 evidence."
     }
   ],
   "boundaries": [
-    "The legacy search locator contains 126 candidates; exact export/readback criteria produce 125 formal main placements.",
+    "The legacy search locator remains a historical 126-candidate artifact; the original 125 formal placements plus two exact live Phase 1B authoring additions now produce 127 formal main placements.",
     "U-GPH X01-X04 are excluded from this first main-lesson projection.",
     "L-MIX-04 is portfolio-only and has no Formal OJ placement by design.",
     "Primary Skill is never inferred from legacy relation order."

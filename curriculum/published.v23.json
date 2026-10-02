@@ -1,7 +1,7 @@
 {
   "schema_version": "v2.3-published-1",
   "contract_version": "v2.3-draft-0",
-  "curriculum_version": "2026-10-01-publish-1",
+  "curriculum_version": "2026-10-02-publish-2",
   "skills": [
     {
       "uid": "S01_IO",
@@ -2002,6 +2002,40 @@
       "assessment_only": false
     },
     {
+      "pb_uid": "PB-182",
+      "problem_id": "ZJ-d067",
+      "title": "d067 格瑞哥里的煩惱 (1 行版)",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=d067",
+      "difficulty": "D2",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Low",
+      "training_purpose": "L-FND-02 S02 Core Independent：從 4/100/400 的重疊規則自行建立完整條件優先順序，正確處理 2000/2100 等 century boundary；從空白完成判定與輸出，不靠單純算術/max/min shortcut。",
+      "assessment_only": false
+    },
+    {
+      "pb_uid": "PB-183",
+      "problem_id": "ZJ-d097",
+      "title": "d097 Jolly Jumpers",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "url": "https://zerojudge.tw/ShowProblem?problemid=d097",
+      "difficulty": "D2",
+      "exam_band": "EB1 初級",
+      "suitability": {
+        "3+3": "Required-core",
+        "5+5": "Required-core"
+      },
+      "alternate_solution_risk": "Medium",
+      "training_purpose": "L-DAT-01 S05 Core Independent：對 n<3000 的序列建立 1..n-1 差值 seen-state，以 indexed 1D storage 完成讀取、相鄰差掃描、標記、最後完整性檢查與 boundary safety；補齊 Array IM3 evidence path。",
+      "assessment_only": false
+    },
+    {
       "pb_uid": "PB-2",
       "problem_id": "ZJ-a290",
       "title": "a290 新手訓練系列～圖論",
@@ -3707,6 +3741,24 @@
       "lesson_order": 1
     },
     {
+      "placement_uid": "PL-PB-182-L-FND-02",
+      "pb_uid": "PB-182",
+      "primary_skill": "S02_Conditionals",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-FND-02",
+      "lesson_order": 4
+    },
+    {
+      "placement_uid": "PL-PB-183-L-DAT-01",
+      "pb_uid": "PB-183",
+      "primary_skill": "S05_Array",
+      "supporting_skills": [],
+      "role": "Core Independent",
+      "lesson_uid": "L-DAT-01",
+      "lesson_order": 4
+    },
+    {
       "placement_uid": "PL-PB-2-L-GPH-01",
       "pb_uid": "PB-2",
       "primary_skill": "S21_Graph_Tree",
@@ -4345,7 +4397,7 @@
   ],
   "stats": {
     "skills": 39,
-    "problems": 125,
-    "placements": 125
+    "problems": 127,
+    "placements": 127
   }
 }

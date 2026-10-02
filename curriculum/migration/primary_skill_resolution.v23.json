@@ -1,8 +1,8 @@
 {
   "schema_version": "v2.3-primary-skill-resolution-1",
-  "curriculum_version": "2026-10-01-publish-1",
+  "curriculum_version": "2026-10-02-publish-2",
   "policy": "Every formal main placement has one reviewed Primary Skill already present in its current PB Skill relations; remaining relations are supporting. Relation order is never used to infer Primary.",
-  "count": 125,
+  "count": 127,
   "rows": [
     {
       "pb_uid": "PB-10",
@@ -1630,6 +1630,28 @@
       ],
       "basis": "lesson_target_review",
       "note": "L-GRD-02 reviewed target Skill."
+    },
+    {
+      "pb_uid": "PB-182",
+      "lesson_uid": "L-FND-02",
+      "primary_skill": "S02_Conditionals",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S02_Conditionals"
+      ],
+      "basis": "evidence_gap_review",
+      "note": "Phase 1B repair: dedicated S02 Core Independent evidence path for 3+3 IM3."
+    },
+    {
+      "pb_uid": "PB-183",
+      "lesson_uid": "L-DAT-01",
+      "primary_skill": "S05_Array",
+      "supporting_skills": [],
+      "relation_skills": [
+        "S05_Array"
+      ],
+      "basis": "evidence_gap_review",
+      "note": "Phase 1B repair: dedicated S05 Core Independent evidence path for 3+3 IM3."
     }
   ]
 }
