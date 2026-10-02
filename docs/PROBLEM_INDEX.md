@@ -1,8 +1,8 @@
 # Problem Index
 
-> 自動產生；請勿手動編輯。
+> 自動產生；請勿手動編輯。v2.2 State 僅供 compatibility，不是 v2.3 mastery/readiness。
 
-| ID | 題目 | Tags | 程式 | 複雜度 | 難度 | 狀態 | Recall | Mastery | 筆記 |
+| ID | 題目 | Tags | 程式 | 複雜度 | 難度 | 狀態 | Recall | v2.2 State | 筆記 |
 | :--- | :--- | :--- | :--- | :--- | :---: | :---: | ---: | :---: | :--- |
 | `1621` | 1621_Distinct_Values | — | [C++](../02_Data_Structures/1621_Distinct_Values.cpp) | `—` | — | 📝 Untracked | — | NEW | — |
 | `a001` | 哈囉 | Basic Syntax, I/O | [C++](../01_Basic_Syntax_Optimization/a001_Hello_World.cpp) | `O(1)` | ★ | 📝 Untracked | — | NEW | — |
