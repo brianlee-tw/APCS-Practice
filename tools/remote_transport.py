@@ -35,7 +35,8 @@ except ImportError:
 PRODUCTION_ENDPOINT = (
     "https://apcs-rec-writeback.main-1h9k2.workers.dev/api/record"
 )
-WRITE_KEY_ENV = "APCS_WRITEBACK_KEY"
+WRITEBACK_URL_ENV = "APCS_WRITEBACK_URL"
+WRITE_KEY_ENV = "APCS_WRITE_KEY"
 DEFAULT_TIMEOUT_SECONDS = 20.0
 KEY_FILE = (
     Path.home()
@@ -47,6 +48,29 @@ KEY_FILE = (
 
 class WritebackTransportError(RuntimeError):
     pass
+
+
+def configured_endpoint() -> str:
+    value = str(
+        os.environ.get(
+            WRITEBACK_URL_ENV,
+            "",
+        )
+    ).strip()
+
+    if not value:
+        raise WritebackTransportError(
+            f"missing {WRITEBACK_URL_ENV}; "
+            "pending envelopes remain local"
+        )
+
+    if value != PRODUCTION_ENDPOINT:
+        raise WritebackTransportError(
+            f"{WRITEBACK_URL_ENV} must equal the approved "
+            "production endpoint"
+        )
+
+    return value
 
 
 def credential_source() -> str | None:
@@ -170,7 +194,7 @@ def post_bundle(
     )
 
     request = urllib.request.Request(
-        PRODUCTION_ENDPOINT,
+        configured_endpoint(),
         data=payload,
         method="POST",
         headers={
