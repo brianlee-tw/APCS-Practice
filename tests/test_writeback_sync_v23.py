@@ -1,4 +1,6 @@
+import contextlib
 import datetime as dt
+import io
 import json
 import os
 from pathlib import Path
@@ -13,6 +15,7 @@ from tools.evidence_outbox import (
 )
 from tools.remote_transport import (
     PRODUCTION_ENDPOINT,
+    WRITEBACK_URL_ENV,
     WRITE_KEY_ENV,
     WritebackTransportError,
     post_bundle,
@@ -21,9 +24,21 @@ from tools.remote_transport import (
 from tools.remote_writeback import (
     build_remote_writeback_bundle,
 )
+from tools import writeback_sync
 
 
 TZ = dt.timezone(dt.timedelta(hours=8))
+
+
+def transport_env(
+    *,
+    key="unit-test-key",
+    url=PRODUCTION_ENDPOINT,
+):
+    return {
+        WRITEBACK_URL_ENV: url,
+        WRITE_KEY_ENV: key,
+    }
 END = dt.datetime(
     2026,
     10,
@@ -145,8 +160,19 @@ class RemoteTransportV23Test(
                 request.get_method()
             )
             seen["timeout"] = timeout
-            seen["key"] = request.get_header(
-                "X-apcs-write-key"
+            headers = {
+                key.lower(): value
+                for key, value
+                in request.header_items()
+            }
+            seen["key"] = headers.get(
+                "x-apcs-write-key"
+            )
+            seen["content_type"] = headers.get(
+                "content-type"
+            )
+            seen["body"] = json.loads(
+                request.data.decode("utf-8")
             )
             return FakeResponse(
                 receipt_for(
@@ -157,6 +183,9 @@ class RemoteTransportV23Test(
         with mock.patch.dict(
             os.environ,
             {
+                WRITEBACK_URL_ENV: (
+                    PRODUCTION_ENDPOINT
+                ),
                 WRITE_KEY_ENV: (
                     "unit-test-key"
                 )
@@ -180,6 +209,14 @@ class RemoteTransportV23Test(
             seen["key"],
             "unit-test-key",
         )
+        self.assertEqual(
+            seen["content_type"],
+            "application/json",
+        )
+        self.assertEqual(
+            seen["body"],
+            bundle.to_dict(),
+        )
         self.assertTrue(
             receipt["complete"]
         )
@@ -201,7 +238,11 @@ class RemoteTransportV23Test(
 
         with mock.patch.dict(
             os.environ,
-            {},
+            {
+                WRITEBACK_URL_ENV: (
+                    PRODUCTION_ENDPOINT
+                )
+            },
             clear=True,
         ), mock.patch(
             "tools.remote_transport.KEY_FILE",
@@ -253,6 +294,9 @@ class RemoteTransportV23Test(
             with mock.patch.dict(
                 os.environ,
                 {
+                    WRITEBACK_URL_ENV: (
+                        PRODUCTION_ENDPOINT
+                    ),
                     WRITE_KEY_ENV: (
                         "unit-test-key"
                     )
@@ -311,6 +355,9 @@ class RemoteTransportV23Test(
             with mock.patch.dict(
                 os.environ,
                 {
+                    WRITEBACK_URL_ENV: (
+                        PRODUCTION_ENDPOINT
+                    ),
                     WRITE_KEY_ENV: (
                         "unit-test-key"
                     )
@@ -373,6 +420,9 @@ class RemoteTransportV23Test(
             with mock.patch.dict(
                 os.environ,
                 {
+                    WRITEBACK_URL_ENV: (
+                        PRODUCTION_ENDPOINT
+                    ),
                     WRITE_KEY_ENV: (
                         "wrong-key"
                     )
@@ -400,6 +450,540 @@ class RemoteTransportV23Test(
                 ),
                 1,
             )
+
+
+    def test_missing_endpoint_fails_before_network(self):
+        bundle = build_remote_writeback_bundle(
+            sample_envelope()
+        )
+        called = False
+
+        def opener(*args, **kwargs):
+            nonlocal called
+            called = True
+            raise AssertionError(
+                "network should not be called"
+            )
+
+        with mock.patch.dict(
+            os.environ,
+            {
+                WRITE_KEY_ENV: "unit-test-key",
+            },
+            clear=True,
+        ):
+            with self.assertRaisesRegex(
+                WritebackTransportError,
+                "missing APCS_WRITEBACK_URL",
+            ):
+                post_bundle(
+                    bundle,
+                    opener=opener,
+                )
+
+        self.assertFalse(called)
+
+    def test_unapproved_endpoint_fails_before_network(self):
+        bundle = build_remote_writeback_bundle(
+            sample_envelope()
+        )
+        called = False
+
+        def opener(*args, **kwargs):
+            nonlocal called
+            called = True
+            raise AssertionError(
+                "network should not be called"
+            )
+
+        with mock.patch.dict(
+            os.environ,
+            transport_env(
+                url="https://example.invalid/api/record"
+            ),
+            clear=True,
+        ):
+            with self.assertRaisesRegex(
+                WritebackTransportError,
+                "approved production endpoint",
+            ):
+                post_bundle(
+                    bundle,
+                    opener=opener,
+                )
+
+        self.assertFalse(called)
+
+    def test_http_409_and_500_leave_attempt_pending(self):
+        for code in (409, 500):
+            with self.subTest(code=code):
+                envelope = sample_envelope()
+                bundle = build_remote_writeback_bundle(
+                    envelope
+                )
+
+                def opener(request, *, timeout):
+                    raise urllib.error.HTTPError(
+                        request.full_url,
+                        code,
+                        "HTTP failure",
+                        hdrs=None,
+                        fp=None,
+                    )
+
+                with tempfile.TemporaryDirectory() as temp:
+                    outbox = EvidenceOutbox(
+                        Path(temp)
+                    )
+                    outbox.enqueue(envelope)
+
+                    with mock.patch.dict(
+                        os.environ,
+                        transport_env(),
+                        clear=True,
+                    ):
+                        with self.assertRaisesRegex(
+                            WritebackTransportError,
+                            f"HTTP {code}",
+                        ):
+                            sync_bundle(
+                                outbox,
+                                bundle,
+                                opener=opener,
+                            )
+
+                    self.assertFalse(
+                        outbox.has_receipt(
+                            bundle.writeback_id
+                        )
+                    )
+                    self.assertEqual(
+                        len(outbox.pending()),
+                        1,
+                    )
+
+    def test_timeout_and_network_error_leave_attempt_pending(self):
+        failures = (
+            TimeoutError("timeout"),
+            urllib.error.URLError("offline"),
+        )
+
+        for failure in failures:
+            with self.subTest(
+                failure=type(failure).__name__
+            ):
+                envelope = sample_envelope()
+                bundle = build_remote_writeback_bundle(
+                    envelope
+                )
+
+                def opener(request, *, timeout):
+                    raise failure
+
+                with tempfile.TemporaryDirectory() as temp:
+                    outbox = EvidenceOutbox(
+                        Path(temp)
+                    )
+                    outbox.enqueue(envelope)
+
+                    with mock.patch.dict(
+                        os.environ,
+                        transport_env(),
+                        clear=True,
+                    ):
+                        with self.assertRaises(
+                            WritebackTransportError
+                        ):
+                            sync_bundle(
+                                outbox,
+                                bundle,
+                                opener=opener,
+                            )
+
+                    self.assertFalse(
+                        outbox.has_receipt(
+                            bundle.writeback_id
+                        )
+                    )
+                    self.assertEqual(
+                        len(outbox.pending()),
+                        1,
+                    )
+
+    def test_malformed_json_leaves_attempt_pending(self):
+        envelope = sample_envelope()
+        bundle = build_remote_writeback_bundle(
+            envelope
+        )
+
+        class InvalidJsonResponse:
+            status = 200
+
+            def __enter__(self):
+                return self
+
+            def __exit__(
+                self,
+                exc_type,
+                exc,
+                tb,
+            ):
+                return False
+
+            def read(self):
+                return b"{not-json"
+
+            def getcode(self):
+                return self.status
+
+        def opener(request, *, timeout):
+            return InvalidJsonResponse()
+
+        with tempfile.TemporaryDirectory() as temp:
+            outbox = EvidenceOutbox(
+                Path(temp)
+            )
+            outbox.enqueue(envelope)
+
+            with mock.patch.dict(
+                os.environ,
+                transport_env(),
+                clear=True,
+            ):
+                with self.assertRaisesRegex(
+                    WritebackTransportError,
+                    "invalid JSON",
+                ):
+                    sync_bundle(
+                        outbox,
+                        bundle,
+                        opener=opener,
+                    )
+
+            self.assertFalse(
+                outbox.has_receipt(
+                    bundle.writeback_id
+                )
+            )
+            self.assertEqual(
+                len(outbox.pending()),
+                1,
+            )
+
+    def test_wrong_writeback_and_missing_evidence_receipts_stay_pending(self):
+        for case in (
+            "wrong-writeback",
+            "missing-evidence",
+        ):
+            with self.subTest(case=case):
+                envelope = sample_envelope()
+                bundle = build_remote_writeback_bundle(
+                    envelope
+                )
+                receipt = receipt_for(bundle)
+
+                if case == "wrong-writeback":
+                    receipt["writeback_id"] = (
+                        "wrong-writeback"
+                    )
+                else:
+                    receipt["evidence"] = []
+
+                def opener(request, *, timeout):
+                    return FakeResponse(receipt)
+
+                with tempfile.TemporaryDirectory() as temp:
+                    outbox = EvidenceOutbox(
+                        Path(temp)
+                    )
+                    outbox.enqueue(envelope)
+
+                    with mock.patch.dict(
+                        os.environ,
+                        transport_env(),
+                        clear=True,
+                    ):
+                        with self.assertRaisesRegex(
+                            WritebackTransportError,
+                            "receipt rejected",
+                        ):
+                            sync_bundle(
+                                outbox,
+                                bundle,
+                                opener=opener,
+                            )
+
+                    self.assertFalse(
+                        outbox.has_receipt(
+                            bundle.writeback_id
+                        )
+                    )
+                    self.assertEqual(
+                        len(outbox.pending()),
+                        1,
+                    )
+
+    def test_success_marks_sent_exactly_once(self):
+        envelope = sample_envelope()
+        bundle = build_remote_writeback_bundle(
+            envelope
+        )
+
+        def opener(request, *, timeout):
+            return FakeResponse(
+                receipt_for(bundle)
+            )
+
+        with tempfile.TemporaryDirectory() as temp:
+            outbox = EvidenceOutbox(
+                Path(temp)
+            )
+            outbox.enqueue(envelope)
+
+            with mock.patch.object(
+                outbox,
+                "mark_sent",
+                wraps=outbox.mark_sent,
+            ) as mark_sent, mock.patch.dict(
+                os.environ,
+                transport_env(),
+                clear=True,
+            ):
+                sync_bundle(
+                    outbox,
+                    bundle,
+                    opener=opener,
+                )
+
+            mark_sent.assert_called_once()
+
+    def test_retry_after_network_failure_reuses_same_ids(self):
+        envelope = sample_envelope()
+        bundle = build_remote_writeback_bundle(
+            envelope
+        )
+        calls = 0
+
+        def opener(request, *, timeout):
+            nonlocal calls
+            calls += 1
+
+            if calls == 1:
+                raise urllib.error.URLError(
+                    "offline"
+                )
+
+            body = json.loads(
+                request.data.decode("utf-8")
+            )
+            self.assertEqual(
+                body["writeback_id"],
+                bundle.writeback_id,
+            )
+            self.assertEqual(
+                [
+                    item["event_id"]
+                    for item in body["evidence"]
+                ],
+                [
+                    item.event_id
+                    for item in bundle.evidence
+                ],
+            )
+            return FakeResponse(
+                receipt_for(bundle)
+            )
+
+        with tempfile.TemporaryDirectory() as temp:
+            outbox = EvidenceOutbox(
+                Path(temp)
+            )
+            outbox.enqueue(envelope)
+
+            with mock.patch.dict(
+                os.environ,
+                transport_env(),
+                clear=True,
+            ):
+                with self.assertRaises(
+                    WritebackTransportError
+                ):
+                    sync_bundle(
+                        outbox,
+                        bundle,
+                        opener=opener,
+                    )
+
+                self.assertEqual(
+                    len(outbox.pending()),
+                    1,
+                )
+
+                sync_bundle(
+                    outbox,
+                    bundle,
+                    opener=opener,
+                )
+
+            self.assertEqual(calls, 2)
+            self.assertEqual(
+                outbox.pending(),
+                (),
+            )
+
+    def test_idempotent_duplicate_receipt_is_acknowledged(self):
+        envelope = sample_envelope()
+        bundle = build_remote_writeback_bundle(
+            envelope
+        )
+        receipt = receipt_for(bundle)
+        receipt["rec"]["duplicate"] = True
+
+        for item in receipt["evidence"]:
+            item["duplicate"] = True
+
+        def opener(request, *, timeout):
+            return FakeResponse(receipt)
+
+        with tempfile.TemporaryDirectory() as temp:
+            outbox = EvidenceOutbox(
+                Path(temp)
+            )
+            outbox.enqueue(envelope)
+
+            with mock.patch.dict(
+                os.environ,
+                transport_env(),
+                clear=True,
+            ):
+                returned, created = sync_bundle(
+                    outbox,
+                    bundle,
+                    opener=opener,
+                )
+
+            self.assertTrue(created)
+            self.assertTrue(
+                returned["rec"]["duplicate"]
+            )
+            self.assertEqual(
+                outbox.pending(),
+                (),
+            )
+
+    def test_secret_is_never_in_transport_error(self):
+        secret = "unit-test-secret-do-not-log"
+        bundle = build_remote_writeback_bundle(
+            sample_envelope()
+        )
+
+        def opener(request, *, timeout):
+            raise urllib.error.HTTPError(
+                request.full_url,
+                401,
+                "Unauthorized",
+                hdrs=None,
+                fp=None,
+            )
+
+        with mock.patch.dict(
+            os.environ,
+            transport_env(
+                key=secret
+            ),
+            clear=True,
+        ):
+            with self.assertRaises(
+                WritebackTransportError
+            ) as caught:
+                post_bundle(
+                    bundle,
+                    opener=opener,
+                )
+
+        self.assertNotIn(
+            secret,
+            str(caught.exception),
+        )
+
+    def test_status_bundle_and_projection_remain_compatible(self):
+        envelope = sample_envelope()
+
+        with tempfile.TemporaryDirectory() as temp:
+            outbox = EvidenceOutbox(
+                Path(temp)
+            )
+            outbox.enqueue(envelope)
+
+            with mock.patch.object(
+                writeback_sync,
+                "store",
+                return_value=outbox,
+            ), mock.patch.dict(
+                os.environ,
+                transport_env(),
+                clear=True,
+            ):
+                output = io.StringIO()
+
+                with contextlib.redirect_stdout(
+                    output
+                ):
+                    self.assertEqual(
+                        writeback_sync.status_cmd(),
+                        0,
+                    )
+
+                self.assertIn(
+                    "eligible=1",
+                    output.getvalue(),
+                )
+
+                output = io.StringIO()
+
+                with contextlib.redirect_stdout(
+                    output
+                ):
+                    self.assertEqual(
+                        writeback_sync.bundle_cmd(
+                            envelope.writeback_id,
+                            projection=False,
+                        ),
+                        0,
+                    )
+
+                bundle_value = json.loads(
+                    output.getvalue()
+                )
+                self.assertEqual(
+                    bundle_value["writeback_id"],
+                    envelope.writeback_id,
+                )
+
+                output = io.StringIO()
+
+                with contextlib.redirect_stdout(
+                    output
+                ):
+                    self.assertEqual(
+                        writeback_sync.bundle_cmd(
+                            envelope.writeback_id,
+                            projection=True,
+                        ),
+                        0,
+                    )
+
+                projection_value = json.loads(
+                    output.getvalue()
+                )
+                self.assertIn(
+                    "rec",
+                    projection_value,
+                )
+                self.assertIn(
+                    "evidence",
+                    projection_value,
+                )
 
 
 if __name__ == "__main__":
