@@ -218,6 +218,8 @@ class LearningRouteV23Test(unittest.TestCase):
                             "role": "Guided Drill",
                             "lesson_uid": "L-FND-01",
                             "lesson_order": 2,
+                            "evidence_level_cap": 2,
+                            "method_confirmation_required": False,
                         },
                         {
                             "placement_uid": "PL-PB-2-L-FND-02",
@@ -227,6 +229,8 @@ class LearningRouteV23Test(unittest.TestCase):
                             "role": "Core Independent",
                             "lesson_uid": "L-FND-02",
                             "lesson_order": 3,
+                            "evidence_level_cap": 3,
+                            "method_confirmation_required": False,
                         },
                         {
                             "placement_uid": "PL-PB-10-L-BR-01",
@@ -236,6 +240,8 @@ class LearningRouteV23Test(unittest.TestCase):
                             "role": "Guided Drill",
                             "lesson_uid": "L-BR-01",
                             "lesson_order": 1,
+                            "evidence_level_cap": 2,
+                            "method_confirmation_required": False,
                         },
                         {
                             "placement_uid": "PL-PB-3-L-CORE-01",
@@ -245,6 +251,8 @@ class LearningRouteV23Test(unittest.TestCase):
                             "role": "Core Independent",
                             "lesson_uid": "L-CORE-01",
                             "lesson_order": 1,
+                            "evidence_level_cap": 3,
+                            "method_confirmation_required": False,
                         },
                     ],
                     "stats": {},
@@ -361,6 +369,50 @@ class LearningRouteV23Test(unittest.TestCase):
                 "S03_REQUIRED"
             ].implementation_level,
             4,
+        )
+
+    def test_published_evidence_cap_limits_core_lower_bound(self):
+        data = json.loads(
+            self.snapshot.read_text(
+                encoding="utf-8"
+            )
+        )
+        for placement in data["placements"]:
+            if placement["pb_uid"] == "PB-2":
+                placement["evidence_level_cap"] = 2
+
+        self.snapshot.write_text(
+            json.dumps(
+                data,
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+        curriculum = RuntimeCurriculum(
+            self.snapshot
+        )
+
+        levels = derive_evidence_lower_bounds(
+            [
+                evidence(
+                    writeback_id="wb-cap",
+                    pb_uid="PB-2",
+                    problem_id="CF-4A",
+                    skill_uid="S02_COND",
+                    activity="Core Independent",
+                    assistance=0,
+                    independent=True,
+                    novelty="new",
+                )
+            ],
+            curriculum=curriculum,
+        )
+
+        self.assertEqual(
+            levels[
+                "S02_COND"
+            ].implementation_level,
+            2,
         )
 
     def test_same_problem_repeat_cannot_unlock_level2(self):
