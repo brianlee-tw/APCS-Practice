@@ -1778,6 +1778,37 @@ def timed_menu(
     )
 
 
+def target_method_confirmation_menu(
+    problem,
+    placement,
+    *,
+    initial: bool | None = None,
+) -> bool | None:
+    skill = CURRICULUM.skill_context(
+        placement.primary_skill
+    )
+    requirement = (
+        skill.implementation_requirement
+        if skill is not None
+        else placement.primary_skill
+    )
+
+    return yes_no_menu(
+        "實際方法確認",
+        problem,
+        yes_detail=(
+            f"本次解法確實展現 {placement.primary_skill}："
+            f"{requirement}"
+        ),
+        no_detail=(
+            "本次使用其他合法方法；Attempt 仍保存，"
+            f"但不建立 {placement.primary_skill} Evidence"
+        ),
+        default_yes=True,
+        initial=initial,
+    )
+
+
 def placement_for_record(
     problem,
 ):
@@ -1870,6 +1901,7 @@ def attempt_envelope_for_record(
     novelty: str,
     timed: bool,
     placement=None,
+    method_confirmed: bool | None = None,
     finished_at: dt.datetime | None = None,
 ):
     if action not in {"finish", "review"}:
@@ -1903,8 +1935,28 @@ def attempt_envelope_for_record(
     )
 
     evidence = []
+    attempt_note = ""
 
-    if placement is not None:
+    claim_allowed = (
+        placement is not None
+        and (
+            not placement.method_confirmation_required
+            or method_confirmed is True
+        )
+    )
+
+    if claim_allowed:
+        claim_note = (
+            f"{activity or 'Practice'}"
+            f" · {result}"
+        )
+
+        if (
+            placement is not None
+            and placement.method_confirmation_required
+        ):
+            claim_note += " · target method confirmed"
+
         evidence.append(
             (
                 placement.primary_skill,
@@ -1914,11 +1966,17 @@ def attempt_envelope_for_record(
                     if result == "AC"
                     else "FAIL"
                 ),
-                (
-                    f"{activity or 'Practice'}"
-                    f" · {result}"
-                ),
+                claim_note,
             )
+        )
+    elif (
+        placement is not None
+        and placement.method_confirmation_required
+    ):
+        attempt_note = (
+            "Primary Skill evidence withheld: "
+            "target method not confirmed for "
+            f"{placement.primary_skill}"
         )
 
     return build_envelope(
@@ -1939,6 +1997,7 @@ def attempt_envelope_for_record(
         timed=timed,
         novelty=novelty,
         activity=activity,
+        note=attempt_note,
         evidence=evidence,
     )
 
@@ -2036,6 +2095,31 @@ def evidence_context_menu(
             continue
 
         state["timed"] = timed
+
+        if (
+            placement is not None
+            and placement.method_confirmation_required
+        ):
+            method_confirmed = (
+                target_method_confirmation_menu(
+                    problem,
+                    placement,
+                    initial=state.get(
+                        "method_confirmed"
+                    ),
+                )
+            )
+
+            if method_confirmed is None:
+                step = "novelty"
+                continue
+
+            state["method_confirmed"] = (
+                method_confirmed
+            )
+        else:
+            state["method_confirmed"] = None
+
         return state
 
 
@@ -2275,6 +2359,31 @@ def record_problem(action: str, problem) -> None:
                 "Placement   "
                 f"{placement.role}"
             )
+            print(
+                "Evidence cap "
+                f"L{placement.evidence_level_cap}"
+            )
+
+            if placement.method_confirmation_required:
+                confirmed = evidence_context.get(
+                    "method_confirmed"
+                )
+                print(
+                    "Target Method "
+                    + (
+                        f"{GREEN}是{RESET}"
+                        if confirmed is True
+                        else f"{YELLOW}否{RESET}"
+                    )
+                )
+
+                if confirmed is not True:
+                    print(
+                        f"{YELLOW}"
+                        "Attempt only · 不建立 "
+                        f"{placement.primary_skill} Evidence"
+                        f"{RESET}"
+                    )
         else:
             print(
                 f"{YELLOW}"
@@ -2409,6 +2518,9 @@ def record_problem(action: str, problem) -> None:
                     placement=evidence_context[
                         "placement"
                     ],
+                    method_confirmed=evidence_context.get(
+                        "method_confirmed"
+                    ),
                 )
             )
 
