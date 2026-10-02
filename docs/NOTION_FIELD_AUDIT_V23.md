@@ -13,9 +13,10 @@ Observed during the v2.3 audit:
 - IM populated: 0 / 39.
 - Evidence Ledger: 0 rows.
 - Skill Status is nevertheless populated across Learning / Practice / Ready / Locked.
-- Problem Bank: 181 rows.
-- Active Problem Bank rows: 131.
+- Problem Bank: 183 rows.
+- Active Problem Bank rows: 133.
 - Needs QA: 50.
+- Phase 1B live additions: PB-182 (S02 Core Independent) and PB-183 (S05 Core Independent), both Active / Placement QA PASS.
 - Active rows missing Skill: 3.
 - Active rows missing calibrated Difficulty: 3.
 - Active rows missing Primary Lesson: 6, including Mock rows where no lesson placement may be legitimate.
