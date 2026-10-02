@@ -252,7 +252,7 @@ class RemoteTransportV23Test(
         ):
             with self.assertRaisesRegex(
                 WritebackTransportError,
-                "missing APCS_WRITEBACK_KEY",
+                "missing APCS_WRITE_KEY",
             ):
                 post_bundle(
                     bundle,
