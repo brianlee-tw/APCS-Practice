@@ -287,22 +287,24 @@ def render_dashboard(rows):
     )
 
     lines = [
-        "## APCS Training Dashboard",
+        "## v2.2 Compatibility Dashboard",
+        "",
+        "> 相容觀測面：不代表 v2.3 Skill × Track mastery、Today 排程或 readiness。",
         "",
         "| 指標 | 數量 |",
         "| :--- | ---: |",
         f"| 索引題目 | **{len(rows)}** |",
         f"| 明確 AC | **{solved}** |",
-        f"| Mastered | **{mastery['MASTERED']}** |",
-        f"| 今日到期複習 | **{due}** |",
+        f"| v2.2 Mastered | **{mastery['MASTERED']}** |",
+        f"| v2.2 problem due | **{due}** |",
         "",
-        "### Canonical Tag 能力分布",
+        "### v2.2 Tag 統計（compatibility）",
         "",
         "> 一題可同時計入多個 Tag，"
         "因此 Tag 題數加總可能大於索引題目總數。",
         "",
         "| 類別 | Tag | 題數 | AC | "
-        "Mastered | Recall 0–1 | 到期 |",
+        "v2.2 Mastered | Recall 0–1 | v2.2 due |",
         "| :--- | :--- | ---: | ---: | "
         "---: | ---: | ---: |",
     ]
@@ -326,12 +328,12 @@ def render_dashboard(rows):
 
     lines += [
         "",
-        "### 弱項訊號",
+        "### v2.2 觀測訊號",
         "",
         "> 只使用可觀察資料：Recall 0–1 "
         "或已到期題目；不使用黑箱分數。",
         "",
-        "| Tag | 已 AC | Recall 0–1 | 到期 | Mastered |",
+        "| Tag | 已 AC | Recall 0–1 | v2.2 due | v2.2 Mastered |",
         "| :--- | ---: | ---: | ---: | ---: |",
     ]
 
@@ -369,7 +371,7 @@ def render_dashboard(rows):
 
     lines += [
         "",
-        "### 今日複習優先序",
+        "### v2.2 Problem-level Due Queue",
         "",
         "| ID | 題目 | Tags | Recall | 到期日 |",
         "| :--- | :--- | :--- | ---: | :---: |",
@@ -411,8 +413,8 @@ def render_dashboard(rows):
         "",
         "完整題庫見 "
         "[Problem Index](./docs/PROBLEM_INDEX.md)，"
-        "複習佇列見 "
-        "[Review Queue](./docs/REVIEW_QUEUE.md)。",
+        "相容佇列見 "
+        "[Compatibility Review Queue](./docs/REVIEW_QUEUE.md)。",
     ]
 
     return "\n".join(lines)
@@ -422,10 +424,10 @@ def render_index(rows):
     lines = [
         "# Problem Index",
         "",
-        "> 自動產生；請勿手動編輯。",
+        "> 自動產生；請勿手動編輯。v2.2 State 僅供 compatibility，不是 v2.3 mastery/readiness。",
         "",
         "| ID | 題目 | Tags | 程式 | 複雜度 | "
-        "難度 | 狀態 | Recall | Mastery | 筆記 |",
+        "難度 | 狀態 | Recall | v2.2 State | 筆記 |",
         "| :--- | :--- | :--- | :--- | :--- | "
         ":---: | :---: | ---: | :---: | :--- |",
     ]
@@ -498,11 +500,11 @@ def render_queue(rows):
     ]
 
     lines = [
-        "# Review Queue",
+        "# Compatibility Review Queue (v2.2)",
         "",
-        "> 自動產生；依 v2.2 adaptive review 排序。",
+        "> 自動產生；僅供歷史／相容觀測。learner-facing Today 請使用 VS Code Control Center → 今日學習。",
         "",
-        "| 到期日 | ID | 題目 | Tags | Recall | Mastery | 狀態 |",
+        "| 到期日 | ID | 題目 | Tags | Recall | v2.2 State | 狀態 |",
         "| :---: | :--- | :--- | :--- | ---: | :---: | :---: |",
     ]
 
@@ -938,6 +940,11 @@ def review_cmd(
 
 
 def today_cmd():
+    print(
+        "COMPATIBILITY ONLY · 這是 v2.2 problem-level due queue；"
+        "learner-facing Today 請使用 VS Code Control Center → 今日學習。"
+    )
+
     rows, _ = build()
 
     table = {
