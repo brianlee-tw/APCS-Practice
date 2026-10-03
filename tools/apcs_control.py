@@ -1337,20 +1337,34 @@ def create_learning_scratch(
     if target.exists():
         return target
 
+    strict_spoiler = (
+        placement.role
+        in {
+            "Transfer Challenge",
+            "Mock",
+        }
+    )
+
     lines = [
         "// APCS B4 new-learning scratch",
-        f"// Skill: {placement.primary_skill}",
-        (
-            f"// Lesson: "
-            f"{placement.lesson_uid or '—'}"
-        ),
         (
             f"// Problem: "
             f"{placement.problem_id} · "
             f"{placement.title}"
         ),
-        f"// Role: {placement.role}",
     ]
+
+    if not strict_spoiler:
+        lines.extend(
+            [
+                f"// Skill: {placement.primary_skill}",
+                (
+                    f"// Lesson: "
+                    f"{placement.lesson_uid or '—'}"
+                ),
+                f"// Role: {placement.role}",
+            ]
+        )
 
     if placement.url:
         lines.append(
@@ -1359,8 +1373,12 @@ def create_learning_scratch(
 
     lines += [
         "//",
-        "// 先依 Lesson 建立 model，再自行完成本題。",
-        "// Core / Transfer pre-attempt 不查看舊解答或關鍵觀察。",
+        (
+            "// 嚴格防劇透：先自行辨認方法；"
+            "不要查看分類、提示或舊解答。"
+            if strict_spoiler
+            else "// 先依 Lesson 建立 model，再自行完成本題。"
+        ),
         "",
     ]
 
@@ -6301,10 +6319,10 @@ def today_view(current_filename: str | None):
         )
 
     if option["kind"] == "cognitive":
-        cognitive_task_view(
-            option["task"]
+        return cognitive_task_view(
+            option["task"],
+            current_filename,
         )
-        return current_filename
 
     return _start_adaptive_review(
         option["candidate"],
@@ -6312,14 +6330,114 @@ def today_view(current_filename: str | None):
     )
 
 
-def cognitive_task_view(task) -> None:
-    clear()
+def _attempted_problem_ids() -> set[str]:
+    return {
+        str(item.external_id).strip().lower()
+        for item in PROBLEM_LIBRARY.items()
+        if item.attempted
+    }
+
+
+def _cognitive_placement(task):
+    if not task.skill_uids:
+        return None
+
+    attempted = _attempted_problem_ids()
+    source = str(
+        task.source_problem_id or ""
+    ).strip().lower()
+
+    placements = []
+    for uid in task.skill_uids:
+        try:
+            placements.extend(
+                CURRICULUM.placements_for_skill(
+                    uid
+                )
+            )
+        except RuntimeCurriculumError:
+            continue
+
+    fresh = [
+        item
+        for item in placements
+        if (
+            item.problem_id.lower()
+            not in attempted
+            and item.problem_id.lower()
+            != source
+        )
+    ]
+
+    if task.kind == "transfer":
+        fresh = [
+            item
+            for item in fresh
+            if item.role
+            == "Transfer Challenge"
+        ]
+    elif task.kind == "repair":
+        role_rank = {
+            "Guided Drill": 0,
+            "Core Independent": 1,
+            "Worked Example": 2,
+            "Transfer Challenge": 3,
+            "Mock": 4,
+        }
+        fresh.sort(
+            key=lambda item: (
+                role_rank.get(
+                    item.role,
+                    99,
+                ),
+                item.lesson_order
+                if item.lesson_order
+                is not None
+                else float("inf"),
+                item.placement_uid,
+            )
+        )
+    else:
+        fresh.sort(
+            key=lambda item: (
+                0
+                if item.role
+                in {
+                    "Core Independent",
+                    "Transfer Challenge",
+                }
+                else 1,
+                item.lesson_order
+                if item.lesson_order
+                is not None
+                else float("inf"),
+                item.placement_uid,
+            )
+        )
+
+    return fresh[0] if fresh else None
+
+
+def cognitive_task_view(
+    task,
+    current_filename: str | None,
+):
     labels = {
         "repair": "最小修復",
         "discrimination": "方法辨識",
         "transfer": "遷移驗證",
     }
-    heading(labels.get(task.kind, "認知練習"))
+    placement = _cognitive_placement(
+        task
+    )
+
+    clear()
+    heading(
+        labels.get(
+            task.kind,
+            "認知練習",
+        )
+    )
     print()
     print_wrapped(
         task.reason,
@@ -6328,13 +6446,16 @@ def cognitive_task_view(task) -> None:
     print()
 
     if task.kind == "repair":
-        print(f"{CYAN}{BOLD}下一步{RESET}")
+        print(
+            f"{CYAN}{BOLD}"
+            "修復步驟"
+            f"{RESET}"
+        )
         print_wrapped(
             repair_instruction(),
             ui_width() - 2,
         )
         if task.source_problem_id:
-            print()
             print(
                 f"{GRAY}"
                 f"來源題目：{task.source_problem_id}"
@@ -6342,31 +6463,29 @@ def cognitive_task_view(task) -> None:
             )
 
     elif task.kind == "discrimination":
-        print(f"{CYAN}{BOLD}任務{RESET}")
         print(
-            "先比較下面兩種方法的成立條件，"
-            "再找一題只看 constraints 判斷該選哪一種："
+            f"{CYAN}{BOLD}"
+            "辨識任務"
+            f"{RESET}"
+        )
+        print(
+            "先比較兩種方法的成立條件，"
+            "再只看新題題面與 constraints 決定方法。"
         )
         for uid in task.skill_uids:
-            print(f"  - {skill_display_name(uid)}")
-        print()
-        print(
-            f"{GRAY}"
-            "不先看解法；重點是說出「為什麼另一種方法不成立」。"
-            f"{RESET}"
-        )
+            print(
+                f"  - {skill_display_name(uid)}"
+            )
 
     elif task.kind == "transfer":
-        uid = task.skill_uids[0] if task.skill_uids else ""
-        print(f"{CYAN}{BOLD}任務{RESET}")
         print(
-            f"找一題新的 {skill_display_name(uid)} 相關題，"
-            "但作答前不要看分類與方法。"
+            f"{CYAN}{BOLD}"
+            "遷移任務"
+            f"{RESET}"
         )
         print(
-            f"{GRAY}"
-            "只有新的 independent / delayed Evidence 才能驗證遷移。"
-            f"{RESET}"
+            "系統會直接提供一題新的 Published Transfer；"
+            "作答前不顯示 Skill、Lesson、Role 或方法。"
         )
 
     print()
@@ -6375,7 +6494,131 @@ def cognitive_task_view(task) -> None:
         f"建議支援上限：{task.guidance or '—'}"
         f"{RESET}"
     )
+
+    if placement is None:
+        print()
+        print(
+            f"{YELLOW}"
+            "目前沒有可安全使用的新 Published 題目；"
+            "系統不會要求你自己找題或猜分類。"
+            f"{RESET}"
+        )
+        pause()
+        return current_filename
+
+    print()
+    rule()
+    print()
+    print(
+        f"{WHITE}{BOLD}"
+        f"{placement.problem_id} · {placement.title}"
+        f"{RESET}"
+    )
+    if placement.url:
+        print(
+            f"{GRAY}{placement.url}{RESET}"
+        )
+
+    if task.kind == "transfer":
+        print(
+            f"{YELLOW}"
+            "嚴格防劇透：本頁不顯示題目分類。"
+            f"{RESET}"
+        )
+    else:
+        print(
+            f"{GRAY}"
+            "系統已選好題目；不需要回題庫自行搜尋。"
+            f"{RESET}"
+        )
+
+    selected = choose_menu(
+        f"{labels.get(task.kind, '認知練習')} · 下一步",
+        [
+            {
+                "label": "開始",
+                "detail": (
+                    "建立防劇透 scratch 並開始正式遷移"
+                    if task.kind == "transfer"
+                    else "開啟系統選定的新題"
+                ),
+                "enabled": True,
+                "action": "開始",
+            }
+        ],
+        footer_numbers=False,
+        back_text="返回今日學習",
+        enter_text="開始",
+    )
+    if selected is None:
+        return current_filename
+
+    if task.kind != "transfer":
+        if placement.url:
+            webbrowser.open(
+                placement.url
+            )
+        return current_filename
+
+    try:
+        scratch = (
+            create_reading_scratch(
+                RUNTIME_DIR,
+                placement,
+                action="finish",
+            )
+            if task.track == "Reading"
+            else create_learning_scratch(
+                placement
+            )
+        )
+    except (
+        OSError,
+        ValueError,
+    ) as exc:
+        clear()
+        heading("遷移驗證")
+        print()
+        print(
+            f"{RED}"
+            f"✕ 無法建立 transfer scratch：{exc}"
+            f"{RESET}"
+        )
+        pause()
+        return current_filename
+
+    opened = open_in_vscode(
+        scratch
+    )
+    if placement.url:
+        webbrowser.open(
+            placement.url
+        )
+
+    clear()
+    heading("遷移驗證")
+    print()
+    if opened:
+        print(
+            f"{GREEN}"
+            "✓ 已開啟防劇透 transfer scratch"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            "完成後回控制中心記錄「完成題目」；"
+            "只有真實 independent outcome 才能成為 Transfer Evidence。"
+            f"{RESET}"
+        )
+    else:
+        print(
+            f"{RED}"
+            "✕ 無法在 VS Code 開啟 transfer scratch"
+            f"{RESET}"
+        )
     pause()
+    return str(scratch)
+
 
 
 def skill_display_name(uid: str) -> str:
