@@ -1897,6 +1897,233 @@ def independent_menu(
     )
 
 
+def compact_support_menu(
+    problem,
+    *,
+    initial: dict | None = None,
+):
+    """一次收集 Assistance + Independent，降低 Published Runtime 摩擦。"""
+
+    values = [
+        (
+            0,
+            True,
+            "A0 · 無提示／獨立",
+            "沒有提示，方法與實作主要由你自行完成",
+        ),
+        (
+            0,
+            False,
+            "A0 · 無提示／非獨立",
+            "沒有提示，但完成仍依賴他人、既有答案或外部協助",
+        ),
+        (
+            1,
+            True,
+            "A1 · 診斷問題／獨立",
+            "只收到診斷性提問，之後主要由你自行完成",
+        ),
+        (
+            1,
+            False,
+            "A1 · 診斷問題／非獨立",
+            "最高只有 A1，但實際完成仍依賴他人／AI",
+        ),
+        (
+            2,
+            False,
+            "A2 · 概念／性質",
+            "收到關鍵概念、性質或表示提示；Independent 自動為否",
+        ),
+        (
+            3,
+            False,
+            "A3 · 演算法方向",
+            "收到方法或演算法方向；Independent 自動為否",
+        ),
+        (
+            4,
+            False,
+            "A4 · pseudocode / skeleton",
+            "收到偽碼、骨架或接近實作的提示；Independent 自動為否",
+        ),
+        (
+            5,
+            False,
+            "A5 · 完整解法 / reference",
+            "看過完整解法、reference 或等價答案；Independent 自動為否",
+        ),
+    ]
+
+    selected_index = None
+    if initial is not None:
+        selected_index = next(
+            (
+                index
+                for index, (assistance, independent, _, _)
+                in enumerate(values)
+                if assistance == initial.get("assistance")
+                and independent == initial.get("independent")
+            ),
+            None,
+        )
+
+    selected = choose_menu(
+        "作答支援",
+        [
+            {
+                "label": label,
+                "detail": detail,
+                "enabled": True,
+            }
+            for _, _, label, detail in values
+        ],
+        problem=problem,
+        main=False,
+        footer_numbers=False,
+        back_text="返回上一步",
+        selected_index=selected_index,
+    )
+
+    if selected is None:
+        return None
+
+    assistance, independent, _, _ = values[selected]
+    return {
+        "assistance": assistance,
+        "independent": independent,
+    }
+
+
+def inferred_published_novelty(
+    action: str,
+    problem,
+    placement,
+) -> str | None:
+    runtime_action = problem.get("runtime_action")
+
+    if action == "review" and runtime_action == "review":
+        return "delayed_retest"
+
+    if action == "finish" and runtime_action == "finish":
+        if placement is not None:
+            if placement.role == "Transfer Challenge":
+                return "transfer"
+            if placement.role == "Mock":
+                return "mixed"
+        return "new"
+
+    return None
+
+
+def inferred_published_timed(problem) -> bool | None:
+    try:
+        session = EXAM.active()
+    except ExamRuntimeError:
+        session = None
+
+    if session is not None:
+        problem_id = (
+            str(problem.get("id") or "")
+            .strip()
+            .casefold()
+        )
+        selected_id = (
+            str(session.get("selected_problem_id") or "")
+            .strip()
+            .casefold()
+        )
+        if problem_id and problem_id == selected_id:
+            return True
+
+    if problem.get("runtime_action") in {
+        "finish",
+        "review",
+    }:
+        return False
+
+    return None
+
+
+def published_evidence_context_menu(
+    action: str,
+    problem,
+    *,
+    initial: dict | None = None,
+    track: str = "Implementation",
+):
+    """Published Runtime 只詢問無法可靠自動取得的 learner facts。"""
+
+    placement, placement_warning = placement_for_record(
+        problem
+    )
+    if placement_warning == "__CANCEL__":
+        return RECORD_BACK
+
+    state = dict(initial or {})
+    state["placement"] = placement
+    state["placement_warning"] = placement_warning
+
+    support = compact_support_menu(
+        problem,
+        initial=state,
+    )
+    if support is None:
+        return RECORD_BACK
+
+    state.update(support)
+
+    novelty = inferred_published_novelty(
+        action,
+        problem,
+        placement,
+    )
+    if novelty is None:
+        novelty = novelty_menu(
+            action,
+            problem,
+            placement=placement,
+            initial=state.get("novelty"),
+        )
+        if novelty is None:
+            return RECORD_BACK
+    state["novelty"] = novelty
+
+    timed = inferred_published_timed(
+        problem
+    )
+    if timed is None:
+        timed = timed_menu(
+            problem,
+            initial=state.get("timed"),
+        )
+        if timed is None:
+            return RECORD_BACK
+    state["timed"] = timed
+
+    if (
+        track == "Implementation"
+        and placement is not None
+        and placement.method_confirmation_required
+    ):
+        method_confirmed = target_method_confirmation_menu(
+            problem,
+            placement,
+            initial=state.get(
+                "method_confirmed"
+            ),
+        )
+        if method_confirmed is None:
+            return RECORD_BACK
+        state["method_confirmed"] = (
+            method_confirmed
+        )
+    else:
+        state["method_confirmed"] = None
+
+    return state
+
+
 def novelty_menu(
     action: str,
     problem,
