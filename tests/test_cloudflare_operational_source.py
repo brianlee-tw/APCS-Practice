@@ -9,15 +9,16 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WORKER = ROOT / "cloudflare" / "worker"
 RECOVERY = ROOT / "cloudflare" / "recovery" / "worker-51"
-RECEIPT = ROOT / "docs" / "REC_SCHEMA_COMPAT_PRODUCTION_RECEIPT_2026-10-03.json"
+SCHEMA_RECEIPT = ROOT / "docs" / "REC_SCHEMA_COMPAT_PRODUCTION_RECEIPT_2026-10-03.json"
+READING_RECEIPT = ROOT / "docs" / "READING_NA_PRODUCTION_RECEIPT_2026-10-03.json"
 
 EXPECTED_BASELINE_SHA = (
     "c4f2271c73a928a4dd757aaa160be303"
     "d3e555b0cfee80f156b2ca6956c7ba67"
 )
-EXPECTED_PRODUCTION_VERSION_ID = "a8a3e533-70a3-4b95-a34b-5ba22b6d75b3"
-EXPECTED_DEPLOYMENT_ID = "cfdc07b8-6a2b-45b4-8ec0-9812a4e9db78"
-EXPECTED_SOURCE_COMMIT = "4ce453b55cd61e54495d36edf1156753aac0d6b2"
+EXPECTED_PRODUCTION_VERSION_ID = "0eafa60d-6d4d-4edb-b1eb-ac6a9a3625b6"
+EXPECTED_DEPLOYMENT_ID = "220994e0-549b-4143-800e-44c089c3ba4a"
+EXPECTED_SOURCE_COMMIT = "0be65f2ab4ca44ea089aa48afc63ef09afd1778f"
 
 
 def _sha256(path: Path) -> str:
@@ -35,7 +36,7 @@ class CloudflareOperationalSourceTests(unittest.TestCase):
         )
 
         self.assertEqual(authority["status"], "PRODUCTION_ACTIVE")
-        self.assertEqual(authority["production_version_number"], 55)
+        self.assertEqual(authority["production_version_number"], 58)
         self.assertEqual(
             authority["production_version_id"],
             EXPECTED_PRODUCTION_VERSION_ID,
@@ -47,7 +48,7 @@ class CloudflareOperationalSourceTests(unittest.TestCase):
         )
         self.assertEqual(
             authority["production_runtime_status"],
-            "SCHEMA_COMPAT_VERIFIED_ON_VERSION_55",
+            "READING_NA_WRITEBACK_VERIFIED_ON_VERSION_58",
         )
         self.assertEqual(
             authority["pending_patch"]["deployment_status"],
@@ -98,7 +99,7 @@ class CloudflareOperationalSourceTests(unittest.TestCase):
         )
 
     def test_schema_compat_release_receipt(self) -> None:
-        receipt = json.loads(RECEIPT.read_text(encoding="utf-8"))
+        receipt = json.loads(SCHEMA_RECEIPT.read_text(encoding="utf-8"))
 
         self.assertEqual(
             receipt["schema_version"],
@@ -120,6 +121,55 @@ class CloudflareOperationalSourceTests(unittest.TestCase):
         self.assertEqual(
             receipt["phase2"]["system_audit"],
             "PASS_KNOWN_PB_BACKLOG_ONLY",
+        )
+        self.assertEqual(receipt["learner_readiness"], "NOT_ASSESSED")
+
+
+    def test_reading_na_release_receipt(self) -> None:
+        receipt = json.loads(READING_RECEIPT.read_text(encoding="utf-8"))
+
+        self.assertEqual(
+            receipt["schema_version"],
+            "apcs-reading-na-production-receipt-1",
+        )
+        self.assertEqual(receipt["production_version_number"], 58)
+        self.assertEqual(
+            receipt["production_version_id"],
+            EXPECTED_PRODUCTION_VERSION_ID,
+        )
+        self.assertEqual(receipt["deployment_id"], EXPECTED_DEPLOYMENT_ID)
+        self.assertEqual(receipt["git_head"], EXPECTED_SOURCE_COMMIT)
+        self.assertEqual(
+            receipt["phase1"]["remote_rec_result"],
+            "未提交/未知",
+        )
+        self.assertEqual(
+            receipt["phase1"]["remote_ev_track"],
+            "Reading",
+        )
+        self.assertEqual(
+            receipt["phase1"]["remote_ev_judge_result"],
+            "N/A",
+        )
+        self.assertEqual(
+            receipt["phase1"]["remote_ev_outcome"],
+            "PARTIAL",
+        )
+        self.assertIs(
+            receipt["phase1"]["remote_ev_valid_for_gate"],
+            False,
+        )
+        self.assertEqual(
+            receipt["phase2"]["system_audit"],
+            "PASS_CLEAN",
+        )
+        self.assertEqual(
+            receipt["production_integrity"]["exceptions"],
+            0,
+        )
+        self.assertEqual(
+            receipt["production_integrity"]["warnings"],
+            0,
         )
         self.assertEqual(receipt["learner_readiness"], "NOT_ASSESSED")
 
