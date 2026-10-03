@@ -2192,7 +2192,274 @@ def evidence_context_menu(
         return state
 
 
+def reading_outcome_menu(
+    problem,
+) -> str | None:
+    options = [
+        {
+            "label": "PASS · 推理成立",
+            "detail": "formal response 的 model / trace / conclusion 經驗證後成立",
+            "enabled": True,
+            "value": "PASS",
+        },
+        {
+            "label": "PARTIAL · 部分成立",
+            "detail": "核心方向有證據，但仍有局部錯誤、缺口或不確定性",
+            "enabled": True,
+            "value": "PARTIAL",
+        },
+        {
+            "label": "FAIL · 未能重建",
+            "detail": "關鍵推理不成立，或仍需要重新學習",
+            "enabled": True,
+            "value": "FAIL",
+        },
+    ]
+
+    selected = choose_menu(
+        "Reading Outcome",
+        options,
+        problem=problem,
+        main=False,
+        back_text="取消 Reading 紀錄",
+    )
+    if selected is None:
+        return None
+    return options[selected]["value"]
+
+
+def record_reading_problem(
+    action: str,
+    problem,
+) -> None:
+    if action not in {"finish", "review"}:
+        raise ValueError(
+            f"unsupported Reading action={action!r}"
+        )
+
+    if not formal_response_ready(
+        Path(problem["path"])
+    ):
+        clear()
+        heading("Reading Evidence")
+        print()
+        print(
+            f"{YELLOW}"
+            "⚠ Formal response 尚未完成；本次不建立 Reading Evidence。"
+            f"{RESET}"
+        )
+        print()
+        print_wrapped(
+            "先在 Reading scratch 留下 reason / trace 並儲存；"
+            "reference / executor / Judge 只能在 formal response 之後使用。",
+            ui_width(),
+            color=GRAY,
+        )
+        pause()
+        return
+
+    outcome = reading_outcome_menu(
+        problem
+    )
+    if outcome is None:
+        return
+
+    clear()
+    heading("Reading 耗時")
+    print()
+    print_problem_context(problem)
+    print()
+    raw_minutes = prompt_text(
+        "本次 Reading 分鐘（可略過）"
+    )
+    if raw_minutes is None:
+        return
+    minutes = None
+    if raw_minutes:
+        if (
+            not raw_minutes.isdigit()
+            or not (1 <= int(raw_minutes) <= 999)
+        ):
+            clear()
+            heading("Reading Evidence")
+            print()
+            print(
+                f"{RED}✕ 分鐘必須是 1–999 的整數{RESET}"
+            )
+            pause()
+            return
+        minutes = int(raw_minutes)
+
+    evidence_context = evidence_context_menu(
+        action,
+        problem,
+        track="Reading",
+    )
+    if evidence_context is RECORD_BACK:
+        return
+
+    placement = evidence_context["placement"]
+
+    clear()
+    heading(
+        "完成 Reading"
+        if action == "finish"
+        else "Reading Review"
+    )
+    print()
+    print_problem_context(problem)
+    print()
+    print(f"Outcome     {outcome}")
+    print(
+        "耗時        "
+        + (
+            f"{minutes} 分鐘"
+            if minutes is not None
+            else "未記錄"
+        )
+    )
+    print(
+        f"Assistance  A{evidence_context['assistance']}"
+    )
+    print(
+        "Independent "
+        + (
+            "是"
+            if evidence_context["independent"]
+            else "否"
+        )
+    )
+    print(
+        f"Novelty     {evidence_context['novelty']}"
+    )
+    print(
+        "Timed       "
+        + (
+            "是"
+            if evidence_context["timed"]
+            else "否"
+        )
+    )
+    if placement is not None:
+        print(
+            "Evidence    "
+            f"{placement.primary_skill} × Reading"
+        )
+        print(f"Placement   {placement.role}")
+    else:
+        print(
+            f"{YELLOW}"
+            "Evidence    尚未建立（無 Published Placement）"
+            f"{RESET}"
+        )
+    print()
+    print_wrapped(
+        "Reading Attempt 使用 Judge Result N/A；不會把 reasoning 偽裝成 AC。",
+        ui_width(),
+        color=GRAY,
+    )
+    print()
+
+    if not confirm("確認保存 Reading Attempt / Evidence？"):
+        return
+
+    envelope = None
+    outbox_warning = None
+    memory_warning = None
+
+    try:
+        envelope = attempt_envelope_for_record(
+            action=action,
+            problem=problem,
+            result="N/A",
+            minutes=minutes,
+            assistance=evidence_context["assistance"],
+            independent=evidence_context["independent"],
+            novelty=evidence_context["novelty"],
+            timed=evidence_context["timed"],
+            placement=placement,
+            track="Reading",
+            evidence_outcome=outcome,
+        )
+        OUTBOX.enqueue(envelope)
+    except (
+        EvidenceOutboxError,
+        OSError,
+        ValueError,
+    ) as exc:
+        outbox_warning = str(exc)
+
+    if (
+        envelope is not None
+        and outbox_warning is None
+    ):
+        try:
+            MEMORY.reconcile(
+                OUTBOX.all_envelopes()
+            )
+        except (
+            EvidenceOutboxError,
+            OSError,
+            ValueError,
+        ) as exc:
+            memory_warning = str(exc)
+
+    clear()
+    heading("Reading Evidence")
+    print()
+
+    if outbox_warning:
+        print(
+            f"{RED}"
+            f"✕ local evidence outbox 寫入失敗：{outbox_warning}"
+            f"{RESET}"
+        )
+        pause()
+        return
+
+    print(
+        f"{GREEN}"
+        "✓ Reading Attempt 已保存到 local evidence outbox"
+        f"{RESET}"
+    )
+    if envelope is not None and envelope.evidence:
+        claim = envelope.evidence[0]
+        print(
+            f"{GREEN}"
+            f"✓ Evidence：{claim.skill_uid} × {claim.track} · {claim.outcome}"
+            f"{RESET}"
+        )
+    if memory_warning:
+        print(
+            f"{YELLOW}"
+            "⚠ Evidence 已保存，但 adaptive memory cache 更新失敗；"
+            "下次 Today 會重新 reconciliation。"
+            f"{RESET}"
+        )
+    else:
+        print(
+            f"{GREEN}✓ Adaptive memory 已更新{RESET}"
+        )
+    print()
+    print(
+        f"{GRAY}"
+        "Remote sync 使用同一 durable writeback_id / event_id；"
+        "Reading 不會要求重做 learner task。"
+        f"{RESET}"
+    )
+    pause()
+
+
 def record_problem(action: str, problem) -> None:
+    if (
+        problem is not None
+        and problem.get("runtime_track") == "Reading"
+    ):
+        record_reading_problem(
+            action,
+            problem,
+        )
+        return
     title = (
         "完成題目"
         if action == "finish"
