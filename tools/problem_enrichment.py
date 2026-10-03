@@ -283,13 +283,15 @@ class ProblemEnrichmentStore:
             },
         }
 
-        self.validate_package(package, package_path)
+        # 先驗證資料內容，再落地 solution；最後再做包含檔案存在性的完整驗證。
+        self.validate_package(package)
         problem_dir = self.problem_dir(source, external_id)
         problem_dir.mkdir(parents=True, exist_ok=True)
         self.solution_path(source, external_id).write_text(
             solution_code,
             encoding="utf-8",
         )
+        self.validate_package(package, package_path)
         self._write_json(package_path, package)
         return package
 
