@@ -9,7 +9,7 @@ const MODE_META = {
 
 const state = {
   allQuestions: [], questions: [], skills: null, products: [], answers: {}, index: 0,
-  selectedCount: 10, started: false, startedAt: null, reviewItems: [],
+  selectedCount: 10, started: false, startedAt: null, reviewItems: [], diagnosticVariant: 0,
 };
 const $ = (id) => document.getElementById(id);
 const labelFor = (id) => state.skills.dimensions.find((d) => d.id === id)?.label ?? id;
@@ -62,8 +62,18 @@ function startQuiz() {
   state.index = 0;
   state.answers = {};
   state.reviewItems = [];
-  state.questions = selectBalancedQuestions(state.allQuestions, state.selectedCount);
-  track("quiz_start", { totalQuestions: state.questions.length, mode: state.selectedCount });
+  state.questions = selectBalancedQuestions(
+    state.allQuestions,
+    state.selectedCount,
+    state.diagnosticVariant,
+  );
+  const variant = state.diagnosticVariant;
+  state.diagnosticVariant += 1;
+  track("quiz_start", {
+    totalQuestions: state.questions.length,
+    mode: state.selectedCount,
+    diagnosticVariant: variant,
+  });
   renderQuestion();
   show("quiz-view");
 }
