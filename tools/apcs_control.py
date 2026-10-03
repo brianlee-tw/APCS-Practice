@@ -1176,8 +1176,6 @@ def choose_menu(
         if main
         else None
     )
-    first_frame = True
-
     while True:
         output = io.StringIO()
 
@@ -1369,21 +1367,16 @@ def choose_menu(
                 label = back_text or "返回控制中心"
                 print(f"{GRAY}Esc / Q {label}{RESET}")
 
-        # Render the completed frame in one write.  Subsequent cursor moves
-        # overwrite from HOME and clear only stale tail content, avoiding the
-        # visible blank frame caused by ESC[2J on every ↑/↓ keypress.
-        lead = (
-            "\033[2J\033[H"
-            if first_frame
-            else "\033[H"
-        )
+        # Render the completed frame in one write.  Always clear the visible
+        # terminal before redrawing: a HOME-only redraw is unsafe when the
+        # previous frame wrapped or scrolled, because HOME then targets the
+        # current viewport rather than the original frame origin and stale
+        # text can remain on screen.
         sys.stdout.write(
-            lead
+            "\033[2J\033[H"
             + output.getvalue()
-            + "\033[J"
         )
         sys.stdout.flush()
-        first_frame = False
 
         key = read_key()
 
