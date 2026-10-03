@@ -44,6 +44,16 @@ except ImportError:
 
 
 try:
+    from .problem_intelligence import (
+        ProblemIntelligenceStore,
+    )
+except ImportError:
+    from problem_intelligence import (
+        ProblemIntelligenceStore,
+    )
+
+
+try:
     from .tag_analytics import (
         build_tag_stats,
         display_tags,
@@ -75,6 +85,9 @@ QUEUE = DOCS / "REVIEW_QUEUE.md"
 STORE = LearningStore(DATA)
 ENGINE = LearningEngine(STORE)
 CATALOG = CatalogStore(DATA)
+PROBLEM_INTELLIGENCE = ProblemIntelligenceStore(
+    DATA / "problem_intelligence"
+)
 
 START = "<!-- APCS_DASHBOARD_START -->"
 END = "<!-- APCS_DASHBOARD_END -->"
@@ -821,6 +834,11 @@ def validate(strict=False):
 
     errors.extend(
         STORE.validate_consistency()
+    )
+
+    errors.extend(
+        "題目智慧: " + message
+        for message in PROBLEM_INTELLIGENCE.validate_all()
     )
 
     print(
