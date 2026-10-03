@@ -5,8 +5,8 @@
 ## 版本
 
 - 穩定執行環境：**v2.3**（PRODUCTION_CLOSED）
-- 下一版本：**v2.4**（C3_PROBLEM_LIBRARY_SPOILER_FIREWALL）
-- 目前階段：**C3｜題目庫與防劇透**
+- 下一版本：**v2.4**（C4_COGNITIVE_ORCHESTRATOR）
+- 目前階段：**C4｜認知編排器與 Today v2**
 
 ## 正式課程
 
