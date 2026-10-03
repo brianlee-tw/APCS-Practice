@@ -1,12 +1,11 @@
 {
   "schema_version": "apcs-cloudflare-operational-source-v1",
-  "status": "EXACT_PRODUCTION_BASELINE",
+  "status": "SCHEMA_COMPAT_PATCH_PENDING_DEPLOY",
   "worker": "apcs-rec-writeback",
   "production_version_number": 51,
   "production_version_id": "6c1e4f06-d7c5-4a33-91eb-9b788386a23d",
   "deployment_id": "e7641e63-7d35-4468-8369-5072b94b15f2",
   "source_path": "cloudflare/worker/src/index.mjs",
-  "source_sha256": "c4f2271c73a928a4dd757aaa160be303d3e555b0cfee80f156b2ca6956c7ba67",
   "recovery_source_path": "cloudflare/recovery/worker-51/index.mjs",
   "assets_path": "cloudflare/recovery/assets-51/public",
   "compatibility_date": "2026-08-25",
@@ -25,5 +24,17 @@
     "index_sha256": "33f3a26bce57aacdb0820dc79d3ea2962adda91383aa5ae2a303ac70ab412a28",
     "routing_sha256": "885e492b910ed1690c1255d7d73e163da5e8537ff74815c3043f856742011fe5"
   },
-  "mutation_policy": "Do not modify recovery snapshots. All future Worker edits occur under cloudflare/worker and require safe-release QA."
+  "mutation_policy": "Do not modify recovery snapshots. All future Worker edits occur under cloudflare/worker and require safe-release QA.",
+  "baseline_source_sha256": "c4f2271c73a928a4dd757aaa160be303d3e555b0cfee80f156b2ca6956c7ba67",
+  "production_runtime_status": "KNOWN_SCHEMA_INCOMPATIBILITY_ON_VERSION_51",
+  "pending_patch": {
+    "id": "rec-schema-compat-2026-10-03",
+    "reason": "REC-v3.1 live schema removed 進度狀態 and 複習日期, but Worker #51 still wrote them on fresh REC creation.",
+    "changes": [
+      "Remove v2.3 remote REC write to 進度狀態",
+      "Remove legacy HTML Direct REC write to 進度狀態",
+      "Remove legacy HTML Direct REC property write to 複習日期 while retaining review-date learner page-body text"
+    ],
+    "deployment_status": "NOT_DEPLOYED"
+  }
 }
