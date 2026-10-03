@@ -1,0 +1,57 @@
+{
+  "schema_version": "apcs-rec-schema-compat-production-receipt-1",
+  "date": "2026-10-03",
+  "worker": "apcs-rec-writeback",
+  "git_head": "4ce453b55cd61e54495d36edf1156753aac0d6b2",
+  "source_path": "cloudflare/worker/src/index.mjs",
+  "previous_baseline_version_number": 53,
+  "previous_baseline_version_id": "baffeed6-6fdf-476c-8940-68a116ff1fe7",
+  "production_version_number": 55,
+  "production_version_id": "a8a3e533-70a3-4b95-a34b-5ba22b6d75b3",
+  "deployment_id": "cfdc07b8-6a2b-45b4-8ec0-9812a4e9db78",
+  "production_percentage": 100,
+  "deployment_authority": "GET readback",
+  "write_key_rotation": {
+    "status": "PASS",
+    "production_version_number": 53,
+    "production_version_id": "baffeed6-6fdf-476c-8940-68a116ff1fe7",
+    "new_key_authenticated": true,
+    "stale_local_key_rejected": true,
+    "local_key_commit": "PASS"
+  },
+  "phase1": {
+    "fresh_candidate_upload": "PASS",
+    "production_host_override_at_zero_percent": "PASS",
+    "fresh_remote_rec_ev_create": "PASS",
+    "exact_remote_retry_idempotency": "PASS",
+    "fresh_html_direct_create": "PASS",
+    "exact_html_retry_idempotency": "PASS",
+    "deprecated_rec_property_writes_absent": true,
+    "review_date_body_text_preserved": true
+  },
+  "cleanup": {
+    "status": "PASS_0_LIVE_TEST_ROWS",
+    "rec_total_after_cleanup": 137,
+    "evidence_total_after_cleanup": 0,
+    "audit_trace_parent": "REC-v3.1 Direct Write Bridge｜Lesson Workspace → PB SSOT → REC-v3.1"
+  },
+  "phase2": {
+    "candidate_override_after_cleanup": "PASS",
+    "convergence_readback_1": "PASS",
+    "convergence_readback_2": "PASS",
+    "production_health": "PASS",
+    "production_routes": "PASS",
+    "production_auth": "PASS",
+    "system_audit": "PASS_KNOWN_PB_BACKLOG_ONLY"
+  },
+  "known_nonblocking_integrity_backlog": [
+    "PB-179 ACTIVE_DIFFICULTY_MISSING",
+    "PB-179 ACTIVE_SKILL_RELATION_MISSING",
+    "PB-180 ACTIVE_DIFFICULTY_MISSING",
+    "PB-180 ACTIVE_SKILL_RELATION_MISSING",
+    "PB-181 ACTIVE_DIFFICULTY_MISSING",
+    "PB-181 ACTIVE_SKILL_RELATION_MISSING"
+  ],
+  "preview_urls_post_release": "DISABLED",
+  "learner_readiness": "NOT_ASSESSED"
+}
