@@ -284,6 +284,33 @@ class ProblemEnrichmentV24Test(unittest.TestCase):
             DIFFERENTIAL_VERIFIED,
         )
 
+    def test_solution_change_invalidates_old_verification_receipt(self):
+        profiles, enrichment = self.make_stores()
+        self.add_candidate(profiles)
+        enrichment.create(
+            "zerojudge",
+            "d050",
+            self.payload(),
+            self.correct_solution,
+        )
+
+        enrichment.solution_path(
+            "zerojudge",
+            "d050",
+        ).write_text(
+            self.wrong_solution,
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(
+            ProblemEnrichmentError,
+            "舊驗證 receipt 失效",
+        ):
+            enrichment.load(
+                "zerojudge",
+                "d050",
+            )
+
     def test_oj_accepted_requires_external_reference(self):
         profiles, enrichment = self.make_stores()
         self.add_candidate(profiles)
