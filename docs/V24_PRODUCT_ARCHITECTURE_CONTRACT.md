@@ -194,11 +194,11 @@ v2.4 的 learner-facing 介面、教學文字與系統提示預設使用**繁體
 
 ---
 
-# 6｜學習者摩擦預算
+# 5｜學習者摩擦預算
 
 這是 v2.4 的硬性產品契約。
 
-## 4.1 啟動摩擦
+## 5.1 啟動摩擦
 
 從開啟 Control Center 到開始第一個今日任務：
 
@@ -214,7 +214,7 @@ Ctrl+Alt+A
 → 開始
 ```
 
-## 4.2 作答期間
+## 5.2 作答期間
 
 正式解題期間：
 
@@ -232,7 +232,7 @@ Ctrl+Alt+A
 
 不得再問一次。
 
-## 4.3 每題結束
+## 5.3 每題結束
 
 一般題目的 learner-facing 問題：
 
@@ -250,7 +250,7 @@ Independent?
 
 Novelty / Activity / Placement / Timed 若可由系統判定，不應要求學習者手填。
 
-## 4.4 每小時管理成本
+## 5.4 每小時管理成本
 
 60 分鐘學習 session 中：
 
@@ -258,7 +258,7 @@ Novelty / Activity / Placement / Timed 若可由系統判定，不應要求學�
 
 這是產品 KPI，不是 learner 的責任。
 
-## 4.5 新欄位准入規則
+## 5.5 新欄位准入規則
 
 任何新 learner-facing 欄位必須回答：
 
@@ -268,7 +268,7 @@ Novelty / Activity / Placement / Timed 若可由系統判定，不應要求學�
 
 **不收集。**
 
-## 4.6 Dashboard 原則
+## 5.6 Dashboard 原則
 
 - 不要求學習者每天看 dashboard；
 - dashboard 是解釋系統決策，不是另一份待辦；
@@ -280,7 +280,7 @@ Novelty / Activity / Placement / Timed 若可由系統判定，不應要求學�
 
 以下功能全部列入 v2.4 Core。
 
-## 5.1 題目智慧
+## 6.1 題目智慧
 
 建立跨 OJ 的題目整理、分類與教學 enrichment 能力。
 
@@ -300,7 +300,7 @@ Novelty / Activity / Placement / Timed 若可由系統判定，不應要求學�
 - 不知道適合 Guided / Core / Transfer / Mock；
 - 沒有一致的教學與提示層級。
 
-## 5.2 題目庫瀏覽與自然語言查找
+## 6.2 題目庫瀏覽與自然語言查找
 
 建立「我的題庫」入口，但不做複雜管理後台。
 
@@ -314,7 +314,7 @@ Novelty / Activity / Placement / Timed 若可由系統判定，不應要求學�
 
 > 找一題我沒做過、約 20 分鐘、5+5 程度、DFS/BFS 都可能，但不要透露方法。
 
-## 5.3 防劇透機制
+## 6.3 防劇透機制
 
 正式依 Activity 控制 learner 可見資訊。
 
@@ -348,7 +348,7 @@ Novelty / Activity / Placement / Timed 若可由系統判定，不應要求學�
 - 不透露方法；
 - 不透露 difficulty 解釋。
 
-## 5.4 提示階梯編譯
+## 6.4 提示階梯編譯
 
 Teaching-ready 題可建立：
 
@@ -365,7 +365,7 @@ A5 完整解法
 - ChatGPT 不臨時過度提示；
 - 提示內容與 Assistance evidence 一致。
 
-## 5.5 交錯與方法辨識
+## 6.5 交錯與方法辨識
 
 建立容易混淆的 Skill / Strategy 關係，例如：
 
@@ -384,7 +384,7 @@ A5 完整解法
 另外兩個方法為什麼不成立？
 ```
 
-## 5.6 自適應引導淡出
+## 6.6 自適應引導淡出
 
 系統依 Evidence 調整 scaffold：
 
@@ -403,7 +403,7 @@ Worked Example
 - A0 independent PASS：進 independent / transfer；
 - Transfer FAIL：先診斷 bottleneck，不直接退回完整解答。
 
-## 5.7 閉環修復系統
+## 6.7 閉環修復系統
 
 錯誤分類不得只做紀錄。
 
@@ -432,7 +432,7 @@ Repair 依 bottleneck 選：
 | Debugging | minimal failing case |
 | Exam Interface | timed decision drill |
 
-## 5.8 Today v2 認知編排
+## 6.8 Today v2 認知編排
 
 Today 不再只有 Review + New Learning。
 
@@ -460,7 +460,7 @@ Today 不再只有 Review + New Learning。
 
 選出少量高價值活動。
 
-## 5.9 Exam Runtime
+## 6.9 Exam Runtime
 
 建立正式考試執行模式：
 
@@ -496,7 +496,7 @@ Postmortem 只問最少必要資訊，例如主要失分原因：
 - complexity；
 - 時間配置。
 
-## 5.10 Calibration 基礎設施
+## 6.10 Calibration 基礎設施
 
 建立 Memory Policy 的離線校準能力，但不直接上 online ML。
 
@@ -519,7 +519,7 @@ real delayed evidence
 
 以下列入 v2.4 roadmap，但不阻塞版本完成。
 
-## 6.1 信心校準
+## 7.1 信心校準
 
 只在少量重要 activity sampling：
 
@@ -546,13 +546,13 @@ real delayed evidence
 - 直接影響 mastery；
 - 直接提高 readiness。
 
-## 6.2 Mental Effort
+## 7.2 Mental Effort
 
 「主觀心智負荷」可研究，但預設 OFF。
 
 只在小量 calibration activity 使用 1–5 分，若無明確學習價值，直接刪除。
 
-## 6.3 Misconception Candidate
+## 7.3 Misconception Candidate
 
 單次 typo / 粗心不建立長期弱點。
 
@@ -568,7 +568,7 @@ real delayed evidence
 
 需經 repair + transfer 後再判定是否仍存在。
 
-## 6.4 Learning Status v2
+## 7.4 Learning Status v2
 
 可增加：
 
@@ -631,7 +631,7 @@ v2.4 不做：
 
 題目智慧只處理「如何理解與使用題目」，不創造第二份 Problem identity。
 
-## 8.1 L0｜已索引
+## 9.1 L0｜已索引
 
 最小資料：
 
@@ -650,7 +650,7 @@ v2.4 不做：
 
 成本要低，可批次大量建立。
 
-## 8.2 L1｜已分類
+## 9.2 L1｜已分類
 
 增加 AI candidate：
 
@@ -670,7 +670,7 @@ v2.4 不做：
 - ambiguity 高時進 Needs QA；
 - 不要求 learner 手動補 metadata。
 
-## 8.3 L2｜教學就緒
+## 9.3 L2｜教學就緒
 
 只針對高價值題。
 
@@ -691,7 +691,7 @@ v2.4 不做：
 
 L2 不代表一定 Published。
 
-## 8.4 驗證層級
+## 9.4 驗證層級
 
 AI 產出的 solution / test 不得直接標「正確」。
 
@@ -712,7 +712,7 @@ AI Candidate
 - Differential Verified：代表與可信 oracle / brute force 對大量小測資一致；
 - OJ Accepted：才代表外部 Judge AC。
 
-## 8.5 Runtime eligibility 與內容品質分離
+## 9.5 Runtime eligibility 與內容品質分離
 
 題目可：
 
@@ -724,7 +724,7 @@ AI Candidate
 
 正式 placement 仍依現有 curriculum publish contract。
 
-## 8.6 Deep enrichment 觸發條件
+## 9.6 Deep enrichment 觸發條件
 
 不得對所有 Indexed 題生成完整教材。
 
