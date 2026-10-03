@@ -1,0 +1,69 @@
+{
+  "schema_version": "apcs-current-authority-v1",
+  "as_of": "2026-10-03",
+  "product": {
+    "stable_runtime": "v2.3",
+    "stable_runtime_status": "PRODUCTION_CLOSED",
+    "next_version": "v2.4",
+    "next_version_status": "C0_AUTHORITY_CONVERGENCE",
+    "next_version_contract": "docs/V24_PRODUCT_ARCHITECTURE_CONTRACT.md",
+    "learner_readiness": "NOT_ASSESSED"
+  },
+  "curriculum": {
+    "main_lessons": 52,
+    "units": 14,
+    "skills": 39,
+    "hosted_ui_version": "5.17.0",
+    "expansion_status": "FROZEN_UNLESS_EVIDENCE_REQUIRES_CHANGE"
+  },
+  "learner_runtime": {
+    "default_surface": "VS Code Control Center",
+    "tracks": [
+      "Reading",
+      "Implementation"
+    ],
+    "today_policy": "Skill × Track adaptive memory + capacity governor",
+    "evidence_authority": "Attempt + explicit Evidence",
+    "main_daily_entrypoints": [
+      "今日學習",
+      "題目庫（v2.4 規劃）",
+      "考試模式（v2.4 規劃）"
+    ]
+  },
+  "production": {
+    "worker": "apcs-rec-writeback",
+    "version_number": 58,
+    "version_id": "0eafa60d-6d4d-4edb-b1eb-ac6a9a3625b6",
+    "deployment_id": "220994e0-549b-4143-800e-44c089c3ba4a",
+    "source_authority_path": "cloudflare/worker/source-authority.json",
+    "preview_urls": "DISABLED",
+    "system_audit": "PASS_CLEAN",
+    "exceptions": 0,
+    "warnings": 0
+  },
+  "durable_records": {
+    "canonical_rec_count": 137,
+    "canonical_ev_count": 0,
+    "remote_writeback_status": "PRODUCTION_VERIFIED"
+  },
+  "current_work": {
+    "gate": "C0",
+    "goal": "Authority 與文件收斂",
+    "open_nonblocking": [
+      {
+        "issue": 32,
+        "scope": "真實 learner manual validation"
+      },
+      {
+        "issue": 40,
+        "scope": "Needs QA staging / content curation"
+      }
+    ]
+  },
+  "authority_paths": {
+    "current_project_authority": "docs/CURRENT_AUTHORITY.json",
+    "production_worker_authority": "cloudflare/worker/source-authority.json",
+    "v24_contract": "docs/V24_PRODUCT_ARCHITECTURE_CONTRACT.md",
+    "v23_architecture_history": "docs/ARCHITECTURE_V23.md"
+  }
+}
