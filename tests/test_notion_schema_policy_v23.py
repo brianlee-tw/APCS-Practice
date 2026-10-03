@@ -146,6 +146,32 @@ class NotionSchemaPolicyV23Test(unittest.TestCase):
             )
         )
 
+    def test_rec_legacy_fields_are_recorded_as_removed(self):
+        policy = json.loads(
+            (
+                ROOT
+                / "curriculum"
+                / "notion_schema_policy.v23.json"
+            ).read_text(
+                encoding="utf-8"
+            )
+        )
+        migration = policy["migration_state"]
+
+        for key in (
+            "rec_progress_status",
+            "rec_review_date",
+        ):
+            self.assertEqual(
+                migration[key]["classification"],
+                "REMOVED",
+            )
+            self.assertTrue(
+                migration[key][
+                    "live_schema_verified_absent"
+                ]
+            )
+
     def test_published_skill_contract_excludes_manual_learner_state(self):
         published = json.loads(
             (
