@@ -1947,6 +1947,8 @@ def attempt_envelope_for_record(
     placement=None,
     method_confirmed: bool | None = None,
     finished_at: dt.datetime | None = None,
+    track: str = "Implementation",
+    evidence_outcome: str | None = None,
 ):
     if action not in {"finish", "review"}:
         raise ValueError(
@@ -1981,10 +1983,33 @@ def attempt_envelope_for_record(
     evidence = []
     attempt_note = ""
 
+    if track not in {"Reading", "Implementation"}:
+        raise ValueError(
+            f"unsupported Evidence track={track!r}"
+        )
+
+    if track == "Reading":
+        if evidence_outcome not in {
+            "PASS",
+            "PARTIAL",
+            "FAIL",
+        }:
+            raise ValueError(
+                "Reading Evidence requires PASS/PARTIAL/FAIL outcome"
+            )
+        resolved_outcome = evidence_outcome
+    else:
+        resolved_outcome = (
+            "PASS"
+            if result == "AC"
+            else "FAIL"
+        )
+
     claim_allowed = (
         placement is not None
         and (
-            not placement.method_confirmation_required
+            track != "Implementation"
+            or not placement.method_confirmation_required
             or method_confirmed is True
         )
     )
@@ -1992,11 +2017,12 @@ def attempt_envelope_for_record(
     if claim_allowed:
         claim_note = (
             f"{activity or 'Practice'}"
-            f" · {result}"
+            f" · {resolved_outcome}"
         )
 
         if (
-            placement is not None
+            track == "Implementation"
+            and placement is not None
             and placement.method_confirmation_required
         ):
             claim_note += " · target method confirmed"
@@ -2004,17 +2030,14 @@ def attempt_envelope_for_record(
         evidence.append(
             (
                 placement.primary_skill,
-                "Implementation",
-                (
-                    "PASS"
-                    if result == "AC"
-                    else "FAIL"
-                ),
+                track,
+                resolved_outcome,
                 claim_note,
             )
         )
     elif (
-        placement is not None
+        track == "Implementation"
+        and placement is not None
         and placement.method_confirmation_required
     ):
         attempt_note = (
@@ -2051,6 +2074,7 @@ def evidence_context_menu(
     problem,
     *,
     initial: dict | None = None,
+    track: str = "Implementation",
 ):
     placement, placement_warning = (
         placement_for_record(
@@ -2141,7 +2165,8 @@ def evidence_context_menu(
         state["timed"] = timed
 
         if (
-            placement is not None
+            track == "Implementation"
+            and placement is not None
             and placement.method_confirmation_required
         ):
             method_confirmed = (
