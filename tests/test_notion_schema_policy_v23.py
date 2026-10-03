@@ -67,6 +67,7 @@ class NotionSchemaPolicyV23Test(unittest.TestCase):
         envelope = build_envelope(
             problem_id="ZJ-d067",
             pb_uid="PB-182",
+            started_at=None,
             finished_at=FINISHED,
             language="cpp",
             judge_result="AC",
