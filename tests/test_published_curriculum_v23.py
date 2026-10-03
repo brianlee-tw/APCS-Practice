@@ -102,6 +102,64 @@ class PublishedCurriculumV23Test(unittest.TestCase):
             set(),
         )
 
+    def test_every_published_placement_has_executable_evidence_policy(self):
+        role_caps = {
+            "Worked Example": 0,
+            "Guided Drill": 2,
+            "Core Independent": 3,
+            "Transfer Challenge": 4,
+            "Mock": 0,
+        }
+
+        for row in self.published["placements"]:
+            self.assertIn(
+                "evidence_level_cap",
+                row,
+            )
+            self.assertIn(
+                "method_confirmation_required",
+                row,
+            )
+            self.assertIsInstance(
+                row["evidence_level_cap"],
+                int,
+            )
+            self.assertIsInstance(
+                row["method_confirmation_required"],
+                bool,
+            )
+            self.assertGreaterEqual(
+                row["evidence_level_cap"],
+                0,
+            )
+            self.assertLessEqual(
+                row["evidence_level_cap"],
+                role_caps[row["role"]],
+            )
+
+    def test_learning_only_overrides_cannot_promote_to_im3(self):
+        by_pb = {
+            row["pb_uid"]: row
+            for row in self.published["placements"]
+        }
+
+        for pb_uid in (
+            "PB-91",
+            "PB-104",
+            "PB-116",
+        ):
+            self.assertEqual(
+                by_pb[pb_uid][
+                    "evidence_level_cap"
+                ],
+                2,
+            )
+            self.assertTrue(
+                by_pb[pb_uid][
+                    "method_confirmation_required"
+                ]
+            )
+
     def test_phase1b_condition_array_repairs_are_explicit(self):
         placements = {
             row["pb_uid"]: row
