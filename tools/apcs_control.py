@@ -748,47 +748,39 @@ def set_today_capacity_minutes(
 def today_capacity_menu(
     current_minutes: int,
 ) -> int | None:
-    options = []
-
-    for minutes in TODAY_CAPACITY_CHOICES:
-        if minutes <= 60:
-            section = "短時段"
-        elif minutes <= 120:
-            section = "標準時段"
-        elif minutes <= 180:
-            section = "長時段"
-        else:
-            section = "延長時段"
-
-        options.append(
-            {
-                "label": f"{minutes} 分鐘",
-                "detail": (
-                    "目前設定"
-                    if minutes == current_minutes
-                    else ""
-                ),
-                "enabled": True,
-                "action": "套用",
-                "section": section,
-            }
-        )
+    options = [
+        {
+            "label": f"{minutes} 分",
+            "detail": (
+                "目前設定"
+                if minutes == current_minutes
+                else ""
+            ),
+            "enabled": True,
+            "action": "套用",
+        }
+        for minutes
+        in TODAY_CAPACITY_CHOICES
+    ]
 
     selected_index = min(
-        range(len(TODAY_CAPACITY_CHOICES)),
+        range(
+            len(TODAY_CAPACITY_CHOICES)
+        ),
         key=lambda index: abs(
             TODAY_CAPACITY_CHOICES[index]
             - current_minutes
         ),
     )
 
-    selected = choose_menu(
+    selected = choose_grid(
         "今日學習 · 可用時間",
         options,
-        footer_numbers=False,
         back_text="返回今日學習",
         selected_index=selected_index,
         enter_text="套用",
+        wide_columns=5,
+        compact_columns=2,
     )
 
     if selected is None:
@@ -1804,6 +1796,8 @@ def choose_grid(
     selected_index: int | None = None,
     enter_text: str = "開啟",
     mode_toggle: bool = False,
+    wide_columns: int = 3,
+    compact_columns: int = 2,
 ):
     """Responsive spatial navigation for compact command-center choices.
 
@@ -1825,7 +1819,11 @@ def choose_grid(
         )
         return result
 
-    columns = 3 if width >= 86 else 2
+    columns = (
+        max(1, int(wide_columns))
+        if width >= 86
+        else max(1, int(compact_columns))
+    )
     rows = _grid_rows(
         options,
         columns,
