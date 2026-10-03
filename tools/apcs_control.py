@@ -4585,23 +4585,35 @@ def today_view(current_filename: str | None):
         and route.skill is not None
         and route.placement is not None
     ):
-        options.append(
-            {
-                "label": (
-                    "新學習 · "
-                    f"{route.skill.uid}"
-                    " · "
-                    f"{route.placement.role}"
-                ),
-                "detail": (
-                    f"{route.placement.lesson_uid}"
-                    f" · {route.placement.problem_id}"
-                ),
-                "enabled": True,
-                "kind": "new",
-                "route": route,
-            }
+        supported_tracks = set(
+            route.skill.tracks
         )
+
+        for track in (
+            "Reading",
+            "Implementation",
+        ):
+            if track not in supported_tracks:
+                continue
+
+            options.append(
+                {
+                    "label": (
+                        "新學習 · "
+                        f"{route.skill.uid}"
+                        f" × {track}"
+                    ),
+                    "detail": (
+                        f"{route.placement.role}"
+                        f" · {route.placement.lesson_uid}"
+                        f" · {route.placement.problem_id}"
+                    ),
+                    "enabled": True,
+                    "kind": "new",
+                    "track": track,
+                    "route": route,
+                }
+            )
 
     for candidate in plan.selected:
         options.append(
@@ -4676,6 +4688,10 @@ def today_view(current_filename: str | None):
         return _start_new_learning(
             option["route"],
             current_filename,
+            track=option.get(
+                "track",
+                "Implementation",
+            ),
         )
 
     return _start_adaptive_review(
@@ -5467,48 +5483,90 @@ def closed_screen() -> None:
     print()
 
 
+def record_action_state(
+    problem,
+) -> tuple[bool, bool, str, str]:
+    """Return Finish/Review enablement for the current learner surface."""
+
+    if not problem:
+        return (
+            False,
+            False,
+            "需先開啟 APCS 題目檔案",
+            "需先開啟 APCS 題目檔案",
+        )
+
+    if problem.get("published_runtime"):
+        runtime_action = problem.get(
+            "runtime_action"
+        )
+        track = (
+            problem.get("runtime_track")
+            or "Implementation"
+        )
+
+        if runtime_action == "review":
+            return (
+                False,
+                True,
+                "此 runtime scratch 是 Review",
+                f"記錄 {track} Review Evidence",
+            )
+
+        if runtime_action == "finish":
+            return (
+                True,
+                False,
+                f"記錄 {track} New Learning Evidence",
+                "此 runtime scratch 是 New Learning",
+            )
+
+    state = problem.get("state")
+    solved = bool(
+        state
+        and state.solved_on
+    )
+
+    return (
+        not solved,
+        solved,
+        (
+            "首次 AC 後記錄掌握程度"
+            if not solved
+            else "已標記 AC；後續請使用「複習題目」"
+        ),
+        (
+            "重做後更新 Result、Recall 與 Evidence"
+            if solved
+            else "需先完成題目並取得 AC"
+        ),
+    )
+
+
 def main() -> int:
     filename = sys.argv[1] if len(sys.argv) >= 2 else None
 
     while True:
         problem = current_problem(filename)
 
+        (
+            finish_enabled,
+            review_enabled,
+            finish_detail,
+            review_detail,
+        ) = record_action_state(
+            problem
+        )
+
         if problem:
-            state = problem.get("state")
-            solved = bool(
-                state
-                and state.solved_on
-            )
-
-            finish_enabled = not solved
-            review_enabled = solved
-
             note = ROOT / "notes" / f"{problem['id']}.md"
-
             note_detail = (
                 "已建立；選取後直接開啟"
                 if note.exists()
                 else "尚未建立；選取後建立並開啟"
             )
-
-            finish_detail = (
-                "首次 AC 後記錄掌握程度"
-                if finish_enabled
-                else "已標記 AC；後續請使用「複習題目」"
-            )
-
-            review_detail = (
-                "重做後更新 Result、Recall 與 Evidence"
-                if review_enabled
-                else "需先完成題目並取得 AC"
-            )
-
         else:
-            finish_enabled = False
-            review_enabled = False
             note_detail = "需先開啟 APCS 題目檔案"
-            finish_detail = "需先開啟 APCS 題目檔案"
-            review_detail = "需先開啟 APCS 題目檔案"
 
         changes = git_changes()
 
