@@ -1,4 +1,6 @@
+import datetime as dt
 import io
+import tempfile
 import types
 import unittest
 from contextlib import redirect_stdout
@@ -12,6 +14,7 @@ from tools.runtime_curriculum import PlacementContext
 def problem(*, action="finish"):
     return {
         "id": "d050",
+        "title": "d050 妳那裡現在幾點了？",
         "path": Path("/tmp/d050.cpp"),
         "published_runtime": True,
         "runtime_action": action,
@@ -337,6 +340,247 @@ class C8LearnerUxTest(unittest.TestCase):
         self.assertEqual(
             summary,
             "DFS · D3 · ZeroJudge · 未做 · 獨立練習 · 有教學資料",
+        )
+
+
+    def test_menu_footer_uses_context_action_instead_of_execute(self):
+        output = io.StringIO()
+
+        with (
+            patch.object(
+                control,
+                "read_key",
+                return_value="q",
+            ),
+            redirect_stdout(output),
+        ):
+            control.choose_menu(
+                "測試",
+                [
+                    {
+                        "label": "題目",
+                        "detail": "查看詳細內容",
+                        "enabled": True,
+                        "action": "查看",
+                    }
+                ],
+            )
+
+        rendered = output.getvalue()
+        self.assertIn(
+            "Enter 查看",
+            rendered,
+        )
+        self.assertNotIn(
+            "Enter 執行",
+            rendered,
+        )
+
+    def test_today_capacity_override_is_daily_and_15_minute_granularity(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = (
+                Path(temp)
+                / "today_capacity.json"
+            )
+            on_date = dt.date(
+                2026,
+                10,
+                4,
+            )
+
+            with (
+                patch.object(
+                    control,
+                    "TODAY_CAPACITY_PATH",
+                    path,
+                ),
+                patch.dict(
+                    "os.environ",
+                    {
+                        "APCS_SESSION_MINUTES": "60",
+                    },
+                    clear=False,
+                ),
+            ):
+                control.set_today_capacity_minutes(
+                    75,
+                    on_date=on_date,
+                )
+
+                self.assertEqual(
+                    control.session_capacity_minutes(
+                        on_date
+                    ),
+                    75,
+                )
+                self.assertEqual(
+                    control.session_capacity_minutes(
+                        on_date
+                        + dt.timedelta(days=1)
+                    ),
+                    60,
+                )
+
+                with self.assertRaises(
+                    ValueError
+                ):
+                    control.set_today_capacity_minutes(
+                        70,
+                        on_date=on_date,
+                    )
+
+    def test_capacity_picker_is_fixed_15_minute_steps(self):
+        with patch.object(
+            control,
+            "choose_menu",
+            return_value=3,
+        ) as menu:
+            value = (
+                control.today_capacity_menu(
+                    60
+                )
+            )
+
+        self.assertEqual(value, 60)
+        options = menu.call_args.args[1]
+        self.assertEqual(
+            [
+                int(
+                    option["label"]
+                    .split()[0]
+                )
+                for option in options
+            ],
+            list(
+                range(
+                    15,
+                    241,
+                    15,
+                )
+            ),
+        )
+        self.assertEqual(
+            options[3]["detail"],
+            "目前設定",
+        )
+
+    def test_filter_view_has_explicit_live_result_action(self):
+        def item(problem_id):
+            return types.SimpleNamespace(
+                external_id=problem_id,
+                source="zerojudge",
+                difficulty="D1",
+                attempted=False,
+                role="Guided Drill",
+                has_l2=True,
+                primary_skill="S01_IO",
+                supporting_skills=(),
+            )
+
+        calls = []
+
+        def choose(title, options, **kwargs):
+            calls.append(
+                (
+                    title,
+                    options,
+                    kwargs,
+                )
+            )
+            return None
+
+        with (
+            patch.object(
+                control.PROBLEM_LIBRARY,
+                "items",
+                return_value=[
+                    item("a001"),
+                    item("a002"),
+                ],
+            ),
+            patch.object(
+                control,
+                "choose_menu",
+                side_effect=choose,
+            ),
+        ):
+            control._problem_library_filter_view()
+
+        options = calls[0][1]
+        self.assertEqual(
+            options[0]["label"],
+            "瀏覽全部 · 2 題",
+        )
+        self.assertEqual(
+            options[0]["action"],
+            "查看",
+        )
+        self.assertEqual(
+            options[0]["section"],
+            "目前結果",
+        )
+
+    def test_control_dashboard_is_responsive(self):
+        plan = types.SimpleNamespace(
+            budget_minutes=18,
+            selected=(),
+            selected_minutes=0,
+        )
+        route = types.SimpleNamespace(
+            skill=types.SimpleNamespace(
+                uid="S01_IO"
+            )
+        )
+        snapshot = {
+            "capacity_minutes": 60,
+            "plan": plan,
+            "new_learning": route,
+            "curriculum_blocker": None,
+            "warning": None,
+        }
+
+        wide = io.StringIO()
+        with (
+            patch(
+                "tools.apcs_control.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=100
+                ),
+            ),
+            redirect_stdout(wide),
+        ):
+            control.print_control_dashboard(
+                problem(),
+                snapshot,
+            )
+
+        self.assertIn(
+            "│",
+            wide.getvalue(),
+        )
+
+        narrow = io.StringIO()
+        with (
+            patch(
+                "tools.apcs_control.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=50
+                ),
+            ),
+            redirect_stdout(narrow),
+        ):
+            control.print_control_dashboard(
+                problem(),
+                snapshot,
+            )
+
+        self.assertNotIn(
+            "│",
+            narrow.getvalue(),
+        )
+        self.assertIn(
+            "今日規劃",
+            narrow.getvalue(),
         )
 
 
