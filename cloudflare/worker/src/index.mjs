@@ -1744,7 +1744,6 @@ async function writeRemoteBundle(env, body, requestOrigin) {
       "紀錄性質": { select: { name: "正式紀錄" } },
       "學習歷程候選": { checkbox: false },
       "Independent Known": { checkbox: a.independent !== null },
-      "進度狀態": { select: { name: a.judgeResult === "AC" ? "已完成" : "進行中" } },
       "Attempt Finished At": { date: { start: a.finishedAt } }
     };
     if (a.startedAt !== null) properties["Attempt Started At"] = { date: { start: a.startedAt } };
@@ -1877,7 +1876,6 @@ async function writeRecord(env, body, requestOrigin) {
     "\u5617\u8A66\u6B21\u6578": { number: attempts },
     "\u89E3\u984C\u6642\u9593(\u5206\u9418)": { number: timeMin },
     "\u5B78\u7FD2\u968E\u6BB5": { select: { name: stage } },
-    "\u9032\u5EA6\u72C0\u614B": { select: { name: result === "AC" ? "\u5DF2\u5B8C\u6210" : "\u9032\u884C\u4E2D" } },
     "\u932F\u8AA4\u985E\u578B": { multi_select: errors.map((name) => ({ name })) },
     "\u6838\u5FC3\u6536\u7A6B": { rich_text: takeaway ? [{ text: { content: takeaway } }] : [] },
     "Writeback ID": { rich_text: [{ text: { content: writebackId } }] },
@@ -1885,9 +1883,6 @@ async function writeRecord(env, body, requestOrigin) {
     "\u7D00\u9304\u6027\u8CEA": { select: { name: recordKind } },
     "\u5B78\u7FD2\u6B77\u7A0B\u5019\u9078": { checkbox: false }
   };
-  if (/^\d{4}-\d{2}-\d{2}$/.test(reviewDate)) {
-    properties["\u8907\u7FD2\u65E5\u671F"] = { date: { start: reviewDate } };
-  }
   const page = await notionFetch(env, "/pages", {
     method: "POST",
     body: JSON.stringify({
