@@ -729,32 +729,31 @@ def set_today_capacity_minutes(
 def today_capacity_menu(
     current_minutes: int,
 ) -> int | None:
-    sections = {
-        15: "短時段",
-        75: "標準時段",
-        135: "長時段",
-        195: "延長時段",
-    }
     options = []
 
     for minutes in TODAY_CAPACITY_CHOICES:
-        option = {
-            "label": f"{minutes} 分鐘",
-            "detail": (
-                "目前設定"
-                if minutes == current_minutes
-                else "以 15 分鐘為單位"
-            ),
-            "enabled": True,
-            "action": "套用",
-        }
+        if minutes <= 60:
+            section = "短時段"
+        elif minutes <= 120:
+            section = "標準時段"
+        elif minutes <= 180:
+            section = "長時段"
+        else:
+            section = "延長時段"
 
-        if minutes in sections:
-            option["section"] = sections[
-                minutes
-            ]
-
-        options.append(option)
+        options.append(
+            {
+                "label": f"{minutes} 分鐘",
+                "detail": (
+                    "目前設定"
+                    if minutes == current_minutes
+                    else ""
+                ),
+                "enabled": True,
+                "action": "套用",
+                "section": section,
+            }
+        )
 
     selected_index = min(
         range(len(TODAY_CAPACITY_CHOICES)),
@@ -7537,6 +7536,7 @@ def _problem_library_results_view(
             options,
             footer_numbers=False,
             back_text="返回題目庫",
+            enter_text="查看",
         )
 
         if selected is None:
@@ -7900,24 +7900,28 @@ def problem_library_view() -> None:
                 "detail": "依目前 Today 學習路徑，優先找尚未做且適合直接開始的題目",
                 "enabled": True,
                 "section": "快速開始",
+                "action": "查看",
             },
             {
                 "label": "分類找題",
                 "detail": "用學習主題、難度、來源、作答狀態、練習用途逐步篩選",
                 "enabled": True,
                 "section": "瀏覽題庫",
+                "action": "設定",
             },
             {
                 "label": "題號／題名搜尋",
                 "detail": "已知道題目時使用；只輸入一般關鍵字",
                 "enabled": True,
                 "section": "瀏覽題庫",
+                "action": "搜尋",
             },
             {
                 "label": "全部題目",
                 "detail": "不套條件，直接瀏覽完整題庫",
                 "enabled": True,
                 "section": "瀏覽題庫",
+                "action": "查看",
             },
         ]
 
