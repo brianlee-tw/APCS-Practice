@@ -85,6 +85,8 @@ class RuntimeCurriculumV23Test(unittest.TestCase):
                     "role": "Core Independent",
                     "lesson_uid": "L-PFX-01",
                     "lesson_order": 2,
+                    "evidence_level_cap": 3,
+                    "method_confirmation_required": False,
                 },
                 {
                     "placement_uid": "PL-002",
@@ -94,6 +96,8 @@ class RuntimeCurriculumV23Test(unittest.TestCase):
                     "role": "Transfer Challenge",
                     "lesson_uid": "L-PSV-02",
                     "lesson_order": 3,
+                    "evidence_level_cap": 2,
+                    "method_confirmation_required": True,
                 },
             ],
             "stats": {},
@@ -155,6 +159,50 @@ class RuntimeCurriculumV23Test(unittest.TestCase):
         self.assertEqual(
             first.role,
             "Core Independent",
+        )
+
+    def test_runtime_exposes_evidence_policy(self):
+        self.write_snapshot(
+            self.base_snapshot()
+        )
+        runtime = RuntimeCurriculum(
+            self.snapshot
+        )
+
+        primary = runtime.placement_by_uid(
+            "PL-001"
+        )
+        transfer = runtime.placement_by_uid(
+            "PL-002"
+        )
+
+        self.assertEqual(
+            primary.evidence_level_cap,
+            3,
+        )
+        self.assertFalse(
+            primary.method_confirmation_required
+        )
+        self.assertEqual(
+            transfer.evidence_level_cap,
+            2,
+        )
+        self.assertTrue(
+            transfer.method_confirmation_required
+        )
+        self.assertEqual(
+            runtime.evidence_level_cap(
+                pb_uid="PB-001",
+                skill_uid="S30_Complexity",
+            ),
+            2,
+        )
+        self.assertEqual(
+            runtime.evidence_level_cap(
+                pb_uid="PB-404",
+                skill_uid="S404",
+            ),
+            0,
         )
 
     def test_unknown_problem_returns_empty(self):

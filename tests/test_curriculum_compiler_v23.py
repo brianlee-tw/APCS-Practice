@@ -150,6 +150,64 @@ class CurriculumCompilerV23Test(unittest.TestCase):
             ["PL-001"],
         )
 
+    def test_placement_policy_defaults_from_role_and_problem_risk(self):
+        source = valid_source()
+        source["problems"][0][
+            "alternate_solution_risk"
+        ] = "High"
+
+        result = compile_source(source)
+        placement = result["placements"][0]
+
+        self.assertEqual(
+            placement["evidence_level_cap"],
+            3,
+        )
+        self.assertTrue(
+            placement[
+                "method_confirmation_required"
+            ]
+        )
+
+    def test_explicit_learning_only_cap_is_preserved(self):
+        source = valid_source()
+        source["placements"][0][
+            "evidence_level_cap"
+        ] = 2
+
+        result = compile_source(source)
+
+        self.assertEqual(
+            result["placements"][0][
+                "evidence_level_cap"
+            ],
+            2,
+        )
+
+    def test_evidence_cap_cannot_exceed_role_cap(self):
+        source = valid_source()
+        source["placements"][0][
+            "evidence_level_cap"
+        ] = 4
+
+        with self.assertRaisesRegex(
+            CurriculumError,
+            "exceeds role cap",
+        ):
+            validate_source(source)
+
+    def test_method_confirmation_override_must_be_boolean(self):
+        source = valid_source()
+        source["placements"][0][
+            "method_confirmation_required"
+        ] = "yes"
+
+        with self.assertRaisesRegex(
+            CurriculumError,
+            "must be boolean",
+        ):
+            validate_source(source)
+
     def test_published_problem_requires_difficulty(self):
         source = valid_source()
         source["problems"][0]["difficulty"] = ""

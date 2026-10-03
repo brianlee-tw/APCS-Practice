@@ -72,6 +72,18 @@ The outbox deliberately does **not** infer Evidence from all Problem Tags.
 An AC on a Prefix Sum problem does not automatically prove every supporting
 Skill.
 
+Published Placement policy further constrains explicit claims:
+
+- `evidence_level_cap` bounds how far one claim may promote an RM/IM
+  lower bound;
+- `method_confirmation_required` prevents a legal alternate solution from
+  being mislabeled as evidence for the placement's Primary Skill;
+- when target-method confirmation is false, the Attempt remains durable but
+  no Primary Skill Evidence claim is emitted.
+
+This preserves the distinction between "the learner solved the Problem" and
+"this attempt observed the intended Skill".
+
 ## Unknown facts stay unknown
 
 This is intentional:

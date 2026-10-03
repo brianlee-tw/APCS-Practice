@@ -35,6 +35,13 @@ The bundle preserves exact attempt facts: attempt/writeback identity, PB UID, Pr
 
 Unknown facts remain unknown. They are not defaulted.
 
+A Published attempt may legitimately contain zero Evidence items.  This occurs
+when the learner completed the Problem with a legal method that does not
+demonstrate the placement's Primary Skill.  Such an envelope remains a durable
+REC attempt and is not converted into fabricated EV-v1 evidence.  The client
+therefore accepts a complete identity-matching receipt with an empty expected
+Evidence set.
+
 ## Relation resolution
 
 The client sends canonical PB UID / Skill UID / writeback ID, not Notion page URLs. The trusted Worker resolves those identities against live Problem Bank, Skill Map, and REC-v3.1 SSOT. Repository Tags, titles, relation order, and stale page IDs are not relation authority.

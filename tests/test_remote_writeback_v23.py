@@ -371,6 +371,49 @@ class RemoteWritebackV23Test(
                 envelope
             )
 
+    def test_zero_evidence_attempt_projects_rec_only_and_accepts_empty_receipt_set(self):
+        bundle = build_remote_writeback_bundle(
+            sample_envelope(
+                evidence=[],
+            )
+        )
+
+        self.assertEqual(
+            bundle.evidence,
+            (),
+        )
+
+        projection = notion_projection(
+            bundle
+        )
+        self.assertEqual(
+            projection["evidence"],
+            [],
+        )
+        self.assertEqual(
+            projection["rec"]["relations"]["skill_uids"],
+            [],
+        )
+
+        receipt = {
+            "schema_version": "v2.3-remote-receipt-1",
+            "writeback_id": bundle.writeback_id,
+            "complete": True,
+            "rec": {
+                "page_id": "rec-page-zero-ev",
+                "duplicate": False,
+            },
+            "evidence": [],
+        }
+
+        self.assertEqual(
+            validate_remote_receipt(
+                bundle,
+                receipt,
+            ),
+            receipt,
+        )
+
     def test_projection_is_deterministic_for_same_envelope(self):
         envelope = sample_envelope()
 

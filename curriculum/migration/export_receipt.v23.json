@@ -1,8 +1,8 @@
 {
   "schema_version": "v2.3-export-receipt-1",
-  "captured_on": "2026-10-02",
-  "curriculum_version": "2026-10-02-publish-2",
-  "authority": "Notion manual Markdown & CSV export, plus exact live Notion readback of post-export authoring repairs and Phase 1B evidence-coverage additions.",
+  "captured_on": "2026-10-03",
+  "curriculum_version": "2026-10-03-publish-3",
+  "authority": "Notion manual Markdown & CSV export, exact live Notion readback of post-export authoring repairs, Phase 1B evidence-coverage additions, and reviewed deterministic evidence-policy projection.",
   "exports": [
     {
       "filename": "8865cc10-f5b8-4ead-a011-ed5de9562e94_ExportBlock-1d70b074-6353-4817-bcbb-5e3edfbb4829.zip",
@@ -70,5 +70,22 @@
     "U-GPH X01-X04 are excluded from this first main-lesson projection.",
     "L-MIX-04 is portfolio-only and has no Formal OJ placement by design.",
     "Primary Skill is never inferred from legacy relation order."
-  ]
+  ],
+  "evidence_policy_projection": {
+    "version": "evidence-policy-v1",
+    "role_caps": {
+      "Worked Example": 0,
+      "Guided Drill": 2,
+      "Core Independent": 3,
+      "Transfer Challenge": 4,
+      "Mock": 0
+    },
+    "method_confirmation_rule": "Medium/High Alternate Solution Risk on Core/Transfer requires explicit target-method confirmation.",
+    "learning_only_overrides": {
+      "PB-91": 2,
+      "PB-104": 2,
+      "PB-116": 2
+    },
+    "note": "No Problem/Placement count changed from publish-2. This revision makes existing Notion evidence semantics executable in the Published runtime contract."
+  }
 }
