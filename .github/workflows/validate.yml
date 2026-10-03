@@ -21,8 +21,15 @@ jobs:
         with:
           python-version: '3.12'
 
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
       - name: Run learning-engine regression tests
         run: python -m unittest discover -s tests -v
+
+      - name: Run diagnostic-site regression tests
+        run: node --test site/tests/engine.test.mjs
 
       - name: Enforce APCS validation warning budget
         run: python tools/quality_gate.py --validate-only

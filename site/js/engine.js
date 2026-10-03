@@ -1,14 +1,36 @@
 const DIMENSIONS = ["syntax", "reading", "debug", "algorithm", "implementation"];
 
-export function selectBalancedQuestions(questions, count) {
+export function selectBalancedQuestions(questions, count, variant = 0) {
   if (![5, 10, 15].includes(count)) throw new Error(`Unsupported quiz count: ${count}`);
+  if (!Number.isInteger(variant) || variant < 0) throw new Error(`Invalid diagnostic variant: ${variant}`);
+
   const perDimension = count / DIMENSIONS.length;
-  const selected = [];
-  for (const dimension of DIMENSIONS) {
+  const byDimension = new Map();
+
+  for (const [dimensionIndex, dimension] of DIMENSIONS.entries()) {
     const pool = questions.filter((q) => q.dimension === dimension);
     if (pool.length < perDimension) throw new Error(`Not enough questions for ${dimension}: need ${perDimension}`);
-    selected.push(...pool.slice(0, perDimension));
+
+    const offset = (variant + dimensionIndex) % pool.length;
+    const picked = [];
+
+    for (let index = 0; index < perDimension; index += 1) {
+      picked.push(pool[(offset + index) % pool.length]);
+    }
+
+    byDimension.set(dimension, picked);
   }
+
+  // Interleave dimensions instead of presenting one dimension as a block.
+  // This keeps 5/10/15 modes exactly balanced while repeat attempts rotate
+  // deterministically through the small diagnostic bank.
+  const selected = [];
+  for (let round = 0; round < perDimension; round += 1) {
+    for (const dimension of DIMENSIONS) {
+      selected.push(byDimension.get(dimension)[round]);
+    }
+  }
+
   return selected;
 }
 
@@ -153,6 +175,9 @@ export function validateQuestionBank(bank) {
     }
     if (!q.explanation) errors.push(`${where}: missing explanation`);
     if (!q.domain) errors.push(`${where}: missing domain`);
+    if (!Number.isInteger(q.difficulty) || q.difficulty < 1 || q.difficulty > 5) {
+      errors.push(`${where}: difficulty must be integer 1-5`);
+    }
   }
 
   for (const d of DIMENSIONS) {

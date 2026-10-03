@@ -29,9 +29,11 @@ Ctrl+Alt+A
 
 APCS 控制中心提供：
 
-- **今日學習**：依 Skill × Track retention 與今日容量安排 adaptive review，同時保留新學習時間。
-- **完成題目**：首次 AC 後記錄 Recall 與解題分鐘數。
-- **複習題目**：記錄 AC / WA / TLE / RE / MLE / CE、Recall 與分鐘數。
+- **今日學習**：依 Skill × Track retention 與今日容量安排 adaptive review，同時保留新學習時間；Published Placement 可啟動 Reading 或 Implementation activity。
+- **學習狀態**：查看 durable Evidence、Reading / Implementation 分布、Remote ACK / Pending、Skill × Track retention 與 capacity；不宣告 readiness。
+- **完成題目**：Implementation 記錄 Judge result / Recall；Reading 先完成 formal response，再記錄 PASS / PARTIAL / FAIL Evidence。
+- **複習題目**：Implementation 使用空白 retrieval scratch；Reading 使用 response-first scratch，兩者都回到同一 Evidence / adaptive-memory path。
+- **題目資料**：管理 Problem metadata，並列出、開啟或新增同一題的多份 solution；Complexity 綁定實際 solution path。
 - **題目筆記**：建立或開啟 `notes/<id>.md`。
 - **檢查與提交**：檢視 Git 變更、stage、commit，以及確認後 push。
 
@@ -139,9 +141,15 @@ v2.2 以 `data/problems.csv` 與 `data/solutions.csv` 作為靜態 metadata 的�
 
 ## 自動化
 
-- Control Center 建立 commit 前：完整 regression、whitespace check、Catalog / learning validation、warning-budget gate。
-- Pull Request / main push：完整 regression、warning-budget validation，以及本次修改 solution 的 syntax check。
+- Control Center 建立 commit 前：Python learning-runtime regression + diagnostic-site Node regression + whitespace check + Catalog / learning validation + warning-budget gate。
+- Pull Request / main push：Python regression、diagnostic-site Node regression、warning-budget validation，以及本次修改 solution 的 syntax check。
 - main 更新後：安全重新產生 README、Problem Index、Review Queue，只 stage generated artifacts。
+
+## Standalone diagnostic site
+
+`site/` 是獨立的匿名能力診斷 surface，**不是 v2.3 Learning Runtime**。它的 `site/data/skill-model.v1.json` 只服務 diagnostic UI，明確設定 `scope = diagnostic-only` 與 `readinessAuthority = false`；不得拿來取代 Skill Map v3、REC/EV、Skill × Track memory 或 RR/IR readiness。
+
+完整 authority boundary 見 [site/README.md](./site/README.md)。
 
 ## Historical folders
 
