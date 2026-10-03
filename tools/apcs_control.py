@@ -1193,20 +1193,20 @@ def choose_menu(
                 print(f"{GRAY}今日學習{RESET}")
                 print(
                     f"容量 {snapshot['capacity_minutes']} min"
-                    f" · Review budget {plan.budget_minutes} min"
+                    f" · 複習預算 {plan.budget_minutes} min"
                 )
 
                 if plan.selected:
                     print(
                         f"{YELLOW}"
-                        f"Adaptive review {len(plan.selected)} 項"
+                        f"到期複習 {len(plan.selected)} 項"
                         f" · {plan.selected_minutes} min"
                         f"{RESET}"
                     )
                 else:
                     print(
                         f"{GREEN}"
-                        "✓ 今天沒有已選定的 adaptive review"
+                        "✓ 今天沒有安排到期複習"
                         f"{RESET}"
                     )
 
@@ -1300,8 +1300,16 @@ def choose_menu(
                 print(f"{GRAY}  ↑ 還有 {start} 項{RESET}")
                 print()
 
+            last_section = None
+
             for index in range(start, end):
                 option = options[index]
+                section = option.get("section")
+
+                if section and section != last_section:
+                    print(f"{GRAY}{section}{RESET}")
+                    last_section = section
+
                 enabled = option.get("enabled", True)
                 prefix = "›" if index == selected else " "
                 number = index + 1
@@ -6084,31 +6092,93 @@ def git_center() -> None:
 # Problem Library
 # ============================================================
 
+def _recommended_problem_items(limit: int = 30):
+    """依目前 route 找尚未做的候選，不建立第二套推薦 truth。"""
+
+    skill_uid = None
+    try:
+        snapshot = adaptive_today_snapshot()
+        route = snapshot.get("new_learning")
+        if (
+            route is not None
+            and route.skill is not None
+        ):
+            skill_uid = route.skill.uid
+    except Exception:
+        skill_uid = None
+
+    if skill_uid:
+        items = PROBLEM_LIBRARY.search(
+            skill=skill_uid,
+            attempted=False,
+            require_l2=True,
+            limit=limit,
+        )
+        if not items:
+            items = PROBLEM_LIBRARY.search(
+                skill=skill_uid,
+                attempted=False,
+                limit=limit,
+            )
+        if items:
+            return items, f"目前學習路徑 {skill_uid} · 尚未做"
+
+    return (
+        PROBLEM_LIBRARY.search(
+            attempted=False,
+            limit=limit,
+        ),
+        "尚未做 · 依題庫穩定排序",
+    )
+
+
 def problem_library_view() -> None:
     clear()
     heading("題目庫")
     print()
     print(
         f"{GRAY}"
-        "只顯示安全資訊；遷移題 / 模擬題在作答前不揭露方法。"
+        "直接輸入題號、題名、Skill 或條件；遷移題 / 模擬題仍受防劇透保護。"
         f"{RESET}"
+    )
+    print_wrapped(
+        "例：dfs 未做、D2 source:cses、tag:prefix、role:transfer、l2；"
+        "輸入「推薦」會依目前學習路徑找尚未做的題。",
+        ui_width() - 2,
+        color=GRAY,
     )
     print()
 
     query = prompt_text(
-        "搜尋題號或題名（Enter 顯示全部）"
+        "搜尋（Enter 顯示全部）"
     )
     if query is None:
         return
 
-    items = PROBLEM_LIBRARY.search(
-        query or "",
-        limit=30,
-    )
+    recommendation_reason = None
+    if (query or "").strip().casefold() in {
+        "推薦",
+        "recommend",
+    }:
+        items, recommendation_reason = (
+            _recommended_problem_items(
+                limit=30
+            )
+        )
+    else:
+        items = PROBLEM_LIBRARY.smart_search(
+            query or "",
+            limit=30,
+        )
 
     if not items:
         print()
         print(f"{YELLOW}沒有符合條件的題目。{RESET}")
+        print_wrapped(
+            "可嘗試移除一個條件，或使用 skill:/tag:、source:、D1–D5、未做/已做。",
+            ui_width() - 2,
+            color=GRAY,
+        )
         pause()
         return
 
@@ -6122,18 +6192,32 @@ def problem_library_view() -> None:
         difficulty = safe.get("difficulty") or "—"
         state = "做過" if item.attempted else "未做"
         l2 = " · 有教學資料" if item.has_l2 else ""
+        visible_skill = safe.get("primary_skill")
+        skill_text = (
+            f" · {visible_skill}"
+            if visible_skill
+            else ""
+        )
         options.append(
             {
                 "label": f"{item.external_id} · {item.title}",
                 "detail": (
-                    f"{item.source} · {difficulty} · {state}{l2}"
+                    f"{item.source} · {difficulty} · {state}"
+                    f"{skill_text}{l2}"
                 ),
                 "enabled": True,
             }
         )
 
+    if recommendation_reason:
+        print()
+        print(
+            f"{CYAN}推薦依據：{recommendation_reason}{RESET}"
+        )
+        print()
+
     selected = choose_menu(
-        "題目庫",
+        "題目庫 · 搜尋結果",
         options,
         footer_numbers=True,
         back_text="返回控制中心",
@@ -6581,43 +6665,51 @@ def main() -> int:
         options = [
             {
                 "label": "今日學習",
-                "detail": "Adaptive review + 保留新學習容量",
+                "detail": "自適應複習 + 保留新學習容量",
                 "enabled": True,
+                "section": "主要入口",
             },
             {
                 "label": "題目庫",
-                "detail": "搜尋外部題目 · 自動防劇透",
+                "detail": "搜尋 / Skill / 難度 / 來源 / 未做 · 自動防劇透",
                 "enabled": True,
+                "section": "主要入口",
             },
             {
                 "label": "考試模式",
-                "detail": "計時 mixed practice · 自動記錄執行時間點",
+                "detail": "計時混合練習 · 自動記錄執行時間點",
                 "enabled": True,
-            },
-            {
-                "label": "學習狀態",
-                "detail": "Evidence、Retention、Capacity、Remote ACK",
-                "enabled": True,
-            },
-            {
-                "label": "題目資料",
-                "detail": "新增題目、編輯 metadata、建立 solution",
-                "enabled": True,
+                "section": "主要入口",
             },
             {
                 "label": "完成題目",
                 "detail": finish_detail,
                 "enabled": finish_enabled,
+                "section": "目前題目",
             },
             {
                 "label": "複習題目",
                 "detail": review_detail,
                 "enabled": review_enabled,
+                "section": "目前題目",
             },
             {
                 "label": "題目筆記",
                 "detail": note_detail,
                 "enabled": problem is not None,
+                "section": "目前題目",
+            },
+            {
+                "label": "學習狀態",
+                "detail": "證據、記憶、容量、同步",
+                "enabled": True,
+                "section": "工具",
+            },
+            {
+                "label": "題目資料",
+                "detail": "新增題目、編輯 metadata、建立 solution",
+                "enabled": True,
+                "section": "工具",
             },
             {
                 "label": "檢查與提交",
@@ -6627,6 +6719,7 @@ def main() -> int:
                     else "目前 Git 工作區乾淨"
                 ),
                 "enabled": True,
+                "section": "工具",
             },
         ]
 
@@ -6651,19 +6744,19 @@ def main() -> int:
             exam_center()
 
         elif selected == 3:
-            learning_status_view()
-
-        elif selected == 4:
-            filename = catalog_center(problem, filename)
-
-        elif selected == 5:
             record_problem("finish", problem)
 
-        elif selected == 6:
+        elif selected == 4:
             record_problem("review", problem)
 
-        elif selected == 7:
+        elif selected == 5:
             open_note(problem)
+
+        elif selected == 6:
+            learning_status_view()
+
+        elif selected == 7:
+            filename = catalog_center(problem, filename)
 
         elif selected == 8:
             git_center()
