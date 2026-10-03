@@ -22,12 +22,12 @@
       "Reading",
       "Implementation"
     ],
-    "today_policy": "Skill × Track adaptive memory + capacity governor",
+    "today_policy": "Skill × Track adaptive memory + capacity governor + cognitive orchestrator",
     "evidence_authority": "Attempt + explicit Evidence",
     "main_daily_entrypoints": [
       "今日學習",
-      "題目庫（v2.4 規劃）",
-      "考試模式（v2.4 規劃）"
+      "題目庫",
+      "考試模式"
     ]
   },
   "production": {
