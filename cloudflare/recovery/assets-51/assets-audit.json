@@ -1,0 +1,52 @@
+{
+  "schema": "apcs-public-assets-audit-v1-summary",
+  "status": "PASS_WITH_INACTIVE_ASSETS",
+  "source": {
+    "origin": "historical canonical Worker public.zip",
+    "source_zip_sha256": "c522e23b11ee19265e27c1054dd091ef51507073d9483da538faa4528b6cb080",
+    "files_total": 356,
+    "bytes_total": 4653706,
+    "tree_fingerprint_sha256": "75dc24a326ebde8833962e4c0c6c0aaf3579acf69ef05860ee7ab99511253cb6",
+    "tree_fingerprint_scope": "recovered public/ snapshot; not a Cloudflare-native asset hash"
+  },
+  "canonical_workspace": {
+    "path": "public/_internal/l-fnd-01.html",
+    "sha256": "0f19c5ea09f9d2c763820af457385f277b5ff3413870fe11e0a0693be06b0d44",
+    "expected_sha256": "0f19c5ea09f9d2c763820af457385f277b5ff3413870fe11e0a0693be06b0d44",
+    "match": true,
+    "inline_style_sha256": "bb2c8963a7164b902b952605ab208613db9ccaf0a28cae263a6ba26d70f26f4b",
+    "expected_inline_style_sha256": "bb2c8963a7164b902b952605ab208613db9ccaf0a28cae263a6ba26d70f26f4b",
+    "style_match": true
+  },
+  "production_parity": {
+    "worker_version": 51,
+    "version_id": "6c1e4f06-d7c5-4a33-91eb-9b788386a23d",
+    "deployment_id": "e7641e63-7d35-4468-8369-5072b94b15f2",
+    "public_headers_matches_version51_raw_headers": true,
+    "lesson_workspaces": {
+      "present": 52,
+      "expected": 52
+    },
+    "labs": {
+      "product_referenced": 163,
+      "legacy_preserved": 45,
+      "active_union": 208,
+      "expected_active": 208
+    }
+  },
+  "security": {
+    "unsafe_zip_paths": 0,
+    "case_insensitive_duplicate_paths": 0,
+    "secret_pattern_hit_files": 0
+  },
+  "inactive_historical_assets_preserved": [
+    "public/labs/index.html",
+    "public/labs/psv04-correctness-boundary.html",
+    "public/labs/psv04-necessary-sufficient.html"
+  ],
+  "notes": [
+    "This summary was committed after the original local audit JSON copy step failed because the JSON file was not present in Downloads.",
+    "The recovered public/ tree itself was committed unchanged from the verified ZIP.",
+    "No production deployment, version upload, binding change, secret mutation, learner evidence mutation, or curriculum mutation occurred."
+  ]
+}
