@@ -29,7 +29,7 @@
   "mutation_policy": "Do not modify recovery snapshots. All future Worker edits occur under cloudflare/worker and require safe-release QA.",
   "baseline_source_sha256": "c4f2271c73a928a4dd757aaa160be303d3e555b0cfee80f156b2ca6956c7ba67",
   "production_runtime_status": "READING_NA_WRITEBACK_VERIFIED_ON_VERSION_58",
-  "preview_urls_status": "PENDING_MANUAL_DISABLE",
+  "preview_urls_status": "DISABLED_POST_RELEASE",
   "credential_rotation": {
     "status": "PASS",
     "version_number": 53,
@@ -60,7 +60,7 @@
     "convergence_readback_2": "PASS",
     "production_qa": "PASS",
     "system_audit": "PASS_CLEAN",
-    "preview_urls_post_release": "PENDING_MANUAL_DISABLE",
+    "preview_urls_post_release": "DISABLED",
     "learner_readiness": "NOT_ASSESSED"
   },
   "known_nonblocking_integrity_backlog": [],
