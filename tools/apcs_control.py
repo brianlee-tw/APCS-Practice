@@ -2869,7 +2869,6 @@ def record_problem(action: str, problem) -> None:
         if action == "finish"
         else "複習題目"
     )
-
     result = "AC"
     score = None
     minutes = None
@@ -2877,7 +2876,7 @@ def record_problem(action: str, problem) -> None:
     finish_complexity = None
     complexity_solution = None
 
-    if action == "finish":
+    if action == "finish" and not published_runtime:
         try:
             complexity_solution = (
                 missing_finish_complexity(
@@ -2896,11 +2895,18 @@ def record_problem(action: str, problem) -> None:
             pause()
             return
 
-    step = (
-        "result"
-        if action == "review"
-        else "recall"
-    )
+    if published_runtime:
+        step = (
+            "result"
+            if action == "review"
+            else "evidence"
+        )
+    else:
+        step = (
+            "result"
+            if action == "review"
+            else "recall"
+        )
 
     while True:
         if step == "result":
@@ -2922,7 +2928,11 @@ def record_problem(action: str, problem) -> None:
             ):
                 score = None
 
-            step = "recall"
+            step = (
+                "evidence"
+                if published_runtime
+                else "recall"
+            )
             continue
 
         if step == "recall":
@@ -2962,15 +2972,29 @@ def record_problem(action: str, problem) -> None:
             continue
 
         if step == "evidence":
-            selected_context = (
-                evidence_context_menu(
-                    action,
-                    problem,
-                    initial=evidence_context,
+            if published_runtime:
+                selected_context = (
+                    published_evidence_context_menu(
+                        action,
+                        problem,
+                        initial=evidence_context,
+                    )
                 )
-            )
+            else:
+                selected_context = (
+                    evidence_context_menu(
+                        action,
+                        problem,
+                        initial=evidence_context,
+                    )
+                )
 
             if selected_context is RECORD_BACK:
+                if published_runtime:
+                    if action == "review":
+                        step = "result"
+                        continue
+                    return
                 step = "minutes"
                 continue
 
@@ -3038,15 +3062,22 @@ def record_problem(action: str, problem) -> None:
                 f"{color}{result}{RESET}"
             )
 
-        print(f"Recall  {score}")
-        print(
-            "耗時    "
-            + (
-                f"{minutes} 分鐘"
-                if minutes is not None
-                else "未記錄"
+        if published_runtime:
+            print(
+                f"{GRAY}"
+                "紀錄      Published Runtime · 只詢問必要 learner facts"
+                f"{RESET}"
             )
-        )
+        else:
+            print(f"Recall  {score}")
+            print(
+                "耗時    "
+                + (
+                    f"{minutes} 分鐘"
+                    if minutes is not None
+                    else "未記錄"
+                )
+            )
 
         if complexity_solution is not None:
             print(
