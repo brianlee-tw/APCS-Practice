@@ -88,22 +88,26 @@
   "migration_state": {
     "rec_progress_status": {
       "field": "進度狀態",
-      "classification": "MIGRATE-FIRST",
+      "classification": "REMOVED",
       "observed_nonempty_rows": 75,
       "observed_formal_rows_with_value": 0,
-      "note": "Historical system-test/legacy values must be archived before property removal.",
+      "note": "75 historical system-test/legacy values archived before removal; 0 formal learner rows. Property removed from live REC-v3.1 schema.",
       "archive_status": "COMPLETE",
       "archive_path": "curriculum/migration/rec_legacy_progress_status_archive.v23.json",
       "archive_rows": 75,
-      "formal_learner_rows": 0
+      "formal_learner_rows": 0,
+      "removed_on": "2026-10-03",
+      "live_schema_verified_absent": true
     },
     "rec_review_date": {
       "field": "複習日期",
-      "classification": "REMOVE",
+      "classification": "REMOVED",
       "observed_nonempty_rows": 0,
       "observed_formal_rows_with_value": 0,
-      "note": "Adaptive Skill x Track scheduling fully replaces this REC-level date.",
-      "remove_ready": true
+      "note": "Property had 0 populated rows and no runtime consumer; removed from live REC-v3.1 schema.",
+      "remove_ready": true,
+      "removed_on": "2026-10-03",
+      "live_schema_verified_absent": true
     },
     "skill_manual_state": {
       "fields": [
