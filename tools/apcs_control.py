@@ -1158,6 +1158,7 @@ def choose_menu(
     footer_numbers=True,
     back_text: str | None = None,
     selected_index: int | None = None,
+    enter_text: str | None = None,
 ):
     if (
         selected_index is not None
@@ -1342,7 +1343,9 @@ def choose_menu(
                 detail = option.get("detail", "")
 
                 if detail:
-                    detail_color = GRAY if enabled else RED
+                    # Disabled is unavailable context, not an error.
+                    # Reserve red for actual failure / destructive warnings.
+                    detail_color = GRAY
                     print_wrapped(
                         detail,
                         max(1, ui_width() - 5),
@@ -1363,15 +1366,29 @@ def choose_menu(
 
             rule()
 
+            selected_action = (
+                options[selected].get("action")
+                or enter_text
+                or ("開啟" if main else "選擇")
+            )
+
             if main:
-                print(f"{GRAY}↑↓ 選擇 · Enter 執行{RESET}")
+                print(
+                    f"{GRAY}"
+                    f"↑↓ 選擇 · Enter {selected_action}"
+                    f"{RESET}"
+                )
                 print(
                     f"{GRAY}"
                     f"1–{len(options)} 直達 · Esc / Q 關閉"
                     f"{RESET}"
                 )
             else:
-                print(f"{GRAY}↑↓ 選擇 · Enter 執行{RESET}")
+                print(
+                    f"{GRAY}"
+                    f"↑↓ 選擇 · Enter {selected_action}"
+                    f"{RESET}"
+                )
                 label = back_text or "返回控制中心"
                 print(f"{GRAY}Esc / Q {label}{RESET}")
 
