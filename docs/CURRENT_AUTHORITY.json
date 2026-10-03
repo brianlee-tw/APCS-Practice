@@ -5,7 +5,7 @@
     "stable_runtime": "v2.3",
     "stable_runtime_status": "PRODUCTION_CLOSED",
     "next_version": "v2.4",
-    "next_version_status": "C5_LEARNER_MODEL_V2",
+    "next_version_status": "C6_EXAM_RUNTIME",
     "next_version_contract": "docs/V24_PRODUCT_ARCHITECTURE_CONTRACT.md",
     "learner_readiness": "NOT_ASSESSED"
   },
@@ -47,8 +47,8 @@
     "remote_writeback_status": "PRODUCTION_VERIFIED"
   },
   "current_work": {
-    "gate": "C5",
-    "goal": "學習者模型 v2",
+    "gate": "C6",
+    "goal": "考試模式",
     "open_nonblocking": [
       {
         "issue": 32,
