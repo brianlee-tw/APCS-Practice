@@ -16,6 +16,9 @@ EXPECTED_BASELINE_SHA = (
     "c4f2271c73a928a4dd757aaa160be303"
     "d3e555b0cfee80f156b2ca6956c7ba67"
 )
+EXPECTED_SCHEMA_VERSION_ID = "a8a3e533-70a3-4b95-a34b-5ba22b6d75b3"
+EXPECTED_SCHEMA_DEPLOYMENT_ID = "cfdc07b8-6a2b-45b4-8ec0-9812a4e9db78"
+EXPECTED_SCHEMA_SOURCE_COMMIT = "4ce453b55cd61e54495d36edf1156753aac0d6b2"
 EXPECTED_PRODUCTION_VERSION_ID = "0eafa60d-6d4d-4edb-b1eb-ac6a9a3625b6"
 EXPECTED_DEPLOYMENT_ID = "220994e0-549b-4143-800e-44c089c3ba4a"
 EXPECTED_SOURCE_COMMIT = "0be65f2ab4ca44ea089aa48afc63ef09afd1778f"
@@ -97,6 +100,14 @@ class CloudflareOperationalSourceTests(unittest.TestCase):
             "attempts, timeMin, stage, errors, takeaway, reviewDate })",
             source,
         )
+        self.assertIn(
+            'new Set(["N/A", "AC", "WA", "CE", "RE", "TLE", "MLE"])',
+            source,
+        )
+        self.assertIn(
+            'a.judgeResult === "N/A" ? "未提交/未知" : a.judgeResult',
+            source,
+        )
 
     def test_schema_compat_release_receipt(self) -> None:
         receipt = json.loads(SCHEMA_RECEIPT.read_text(encoding="utf-8"))
@@ -108,10 +119,16 @@ class CloudflareOperationalSourceTests(unittest.TestCase):
         self.assertEqual(receipt["production_version_number"], 55)
         self.assertEqual(
             receipt["production_version_id"],
-            EXPECTED_PRODUCTION_VERSION_ID,
+            EXPECTED_SCHEMA_VERSION_ID,
         )
-        self.assertEqual(receipt["deployment_id"], EXPECTED_DEPLOYMENT_ID)
-        self.assertEqual(receipt["git_head"], EXPECTED_SOURCE_COMMIT)
+        self.assertEqual(
+            receipt["deployment_id"],
+            EXPECTED_SCHEMA_DEPLOYMENT_ID,
+        )
+        self.assertEqual(
+            receipt["git_head"],
+            EXPECTED_SCHEMA_SOURCE_COMMIT,
+        )
         self.assertEqual(
             receipt["cleanup"]["status"],
             "PASS_0_LIVE_TEST_ROWS",
