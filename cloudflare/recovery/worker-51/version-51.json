@@ -1,0 +1,112 @@
+﻿{
+  "id": "6c1e4f06-d7c5-4a33-91eb-9b788386a23d",
+  "number": 51,
+  "metadata": {
+    "created_on": "2026-10-02T10:37:50.663338Z",
+    "source": "api",
+    "author_id": "1f65d8ece4d5578b0c71bd2fac7fcaaa",
+    "author_email": "main.1h9k2@gmail.com",
+    "has_preview": true
+  },
+  "annotations": {
+    "workers/message": "APCS v2.3 remote-writeback clean release candidate",
+    "workers/tag": "apcs-v23-remote-writeback-clean-rc",
+    "workers/triggered_by": "version_upload"
+  },
+  "resources": {
+    "script": {
+      "etag": "451cc6e594964e9c912a4f5ca86aaf25fcfaf6cd9371dda9a52718956dee21ee",
+      "handlers": [
+        "fetch"
+      ],
+      "last_deployed_from": "api"
+    },
+    "script_runtime": {
+      "assets": {
+        "headers": {
+          "version": 2,
+          "rules": {
+            "/*": {
+              "set": {
+                "permissions-policy": "camera=(), microphone=(), geolocation=(), payment=()",
+                "referrer-policy": "no-referrer",
+                "x-content-type-options": "nosniff",
+                "x-robots-tag": "noindex, nofollow"
+              },
+              "unset": []
+            },
+            "/assets/*": {
+              "set": {
+                "cache-control": "public, max-age=3600"
+              },
+              "unset": []
+            },
+            "/labs/*": {
+              "set": {
+                "cache-control": "no-cache, must-revalidate",
+                "content-security-policy": "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors https://app.notion.com https://www.notion.so https://*.notion.so https://*.notion.site"
+              },
+              "unset": []
+            },
+            "/visuals/*": {
+              "set": {
+                "cache-control": "no-cache, must-revalidate",
+                "content-security-policy": "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors https://app.notion.com https://www.notion.so https://*.notion.so https://*.notion.site"
+              },
+              "unset": []
+            },
+            "/workspace*": {
+              "set": {
+                "cache-control": "no-cache, must-revalidate",
+                "content-security-policy": "default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors https://app.notion.com https://www.notion.so https://*.notion.so https://*.notion.site"
+              },
+              "unset": []
+            }
+          }
+        },
+        "raw_headers": "/*\n  X-Robots-Tag: noindex, nofollow\n  X-Content-Type-Options: nosniff\n  Referrer-Policy: no-referrer\n  Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()\n\n/workspace*\n  Cache-Control: no-cache, must-revalidate\n  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors https://app.notion.com https://www.notion.so https://*.notion.so https://*.notion.site\n\n/labs/*\n  Cache-Control: no-cache, must-revalidate\n  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self' 'unsafe-inline'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors https://app.notion.com https://www.notion.so https://*.notion.so https://*.notion.site\n\n/assets/*\n  Cache-Control: public, max-age=3600\n\n/visuals/*\n  Cache-Control: no-cache, must-revalidate\n  Content-Security-Policy: default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; connect-src 'self'; img-src 'self' data:; object-src 'none'; base-uri 'none'; frame-ancestors https://app.notion.com https://www.notion.so https://*.notion.so https://*.notion.site\n",
+        "static_routing": {
+          "user_worker": [
+            "/api/*",
+            "/learn/*",
+            "/_internal/*",
+            "/workspace-v5-5",
+            "/workspace-v5-5.html",
+            "/visuals/skill/*",
+            "/visuals/unit/*"
+          ]
+        },
+        "serve_directly": true,
+        "raw_run_worker_first": [
+          "/api/*",
+          "/learn/*",
+          "/_internal/*",
+          "/workspace-v5-5",
+          "/workspace-v5-5.html",
+          "/visuals/skill/*",
+          "/visuals/unit/*"
+        ],
+        "base_path": "/"
+      },
+      "compatibility_date": "2026-08-25",
+      "compatibility_flags": [
+        "nodejs_compat"
+      ],
+      "usage_model": "standard"
+    },
+    "bindings": [
+      {
+        "name": "ASSETS",
+        "type": "assets"
+      },
+      {
+        "name": "NOTION_API_TOKEN",
+        "type": "secret_text"
+      },
+      {
+        "name": "WRITE_KEY",
+        "type": "secret_text"
+      }
+    ]
+  }
+}
