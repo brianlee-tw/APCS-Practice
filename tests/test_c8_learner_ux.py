@@ -195,5 +195,150 @@ class C8LearnerUxTest(unittest.TestCase):
         self.assertNotIn("最低 R 優先", rendered)
 
 
+    def test_problem_library_entry_is_choice_first_not_query_first(self):
+        with (
+            patch.object(
+                control,
+                "choose_menu",
+                return_value=None,
+            ) as menu,
+            patch.object(
+                control,
+                "prompt_text",
+                side_effect=AssertionError(
+                    "entry must not force text search"
+                ),
+            ),
+        ):
+            control.problem_library_view()
+
+        options = menu.call_args.args[1]
+        self.assertEqual(
+            [item["label"] for item in options],
+            [
+                "推薦給我",
+                "分類找題",
+                "題號／題名搜尋",
+                "全部題目",
+            ],
+        )
+
+    def test_skill_navigation_groups_all_skills_by_unit(self):
+        groups = (
+            control._problem_library_skill_groups()
+        )
+
+        self.assertEqual(
+            sum(
+                len(group["skills"])
+                for group in groups
+            ),
+            39,
+        )
+        self.assertLessEqual(
+            max(
+                len(group["skills"])
+                for group in groups
+            ),
+            7,
+        )
+        self.assertIn(
+            "基礎語法與函式",
+            {
+                group["label"]
+                for group in groups
+            },
+        )
+        self.assertIn(
+            "圖論與樹",
+            {
+                group["label"]
+                for group in groups
+            },
+        )
+
+    def test_skill_filter_never_surfaces_unseen_transfer_or_mock(self):
+        def item(
+            *,
+            problem_id,
+            role,
+            attempted,
+        ):
+            return types.SimpleNamespace(
+                external_id=problem_id,
+                source="zerojudge",
+                difficulty="D2",
+                primary_skill="S18_DFS",
+                supporting_skills=(),
+                role=role,
+                attempted=attempted,
+                has_l2=False,
+            )
+
+        items = [
+            item(
+                problem_id="guided",
+                role="Guided Drill",
+                attempted=False,
+            ),
+            item(
+                problem_id="transfer",
+                role="Transfer Challenge",
+                attempted=False,
+            ),
+            item(
+                problem_id="mock",
+                role="Mock",
+                attempted=False,
+            ),
+            item(
+                problem_id="old-transfer",
+                role="Transfer Challenge",
+                attempted=True,
+            ),
+        ]
+
+        filtered = (
+            control._problem_library_filter_items(
+                items,
+                {
+                    "skill_uids": (
+                        "S18_DFS",
+                    ),
+                },
+            )
+        )
+
+        self.assertEqual(
+            [
+                value.external_id
+                for value in filtered
+            ],
+            [
+                "guided",
+                "old-transfer",
+            ],
+        )
+
+    def test_filter_summary_is_human_readable(self):
+        summary = (
+            control._problem_library_filter_summary(
+                {
+                    "skill_label": "DFS",
+                    "difficulty": "D3",
+                    "source": "zerojudge",
+                    "attempted": False,
+                    "role": "Core Independent",
+                    "require_l2": True,
+                }
+            )
+        )
+
+        self.assertEqual(
+            summary,
+            "DFS · D3 · ZeroJudge · 未做 · 獨立練習 · 有教學資料",
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
