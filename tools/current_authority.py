@@ -107,11 +107,16 @@ def validate_authority(authority: dict, worker: dict) -> None:
         )
 
 
-def render_summary(authority: dict) -> str:
+def render_summary(authority: dict, *, from_docs: bool = False) -> str:
     product = authority["product"]
     curriculum = authority["curriculum"]
     production = authority["production"]
     current_work = authority["current_work"]
+    contract_link = (
+        "./V24_PRODUCT_ARCHITECTURE_CONTRACT.md"
+        if from_docs
+        else "./docs/V24_PRODUCT_ARCHITECTURE_CONTRACT.md"
+    )
 
     return "\n".join(
         [
@@ -138,7 +143,7 @@ def render_summary(authority: dict) -> str:
                 "- 學習準備度："
                 f"`LEARNER_READINESS = {product['learner_readiness']}`。"
             ),
-            "- v2.4 正式契約：[`docs/V24_PRODUCT_ARCHITECTURE_CONTRACT.md`](./docs/V24_PRODUCT_ARCHITECTURE_CONTRACT.md)。",
+            f"- v2.4 正式契約：[`docs/V24_PRODUCT_ARCHITECTURE_CONTRACT.md`]({contract_link})。",
         ]
     )
 
@@ -223,9 +228,12 @@ def replace_between(text: str, start: str, end: str, body: str) -> str:
 
 def sync_current_authority() -> None:
     authority = load_current_authority()
-    summary = render_summary(authority)
+    summaries = {
+        README_PATH: render_summary(authority, from_docs=False),
+        V23_ARCH_PATH: render_summary(authority, from_docs=True),
+    }
 
-    for path in (README_PATH, V23_ARCH_PATH):
+    for path, summary in summaries.items():
         current = path.read_text(encoding="utf-8")
         path.write_text(
             replace_between(current, START, END, summary),
