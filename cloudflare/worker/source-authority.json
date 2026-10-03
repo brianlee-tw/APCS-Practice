@@ -2,11 +2,11 @@
   "schema_version": "apcs-cloudflare-operational-source-v1",
   "status": "PRODUCTION_ACTIVE",
   "worker": "apcs-rec-writeback",
-  "production_version_number": 55,
-  "production_version_id": "a8a3e533-70a3-4b95-a34b-5ba22b6d75b3",
-  "deployment_id": "cfdc07b8-6a2b-45b4-8ec0-9812a4e9db78",
-  "production_source_git_commit": "4ce453b55cd61e54495d36edf1156753aac0d6b2",
-  "production_source_blob_sha": "feb6796acafe1c6eeb5335da64c081bcadd8d3ec",
+  "production_version_number": 58,
+  "production_version_id": "0eafa60d-6d4d-4edb-b1eb-ac6a9a3625b6",
+  "deployment_id": "220994e0-549b-4143-800e-44c089c3ba4a",
+  "production_source_git_commit": "0be65f2ab4ca44ea089aa48afc63ef09afd1778f",
+  "production_source_blob_sha": "a510d1956e4d51eaed082ca37c5dd69bb1450474",
   "source_path": "cloudflare/worker/src/index.mjs",
   "recovery_source_path": "cloudflare/recovery/worker-51/index.mjs",
   "assets_path": "cloudflare/recovery/assets-51/public",
@@ -28,7 +28,7 @@
   },
   "mutation_policy": "Do not modify recovery snapshots. All future Worker edits occur under cloudflare/worker and require safe-release QA.",
   "baseline_source_sha256": "c4f2271c73a928a4dd757aaa160be303d3e555b0cfee80f156b2ca6956c7ba67",
-  "production_runtime_status": "SCHEMA_COMPAT_VERIFIED_ON_VERSION_55",
+  "production_runtime_status": "READING_NA_WRITEBACK_VERIFIED_ON_VERSION_58",
   "preview_urls_status": "DISABLED_POST_RELEASE",
   "credential_rotation": {
     "status": "PASS",
@@ -38,44 +38,53 @@
     "new_key_authenticated": true
   },
   "release": {
-    "id": "rec-schema-compat-2026-10-03",
-    "previous_production_version_number": 53,
-    "previous_production_version_id": "baffeed6-6fdf-476c-8940-68a116ff1fe7",
-    "production_version_number": 55,
-    "production_version_id": "a8a3e533-70a3-4b95-a34b-5ba22b6d75b3",
-    "deployment_id": "cfdc07b8-6a2b-45b4-8ec0-9812a4e9db78",
-    "source_git_commit": "4ce453b55cd61e54495d36edf1156753aac0d6b2",
-    "phase1_fresh_rec_ev": "PASS",
+    "id": "reading-na-writeback-2026-10-03",
+    "previous_production_version_number": 55,
+    "previous_production_version_id": "a8a3e533-70a3-4b95-a34b-5ba22b6d75b3",
+    "production_version_number": 58,
+    "production_version_id": "0eafa60d-6d4d-4edb-b1eb-ac6a9a3625b6",
+    "deployment_id": "220994e0-549b-4143-800e-44c089c3ba4a",
+    "source_git_commit": "0be65f2ab4ca44ea089aa48afc63ef09afd1778f",
+    "version_url_gate": "WAIVED_CLOUDFLARE_ROUTER_1042_WITH_RANDOM_ALIAS_CONTROL",
+    "phase1_fresh_reading_rec_ev": "PASS",
     "phase1_exact_retry": "PASS",
-    "phase1_html_direct": "PASS",
-    "notion_cleanup": "PASS_0_LIVE_TEST_ROWS",
-    "candidate_override_after_cleanup": "PASS",
+    "phase1_html_direct_regression": "PASS",
+    "remote_rec_result": "未提交/未知",
+    "remote_ev_track": "Reading",
+    "remote_ev_judge_result": "N/A",
+    "remote_ev_outcome": "PARTIAL",
+    "remote_ev_valid_for_gate": false,
+    "notion_cleanup": "PASS_MOVED_OUT_AND_AUDIT_0_LIVE_TEST_ROWS",
+    "candidate_override_after_cleanup": "PASS_CLEAN_INTEGRITY",
     "convergence_readback_1": "PASS",
     "convergence_readback_2": "PASS",
     "production_qa": "PASS",
-    "system_audit": "PASS_KNOWN_PB_BACKLOG_ONLY",
+    "system_audit": "PASS_CLEAN",
     "preview_urls_post_release": "DISABLED",
     "learner_readiness": "NOT_ASSESSED"
   },
-  "known_nonblocking_integrity_backlog": [
-    "PB-179 ACTIVE_DIFFICULTY_MISSING",
-    "PB-179 ACTIVE_SKILL_RELATION_MISSING",
-    "PB-180 ACTIVE_DIFFICULTY_MISSING",
-    "PB-180 ACTIVE_SKILL_RELATION_MISSING",
-    "PB-181 ACTIVE_DIFFICULTY_MISSING",
-    "PB-181 ACTIVE_SKILL_RELATION_MISSING"
-  ],
+  "known_nonblocking_integrity_backlog": [],
   "pending_patch": {
-    "id": "rec-schema-compat-2026-10-03",
-    "reason": "REC-v3.1 live schema removed 進度狀態 and 複習日期, but Worker #51 still wrote them on fresh REC creation.",
+    "id": "reading-na-writeback-2026-10-03",
+    "reason": "The v2.3 Reading runtime records non-judge attempts as Judge Result N/A; Worker #55 did not yet accept that remote transport contract.",
     "changes": [
-      "Remove v2.3 remote REC write to 進度狀態",
-      "Remove legacy HTML Direct REC write to 進度狀態",
-      "Remove legacy HTML Direct REC property write to 複習日期 while retaining review-date learner page-body text"
+      "Accept remote Judge Result N/A for Reading attempts",
+      "Preserve EV-v1 Judge Result N/A and Track Reading",
+      "Project REC-v3.1 latest result to 未提交/未知 instead of fabricating judge success"
     ],
     "deployment_status": "DEPLOYED_AND_VERIFIED",
+    "production_version_number": 58,
+    "production_version_id": "0eafa60d-6d4d-4edb-b1eb-ac6a9a3625b6",
+    "deployment_id": "220994e0-549b-4143-800e-44c089c3ba4a"
+  },
+  "previous_release": {
+    "id": "rec-schema-compat-2026-10-03",
     "production_version_number": 55,
     "production_version_id": "a8a3e533-70a3-4b95-a34b-5ba22b6d75b3",
-    "deployment_id": "cfdc07b8-6a2b-45b4-8ec0-9812a4e9db78"
-  }
+    "deployment_id": "cfdc07b8-6a2b-45b4-8ec0-9812a4e9db78",
+    "status": "CLOSED"
+  },
+  "known_nonblocking_staging_backlog": [
+    "Issue #40 retains Needs QA content-curation rows; staging rows are fail-closed and do not affect production integrity."
+  ]
 }

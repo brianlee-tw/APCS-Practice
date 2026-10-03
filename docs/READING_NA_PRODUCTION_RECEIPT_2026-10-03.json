@@ -1,0 +1,59 @@
+{
+  "schema_version": "apcs-reading-na-production-receipt-1",
+  "date": "2026-10-03",
+  "worker": "apcs-rec-writeback",
+  "git_head": "0be65f2ab4ca44ea089aa48afc63ef09afd1778f",
+  "source_path": "cloudflare/worker/src/index.mjs",
+  "previous_production_version_number": 55,
+  "previous_production_version_id": "a8a3e533-70a3-4b95-a34b-5ba22b6d75b3",
+  "production_version_number": 58,
+  "production_version_id": "0eafa60d-6d4d-4edb-b1eb-ac6a9a3625b6",
+  "deployment_id": "220994e0-549b-4143-800e-44c089c3ba4a",
+  "production_percentage": 100,
+  "deployment_authority": "GET readback",
+  "version_url_gate": {
+    "status": "WAIVED_CLOUDFLARE_ROUTER_1042_WITH_RANDOM_ALIAS_CONTROL",
+    "rationale": "Candidate Version URL and a random nonexistent alias returned the same Cloudflare 404/1042 router fingerprint before application execution; exact candidate QA therefore used candidate@0 with production-host version override."
+  },
+  "phase1": {
+    "fresh_candidate_upload": "PASS",
+    "candidate_zero_percent_override": "PASS",
+    "fresh_reading_rec_ev_create": "PASS",
+    "exact_retry_idempotency": "PASS",
+    "html_direct_regression": "PASS",
+    "remote_rec_result": "未提交/未知",
+    "remote_ev_track": "Reading",
+    "remote_ev_judge_result": "N/A",
+    "remote_ev_outcome": "PARTIAL",
+    "remote_ev_valid_for_gate": false
+  },
+  "cleanup": {
+    "status": "PASS_MOVED_OUT_AND_AUDIT_0_LIVE_TEST_ROWS",
+    "remote_rec_page_id": "3ee43be9-58cd-8157-9afc-fb9e31026a58",
+    "remote_ev_page_id": "3ee43be9-58cd-81b7-85cd-e5952737dbaa",
+    "html_rec_page_id": "3ee43be9-58cd-8166-a555-c6175b65cfed",
+    "rec_total_after_cleanup": 137,
+    "evidence_total_after_cleanup": 0,
+    "audit_trace_parent": "REC-v3.1 Direct Write Bridge｜Lesson Workspace → PB SSOT → REC-v3.1"
+  },
+  "phase2": {
+    "candidate_override_after_cleanup": "PASS_CLEAN_INTEGRITY",
+    "convergence_readback_1": "PASS",
+    "convergence_readback_2": "PASS",
+    "production_health": "PASS_V23_REMOTE_WRITEBACK",
+    "production_routes": "PASS",
+    "production_auth": "PASS",
+    "system_audit": "PASS_CLEAN"
+  },
+  "production_integrity": {
+    "skills": 39,
+    "problems": 183,
+    "active_problems": 133,
+    "records": 137,
+    "evidence": 0,
+    "exceptions": 0,
+    "warnings": 0
+  },
+  "preview_urls_post_release": "DISABLED",
+  "learner_readiness": "NOT_ASSESSED"
+}
