@@ -32,6 +32,9 @@ try:
         next_due_on,
         retrievability,
     )
+    from .calibration import (
+        resolve_memory_policy,
+    )
     from .cognitive_orchestrator import (
         CognitiveOrchestrator,
         repair_instruction,
@@ -73,6 +76,9 @@ except ImportError:
         next_due_on,
         retrievability,
     )
+    from calibration import (
+        resolve_memory_policy,
+    )
     from cognitive_orchestrator import (
         CognitiveOrchestrator,
         repair_instruction,
@@ -107,7 +113,10 @@ PUBLISHED_CURRICULUM = ROOT / "curriculum" / "published.v23.json"
 OUTBOX = EvidenceOutbox(RUNTIME_DIR)
 CURRICULUM = RuntimeCurriculum(PUBLISHED_CURRICULUM)
 MEMORY = SkillMemoryStore(
-    RUNTIME_DIR / "skill_memory.json"
+    RUNTIME_DIR / "skill_memory.json",
+    policy=resolve_memory_policy(
+        RUNTIME_DIR
+    ),
 )
 PROBLEM_LIBRARY = ProblemLibrary(
     core.PROBLEM_INTELLIGENCE,

@@ -5,8 +5,8 @@
 ## 版本
 
 - 穩定執行環境：**v2.3**（PRODUCTION_CLOSED）
-- 下一版本：**v2.4**（C6_EXAM_RUNTIME）
-- 目前階段：**C6｜考試模式**
+- 下一版本：**v2.4**（C7_CALIBRATION_INFRA）
+- 目前階段：**C7｜記憶校準基礎設施**
 
 ## 正式課程
 
@@ -20,7 +20,7 @@
 
 - 主要介面：**VS Code Control Center**
 - Tracks：Reading, Implementation
-- Today：Skill × Track adaptive memory + capacity governor
+- Today：Skill × Track adaptive memory + capacity governor + cognitive orchestrator
 - Evidence authority：Attempt + explicit Evidence
 
 ## Production

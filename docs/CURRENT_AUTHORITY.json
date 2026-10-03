@@ -5,7 +5,7 @@
     "stable_runtime": "v2.3",
     "stable_runtime_status": "PRODUCTION_CLOSED",
     "next_version": "v2.4",
-    "next_version_status": "C6_EXAM_RUNTIME",
+    "next_version_status": "C7_CALIBRATION_INFRA",
     "next_version_contract": "docs/V24_PRODUCT_ARCHITECTURE_CONTRACT.md",
     "learner_readiness": "NOT_ASSESSED"
   },
@@ -22,12 +22,12 @@
       "Reading",
       "Implementation"
     ],
-    "today_policy": "Skill × Track adaptive memory + capacity governor",
+    "today_policy": "Skill × Track adaptive memory + capacity governor + cognitive orchestrator",
     "evidence_authority": "Attempt + explicit Evidence",
     "main_daily_entrypoints": [
       "今日學習",
-      "題目庫（v2.4 規劃）",
-      "考試模式（v2.4 規劃）"
+      "題目庫",
+      "考試模式"
     ]
   },
   "production": {
@@ -47,8 +47,8 @@
     "remote_writeback_status": "PRODUCTION_VERIFIED"
   },
   "current_work": {
-    "gate": "C6",
-    "goal": "考試模式",
+    "gate": "C7",
+    "goal": "記憶校準基礎設施",
     "open_nonblocking": [
       {
         "issue": 32,
