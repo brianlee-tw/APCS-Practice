@@ -1,0 +1,25 @@
+{
+  "$schema": "https://developers.cloudflare.com/workers/wrangler/config-schema.json",
+  "name": "apcs-rec-writeback",
+  "main": "src/index.mjs",
+  "compatibility_date": "2026-08-25",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "assets": {
+    "directory": "../recovery/assets-51/public",
+    "binding": "ASSETS",
+    "run_worker_first": [
+      "/api/*",
+      "/learn/*",
+      "/_internal/*",
+      "/workspace-v5-5",
+      "/workspace-v5-5.html",
+      "/visuals/skill/*",
+      "/visuals/unit/*"
+    ]
+  },
+  "observability": {
+    "enabled": true
+  }
+}
