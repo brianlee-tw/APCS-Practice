@@ -132,7 +132,20 @@ DEFAULT_SESSION_MINUTES = 60
 DEFAULT_IMPLEMENTATION_REVIEW_MINUTES = 12
 DEFAULT_READING_REVIEW_MINUTES = 6
 TODAY_CAPACITY_PATH = RUNTIME_DIR / "today_capacity.json"
-TODAY_CAPACITY_CHOICES = tuple(range(15, 241, 15))
+SELECTION_MODE_PATH = RUNTIME_DIR / "selection_mode.json"
+TODAY_CAPACITY_CHOICES = (
+    15,
+    30,
+    45,
+    60,
+    75,
+    90,
+    120,
+    150,
+    180,
+    240,
+)
+SELECTION_MODES = ("practice", "exam")
 
 ID_RE = re.compile(r"^([A-Za-z]\d+|\d+)(?:_|$)")
 
@@ -149,6 +162,7 @@ GRAY = "\033[90m"
 # Internal sentinel for returning to the previous record-wizard step.
 # None remains a valid field value (for example, skipped active minutes).
 RECORD_BACK = object()
+MODE_TOGGLE = object()
 
 
 # ============================================================
@@ -285,7 +299,8 @@ def print_wrapped(
 
 def ui_width() -> int:
     columns = shutil.get_terminal_size((80, 24)).columns
-    return max(28, columns - 2)
+    # Keep the command center compact even when the terminal is very wide.
+    return min(94, max(28, columns - 2))
 
 
 def rule() -> None:
@@ -334,6 +349,10 @@ def read_key() -> str:
                 return "UP"
             if third == b"B":
                 return "DOWN"
+            if third == b"C":
+                return "RIGHT"
+            if third == b"D":
+                return "LEFT"
 
             return "ESC"
 
@@ -697,7 +716,7 @@ def set_today_capacity_minutes(
 
     if minutes not in TODAY_CAPACITY_CHOICES:
         raise ValueError(
-            "今日可用時間必須是 15–240 分鐘，且以 15 分鐘為單位。"
+            "今日可用時間必須使用系統提供的時間選項。"
         )
 
     TODAY_CAPACITY_PATH.parent.mkdir(
@@ -778,6 +797,83 @@ def today_capacity_menu(
     return TODAY_CAPACITY_CHOICES[
         selected
     ]
+
+
+def selection_mode() -> str:
+    if not SELECTION_MODE_PATH.is_file():
+        return "practice"
+
+    try:
+        payload = json.loads(
+            SELECTION_MODE_PATH.read_text(
+                encoding="utf-8"
+            )
+        )
+        mode = str(
+            payload.get("mode") or ""
+        ).strip().lower()
+    except (
+        OSError,
+        TypeError,
+        json.JSONDecodeError,
+    ):
+        return "practice"
+
+    return (
+        mode
+        if mode in SELECTION_MODES
+        else "practice"
+    )
+
+
+def set_selection_mode(mode: str) -> None:
+    mode = str(mode or "").strip().lower()
+    if mode not in SELECTION_MODES:
+        raise ValueError(
+            "選題模式必須是 practice 或 exam。"
+        )
+
+    SELECTION_MODE_PATH.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+    temp_path = (
+        SELECTION_MODE_PATH
+        .with_suffix(".tmp")
+    )
+    temp_path.write_text(
+        json.dumps(
+            {"mode": mode},
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    temp_path.replace(
+        SELECTION_MODE_PATH
+    )
+
+
+def toggle_selection_mode() -> str:
+    mode = (
+        "exam"
+        if selection_mode() == "practice"
+        else "practice"
+    )
+    set_selection_mode(mode)
+    return mode
+
+
+def selection_mode_label(
+    mode: str | None = None,
+) -> str:
+    mode = mode or selection_mode()
+    return (
+        "練習"
+        if mode == "practice"
+        else "考試"
+    )
 
 
 def curriculum_target() -> str:
@@ -1653,6 +1749,357 @@ def choose_menu(
                 index = value - 1
 
                 if options[index].get("enabled", True):
+                    return index
+
+
+def _grid_rows(
+    options,
+    columns: int,
+):
+    rows = []
+    current_section = None
+    current = []
+
+    for index, option in enumerate(options):
+        section = option.get("section") or ""
+
+        if (
+            current
+            and (
+                section != current_section
+                or len(current) >= columns
+            )
+        ):
+            rows.append(
+                (
+                    current_section,
+                    tuple(current),
+                )
+            )
+            current = []
+
+        if not current:
+            current_section = section
+
+        current.append(index)
+
+    if current:
+        rows.append(
+            (
+                current_section,
+                tuple(current),
+            )
+        )
+
+    return rows
+
+
+def choose_grid(
+    title: str,
+    options,
+    *,
+    problem=None,
+    main=False,
+    back_text: str | None = None,
+    selected_index: int | None = None,
+    enter_text: str = "開啟",
+    mode_toggle: bool = False,
+):
+    """Responsive spatial navigation for compact command-center choices.
+
+    Wide terminals use a 3-column grid, compact terminals use 2 columns,
+    and narrow terminals fall back to the proven linear menu.
+    """
+
+    width = ui_width()
+    if width < 64:
+        result = choose_menu(
+            title,
+            options,
+            problem=problem,
+            main=main,
+            footer_numbers=True,
+            back_text=back_text,
+            selected_index=selected_index,
+            enter_text=enter_text,
+        )
+        return result
+
+    columns = 3 if width >= 86 else 2
+    rows = _grid_rows(
+        options,
+        columns,
+    )
+
+    if (
+        selected_index is not None
+        and 0 <= selected_index < len(options)
+        and options[selected_index].get(
+            "enabled",
+            True,
+        )
+    ):
+        selected = selected_index
+    else:
+        selected = first_enabled(
+            options
+        )
+
+    snapshot = (
+        adaptive_today_snapshot()
+        if main
+        else None
+    )
+
+    def locate(index):
+        for row_index, (_, indexes) in enumerate(rows):
+            if index in indexes:
+                return (
+                    row_index,
+                    indexes.index(index),
+                )
+        return (0, 0)
+
+    def move_vertical(direction):
+        nonlocal selected
+        row_index, col_index = locate(
+            selected
+        )
+        target = row_index + direction
+
+        while 0 <= target < len(rows):
+            indexes = rows[target][1]
+            candidates = [
+                index
+                for index in indexes
+                if options[index].get(
+                    "enabled",
+                    True,
+                )
+            ]
+            if candidates:
+                desired = min(
+                    col_index,
+                    len(indexes) - 1,
+                )
+                ordered = sorted(
+                    candidates,
+                    key=lambda index: abs(
+                        indexes.index(index)
+                        - desired
+                    ),
+                )
+                selected = ordered[0]
+                return
+            target += direction
+
+    def move_horizontal(direction):
+        nonlocal selected
+        row_index, col_index = locate(
+            selected
+        )
+        indexes = rows[row_index][1]
+        enabled = [
+            index
+            for index in indexes
+            if options[index].get(
+                "enabled",
+                True,
+            )
+        ]
+        if len(enabled) <= 1:
+            return
+
+        position = enabled.index(
+            selected
+        )
+        selected = enabled[
+            (
+                position + direction
+            )
+            % len(enabled)
+        ]
+
+    while True:
+        output = io.StringIO()
+
+        with contextlib.redirect_stdout(
+            output
+        ):
+            heading(title)
+            print()
+
+            if main and snapshot is not None:
+                print_control_dashboard(
+                    problem,
+                    snapshot,
+                )
+                print(
+                    f"{GRAY}"
+                    "選題模式："
+                    f"{selection_mode_label()}"
+                    + (
+                        " · M 切換"
+                        if mode_toggle
+                        else ""
+                    )
+                    + f"{RESET}"
+                )
+                print()
+            elif problem is not None:
+                print_problem_context(
+                    problem
+                )
+                print()
+
+            cell_gap = 3
+            cell_width = max(
+                14,
+                (
+                    width
+                    - cell_gap * (columns - 1)
+                )
+                // columns,
+            )
+
+            previous_section = None
+            for section, indexes in rows:
+                if (
+                    section
+                    and section
+                    != previous_section
+                ):
+                    if previous_section is not None:
+                        print()
+                    print(
+                        f"{GRAY}"
+                        f"{section}"
+                        f"{RESET}"
+                    )
+                previous_section = section
+
+                cells = []
+                for index in indexes:
+                    option = options[index]
+                    enabled = option.get(
+                        "enabled",
+                        True,
+                    )
+                    prefix = (
+                        "›"
+                        if index == selected
+                        else " "
+                    )
+                    label = (
+                        f"{prefix} {index + 1} "
+                        f"{option['label']}"
+                    )
+                    clipped = pad_display(
+                        label,
+                        cell_width,
+                    )
+
+                    if not enabled:
+                        cells.append(
+                            f"{GRAY}{clipped}{RESET}"
+                        )
+                    elif index == selected:
+                        cells.append(
+                            f"{CYAN}{BOLD}"
+                            f"{clipped}"
+                            f"{RESET}"
+                        )
+                    else:
+                        cells.append(
+                            clipped
+                        )
+
+                print(
+                    (" " * cell_gap).join(
+                        cells
+                    )
+                )
+
+            detail = options[selected].get(
+                "detail",
+                "",
+            )
+            if detail:
+                print()
+                print_wrapped(
+                    detail,
+                    width,
+                    color=GRAY,
+                )
+
+            print()
+            rule()
+            footer = (
+                "←→ 選擇 · ↑↓ 換列"
+                f" · Enter "
+                f"{options[selected].get('action') or enter_text}"
+            )
+            if mode_toggle:
+                footer += " · M 切換選題模式"
+            print(
+                f"{GRAY}{footer}{RESET}"
+            )
+            label = (
+                back_text
+                or (
+                    "關閉"
+                    if main
+                    else "返回"
+                )
+            )
+            print(
+                f"{GRAY}"
+                f"1–{len(options)} 直達"
+                f" · Esc / Q {label}"
+                f"{RESET}"
+            )
+
+        sys.stdout.write(
+            "\033[2J\033[H"
+            + output.getvalue()
+        )
+        sys.stdout.flush()
+
+        key = read_key()
+
+        if key == "LEFT":
+            move_horizontal(-1)
+        elif key == "RIGHT":
+            move_horizontal(1)
+        elif key == "UP":
+            move_vertical(-1)
+        elif key == "DOWN":
+            move_vertical(1)
+        elif key == "ENTER":
+            if options[selected].get(
+                "enabled",
+                True,
+            ):
+                return selected
+        elif (
+            mode_toggle
+            and key in {"m", "M"}
+        ):
+            return MODE_TOGGLE
+        elif key in {
+            "ESC",
+            "q",
+            "Q",
+        }:
+            return None
+        elif key.isdigit():
+            value = int(key)
+            if 1 <= value <= len(options):
+                index = value - 1
+                if options[index].get(
+                    "enabled",
+                    True,
+                ):
                     return index
 
 
