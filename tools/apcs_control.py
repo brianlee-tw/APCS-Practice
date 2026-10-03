@@ -5931,51 +5931,173 @@ def learning_status_view() -> None:
             "只顯示會影響下一步學習決策的摘要；不是 mastery / readiness 宣告。"
             f"{RESET}"
         )
+        print()
 
-        print()
-        print(f"{CYAN}{BOLD}目前進度{RESET}")
-        print(
-            f"真實作答  {snapshot['attempts']}"
-            f" · 能力證據 {snapshot['evidence']}"
-        )
-        print(
-            "學習軌道  "
-            f"Reading {snapshot['evidence_by_track'].get('Reading', 0)}"
-            " · Implementation "
-            f"{snapshot['evidence_by_track'].get('Implementation', 0)}"
-        )
-        print(
-            f"記憶狀態  {snapshot['memory_states']} 個 Skill × Track"
-        )
-
-        print()
-        rule()
-        print()
-        print(f"{CYAN}{BOLD}今日容量{RESET}")
-        print(
-            f"總容量    {snapshot['capacity_minutes']} min"
-        )
-        print(
-            f"複習      {snapshot['review_selected_minutes']}/"
-            f"{snapshot['review_budget_minutes']} min"
-            f" · {snapshot['review_selected']} 項"
-        )
-        print(
-            f"新學習    ≥ {snapshot['protected_new_learning_minutes']} min 保留"
-        )
-        if snapshot["review_deferred"]:
-            print(
-                f"安全延後  {snapshot['review_deferred']} 項 · 不算欠作業"
+        width = ui_width()
+        if width >= 86:
+            gap = 3
+            left = (
+                width - gap
+            ) // 2
+            right = (
+                width - gap - left
             )
 
-        print()
-        rule()
-        print()
-        print(f"{CYAN}{BOLD}同步狀態{RESET}")
-        print(
-            f"已確認    {snapshot['remote_acknowledged']}"
-            f" · 待同步 {snapshot['remote_pending']}"
-        )
+            progress = [
+                (
+                    f"真實作答 {snapshot['attempts']}"
+                    f" · Evidence {snapshot['evidence']}"
+                ),
+                (
+                    "Reading "
+                    f"{snapshot['evidence_by_track'].get('Reading', 0)}"
+                    " · Implementation "
+                    f"{snapshot['evidence_by_track'].get('Implementation', 0)}"
+                ),
+                (
+                    f"記憶狀態 {snapshot['memory_states']} 個 Skill × Track"
+                ),
+            ]
+            capacity = [
+                (
+                    f"總容量 {snapshot['capacity_minutes']} min"
+                ),
+                (
+                    f"複習 {snapshot['review_selected_minutes']}/"
+                    f"{snapshot['review_budget_minutes']} min"
+                    f" · {snapshot['review_selected']} 項"
+                ),
+                (
+                    f"新學習 ≥ "
+                    f"{snapshot['protected_new_learning_minutes']} min"
+                ),
+            ]
+            if snapshot[
+                "review_deferred"
+            ]:
+                capacity.append(
+                    f"安全延後 "
+                    f"{snapshot['review_deferred']} 項"
+                )
+
+            print(
+                f"{CYAN}{BOLD}"
+                f"{pad_display('目前進度', left)}"
+                f"{RESET}"
+                "   "
+                f"{CYAN}{BOLD}"
+                f"{pad_display('今日容量', right)}"
+                f"{RESET}"
+            )
+            for index in range(
+                max(
+                    len(progress),
+                    len(capacity),
+                )
+            ):
+                a = (
+                    progress[index]
+                    if index < len(progress)
+                    else ""
+                )
+                b = (
+                    capacity[index]
+                    if index < len(capacity)
+                    else ""
+                )
+                print(
+                    f"{pad_display(a, left)}"
+                    "   "
+                    f"{fit(b, right)}"
+                )
+
+            print()
+            rule()
+            print()
+            sync = (
+                f"同步：已確認 "
+                f"{snapshot['remote_acknowledged']}"
+                f" · 待同步 {snapshot['remote_pending']}"
+            )
+            readiness = (
+                "LEARNER_READINESS = NOT ASSESSED"
+            )
+            print(
+                f"{pad_display(sync, left)}"
+                "   "
+                f"{YELLOW}"
+                f"{fit(readiness, right)}"
+                f"{RESET}"
+            )
+
+        else:
+            print(
+                f"{CYAN}{BOLD}"
+                "目前進度"
+                f"{RESET}"
+            )
+            print(
+                f"真實作答  {snapshot['attempts']}"
+                f" · 能力證據 {snapshot['evidence']}"
+            )
+            print(
+                "學習軌道  "
+                f"Reading {snapshot['evidence_by_track'].get('Reading', 0)}"
+                " · Implementation "
+                f"{snapshot['evidence_by_track'].get('Implementation', 0)}"
+            )
+            print(
+                f"記憶狀態  {snapshot['memory_states']} 個 Skill × Track"
+            )
+
+            print()
+            rule()
+            print()
+            print(
+                f"{CYAN}{BOLD}"
+                "今日容量"
+                f"{RESET}"
+            )
+            print(
+                f"總容量    {snapshot['capacity_minutes']} min"
+            )
+            print(
+                f"複習      {snapshot['review_selected_minutes']}/"
+                f"{snapshot['review_budget_minutes']} min"
+                f" · {snapshot['review_selected']} 項"
+            )
+            print(
+                f"新學習    ≥ "
+                f"{snapshot['protected_new_learning_minutes']} min 保留"
+            )
+            if snapshot[
+                "review_deferred"
+            ]:
+                print(
+                    f"安全延後  "
+                    f"{snapshot['review_deferred']} 項 · 不算欠作業"
+                )
+
+            print()
+            rule()
+            print()
+            print(
+                f"{CYAN}{BOLD}"
+                "同步狀態"
+                f"{RESET}"
+            )
+            print(
+                f"已確認    {snapshot['remote_acknowledged']}"
+                f" · 待同步 {snapshot['remote_pending']}"
+            )
+
+            print()
+            rule()
+            print(
+                f"{YELLOW}"
+                "LEARNER_READINESS = NOT ASSESSED"
+                f"{RESET}"
+            )
 
         if snapshot["warnings"]:
             print()
@@ -5987,12 +6109,6 @@ def learning_status_view() -> None:
                 )
 
         print()
-        rule()
-        print(
-            f"{YELLOW}"
-            "LEARNER_READINESS = NOT ASSESSED"
-            f"{RESET}"
-        )
         print(
             f"{GRAY}"
             "D 查看詳細技術狀態 · Enter / Esc 返回控制中心"
@@ -6000,12 +6116,18 @@ def learning_status_view() -> None:
         )
 
         key = read_key()
-        if key in {"ENTER", "ESC", "q", "Q"}:
+        if key in {
+            "ENTER",
+            "ESC",
+            "q",
+            "Q",
+        }:
             return
         if key in {"d", "D"}:
             learning_status_detail_view(
                 snapshot
             )
+
 
 
 def today_view(current_filename: str | None):
@@ -8113,10 +8235,10 @@ def _problem_library_item_detail(
             f"活動      "
             f"{view.get('activity') or '—'}"
         )
-        if view.get("primary_skill"):
+        if item.primary_skill:
             print(
                 f"主要 Skill "
-                f"{view['primary_skill']}"
+                f"{item.primary_skill}"
             )
 
         if item.role in {
@@ -8799,12 +8921,30 @@ def _problem_library_text_search(
     if query is None:
         return
 
-    items = (
-        PROBLEM_LIBRARY.smart_search(
-            query or "",
-            limit=100,
+    if mode == "exam":
+        folded = str(
+            query or ""
+        ).strip().casefold()
+        items = [
+            item
+            for item in PROBLEM_LIBRARY.items()
+            if (
+                not folded
+                or folded
+                in (
+                    f"{item.external_id} "
+                    f"{item.title}"
+                ).casefold()
+            )
+        ][:100]
+    else:
+        items = (
+            PROBLEM_LIBRARY.smart_search(
+                query or "",
+                limit=100,
+            )
         )
-    )
+
     _problem_library_results_view(
         items,
         title="題目庫 · 搜尋結果",
