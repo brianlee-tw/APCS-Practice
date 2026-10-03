@@ -189,6 +189,27 @@ def fit(text: str, width: int) -> str:
     return out + "…"
 
 
+def pad_display(
+    text: str,
+    width: int,
+) -> str:
+    """Pad a plain terminal cell by display width."""
+
+    clipped = fit(
+        str(text),
+        max(1, width),
+    )
+    return (
+        clipped
+        + " " * max(
+            0,
+            width - display_width(
+                clipped
+            ),
+        )
+    )
+
+
 def wrap_display(text: str, width: int) -> list[str]:
     """Wrap text by terminal display width without dropping content."""
     width = max(1, int(width))
@@ -1293,6 +1314,159 @@ def move_enabled(options, current: int, direction: int) -> int:
     return current
 
 
+def _control_dashboard_lines(
+    problem,
+    snapshot,
+):
+    problem_lines = [
+        problem_line(problem),
+        problem_status(problem),
+    ]
+
+    plan = snapshot["plan"]
+    protected = max(
+        0,
+        snapshot["capacity_minutes"]
+        - plan.budget_minutes,
+    )
+    today_lines = [
+        (
+            f"{snapshot['capacity_minutes']} min"
+            f" · 複習 {plan.selected_minutes}/"
+            f"{plan.budget_minutes} min"
+        ),
+        (
+            f"新學習 ≥ {protected} min"
+            + (
+                f" · {snapshot['new_learning'].skill.uid}"
+                if (
+                    snapshot["new_learning"] is not None
+                    and snapshot["new_learning"].skill is not None
+                )
+                else ""
+            )
+        ),
+    ]
+
+    if plan.selected:
+        today_lines.append(
+            f"到期複習 {len(plan.selected)} 項"
+        )
+    else:
+        today_lines.append(
+            "今天沒有到期複習"
+        )
+
+    return problem_lines, today_lines
+
+
+def print_control_dashboard(
+    problem,
+    snapshot,
+) -> None:
+    problem_lines, today_lines = (
+        _control_dashboard_lines(
+            problem,
+            snapshot,
+        )
+    )
+    width = ui_width()
+
+    if width >= 88:
+        gap = 3
+        left_width = (
+            width - gap
+        ) // 2
+        right_width = (
+            width - gap - left_width
+        )
+
+        print(
+            f"{CYAN}{BOLD}"
+            f"{pad_display('目前題目', left_width)}"
+            f"{RESET}"
+            " │ "
+            f"{CYAN}{BOLD}"
+            f"{pad_display('今日規劃', right_width)}"
+            f"{RESET}"
+        )
+
+        rows = max(
+            len(problem_lines),
+            len(today_lines),
+        )
+        for index in range(rows):
+            left = (
+                problem_lines[index]
+                if index < len(problem_lines)
+                else ""
+            )
+            right = (
+                today_lines[index]
+                if index < len(today_lines)
+                else ""
+            )
+            print(
+                f"{pad_display(left, left_width)}"
+                " │ "
+                f"{fit(right, right_width)}"
+            )
+    else:
+        print(
+            f"{CYAN}{BOLD}"
+            "目前題目"
+            f"{RESET}"
+        )
+        for line in problem_lines:
+            print_wrapped(
+                line,
+                width,
+                color=(
+                    WHITE
+                    if line == problem_lines[0]
+                    else GRAY
+                ),
+            )
+
+        print()
+        print(
+            f"{CYAN}{BOLD}"
+            "今日規劃"
+            f"{RESET}"
+        )
+        for index, line in enumerate(
+            today_lines
+        ):
+            color = (
+                GREEN
+                if (
+                    index == 2
+                    and not snapshot["plan"].selected
+                )
+                else GRAY
+            )
+            print_wrapped(
+                line,
+                width,
+                color=color,
+            )
+
+    if snapshot["curriculum_blocker"]:
+        print_wrapped(
+            "⚠ 新學習暫時無法啟動："
+            + snapshot["curriculum_blocker"],
+            width,
+            color=YELLOW,
+        )
+
+    if snapshot["warning"]:
+        print_wrapped(
+            f"⚠ {snapshot['warning']}",
+            width,
+            color=YELLOW,
+        )
+
+
 def choose_menu(
     title: str,
     options,
@@ -1328,104 +1502,15 @@ def choose_menu(
             heading(title)
             print()
 
-            if problem is not None:
-                print_problem_context(problem)
+            if main and snapshot is not None:
+                print_control_dashboard(
+                    problem,
+                    snapshot,
+                )
                 print()
 
-            if main and snapshot is not None:
-                plan = snapshot["plan"]
-
-                print(f"{GRAY}今日學習{RESET}")
-                print(
-                    f"容量 {snapshot['capacity_minutes']} min"
-                    f" · 複習預算 {plan.budget_minutes} min"
-                )
-
-                if plan.selected:
-                    print(
-                        f"{YELLOW}"
-                        f"到期複習 {len(plan.selected)} 項"
-                        f" · {plan.selected_minutes} min"
-                        f"{RESET}"
-                    )
-                else:
-                    print(
-                        f"{GREEN}"
-                        "✓ 今天沒有安排到期複習"
-                        f"{RESET}"
-                    )
-
-                if plan.deferred:
-                    print(
-                        f"{GRAY}"
-                        f"安全延後 {len(plan.deferred)} 項"
-                        "（不是欠題）"
-                        f"{RESET}"
-                    )
-
-                protected = max(
-                    0,
-                    snapshot["capacity_minutes"]
-                    - plan.budget_minutes,
-                )
-                print(
-                    f"{GRAY}"
-                    f"新學習保留 ≥ {protected} min"
-                    f"{RESET}"
-                )
-
-                if snapshot["curriculum_blocker"]:
-                    print(
-                        f"{YELLOW}"
-                        "新學習 · BLOCKED"
-                        f"{RESET}"
-                    )
-                    print_wrapped(
-                        snapshot["curriculum_blocker"],
-                        ui_width() - 2,
-                        color=GRAY,
-                    )
-                elif snapshot["new_learning"] is not None:
-                    route = snapshot["new_learning"]
-
-                    if route.skill is not None:
-                        print(
-                            f"{CYAN}"
-                            "新學習 · "
-                            f"{route.skill.uid}"
-                            f"{RESET}"
-                        )
-                        print_wrapped(
-                            route.why_now,
-                            ui_width() - 2,
-                            color=GRAY,
-                        )
-                    elif route.blocked_skill is not None:
-                        print(
-                            f"{YELLOW}"
-                            "新學習 · BLOCKED · "
-                            f"{route.blocked_skill.uid}"
-                            f"{RESET}"
-                        )
-                        print_wrapped(
-                            route.why_now,
-                            ui_width() - 2,
-                            color=GRAY,
-                        )
-                    elif route.route_complete:
-                        print(
-                            f"{GREEN}"
-                            "✓ Required route 已達 start threshold"
-                            f"{RESET}"
-                        )
-
-                if snapshot["warning"]:
-                    print_wrapped(
-                        f"⚠ {snapshot['warning']}",
-                        ui_width() - 2,
-                        color=YELLOW,
-                    )
-
+            elif problem is not None:
+                print_problem_context(problem)
                 print()
 
             rule()
@@ -7585,7 +7670,20 @@ def _problem_library_filter_view():
             )
         )
 
+        result_label = (
+            f"開始搜尋 · {len(current)} 題"
+            if has_filters
+            else f"瀏覽全部 · {len(current)} 題"
+        )
+
         options = [
+            {
+                "label": result_label,
+                "detail": summary,
+                "enabled": bool(current),
+                "section": "目前結果",
+                "action": "查看",
+            },
             {
                 "label": "學習主題",
                 "detail": (
@@ -7595,6 +7693,8 @@ def _problem_library_filter_view():
                     or "不限 · 先選 Unit，再選 Skill"
                 ),
                 "enabled": True,
+                "section": "篩選條件",
+                "action": "設定",
             },
             {
                 "label": "難度",
@@ -7605,6 +7705,8 @@ def _problem_library_filter_view():
                     or "不限 · D1–D5"
                 ),
                 "enabled": True,
+                "section": "篩選條件",
+                "action": "設定",
             },
             {
                 "label": "來源",
@@ -7620,6 +7722,8 @@ def _problem_library_filter_view():
                     else "不限"
                 ),
                 "enabled": True,
+                "section": "篩選條件",
+                "action": "設定",
             },
             {
                 "label": "作答狀態",
@@ -7639,6 +7743,8 @@ def _problem_library_filter_view():
                     )
                 ),
                 "enabled": True,
+                "section": "篩選條件",
+                "action": "設定",
             },
             {
                 "label": "練習用途",
@@ -7653,6 +7759,8 @@ def _problem_library_filter_view():
                     )
                 ),
                 "enabled": True,
+                "section": "篩選條件",
+                "action": "設定",
             },
             {
                 "label": "教學資料",
@@ -7672,21 +7780,15 @@ def _problem_library_filter_view():
                     )
                 ),
                 "enabled": True,
-            },
-            {
-                "label": (
-                    f"查看結果 · "
-                    f"{len(current)} 題"
-                ),
-                "detail": (
-                    summary
-                ),
-                "enabled": bool(current),
+                "section": "篩選條件",
+                "action": "設定",
             },
             {
                 "label": "清除全部條件",
                 "detail": "恢復成不限",
                 "enabled": has_filters,
+                "section": "篩選條件",
+                "action": "清除",
             },
         ]
 
@@ -7701,44 +7803,44 @@ def _problem_library_filter_view():
             return
 
         if selected == 0:
+            _problem_library_results_view(
+                current,
+                title="題目庫 · 分類結果",
+                context=summary,
+            )
+
+        elif selected == 1:
             _problem_library_choose_skill(
                 filters,
                 all_items,
             )
 
-        elif selected == 1:
+        elif selected == 2:
             _problem_library_choose_difficulty(
                 filters,
                 all_items,
             )
 
-        elif selected == 2:
+        elif selected == 3:
             _problem_library_choose_source(
                 filters,
                 all_items,
             )
 
-        elif selected == 3:
+        elif selected == 4:
             _problem_library_choose_status(
                 filters,
             )
 
-        elif selected == 4:
+        elif selected == 5:
             _problem_library_choose_role(
                 filters,
                 all_items,
             )
 
-        elif selected == 5:
+        elif selected == 6:
             _problem_library_choose_teaching(
                 filters,
-            )
-
-        elif selected == 6:
-            _problem_library_results_view(
-                current,
-                title="題目庫 · 分類結果",
-                context=summary,
             )
 
         elif selected == 7:
@@ -7753,7 +7855,6 @@ def _problem_library_filter_view():
                     "require_l2": None,
                 }
             )
-
 
 def _problem_library_text_search():
     clear()
