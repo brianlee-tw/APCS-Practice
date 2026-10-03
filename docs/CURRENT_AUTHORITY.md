@@ -5,8 +5,8 @@
 ## 版本
 
 - 穩定執行環境：**v2.3**（PRODUCTION_CLOSED）
-- 下一版本：**v2.4**（C0_AUTHORITY_CONVERGENCE）
-- 目前階段：**C0｜Authority 與文件收斂**
+- 下一版本：**v2.4**（C1_PROBLEM_INTELLIGENCE_MVP）
+- 目前階段：**C1｜題目智慧最小可用版本**
 
 ## 正式課程
 
