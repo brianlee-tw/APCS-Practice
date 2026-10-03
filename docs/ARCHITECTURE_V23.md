@@ -1,8 +1,24 @@
 # APCS Learning System v2.3 Architecture Contract
 
-Status: **Draft 0 / Gate 0**
+狀態：**歷史架構契約｜v2.3 已完成並投入 Production**
 
-This document defines the target integration between Notion, GitHub, VS Code, ChatGPT, and the optional Cloudflare surfaces. It replaces the assumption that any one existing subsystem is already perfect.
+> 本文件記錄 v2.3 的架構設計與不變條件，不再代表目前開發階段。現在的正式狀態請以 `docs/CURRENT_AUTHORITY.json` 為準；v2.4 的產品與架構契約請見 `docs/V24_PRODUCT_ARCHITECTURE_CONTRACT.md`。
+
+<!-- APCS_CURRENT_AUTHORITY_START -->
+## 目前正式狀態（自動產生）
+
+> 本區塊由 `docs/CURRENT_AUTHORITY.json` 產生；不要手動修改。
+
+- 穩定學習執行環境：**v2.3**，狀態 `PRODUCTION_CLOSED`。
+- 下一版本：**v2.4**，目前階段 **C0｜Authority 與文件收斂**。
+- 正式課程：**52 Lessons / 14 Units / 39 Skills**；未有真實 Evidence 前不擴張主線。
+- Production Worker：**#58 @100%** `0eafa60d-6d4d-4edb-b1eb-ac6a9a3625b6`；system-audit = **PASS_CLEAN**；Preview / Version URLs = **DISABLED**。
+- 日常主要介面：**VS Code Control Center**。
+- 學習準備度：`LEARNER_READINESS = NOT_ASSESSED`。
+- v2.4 正式契約：[`docs/V24_PRODUCT_ARCHITECTURE_CONTRACT.md`](./V24_PRODUCT_ARCHITECTURE_CONTRACT.md)。
+<!-- APCS_CURRENT_AUTHORITY_END -->
+
+以下內容保留作為 v2.3 的歷史設計依據。
 
 ## 1. Product goal
 
