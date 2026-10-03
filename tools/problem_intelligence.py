@@ -620,6 +620,35 @@ class ProblemIntelligenceStore:
         *,
         path: Path | None = None,
     ) -> None:
+        expected_top = {
+            "schema_version",
+            "identity",
+            "lifecycle",
+            "source_metadata",
+            "classification",
+            "integration",
+        }
+        if set(record) != expected_top:
+            unknown = sorted(set(record) - expected_top)
+            missing = sorted(expected_top - set(record))
+            detail = []
+            if unknown:
+                detail.append(
+                    "未知欄位=" + ",".join(unknown)
+                )
+            if missing:
+                detail.append(
+                    "缺欄位=" + ",".join(missing)
+                )
+            raise ProblemIntelligenceError(
+                "題目智慧頂層 schema 不一致"
+                + (
+                    "；" + "；".join(detail)
+                    if detail
+                    else ""
+                )
+            )
+
         if record.get("schema_version") != SCHEMA_VERSION:
             raise ProblemIntelligenceError(
                 "schema_version 不正確"
@@ -652,15 +681,153 @@ class ProblemIntelligenceStore:
             raise ProblemIntelligenceError(
                 "source_metadata 必須是 object"
             )
+
+        expected_metadata = {
+            "title",
+            "statement_summary",
+            "constraints",
+            "metadata_source",
+        }
+        if set(metadata) != expected_metadata:
+            raise ProblemIntelligenceError(
+                "source_metadata schema 不一致"
+            )
+
         if not isinstance(metadata.get("constraints"), list):
             raise ProblemIntelligenceError(
                 "source_metadata.constraints 必須是陣列"
             )
+        if any(
+            not isinstance(item, str)
+            or not item.strip()
+            for item in metadata["constraints"]
+        ):
+            raise ProblemIntelligenceError(
+                "constraints 只能包含非空字串"
+            )
+
+        if metadata.get("metadata_source") not in {
+            "URL_ONLY",
+            "SOURCE_PAGE",
+            "AI_EXTRACTED_FROM_SOURCE",
+        }:
+            raise ProblemIntelligenceError(
+                "metadata_source 值不合法"
+            )
+
+        for field in (
+            "title",
+            "statement_summary",
+        ):
+            if not isinstance(metadata.get(field), str):
+                raise ProblemIntelligenceError(
+                    f"source_metadata.{field} 必須是字串"
+                )
 
         classification = record.get("classification")
         if not isinstance(classification, dict):
             raise ProblemIntelligenceError(
                 "classification 必須是 object"
+            )
+
+        expected_classification = {
+            "status",
+            "confidence",
+            "primary_skill_candidate",
+            "supporting_skill_candidates",
+            "difficulty_candidate",
+            "prerequisite_candidates",
+            "expected_complexity_candidate",
+            "role_candidate",
+            "alternate_solution_risk_candidate",
+            "evidence_suitability_candidate",
+            "rationale",
+            "qa_reasons",
+            "classification_source",
+        }
+        if set(classification) != expected_classification:
+            raise ProblemIntelligenceError(
+                "classification schema 不一致"
+            )
+
+        for field in (
+            "supporting_skill_candidates",
+            "prerequisite_candidates",
+            "qa_reasons",
+        ):
+            value = classification.get(field)
+            if not isinstance(value, list):
+                raise ProblemIntelligenceError(
+                    f"classification.{field} 必須是陣列"
+                )
+            if any(
+                not isinstance(item, str)
+                or not item.strip()
+                for item in value
+            ):
+                raise ProblemIntelligenceError(
+                    f"classification.{field} 只能包含非空字串"
+                )
+
+        for field in (
+            "primary_skill_candidate",
+            "expected_complexity_candidate",
+            "classification_source",
+        ):
+            value = classification.get(field)
+            if value is not None and (
+                not isinstance(value, str)
+                or not value.strip()
+            ):
+                raise ProblemIntelligenceError(
+                    f"classification.{field} 必須是非空字串或 null"
+                )
+
+        if not isinstance(classification.get("rationale"), str):
+            raise ProblemIntelligenceError(
+                "classification.rationale 必須是字串"
+            )
+
+        difficulty = classification.get(
+            "difficulty_candidate"
+        )
+        if (
+            difficulty is not None
+            and difficulty not in VALID_DIFFICULTIES
+        ):
+            raise ProblemIntelligenceError(
+                "difficulty_candidate 必須是 D1–D5 或 null"
+            )
+
+        role = classification.get("role_candidate")
+        if (
+            role is not None
+            and role not in VALID_ROLES
+        ):
+            raise ProblemIntelligenceError(
+                "role_candidate 值不合法"
+            )
+
+        alternate_risk = classification.get(
+            "alternate_solution_risk_candidate"
+        )
+        if (
+            alternate_risk is not None
+            and alternate_risk not in VALID_ALTERNATE_SOLUTION_RISK
+        ):
+            raise ProblemIntelligenceError(
+                "alternate_solution_risk_candidate 值不合法"
+            )
+
+        evidence_suitability = classification.get(
+            "evidence_suitability_candidate"
+        )
+        if (
+            evidence_suitability is not None
+            and evidence_suitability not in VALID_EVIDENCE_SUITABILITY
+        ):
+            raise ProblemIntelligenceError(
+                "evidence_suitability_candidate 值不合法"
             )
 
         status = classification.get("status")
@@ -704,10 +871,56 @@ class ProblemIntelligenceStore:
                     "NEEDS_QA 必須說明 qa_reasons"
                 )
 
+            if (
+                status == CLASS_CANDIDATE
+                and float(confidence)
+                < CLASSIFICATION_CONFIDENCE_THRESHOLD
+            ):
+                raise ProblemIntelligenceError(
+                    "CANDIDATE confidence 不得低於 0.80"
+                )
+
+            if (
+                status == CLASS_CANDIDATE
+                and not classification.get(
+                    "primary_skill_candidate"
+                )
+            ):
+                raise ProblemIntelligenceError(
+                    "CANDIDATE 必須有 Primary Skill candidate"
+                )
+
+            if (
+                status == CLASS_CANDIDATE
+                and not classification.get(
+                    "difficulty_candidate"
+                )
+            ):
+                raise ProblemIntelligenceError(
+                    "CANDIDATE 必須有 difficulty candidate"
+                )
+
+            if not classification.get(
+                "classification_source"
+            ):
+                raise ProblemIntelligenceError(
+                    "L1 classification_source 不得為空"
+                )
+
         integration = record.get("integration")
         if not isinstance(integration, dict):
             raise ProblemIntelligenceError(
                 "integration 必須是 object"
+            )
+
+        expected_integration = {
+            "problem_bank_status",
+            "pb_uid",
+            "runtime_eligible",
+        }
+        if set(integration) != expected_integration:
+            raise ProblemIntelligenceError(
+                "integration schema 不一致"
             )
 
         if integration.get("runtime_eligible") is not False:
