@@ -91,14 +91,19 @@
       "classification": "MIGRATE-FIRST",
       "observed_nonempty_rows": 75,
       "observed_formal_rows_with_value": 0,
-      "note": "Historical system-test/legacy values must be archived before property removal."
+      "note": "Historical system-test/legacy values must be archived before property removal.",
+      "archive_status": "COMPLETE",
+      "archive_path": "curriculum/migration/rec_legacy_progress_status_archive.v23.json",
+      "archive_rows": 75,
+      "formal_learner_rows": 0
     },
     "rec_review_date": {
       "field": "複習日期",
       "classification": "REMOVE",
       "observed_nonempty_rows": 0,
       "observed_formal_rows_with_value": 0,
-      "note": "Adaptive Skill x Track scheduling fully replaces this REC-level date."
+      "note": "Adaptive Skill x Track scheduling fully replaces this REC-level date.",
+      "remove_ready": true
     },
     "skill_manual_state": {
       "fields": [
