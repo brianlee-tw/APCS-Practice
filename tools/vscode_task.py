@@ -11,10 +11,12 @@ from pathlib import Path
 
 import apcs as core
 import apcs_control as control
+from exam_runtime import ExamSessionStore
 
 
 ROOT = Path(__file__).resolve().parents[1]
 BUILD_DIR = ROOT / "build"
+EXAM = ExamSessionStore(ROOT / ".apcs" / "runtime")
 
 PROBLEM_ID_RE = re.compile(r"^([A-Za-z]\d+)(?:_|$)")
 RECALL_RE = re.compile(r"^\s*([0-3])")
@@ -93,6 +95,16 @@ def compile_cpp(filename: str) -> tuple[int, Path | None]:
         ],
         cwd=ROOT,
     )
+
+    try:
+        pid = problem_id(str(source))
+        EXAM.mark_compile(
+            pid,
+            success=(result.returncode == 0),
+        )
+    except (ValueError, OSError):
+        # Exam telemetry must never break the ordinary build path.
+        pass
 
     if result.returncode != 0:
         print()
