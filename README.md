@@ -1,10 +1,24 @@
 # APCS-Practice
 
-APCS 實作練習、教學、adaptive review 與能力證據追蹤倉庫。
+APCS C++ 學習、實作練習、複習排程與能力證據追蹤系統。
 
-v2.3 正在把 VS Code 提升為日常學習 runtime：以 Published Curriculum、explicit Evidence、Skill × Track memory 與 capacity-aware Today 驅動學習；v2.2 的 Catalog / learning event 底座繼續保留。
+v2.3 的可靠學習基礎設施已完成並投入正式使用；v2.4 現在進入「低摩擦認知式學習系統」開發階段。日常仍以 VS Code 控制中心為主，不要求學習者管理底層資料。
 
-這個倉庫的 v2.2 設計將題目 metadata 與 solution code 分離：`data/problems.csv` 管理題目資料，`data/solutions.csv` 管理解答檔案與複雜度；資料夾只代表檔案位置，不再是能力分類或進度來源。
+<!-- APCS_CURRENT_AUTHORITY_START -->
+## 目前正式狀態（自動產生）
+
+> 本區塊由 `docs/CURRENT_AUTHORITY.json` 產生；不要手動修改。
+
+- 穩定學習執行環境：**v2.3**，狀態 `PRODUCTION_CLOSED`。
+- 下一版本：**v2.4**，目前階段 **C0｜Authority 與文件收斂**。
+- 正式課程：**52 Lessons / 14 Units / 39 Skills**；未有真實 Evidence 前不擴張主線。
+- Production Worker：**#58 @100%** `0eafa60d-6d4d-4edb-b1eb-ac6a9a3625b6`；system-audit = **PASS_CLEAN**；Preview / Version URLs = **DISABLED**。
+- 日常主要介面：**VS Code Control Center**。
+- 學習準備度：`LEARNER_READINESS = NOT_ASSESSED`。
+- v2.4 正式契約：[`docs/V24_PRODUCT_ARCHITECTURE_CONTRACT.md`](./docs/V24_PRODUCT_ARCHITECTURE_CONTRACT.md)。
+<!-- APCS_CURRENT_AUTHORITY_END -->
+
+這個倉庫仍保留 v2.2 的題目／解答資料底座作為相容層；它不是 v2.3/v2.4 的能力判定或今日學習權威。
 
 ## 目標
 
