@@ -71,14 +71,31 @@ def create_reading_scratch(
     )
     lesson = placement.lesson_uid or "—"
     judge = placement.url or "—"
+    strict_spoiler = (
+        placement.role
+        in {
+            "Transfer Challenge",
+            "Mock",
+        }
+    )
+    metadata = (
+        (
+            f"- Problem: {placement.problem_id} · {placement.title}\n"
+            f"- Reference / Judge URL: {judge}"
+        )
+        if strict_spoiler
+        else (
+            f"- Skill: {placement.primary_skill}\n"
+            f"- Lesson: {lesson}\n"
+            f"- Problem: {placement.problem_id} · {placement.title}\n"
+            f"- Role: {placement.role}\n"
+            f"- Reference / Judge URL: {judge}"
+        )
+    )
 
     text = f"""# APCS Reading · {mode}
 
-- Skill: {placement.primary_skill}
-- Lesson: {lesson}
-- Problem: {placement.problem_id} · {placement.title}
-- Role: {placement.role}
-- Reference / Judge URL: {judge}
+{metadata}
 
 ## Evidence rule
 
