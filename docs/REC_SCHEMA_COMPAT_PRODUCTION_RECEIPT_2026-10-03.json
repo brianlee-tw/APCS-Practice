@@ -52,6 +52,6 @@
     "PB-181 ACTIVE_DIFFICULTY_MISSING",
     "PB-181 ACTIVE_SKILL_RELATION_MISSING"
   ],
-  "preview_urls_post_release": "PENDING_MANUAL_DISABLE",
+  "preview_urls_post_release": "DISABLED",
   "learner_readiness": "NOT_ASSESSED"
 }
