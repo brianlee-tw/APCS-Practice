@@ -140,8 +140,8 @@ REC should represent one immutable attempt story, not a mutable scheduling objec
 | 技能節點 | SYSTEM-MANAGED | Context relation derived from Placement and actual observed target; not manually copied from all Problem tags. |
 | Evidence Events | SYSTEM-MANAGED | Backlink. |
 | 學習階段 | DERIVE | Prefer explicit Activity/Role in attempt context; avoid overlapping subjective state. |
-| 進度狀態 | MIGRATE-FIRST | A completed immutable attempt should not also act as a mutable task/status object. Live audit: 75 legacy/system-test rows contained historical values; 0 formal learner rows did. Archive completed at `curriculum/migration/rec_legacy_progress_status_archive.v23.json`; property is now removal-ready pending explicit destructive-migration approval. |
-| 複習日期 | DELETE | Scheduling belongs to adaptive Skill x Track engine, not to an individual REC. Live audit: 0 / 137 rows populated; no runtime consumer remains. Property is removal-ready pending explicit destructive-migration approval. |
+| 進度狀態 | MIGRATE-FIRST | A completed immutable attempt should not also act as a mutable task/status object. Live audit: 75 legacy/system-test rows contained historical values; 0 formal learner rows did. Archive completed at `curriculum/migration/rec_legacy_progress_status_archive.v23.json`; the live REC-v3.1 property was removed on 2026-10-03 and verified absent. |
+| 複習日期 | DELETE | Scheduling belongs to adaptive Skill x Track engine, not to an individual REC. Live audit: 0 / 137 rows populated; no runtime consumer remained. The live REC-v3.1 property was removed on 2026-10-03 and verified absent. |
 | 學習歷程候選 | KEEP | Optional portfolio signal, independent from mastery. |
 | 學習歷程證據 | KEEP | Optional human-readable portfolio note. |
 
@@ -213,7 +213,6 @@ Current enforced client write boundary:
 This allows legacy Notion values to remain available for audit while preventing
 them from re-entering runtime truth.
 
-## 10. Destructive migration gate
+## 10. Destructive migration closure
 
-Do not remove a populated property until retained historical values are
-archived or otherwise proven disposable.
+REC-v3.1 legacy fields `進度狀態` and `複習日期` have been removed from the live schema. Historical `進度狀態` values were archived before deletion; `複習日期` contained no values. Runtime/client guards remain in place so removed legacy truth cannot re-enter the active contract.
