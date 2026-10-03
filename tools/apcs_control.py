@@ -32,6 +32,10 @@ try:
         next_due_on,
         retrievability,
     )
+    from .cognitive_orchestrator import (
+        CognitiveOrchestrator,
+        repair_instruction,
+    )
     from .learning_route import (
         select_new_learning_plan,
     )
@@ -59,6 +63,10 @@ except ImportError:
     from adaptive_memory import (
         next_due_on,
         retrievability,
+    )
+    from cognitive_orchestrator import (
+        CognitiveOrchestrator,
+        repair_instruction,
     )
     from learning_route import (
         select_new_learning_plan,
@@ -88,6 +96,7 @@ PROBLEM_LIBRARY = ProblemLibrary(
     core.PROBLEM_ENRICHMENT,
     OUTBOX,
 )
+COGNITIVE = CognitiveOrchestrator()
 
 DEFAULT_SESSION_MINUTES = 60
 DEFAULT_IMPLEMENTATION_REVIEW_MINUTES = 12
@@ -697,6 +706,17 @@ def adaptive_today_snapshot(
         if warning is None:
             warning = str(exc)
 
+    cognitive_plan = COGNITIVE.plan(
+        envelopes,
+        total_capacity_minutes=total_capacity_minutes,
+        review_selected_minutes=plan.selected_minutes,
+        new_learning_active=bool(
+            new_learning is not None
+            and new_learning.skill is not None
+            and new_learning.placement is not None
+        ),
+    )
+
     return {
         "date": on_date,
         "capacity_minutes": total_capacity_minutes,
@@ -722,6 +742,7 @@ def adaptive_today_snapshot(
             new_learning
         ),
         "warning": warning,
+        "cognitive_plan": cognitive_plan,
     }
 
 
@@ -4966,6 +4987,34 @@ def today_view(current_filename: str | None):
                 f" · {candidate.estimated_minutes} min"
             )
 
+    cognitive_plan = snapshot["cognitive_plan"]
+    if cognitive_plan.selected:
+        print()
+        rule()
+        print()
+        print(
+            f"{CYAN}{BOLD}"
+            f"認知練習 · {len(cognitive_plan.selected)}"
+            f"{RESET}"
+        )
+        for task in cognitive_plan.selected:
+            label = {
+                "repair": "最小修復",
+                "discrimination": "方法辨識",
+                "transfer": "遷移驗證",
+            }.get(task.kind, task.kind)
+            print(
+                f"  {label}"
+                f" · {task.estimated_minutes} min"
+            )
+            print_wrapped(
+                task.reason,
+                ui_width() - 4,
+                prefix="    ",
+                continuation_prefix="    ",
+                color=GRAY,
+            )
+
     options = []
 
     if (
@@ -5019,6 +5068,25 @@ def today_view(current_filename: str | None):
                 "enabled": True,
                 "kind": "review",
                 "candidate": candidate,
+            }
+        )
+
+    for task in cognitive_plan.selected:
+        label = {
+            "repair": "修復",
+            "discrimination": "方法辨識",
+            "transfer": "遷移",
+        }.get(task.kind, "認知練習")
+        options.append(
+            {
+                "label": f"{label} · {', '.join(task.skill_uids)}",
+                "detail": (
+                    f"{task.estimated_minutes} min"
+                    f" · {task.reason}"
+                ),
+                "enabled": True,
+                "kind": "cognitive",
+                "task": task,
             }
         )
 
@@ -5082,10 +5150,93 @@ def today_view(current_filename: str | None):
             ),
         )
 
+    if option["kind"] == "cognitive":
+        cognitive_task_view(
+            option["task"]
+        )
+        return current_filename
+
     return _start_adaptive_review(
         option["candidate"],
         current_filename,
     )
+
+
+def cognitive_task_view(task) -> None:
+    clear()
+    labels = {
+        "repair": "最小修復",
+        "discrimination": "方法辨識",
+        "transfer": "遷移驗證",
+    }
+    heading(labels.get(task.kind, "認知練習"))
+    print()
+    print_wrapped(
+        task.reason,
+        ui_width() - 2,
+    )
+    print()
+
+    if task.kind == "repair":
+        print(f"{CYAN}{BOLD}下一步{RESET}")
+        print_wrapped(
+            repair_instruction(),
+            ui_width() - 2,
+        )
+        if task.source_problem_id:
+            print()
+            print(
+                f"{GRAY}"
+                f"來源題目：{task.source_problem_id}"
+                f"{RESET}"
+            )
+
+    elif task.kind == "discrimination":
+        print(f"{CYAN}{BOLD}任務{RESET}")
+        print(
+            "先比較下面兩種方法的成立條件，"
+            "再找一題只看 constraints 判斷該選哪一種："
+        )
+        for uid in task.skill_uids:
+            print(f"  - {skill_display_name(uid)}")
+        print()
+        print(
+            f"{GRAY}"
+            "不先看解法；重點是說出「為什麼另一種方法不成立」。"
+            f"{RESET}"
+        )
+
+    elif task.kind == "transfer":
+        uid = task.skill_uids[0] if task.skill_uids else ""
+        print(f"{CYAN}{BOLD}任務{RESET}")
+        print(
+            f"找一題新的 {skill_display_name(uid)} 相關題，"
+            "但作答前不要看分類與方法。"
+        )
+        print(
+            f"{GRAY}"
+            "只有新的 independent / delayed Evidence 才能驗證遷移。"
+            f"{RESET}"
+        )
+
+    print()
+    print(
+        f"{GRAY}"
+        f"建議支援上限：{task.guidance or '—'}"
+        f"{RESET}"
+    )
+    pause()
+
+
+def skill_display_name(uid: str) -> str:
+    try:
+        for row in CURRICULUM.load().get("skills") or []:
+            if str(row.get("uid") or "").strip() == uid:
+                name = str(row.get("name") or "").strip()
+                return f"{name}（{uid}）" if name else uid
+    except RuntimeCurriculumError:
+        pass
+    return uid
 
 
 def open_note(problem) -> None:
