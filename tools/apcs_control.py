@@ -2098,10 +2098,15 @@ def choose_grid(
                     else "返回"
                 )
             )
+            direct = (
+                f"1–{len(options)} 直達 · "
+                if len(options) <= 9
+                else ""
+            )
             print(
                 f"{GRAY}"
-                f"1–{len(options)} 直達"
-                f" · Esc / Q {label}"
+                f"{direct}"
+                f"Esc / Q {label}"
                 f"{RESET}"
             )
 
