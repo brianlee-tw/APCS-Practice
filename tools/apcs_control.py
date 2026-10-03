@@ -8749,11 +8749,74 @@ def record_action_state(
     )
 
 
+def more_tools_center(
+    problem,
+    current_filename: str | None,
+):
+    while True:
+        changes = git_changes()
+        options = [
+            {
+                "label": "題目資料",
+                "detail": (
+                    "新增題目、編輯 metadata、建立 solution"
+                ),
+                "enabled": True,
+                "section": "維護",
+                "kind": "catalog",
+                "action": "開啟",
+            },
+            {
+                "label": "檢查與提交",
+                "detail": (
+                    f"{len(changes)} 個 Git 變更待處理"
+                    if changes
+                    else "目前 Git 工作區乾淨"
+                ),
+                "enabled": True,
+                "section": "維護",
+                "kind": "git",
+                "action": "開啟",
+            },
+        ]
+
+        selected = choose_grid(
+            "更多工具",
+            options,
+            problem=problem,
+            back_text="返回控制中心",
+            wide_columns=2,
+            compact_columns=2,
+        )
+        if selected is None:
+            return current_filename
+
+        option = options[selected]
+        if option["kind"] == "catalog":
+            current_filename = (
+                catalog_center(
+                    problem,
+                    current_filename,
+                )
+            )
+            problem = current_problem(
+                current_filename
+            )
+        else:
+            git_center()
+
+
 def main() -> int:
-    filename = sys.argv[1] if len(sys.argv) >= 2 else None
+    filename = (
+        sys.argv[1]
+        if len(sys.argv) >= 2
+        else None
+    )
 
     while True:
-        problem = current_problem(filename)
+        problem = current_problem(
+            filename
+        )
 
         (
             finish_enabled,
@@ -8764,116 +8827,178 @@ def main() -> int:
             problem
         )
 
-        if problem:
-            note = ROOT / "notes" / f"{problem['id']}.md"
-            note_detail = (
-                "已建立；選取後直接開啟"
-                if note.exists()
-                else "尚未建立；選取後建立並開啟"
-            )
-        else:
-            note_detail = "需先開啟 APCS 題目檔案"
-
-        changes = git_changes()
-
         options = [
             {
                 "label": "今日學習",
-                "detail": "自適應複習 + 保留新學習容量",
+                "detail": "依目前 Evidence、記憶與容量安排下一個高價值活動",
                 "enabled": True,
-                "section": "主要入口",
+                "section": "主要",
+                "kind": "today",
+                "action": "開啟",
             },
             {
                 "label": "題目庫",
-                "detail": "搜尋 / Skill / 難度 / 來源 / 未做 · 自動防劇透",
-                "enabled": True,
-                "section": "主要入口",
-            },
-            {
-                "label": "考試模式",
-                "detail": "計時混合練習 · 自動記錄執行時間點",
-                "enabled": True,
-                "section": "主要入口",
-            },
-            {
-                "label": "完成題目",
-                "detail": finish_detail,
-                "enabled": finish_enabled,
-                "section": "目前題目",
-            },
-            {
-                "label": "複習題目",
-                "detail": review_detail,
-                "enabled": review_enabled,
-                "section": "目前題目",
-            },
-            {
-                "label": "題目筆記",
-                "detail": note_detail,
-                "enabled": problem is not None,
-                "section": "目前題目",
-            },
-            {
-                "label": "學習狀態",
-                "detail": "證據、記憶、容量、同步",
-                "enabled": True,
-                "section": "工具",
-            },
-            {
-                "label": "題目資料",
-                "detail": "新增題目、編輯 metadata、建立 solution",
-                "enabled": True,
-                "section": "工具",
-            },
-            {
-                "label": "檢查與提交",
                 "detail": (
-                    f"{len(changes)} 個 Git 變更待處理"
-                    if changes
-                    else "目前 Git 工作區乾淨"
+                    "練習模式可按主題找題；考試模式會隱藏方法分類"
                 ),
                 "enabled": True,
-                "section": "工具",
+                "section": "主要",
+                "kind": "library",
+                "action": "開啟",
+            },
+            {
+                "label": "模擬考",
+                "detail": "計時 mixed practice；選題與執行時間點由 Exam Runtime 管理",
+                "enabled": True,
+                "section": "主要",
+                "kind": "exam",
+                "action": "開啟",
             },
         ]
 
-        selected = choose_menu(
+        if problem is not None:
+            if finish_enabled:
+                options.append(
+                    {
+                        "label": "完成題目",
+                        "detail": finish_detail,
+                        "enabled": True,
+                        "section": "目前題目",
+                        "kind": "finish",
+                        "action": "記錄",
+                    }
+                )
+            elif review_enabled:
+                options.append(
+                    {
+                        "label": (
+                            "完成複習"
+                            if (
+                                problem.get(
+                                    "published_runtime"
+                                )
+                                and problem.get(
+                                    "runtime_action"
+                                )
+                                == "review"
+                            )
+                            else "複習題目"
+                        ),
+                        "detail": review_detail,
+                        "enabled": True,
+                        "section": "目前題目",
+                        "kind": "review",
+                        "action": "記錄",
+                    }
+                )
+
+            note = (
+                ROOT
+                / "notes"
+                / f"{problem['id']}.md"
+            )
+            options.append(
+                {
+                    "label": "題目筆記",
+                    "detail": (
+                        "已建立；直接開啟"
+                        if note.exists()
+                        else "尚未建立；選取後建立並開啟"
+                    ),
+                    "enabled": True,
+                    "section": "目前題目",
+                    "kind": "note",
+                    "action": "開啟",
+                }
+            )
+
+        options.extend(
+            [
+                {
+                    "label": "學習狀態",
+                    "detail": "Evidence、記憶、容量與同步摘要",
+                    "enabled": True,
+                    "section": "其他",
+                    "kind": "status",
+                    "action": "查看",
+                },
+                {
+                    "label": "更多工具",
+                    "detail": "題目資料與 Git 維護；不屬於日常學習主流程",
+                    "enabled": True,
+                    "section": "其他",
+                    "kind": "tools",
+                    "action": "開啟",
+                },
+            ]
+        )
+
+        selected = choose_grid(
             "控制中心",
             options,
             problem=problem,
             main=True,
+            mode_toggle=True,
+            back_text="關閉",
         )
+
+        if selected is MODE_TOGGLE:
+            try:
+                toggle_selection_mode()
+            except (
+                OSError,
+                ValueError,
+            ) as exc:
+                clear()
+                heading("控制中心")
+                print()
+                print(
+                    f"{RED}✕ 無法切換選題模式：{exc}{RESET}"
+                )
+                pause()
+            continue
 
         if selected is None:
             closed_screen()
             return 0
 
-        if selected == 0:
-            filename = today_view(filename)
+        option = options[selected]
+        kind = option["kind"]
 
-        elif selected == 1:
+        if kind == "today":
+            filename = today_view(
+                filename
+            )
+
+        elif kind == "library":
             problem_library_view()
 
-        elif selected == 2:
+        elif kind == "exam":
             exam_center()
 
-        elif selected == 3:
-            record_problem("finish", problem)
+        elif kind == "finish":
+            record_problem(
+                "finish",
+                problem,
+            )
 
-        elif selected == 4:
-            record_problem("review", problem)
+        elif kind == "review":
+            record_problem(
+                "review",
+                problem,
+            )
 
-        elif selected == 5:
+        elif kind == "note":
             open_note(problem)
 
-        elif selected == 6:
+        elif kind == "status":
             learning_status_view()
 
-        elif selected == 7:
-            filename = catalog_center(problem, filename)
-
-        elif selected == 8:
-            git_center()
+        elif kind == "tools":
+            filename = more_tools_center(
+                problem,
+                filename,
+            )
 
 
 if __name__ == "__main__":
