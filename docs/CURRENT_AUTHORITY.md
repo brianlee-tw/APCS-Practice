@@ -5,8 +5,8 @@
 ## 版本
 
 - 穩定執行環境：**v2.3**（PRODUCTION_CLOSED）
-- 下一版本：**v2.4**（C7_CALIBRATION_INFRA）
-- 目前階段：**C7｜記憶校準基礎設施**
+- 下一版本：**v2.4**（C8_GENUINE_LEARNER_PILOT）
+- 目前階段：**C8｜真實學習者試用**
 
 ## 正式課程
 
@@ -42,6 +42,7 @@
 
 - GitHub issue #32：真實 learner manual validation
 - GitHub issue #40：Needs QA staging / content curation
+- GitHub issue #80：v2.4 genuine learner pilot
 
 ## Readiness
 
