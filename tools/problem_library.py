@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import shlex
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Iterable
@@ -182,7 +183,7 @@ class ProblemLibrary:
     ) -> list[LibraryItem]:
         q = str(query or "").strip().casefold()
         source_q = str(source or "").strip().casefold()
-        difficulty_q = str(difficulty or "").strip()
+        difficulty_q = str(difficulty or "").strip().upper()
         skill_q = str(skill or "").strip().casefold()
         role_q = str(role or "").strip().casefold()
 
@@ -190,20 +191,26 @@ class ProblemLibrary:
         for item in self.items():
             if source_q and item.source.casefold() != source_q:
                 continue
-            if difficulty_q and item.difficulty != difficulty_q:
+            if (
+                difficulty_q
+                and (item.difficulty or "").upper() != difficulty_q
+            ):
                 continue
             if attempted is not None and item.attempted is not attempted:
                 continue
             if require_l2 is not None and item.has_l2 is not require_l2:
                 continue
-            if role_q and (item.role or "").casefold() != role_q:
+            if role_q and role_q not in (item.role or "").casefold():
                 continue
             if skill_q:
                 skills = [
                     item.primary_skill or "",
                     *item.supporting_skills,
                 ]
-                if not any(skill_q == value.casefold() for value in skills):
+                if not any(
+                    skill_q in value.casefold()
+                    for value in skills
+                ):
                     continue
             if q:
                 haystack = " ".join(
@@ -212,6 +219,10 @@ class ProblemLibrary:
                         item.title,
                         item.statement_summary,
                         item.source,
+                        item.difficulty or "",
+                        item.role or "",
+                        item.primary_skill or "",
+                        *item.supporting_skills,
                     ]
                 ).casefold()
                 if q not in haystack:
@@ -222,6 +233,134 @@ class ProblemLibrary:
                 break
 
         return result
+
+    def smart_search(
+        self,
+        query: str = "",
+        *,
+        limit: int = 50,
+    ) -> list[LibraryItem]:
+        """低摩擦 learner search。
+
+        支援自然關鍵字，以及少量可組合 token：
+        skill:/tag:, source:, difficulty:/d:, role:,
+        未做/已做, l2:/teaching:。
+        """
+
+        raw = str(query or "").strip()
+        if not raw:
+            return self.search(limit=limit)
+
+        filters: dict[str, Any] = {
+            "source": None,
+            "difficulty": None,
+            "skill": None,
+            "role": None,
+            "attempted": None,
+            "require_l2": None,
+        }
+        terms: list[str] = []
+
+        role_aliases = {
+            "worked": "Worked Example",
+            "guided": "Guided Drill",
+            "core": "Core Independent",
+            "transfer": "Transfer Challenge",
+            "mock": "Mock",
+            "遷移": "Transfer Challenge",
+            "模擬": "Mock",
+        }
+
+        try:
+            tokens = shlex.split(raw)
+        except ValueError:
+            tokens = raw.split()
+
+        for token in tokens:
+            folded = token.casefold()
+
+            if folded in {"未做", "unattempted", "new-only"}:
+                filters["attempted"] = False
+                continue
+            if folded in {"已做", "attempted", "done"}:
+                filters["attempted"] = True
+                continue
+            if folded in {"有教學", "l2", "teaching"}:
+                filters["require_l2"] = True
+                continue
+            if folded in {"無教學", "no-l2"}:
+                filters["require_l2"] = False
+                continue
+
+            if ":" in token:
+                key, value = token.split(":", 1)
+                key = key.strip().casefold()
+                value = value.strip()
+
+                if key in {"skill", "tag"}:
+                    filters["skill"] = value
+                    continue
+                if key in {"source", "src"}:
+                    filters["source"] = value
+                    continue
+                if key in {"difficulty", "diff", "d"}:
+                    filters["difficulty"] = value.upper()
+                    continue
+                if key in {"role", "activity"}:
+                    filters["role"] = role_aliases.get(
+                        value.casefold(),
+                        value,
+                    )
+                    continue
+                if key in {"status", "state"}:
+                    value_folded = value.casefold()
+                    if value_folded in {
+                        "未做",
+                        "unattempted",
+                        "new",
+                    }:
+                        filters["attempted"] = False
+                        continue
+                    if value_folded in {
+                        "已做",
+                        "attempted",
+                        "done",
+                    }:
+                        filters["attempted"] = True
+                        continue
+                if key in {"l2", "teaching"}:
+                    value_folded = value.casefold()
+                    if value_folded in {"1", "yes", "true", "有"}:
+                        filters["require_l2"] = True
+                        continue
+                    if value_folded in {"0", "no", "false", "無"}:
+                        filters["require_l2"] = False
+                        continue
+
+            if (
+                len(folded) == 2
+                and folded[0] == "d"
+                and folded[1].isdigit()
+            ):
+                filters["difficulty"] = folded.upper()
+                continue
+
+            if folded in role_aliases:
+                filters["role"] = role_aliases[folded]
+                continue
+
+            terms.append(token)
+
+        return self.search(
+            " ".join(terms),
+            source=filters["source"],
+            difficulty=filters["difficulty"],
+            skill=filters["skill"],
+            role=filters["role"],
+            attempted=filters["attempted"],
+            require_l2=filters["require_l2"],
+            limit=limit,
+        )
 
     def learner_view(
         self,
