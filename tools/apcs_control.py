@@ -48,6 +48,11 @@ try:
         LearnerSignalStore,
         learner_model_snapshot,
     )
+    from .exam_runtime import (
+        ExamRuntimeError,
+        ExamSessionStore,
+        POSTMORTEM_REASONS,
+    )
     from .skill_memory_store import (
         SkillMemoryStore,
     )
@@ -84,6 +89,11 @@ except ImportError:
         LearnerSignalStore,
         learner_model_snapshot,
     )
+    from exam_runtime import (
+        ExamRuntimeError,
+        ExamSessionStore,
+        POSTMORTEM_REASONS,
+    )
     from skill_memory_store import (
         SkillMemoryStore,
     )
@@ -106,6 +116,7 @@ PROBLEM_LIBRARY = ProblemLibrary(
 )
 COGNITIVE = CognitiveOrchestrator()
 LEARNER_SIGNALS = LearnerSignalStore(RUNTIME_DIR)
+EXAM = ExamSessionStore(RUNTIME_DIR)
 
 DEFAULT_SESSION_MINUTES = 60
 DEFAULT_IMPLEMENTATION_REVIEW_MINUTES = 12
@@ -6194,6 +6205,278 @@ def problem_library_view() -> None:
         webbrowser.open(item.canonical_url)
 
 # ============================================================
+# Exam Runtime
+# ============================================================
+
+def _exam_start_ui() -> None:
+    clear()
+    heading("考試模式")
+    print()
+    print(
+        f"{GRAY}"
+        "輸入本次題號即可；時間點與切題由系統自動記錄。"
+        f"{RESET}"
+    )
+    print()
+
+    raw = prompt_text(
+        "題號（空白或逗號分隔）",
+        required=True,
+    )
+    if raw is None:
+        return
+
+    problem_ids = [
+        token.strip().lower()
+        for token in re.split(r"[\s,]+", raw)
+        if token.strip()
+    ]
+
+    raw_minutes = prompt_text(
+        "考試時間（分鐘）",
+        current="60",
+        required=True,
+    )
+    if raw_minutes is None:
+        return
+
+    try:
+        minutes = int(raw_minutes)
+        EXAM.start(
+            problem_ids,
+            duration_minutes=minutes,
+        )
+    except (ValueError, ExamRuntimeError) as exc:
+        print()
+        print(f"{RED}✕ {exc}{RESET}")
+        pause()
+        return
+
+
+def _exam_submit_ui(session) -> None:
+    pid = session.get("selected_problem_id")
+    if not pid:
+        print(f"{YELLOW}請先選擇目前作答題目。{RESET}")
+        pause()
+        return
+
+    values = ["AC", "WA", "TLE", "RE", "CE", "MLE", "N/A"]
+    selected = choose_menu(
+        "記錄提交",
+        [
+            {
+                "label": value,
+                "detail": (
+                    "外部 OJ 結果"
+                    if value != "N/A"
+                    else "只記錄提交時間，結果未知"
+                ),
+                "enabled": True,
+            }
+            for value in values
+        ],
+        footer_numbers=True,
+        back_text="返回考試模式",
+    )
+    if selected is None:
+        return
+
+    try:
+        EXAM.mark_submit(
+            pid,
+            result=values[selected],
+        )
+    except ExamRuntimeError as exc:
+        print(f"{RED}✕ {exc}{RESET}")
+        pause()
+
+
+def _exam_end_ui() -> None:
+    reasons = list(POSTMORTEM_REASONS.items())
+    selected = choose_menu(
+        "考試後檢討 · 主要失分原因",
+        [
+            {
+                "label": label,
+                "detail": (
+                    "只選最主要原因；不需要填長表單"
+                    if key != "NONE"
+                    else "本次沒有明顯執行失分"
+                ),
+                "enabled": True,
+            }
+            for key, label in reasons
+        ],
+        footer_numbers=True,
+        back_text="繼續考試",
+    )
+    if selected is None:
+        return
+
+    key, _ = reasons[selected]
+    try:
+        session = EXAM.end(
+            postmortem_reason=key,
+        )
+    except ExamRuntimeError as exc:
+        print(f"{RED}✕ {exc}{RESET}")
+        pause()
+        return
+
+    summary = EXAM.summary(session)
+    clear()
+    heading("考試完成")
+    print()
+    print(f"總時間    {summary['elapsed_minutes']} min")
+    print(
+        "掃題      "
+        f"{summary['scan_minutes'] if summary['scan_minutes'] is not None else '—'} min"
+    )
+    print(
+        "首次編譯  "
+        f"{summary['first_compile_minutes'] if summary['first_compile_minutes'] is not None else '—'} min"
+    )
+    print(f"編譯      {summary['compile_count']} 次")
+    print(f"提交      {summary['submit_count']} 次")
+    print(f"切題      {summary['switch_count']} 次")
+    print(
+        "主要失分  "
+        f"{POSTMORTEM_REASONS[summary['postmortem_reason']]}"
+    )
+    print()
+    print(
+        f"{GRAY}"
+        "Exam telemetry 只分析考試流程；真正能力 Evidence 仍由正式作答紀錄產生。"
+        f"{RESET}"
+    )
+    pause()
+
+
+def exam_center() -> None:
+    while True:
+        try:
+            session = EXAM.active()
+        except ExamRuntimeError as exc:
+            clear()
+            heading("考試模式")
+            print()
+            print(f"{RED}✕ {exc}{RESET}")
+            pause()
+            return
+
+        if session is None:
+            selected = choose_menu(
+                "考試模式",
+                [
+                    {
+                        "label": "開始計時練習",
+                        "detail": "mixed set / 模擬考 · 最少輸入題號與時間",
+                        "enabled": True,
+                    }
+                ],
+                footer_numbers=True,
+                back_text="返回控制中心",
+            )
+            if selected is None:
+                return
+            _exam_start_ui()
+            continue
+
+        summary = EXAM.summary(session)
+        elapsed = summary["elapsed_minutes"]
+        remaining = max(
+            0,
+            session["duration_minutes"] - elapsed,
+        )
+
+        options = []
+        for pid in session["problem_ids"]:
+            selected_now = (
+                pid == session["selected_problem_id"]
+            )
+            options.append(
+                {
+                    "label": (
+                        f"{'目前 · ' if selected_now else ''}{pid}"
+                    ),
+                    "detail": (
+                        "保持作答"
+                        if selected_now
+                        else "選擇 / 切換到這題"
+                    ),
+                    "enabled": True,
+                    "kind": "select",
+                    "problem_id": pid,
+                }
+            )
+
+        options.extend(
+            [
+                {
+                    "label": "記錄提交",
+                    "detail": (
+                        "只需選外部 OJ 結果"
+                        if session["selected_problem_id"]
+                        else "請先選題"
+                    ),
+                    "enabled": bool(session["selected_problem_id"]),
+                    "kind": "submit",
+                },
+                {
+                    "label": "結束並檢討",
+                    "detail": "只問一個主要失分原因",
+                    "enabled": True,
+                    "kind": "end",
+                },
+            ]
+        )
+
+        clear()
+        heading("考試模式")
+        print()
+        print(
+            f"時間      {elapsed}/{session['duration_minutes']} min"
+            f" · 剩餘約 {remaining} min"
+        )
+        print(
+            f"目前題目  {session['selected_problem_id'] or '掃題中'}"
+        )
+        print(
+            f"編譯 {summary['compile_count']} · "
+            f"提交 {summary['submit_count']} · "
+            f"切題 {summary['switch_count']}"
+        )
+        print()
+        print(
+            f"{GRAY}"
+            "Ctrl+Shift+B 編譯會自動留下考試時間點。"
+            f"{RESET}"
+        )
+        print()
+
+        chosen = choose_menu(
+            "考試模式 · 下一步",
+            options,
+            footer_numbers=True,
+            back_text="返回控制中心（計時持續）",
+        )
+        if chosen is None:
+            return
+
+        option = options[chosen]
+        if option["kind"] == "select":
+            try:
+                EXAM.select(option["problem_id"])
+            except ExamRuntimeError as exc:
+                print(f"{RED}✕ {exc}{RESET}")
+                pause()
+        elif option["kind"] == "submit":
+            _exam_submit_ui(session)
+        else:
+            _exam_end_ui()
+
+
+# ============================================================
 # Main
 # ============================================================
 
@@ -6305,6 +6588,11 @@ def main() -> int:
                 "enabled": True,
             },
             {
+                "label": "考試模式",
+                "detail": "計時 mixed practice · 自動記錄執行時間點",
+                "enabled": True,
+            },
+            {
                 "label": "學習狀態",
                 "detail": "Evidence、Retention、Capacity、Remote ACK",
                 "enabled": True,
@@ -6358,21 +6646,24 @@ def main() -> int:
             problem_library_view()
 
         elif selected == 2:
-            learning_status_view()
+            exam_center()
 
         elif selected == 3:
-            filename = catalog_center(problem, filename)
+            learning_status_view()
 
         elif selected == 4:
-            record_problem("finish", problem)
+            filename = catalog_center(problem, filename)
 
         elif selected == 5:
-            record_problem("review", problem)
+            record_problem("finish", problem)
 
         elif selected == 6:
-            open_note(problem)
+            record_problem("review", problem)
 
         elif selected == 7:
+            open_note(problem)
+
+        elif selected == 8:
             git_center()
 
 
