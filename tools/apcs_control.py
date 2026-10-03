@@ -1193,20 +1193,20 @@ def choose_menu(
                 print(f"{GRAY}今日學習{RESET}")
                 print(
                     f"容量 {snapshot['capacity_minutes']} min"
-                    f" · Review budget {plan.budget_minutes} min"
+                    f" · 複習預算 {plan.budget_minutes} min"
                 )
 
                 if plan.selected:
                     print(
                         f"{YELLOW}"
-                        f"Adaptive review {len(plan.selected)} 項"
+                        f"到期複習 {len(plan.selected)} 項"
                         f" · {plan.selected_minutes} min"
                         f"{RESET}"
                     )
                 else:
                     print(
                         f"{GREEN}"
-                        "✓ 今天沒有已選定的 adaptive review"
+                        "✓ 今天沒有安排到期複習"
                         f"{RESET}"
                     )
 
@@ -1300,8 +1300,16 @@ def choose_menu(
                 print(f"{GRAY}  ↑ 還有 {start} 項{RESET}")
                 print()
 
+            last_section = None
+
             for index in range(start, end):
                 option = options[index]
+                section = option.get("section")
+
+                if section and section != last_section:
+                    print(f"{GRAY}{section}{RESET}")
+                    last_section = section
+
                 enabled = option.get("enabled", True)
                 prefix = "›" if index == selected else " "
                 number = index + 1
@@ -1889,6 +1897,233 @@ def independent_menu(
     )
 
 
+def compact_support_menu(
+    problem,
+    *,
+    initial: dict | None = None,
+):
+    """一次收集 Assistance + Independent，降低 Published Runtime 摩擦。"""
+
+    values = [
+        (
+            0,
+            True,
+            "A0 · 無提示／獨立",
+            "沒有提示，方法與實作主要由你自行完成",
+        ),
+        (
+            0,
+            False,
+            "A0 · 無提示／非獨立",
+            "沒有提示，但完成仍依賴他人、既有答案或外部協助",
+        ),
+        (
+            1,
+            True,
+            "A1 · 診斷問題／獨立",
+            "只收到診斷性提問，之後主要由你自行完成",
+        ),
+        (
+            1,
+            False,
+            "A1 · 診斷問題／非獨立",
+            "最高只有 A1，但實際完成仍依賴他人／AI",
+        ),
+        (
+            2,
+            False,
+            "A2 · 概念／性質",
+            "收到關鍵概念、性質或表示提示；Independent 自動為否",
+        ),
+        (
+            3,
+            False,
+            "A3 · 演算法方向",
+            "收到方法或演算法方向；Independent 自動為否",
+        ),
+        (
+            4,
+            False,
+            "A4 · pseudocode / skeleton",
+            "收到偽碼、骨架或接近實作的提示；Independent 自動為否",
+        ),
+        (
+            5,
+            False,
+            "A5 · 完整解法 / reference",
+            "看過完整解法、reference 或等價答案；Independent 自動為否",
+        ),
+    ]
+
+    selected_index = None
+    if initial is not None:
+        selected_index = next(
+            (
+                index
+                for index, (assistance, independent, _, _)
+                in enumerate(values)
+                if assistance == initial.get("assistance")
+                and independent == initial.get("independent")
+            ),
+            None,
+        )
+
+    selected = choose_menu(
+        "作答支援",
+        [
+            {
+                "label": label,
+                "detail": detail,
+                "enabled": True,
+            }
+            for _, _, label, detail in values
+        ],
+        problem=problem,
+        main=False,
+        footer_numbers=False,
+        back_text="返回上一步",
+        selected_index=selected_index,
+    )
+
+    if selected is None:
+        return None
+
+    assistance, independent, _, _ = values[selected]
+    return {
+        "assistance": assistance,
+        "independent": independent,
+    }
+
+
+def inferred_published_novelty(
+    action: str,
+    problem,
+    placement,
+) -> str | None:
+    runtime_action = problem.get("runtime_action")
+
+    if action == "review" and runtime_action == "review":
+        return "delayed_retest"
+
+    if action == "finish" and runtime_action == "finish":
+        if placement is not None:
+            if placement.role == "Transfer Challenge":
+                return "transfer"
+            if placement.role == "Mock":
+                return "mixed"
+        return "new"
+
+    return None
+
+
+def inferred_published_timed(problem) -> bool | None:
+    try:
+        session = EXAM.active()
+    except ExamRuntimeError:
+        session = None
+
+    if session is not None:
+        problem_id = (
+            str(problem.get("id") or "")
+            .strip()
+            .casefold()
+        )
+        selected_id = (
+            str(session.get("selected_problem_id") or "")
+            .strip()
+            .casefold()
+        )
+        if problem_id and problem_id == selected_id:
+            return True
+
+    if problem.get("runtime_action") in {
+        "finish",
+        "review",
+    }:
+        return False
+
+    return None
+
+
+def published_evidence_context_menu(
+    action: str,
+    problem,
+    *,
+    initial: dict | None = None,
+    track: str = "Implementation",
+):
+    """Published Runtime 只詢問無法可靠自動取得的 learner facts。"""
+
+    placement, placement_warning = placement_for_record(
+        problem
+    )
+    if placement_warning == "__CANCEL__":
+        return RECORD_BACK
+
+    state = dict(initial or {})
+    state["placement"] = placement
+    state["placement_warning"] = placement_warning
+
+    support = compact_support_menu(
+        problem,
+        initial=state,
+    )
+    if support is None:
+        return RECORD_BACK
+
+    state.update(support)
+
+    novelty = inferred_published_novelty(
+        action,
+        problem,
+        placement,
+    )
+    if novelty is None:
+        novelty = novelty_menu(
+            action,
+            problem,
+            placement=placement,
+            initial=state.get("novelty"),
+        )
+        if novelty is None:
+            return RECORD_BACK
+    state["novelty"] = novelty
+
+    timed = inferred_published_timed(
+        problem
+    )
+    if timed is None:
+        timed = timed_menu(
+            problem,
+            initial=state.get("timed"),
+        )
+        if timed is None:
+            return RECORD_BACK
+    state["timed"] = timed
+
+    if (
+        track == "Implementation"
+        and placement is not None
+        and placement.method_confirmation_required
+    ):
+        method_confirmed = target_method_confirmation_menu(
+            problem,
+            placement,
+            initial=state.get(
+                "method_confirmed"
+            ),
+        )
+        if method_confirmed is None:
+            return RECORD_BACK
+        state["method_confirmed"] = (
+            method_confirmed
+        )
+    else:
+        state["method_confirmed"] = None
+
+    return state
+
+
 def novelty_menu(
     action: str,
     problem,
@@ -2458,33 +2693,11 @@ def record_reading_problem(
     if outcome is None:
         return
 
-    clear()
-    heading("Reading 耗時")
-    print()
-    print_problem_context(problem)
-    print()
-    raw_minutes = prompt_text(
-        "本次 Reading 分鐘（可略過）"
-    )
-    if raw_minutes is None:
-        return
+    # Published Reading runtime already knows Activity / Novelty / Timed.
+    # Do not ask for optional minutes here; Exam Runtime owns timed telemetry.
     minutes = None
-    if raw_minutes:
-        if (
-            not raw_minutes.isdigit()
-            or not (1 <= int(raw_minutes) <= 999)
-        ):
-            clear()
-            heading("Reading Evidence")
-            print()
-            print(
-                f"{RED}✕ 分鐘必須是 1–999 的整數{RESET}"
-            )
-            pause()
-            return
-        minutes = int(raw_minutes)
 
-    evidence_context = evidence_context_menu(
+    evidence_context = published_evidence_context_menu(
         action,
         problem,
         track="Reading",
@@ -2505,12 +2718,9 @@ def record_reading_problem(
     print()
     print(f"Outcome     {outcome}")
     print(
-        "耗時        "
-        + (
-            f"{minutes} 分鐘"
-            if minutes is not None
-            else "未記錄"
-        )
+        f"{GRAY}"
+        "耗時        一般 Reading 不另要求填寫；限時資料由考試模式記錄"
+        f"{RESET}"
     )
     print(
         f"Assistance  A{evidence_context['assistance']}"
@@ -2659,7 +2869,6 @@ def record_problem(action: str, problem) -> None:
         if action == "finish"
         else "複習題目"
     )
-
     result = "AC"
     score = None
     minutes = None
@@ -2667,7 +2876,7 @@ def record_problem(action: str, problem) -> None:
     finish_complexity = None
     complexity_solution = None
 
-    if action == "finish":
+    if action == "finish" and not published_runtime:
         try:
             complexity_solution = (
                 missing_finish_complexity(
@@ -2686,11 +2895,18 @@ def record_problem(action: str, problem) -> None:
             pause()
             return
 
-    step = (
-        "result"
-        if action == "review"
-        else "recall"
-    )
+    if published_runtime:
+        step = (
+            "result"
+            if action == "review"
+            else "evidence"
+        )
+    else:
+        step = (
+            "result"
+            if action == "review"
+            else "recall"
+        )
 
     while True:
         if step == "result":
@@ -2712,7 +2928,11 @@ def record_problem(action: str, problem) -> None:
             ):
                 score = None
 
-            step = "recall"
+            step = (
+                "evidence"
+                if published_runtime
+                else "recall"
+            )
             continue
 
         if step == "recall":
@@ -2752,15 +2972,29 @@ def record_problem(action: str, problem) -> None:
             continue
 
         if step == "evidence":
-            selected_context = (
-                evidence_context_menu(
-                    action,
-                    problem,
-                    initial=evidence_context,
+            if published_runtime:
+                selected_context = (
+                    published_evidence_context_menu(
+                        action,
+                        problem,
+                        initial=evidence_context,
+                    )
                 )
-            )
+            else:
+                selected_context = (
+                    evidence_context_menu(
+                        action,
+                        problem,
+                        initial=evidence_context,
+                    )
+                )
 
             if selected_context is RECORD_BACK:
+                if published_runtime:
+                    if action == "review":
+                        step = "result"
+                        continue
+                    return
                 step = "minutes"
                 continue
 
@@ -2828,15 +3062,22 @@ def record_problem(action: str, problem) -> None:
                 f"{color}{result}{RESET}"
             )
 
-        print(f"Recall  {score}")
-        print(
-            "耗時    "
-            + (
-                f"{minutes} 分鐘"
-                if minutes is not None
-                else "未記錄"
+        if published_runtime:
+            print(
+                f"{GRAY}"
+                "紀錄      Published Runtime · 只詢問必要 learner facts"
+                f"{RESET}"
             )
-        )
+        else:
+            print(f"Recall  {score}")
+            print(
+                "耗時    "
+                + (
+                    f"{minutes} 分鐘"
+                    if minutes is not None
+                    else "未記錄"
+                )
+            )
 
         if complexity_solution is not None:
             print(
@@ -4822,52 +5063,50 @@ def _start_adaptive_review(
     return str(scratch)
 
 
-def learning_status_view() -> None:
-    snapshot = learning_status_snapshot()
-
+def learning_status_detail_view(snapshot) -> None:
     clear()
-    heading("學習狀態")
+    heading("學習狀態 · 詳細")
     print()
     print(
         f"{GRAY}"
-        "v2.3 derived operational view · 不是 mastery/readiness 宣告"
+        "衍生運作資料；只用於安排與診斷，不是 mastery / readiness 宣告。"
         f"{RESET}"
     )
     print()
 
     print(f"目標      {snapshot['target']}")
     print(
-        f"Attempt   {snapshot['attempts']}"
+        f"作答      {snapshot['attempts']}"
         f" · Evidence {snapshot['evidence']}"
     )
     print(
-        "Track     "
+        "軌道      "
         f"Reading {snapshot['evidence_by_track'].get('Reading', 0)}"
         " · Implementation "
         f"{snapshot['evidence_by_track'].get('Implementation', 0)}"
     )
     print(
-        f"Remote    ACK {snapshot['remote_acknowledged']}"
-        f" · Pending {snapshot['remote_pending']}"
+        f"同步      已確認 {snapshot['remote_acknowledged']}"
+        f" · 待同步 {snapshot['remote_pending']}"
     )
     print(
-        f"Memory    {snapshot['memory_states']} Skill × Track"
+        f"記憶      {snapshot['memory_states']} Skill × Track"
     )
 
     print()
     rule()
     print()
-    print(f"{CYAN}{BOLD}Capacity{RESET}")
+    print(f"{CYAN}{BOLD}今日容量{RESET}")
     print(
         f"總容量    {snapshot['capacity_minutes']} min"
     )
     print(
-        f"Review    {snapshot['review_selected_minutes']}/"
+        f"複習      {snapshot['review_selected_minutes']}/"
         f"{snapshot['review_budget_minutes']} min"
-        f" · {snapshot['review_selected']} selected"
+        f" · {snapshot['review_selected']} 項"
     )
     print(
-        f"Deferred  {snapshot['review_deferred']}"
+        f"安全延後  {snapshot['review_deferred']}"
         " · 不計為欠作業"
     )
     print(
@@ -4877,16 +5116,16 @@ def learning_status_view() -> None:
     print()
     rule()
     print()
-    print(f"{CYAN}{BOLD}Retention · lowest R first{RESET}")
+    print(f"{CYAN}{BOLD}記憶狀態 · 最低 R 優先{RESET}")
 
     if not snapshot["retention"]:
         print(f"{GRAY}尚無可計算的 Skill × Track retention state{RESET}")
     else:
         for item in snapshot["retention"][:10]:
             due_mark = (
-                "due"
+                "到期"
                 if item["due_on"] <= snapshot["date"]
-                else f"due {item['due_on']:%m/%d}"
+                else f"預計 {item['due_on']:%m/%d}"
             )
             print(
                 f"  {item['skill_uid']} × {item['track']}"
@@ -4962,7 +5201,96 @@ def learning_status_view() -> None:
         "Retention / capacity 只用於下一步安排；不等於 RR/IR PASS。"
         f"{RESET}"
     )
-    pause()
+    pause("Enter / Esc 返回學習狀態")
+
+
+def learning_status_view() -> None:
+    snapshot = learning_status_snapshot()
+
+    while True:
+        clear()
+        heading("學習狀態")
+        print()
+        print(
+            f"{GRAY}"
+            "只顯示會影響下一步學習決策的摘要；不是 mastery / readiness 宣告。"
+            f"{RESET}"
+        )
+
+        print()
+        print(f"{CYAN}{BOLD}目前進度{RESET}")
+        print(
+            f"真實作答  {snapshot['attempts']}"
+            f" · 能力證據 {snapshot['evidence']}"
+        )
+        print(
+            "學習軌道  "
+            f"Reading {snapshot['evidence_by_track'].get('Reading', 0)}"
+            " · Implementation "
+            f"{snapshot['evidence_by_track'].get('Implementation', 0)}"
+        )
+        print(
+            f"記憶狀態  {snapshot['memory_states']} 個 Skill × Track"
+        )
+
+        print()
+        rule()
+        print()
+        print(f"{CYAN}{BOLD}今日容量{RESET}")
+        print(
+            f"總容量    {snapshot['capacity_minutes']} min"
+        )
+        print(
+            f"複習      {snapshot['review_selected_minutes']}/"
+            f"{snapshot['review_budget_minutes']} min"
+            f" · {snapshot['review_selected']} 項"
+        )
+        print(
+            f"新學習    ≥ {snapshot['protected_new_learning_minutes']} min 保留"
+        )
+        if snapshot["review_deferred"]:
+            print(
+                f"安全延後  {snapshot['review_deferred']} 項 · 不算欠作業"
+            )
+
+        print()
+        rule()
+        print()
+        print(f"{CYAN}{BOLD}同步狀態{RESET}")
+        print(
+            f"已確認    {snapshot['remote_acknowledged']}"
+            f" · 待同步 {snapshot['remote_pending']}"
+        )
+
+        if snapshot["warnings"]:
+            print()
+            for warning in snapshot["warnings"]:
+                print_wrapped(
+                    f"⚠ {warning}",
+                    ui_width() - 2,
+                    color=YELLOW,
+                )
+
+        print()
+        rule()
+        print(
+            f"{YELLOW}"
+            "LEARNER_READINESS = NOT ASSESSED"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            "D 查看詳細技術狀態 · Enter / Esc 返回控制中心"
+            f"{RESET}"
+        )
+
+        key = read_key()
+        if key in {"ENTER", "ESC", "q", "Q"}:
+            return
+        if key in {"d", "D"}:
+            learning_status_detail_view(
+                snapshot
+            )
 
 
 def today_view(current_filename: str | None):
@@ -6084,31 +6412,93 @@ def git_center() -> None:
 # Problem Library
 # ============================================================
 
+def _recommended_problem_items(limit: int = 30):
+    """依目前 route 找尚未做的候選，不建立第二套推薦 truth。"""
+
+    skill_uid = None
+    try:
+        snapshot = adaptive_today_snapshot()
+        route = snapshot.get("new_learning")
+        if (
+            route is not None
+            and route.skill is not None
+        ):
+            skill_uid = route.skill.uid
+    except Exception:
+        skill_uid = None
+
+    if skill_uid:
+        items = PROBLEM_LIBRARY.search(
+            skill=skill_uid,
+            attempted=False,
+            require_l2=True,
+            limit=limit,
+        )
+        if not items:
+            items = PROBLEM_LIBRARY.search(
+                skill=skill_uid,
+                attempted=False,
+                limit=limit,
+            )
+        if items:
+            return items, f"目前學習路徑 {skill_uid} · 尚未做"
+
+    return (
+        PROBLEM_LIBRARY.search(
+            attempted=False,
+            limit=limit,
+        ),
+        "尚未做 · 依題庫穩定排序",
+    )
+
+
 def problem_library_view() -> None:
     clear()
     heading("題目庫")
     print()
     print(
         f"{GRAY}"
-        "只顯示安全資訊；遷移題 / 模擬題在作答前不揭露方法。"
+        "直接輸入題號、題名、Skill 或條件；遷移題 / 模擬題仍受防劇透保護。"
         f"{RESET}"
+    )
+    print_wrapped(
+        "例：dfs 未做、D2 source:cses、tag:prefix、role:transfer、l2；"
+        "輸入「推薦」會依目前學習路徑找尚未做的題。",
+        ui_width() - 2,
+        color=GRAY,
     )
     print()
 
     query = prompt_text(
-        "搜尋題號或題名（Enter 顯示全部）"
+        "搜尋（Enter 顯示全部）"
     )
     if query is None:
         return
 
-    items = PROBLEM_LIBRARY.search(
-        query or "",
-        limit=30,
-    )
+    recommendation_reason = None
+    if (query or "").strip().casefold() in {
+        "推薦",
+        "recommend",
+    }:
+        items, recommendation_reason = (
+            _recommended_problem_items(
+                limit=30
+            )
+        )
+    else:
+        items = PROBLEM_LIBRARY.smart_search(
+            query or "",
+            limit=30,
+        )
 
     if not items:
         print()
         print(f"{YELLOW}沒有符合條件的題目。{RESET}")
+        print_wrapped(
+            "可嘗試移除一個條件，或使用 skill:/tag:、source:、D1–D5、未做/已做。",
+            ui_width() - 2,
+            color=GRAY,
+        )
         pause()
         return
 
@@ -6122,18 +6512,32 @@ def problem_library_view() -> None:
         difficulty = safe.get("difficulty") or "—"
         state = "做過" if item.attempted else "未做"
         l2 = " · 有教學資料" if item.has_l2 else ""
+        visible_skill = safe.get("primary_skill")
+        skill_text = (
+            f" · {visible_skill}"
+            if visible_skill
+            else ""
+        )
         options.append(
             {
                 "label": f"{item.external_id} · {item.title}",
                 "detail": (
-                    f"{item.source} · {difficulty} · {state}{l2}"
+                    f"{item.source} · {difficulty} · {state}"
+                    f"{skill_text}{l2}"
                 ),
                 "enabled": True,
             }
         )
 
+    if recommendation_reason:
+        print()
+        print(
+            f"{CYAN}推薦依據：{recommendation_reason}{RESET}"
+        )
+        print()
+
     selected = choose_menu(
-        "題目庫",
+        "題目庫 · 搜尋結果",
         options,
         footer_numbers=True,
         back_text="返回控制中心",
@@ -6581,43 +6985,51 @@ def main() -> int:
         options = [
             {
                 "label": "今日學習",
-                "detail": "Adaptive review + 保留新學習容量",
+                "detail": "自適應複習 + 保留新學習容量",
                 "enabled": True,
+                "section": "主要入口",
             },
             {
                 "label": "題目庫",
-                "detail": "搜尋外部題目 · 自動防劇透",
+                "detail": "搜尋 / Skill / 難度 / 來源 / 未做 · 自動防劇透",
                 "enabled": True,
+                "section": "主要入口",
             },
             {
                 "label": "考試模式",
-                "detail": "計時 mixed practice · 自動記錄執行時間點",
+                "detail": "計時混合練習 · 自動記錄執行時間點",
                 "enabled": True,
-            },
-            {
-                "label": "學習狀態",
-                "detail": "Evidence、Retention、Capacity、Remote ACK",
-                "enabled": True,
-            },
-            {
-                "label": "題目資料",
-                "detail": "新增題目、編輯 metadata、建立 solution",
-                "enabled": True,
+                "section": "主要入口",
             },
             {
                 "label": "完成題目",
                 "detail": finish_detail,
                 "enabled": finish_enabled,
+                "section": "目前題目",
             },
             {
                 "label": "複習題目",
                 "detail": review_detail,
                 "enabled": review_enabled,
+                "section": "目前題目",
             },
             {
                 "label": "題目筆記",
                 "detail": note_detail,
                 "enabled": problem is not None,
+                "section": "目前題目",
+            },
+            {
+                "label": "學習狀態",
+                "detail": "證據、記憶、容量、同步",
+                "enabled": True,
+                "section": "工具",
+            },
+            {
+                "label": "題目資料",
+                "detail": "新增題目、編輯 metadata、建立 solution",
+                "enabled": True,
+                "section": "工具",
             },
             {
                 "label": "檢查與提交",
@@ -6627,6 +7039,7 @@ def main() -> int:
                     else "目前 Git 工作區乾淨"
                 ),
                 "enabled": True,
+                "section": "工具",
             },
         ]
 
@@ -6651,19 +7064,19 @@ def main() -> int:
             exam_center()
 
         elif selected == 3:
-            learning_status_view()
-
-        elif selected == 4:
-            filename = catalog_center(problem, filename)
-
-        elif selected == 5:
             record_problem("finish", problem)
 
-        elif selected == 6:
+        elif selected == 4:
             record_problem("review", problem)
 
-        elif selected == 7:
+        elif selected == 5:
             open_note(problem)
+
+        elif selected == 6:
+            learning_status_view()
+
+        elif selected == 7:
+            filename = catalog_center(problem, filename)
 
         elif selected == 8:
             git_center()

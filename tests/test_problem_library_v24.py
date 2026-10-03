@@ -284,5 +284,71 @@ class ProblemLibraryV24Test(unittest.TestCase):
         self.assertNotIn("primary_skill", view)
 
 
+    def test_smart_search_supports_skill_tags_and_compact_filters(self):
+        profiles, enrichment, _ = self.make_library()
+        self.add_profile(
+            profiles,
+            "d050",
+            title="時間轉換",
+            skill="S01_IO",
+            difficulty="D1",
+            role="Guided Drill",
+            pb_uid="PB-DONE",
+        )
+        self.add_profile(
+            profiles,
+            "a693",
+            title="前綴和查詢",
+            skill="S11_Prefix_Sum",
+            difficulty="D2",
+            role="Transfer Challenge",
+        )
+
+        library = ProblemLibrary(
+            profiles,
+            enrichment,
+            FakeOutbox(["PB-DONE"]),
+        )
+
+        self.assertEqual(
+            [
+                x.external_id
+                for x in library.smart_search(
+                    "tag:prefix 未做 D2"
+                )
+            ],
+            ["a693"],
+        )
+        self.assertEqual(
+            [
+                x.external_id
+                for x in library.smart_search(
+                    "role:guided 已做"
+                )
+            ],
+            ["d050"],
+        )
+
+    def test_plain_query_also_matches_skill_and_role_metadata(self):
+        profiles, _, library = self.make_library()
+        self.add_profile(
+            profiles,
+            "a693",
+            title="未知表面題名",
+            skill="S11_Prefix_Sum",
+            difficulty="D2",
+            role="Transfer Challenge",
+        )
+
+        self.assertEqual(
+            [x.external_id for x in library.smart_search("prefix")],
+            ["a693"],
+        )
+        self.assertEqual(
+            [x.external_id for x in library.smart_search("transfer")],
+            ["a693"],
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
