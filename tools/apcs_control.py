@@ -13,6 +13,7 @@ import sys
 import termios
 import tty
 import unicodedata
+import webbrowser
 from pathlib import Path
 
 try:
@@ -38,6 +39,7 @@ try:
         create_reading_scratch,
         formal_response_ready,
     )
+    from .problem_library import ProblemLibrary
     from .skill_memory_store import (
         SkillMemoryStore,
     )
@@ -65,6 +67,7 @@ except ImportError:
         create_reading_scratch,
         formal_response_ready,
     )
+    from problem_library import ProblemLibrary
     from skill_memory_store import (
         SkillMemoryStore,
     )
@@ -79,6 +82,11 @@ OUTBOX = EvidenceOutbox(RUNTIME_DIR)
 CURRICULUM = RuntimeCurriculum(PUBLISHED_CURRICULUM)
 MEMORY = SkillMemoryStore(
     RUNTIME_DIR / "skill_memory.json"
+)
+PROBLEM_LIBRARY = ProblemLibrary(
+    core.PROBLEM_INTELLIGENCE,
+    core.PROBLEM_ENRICHMENT,
+    OUTBOX,
 )
 
 DEFAULT_SESSION_MINUTES = 60
@@ -5851,6 +5859,132 @@ def git_center() -> None:
 
 
 # ============================================================
+# Problem Library
+# ============================================================
+
+def problem_library_view() -> None:
+    clear()
+    heading("題目庫")
+    print()
+    print(
+        f"{GRAY}"
+        "只顯示安全資訊；遷移題 / 模擬題在作答前不揭露方法。"
+        f"{RESET}"
+    )
+    print()
+
+    query = prompt_text(
+        "搜尋題號或題名（Enter 顯示全部）"
+    )
+    if query is None:
+        return
+
+    items = PROBLEM_LIBRARY.search(
+        query or "",
+        limit=30,
+    )
+
+    if not items:
+        print()
+        print(f"{YELLOW}沒有符合條件的題目。{RESET}")
+        pause()
+        return
+
+    options = []
+    for item in items:
+        safe = PROBLEM_LIBRARY.learner_view(
+            item,
+            activity=item.role or "Core Independent",
+            post_attempt=False,
+        )
+        difficulty = safe.get("difficulty") or "—"
+        state = "做過" if item.attempted else "未做"
+        l2 = " · 有教學資料" if item.has_l2 else ""
+        options.append(
+            {
+                "label": f"{item.external_id} · {item.title}",
+                "detail": (
+                    f"{item.source} · {difficulty} · {state}{l2}"
+                ),
+                "enabled": True,
+            }
+        )
+
+    selected = choose_menu(
+        "題目庫",
+        options,
+        footer_numbers=True,
+        back_text="返回控制中心",
+    )
+    if selected is None:
+        return
+
+    item = items[selected]
+    view = PROBLEM_LIBRARY.learner_view(
+        item,
+        activity=item.role or "Core Independent",
+        post_attempt=item.attempted,
+    )
+
+    clear()
+    heading("題目庫")
+    print()
+    print(f"{WHITE}{item.external_id} · {item.title}{RESET}")
+    print(f"{GRAY}{item.canonical_url}{RESET}")
+    print()
+    print(f"狀態      {'做過' if item.attempted else '未做'}")
+    print(f"難度      {view.get('difficulty') or '—'}")
+    print(f"活動      {view.get('activity') or '—'}")
+
+    if view.get("primary_skill"):
+        print(f"主要 Skill {view['primary_skill']}")
+
+    if not item.attempted and (
+        (item.role or "Core Independent")
+        in {"Core Independent", "Transfer Challenge", "Mock"}
+    ):
+        print()
+        print(
+            f"{YELLOW}"
+            "防劇透：主要方法、關鍵觀察與解法會在作答後解鎖。"
+            f"{RESET}"
+        )
+
+    if item.attempted and item.has_l2:
+        print()
+        rule()
+        print()
+        print(f"{CYAN}{BOLD}作答後教學{RESET}")
+        print_wrapped(
+            view.get("key_observation", "—"),
+            ui_width() - 2,
+        )
+        print(
+            f"複雜度    "
+            f"{view.get('time_complexity', '—')} / "
+            f"{view.get('space_complexity', '—')}"
+        )
+        pitfalls = view.get("common_pitfalls") or []
+        if pitfalls:
+            print("常見陷阱")
+            for pitfall in pitfalls:
+                print_wrapped(
+                    pitfall,
+                    ui_width() - 4,
+                    prefix="  - ",
+                    continuation_prefix="    ",
+                )
+        print(
+            f"{GRAY}"
+            f"驗證層級  {view.get('trust_status') or '—'}"
+            f"{RESET}"
+        )
+
+    print()
+    if confirm("開啟原題網址？"):
+        webbrowser.open(item.canonical_url)
+
+# ============================================================
 # Main
 # ============================================================
 
@@ -5957,6 +6091,11 @@ def main() -> int:
                 "enabled": True,
             },
             {
+                "label": "題目庫",
+                "detail": "搜尋外部題目 · 自動防劇透",
+                "enabled": True,
+            },
+            {
                 "label": "學習狀態",
                 "detail": "Evidence、Retention、Capacity、Remote ACK",
                 "enabled": True,
@@ -6007,21 +6146,24 @@ def main() -> int:
             filename = today_view(filename)
 
         elif selected == 1:
-            learning_status_view()
+            problem_library_view()
 
         elif selected == 2:
-            filename = catalog_center(problem, filename)
+            learning_status_view()
 
         elif selected == 3:
-            record_problem("finish", problem)
+            filename = catalog_center(problem, filename)
 
         elif selected == 4:
-            record_problem("review", problem)
+            record_problem("finish", problem)
 
         elif selected == 5:
-            open_note(problem)
+            record_problem("review", problem)
 
         elif selected == 6:
+            open_note(problem)
+
+        elif selected == 7:
             git_center()
 
 
