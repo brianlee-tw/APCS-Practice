@@ -72,8 +72,16 @@ class LegacyTruthSurfaceV23Test(unittest.TestCase):
             "diagnostic-only",
         )
         self.assertIs(
+            model["runtimeAuthority"],
+            False,
+        )
+        self.assertIs(
             model["readinessAuthority"],
             False,
+        )
+        self.assertEqual(
+            model["canonicalLearningSkillMap"],
+            "Skill Map v3",
         )
 
     def test_static_diagnostic_page_exposes_authority_boundary(self):
