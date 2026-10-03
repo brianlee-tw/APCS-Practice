@@ -202,7 +202,7 @@ class C8LearnerUxTest(unittest.TestCase):
         with (
             patch.object(
                 control,
-                "choose_menu",
+                "choose_grid",
                 return_value=None,
             ) as menu,
             patch.object(
@@ -221,7 +221,7 @@ class C8LearnerUxTest(unittest.TestCase):
             [
                 "推薦給我",
                 "分類找題",
-                "題號／題名搜尋",
+                "題號／題名",
                 "全部題目",
             ],
         )
@@ -260,7 +260,7 @@ class C8LearnerUxTest(unittest.TestCase):
             },
         )
 
-    def test_skill_filter_never_surfaces_unseen_transfer_or_mock(self):
+    def test_practice_skill_filter_can_surface_transfer_and_mock(self):
         def item(
             *,
             problem_id,
@@ -319,6 +319,8 @@ class C8LearnerUxTest(unittest.TestCase):
             ],
             [
                 "guided",
+                "transfer",
+                "mock",
                 "old-transfer",
             ],
         )
@@ -429,10 +431,10 @@ class C8LearnerUxTest(unittest.TestCase):
                         on_date=on_date,
                     )
 
-    def test_capacity_picker_is_fixed_15_minute_steps(self):
+    def test_capacity_picker_uses_sparse_high_value_presets(self):
         with patch.object(
             control,
-            "choose_menu",
+            "choose_grid",
             return_value=3,
         ) as menu:
             value = (
@@ -451,17 +453,28 @@ class C8LearnerUxTest(unittest.TestCase):
                 )
                 for option in options
             ],
-            list(
-                range(
-                    15,
-                    241,
-                    15,
-                )
-            ),
+            [
+                15,
+                30,
+                45,
+                60,
+                75,
+                90,
+                120,
+                150,
+                180,
+                240,
+            ],
         )
         self.assertEqual(
             options[3]["detail"],
             "目前設定",
+        )
+        self.assertEqual(
+            menu.call_args.kwargs[
+                "wide_columns"
+            ],
+            5,
         )
 
     def test_filter_view_has_explicit_live_result_action(self):
@@ -503,13 +516,21 @@ class C8LearnerUxTest(unittest.TestCase):
                 "choose_menu",
                 side_effect=choose,
             ),
+            patch(
+                "tools.apcs_control.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=80
+                ),
+            ),
         ):
-            control._problem_library_filter_view()
+            control._problem_library_filter_view(
+                mode="practice",
+            )
 
         options = calls[0][1]
         self.assertEqual(
             options[0]["label"],
-            "瀏覽全部 · 2 題",
+            "查看 2 題",
         )
         self.assertEqual(
             options[0]["action"],
@@ -581,6 +602,297 @@ class C8LearnerUxTest(unittest.TestCase):
         self.assertIn(
             "今日規劃",
             narrow.getvalue(),
+        )
+
+
+    def test_selection_mode_persists_without_becoming_a_new_ssot(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = (
+                Path(temp)
+                / "selection_mode.json"
+            )
+            with patch.object(
+                control,
+                "SELECTION_MODE_PATH",
+                path,
+            ):
+                self.assertEqual(
+                    control.selection_mode(),
+                    "practice",
+                )
+                control.set_selection_mode(
+                    "exam"
+                )
+                self.assertEqual(
+                    control.selection_mode(),
+                    "exam",
+                )
+                self.assertEqual(
+                    control.toggle_selection_mode(),
+                    "practice",
+                )
+
+    def test_choose_grid_supports_horizontal_navigation(self):
+        keys = iter(
+            [
+                "RIGHT",
+                "ENTER",
+            ]
+        )
+        with (
+            patch.object(
+                control,
+                "read_key",
+                side_effect=lambda: next(keys),
+            ),
+            patch(
+                "tools.apcs_control.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=100
+                ),
+            ),
+            redirect_stdout(io.StringIO()),
+        ):
+            selected = control.choose_grid(
+                "測試",
+                [
+                    {
+                        "label": "A",
+                        "enabled": True,
+                        "section": "主要",
+                    },
+                    {
+                        "label": "B",
+                        "enabled": True,
+                        "section": "主要",
+                    },
+                    {
+                        "label": "C",
+                        "enabled": True,
+                        "section": "主要",
+                    },
+                ],
+            )
+
+        self.assertEqual(
+            selected,
+            1,
+        )
+
+    def test_exam_filter_hides_method_classification_controls(self):
+        options = (
+            control._problem_library_filter_options(
+                {
+                    "skill_uids": (),
+                    "skill_label": None,
+                    "difficulty": None,
+                    "source": None,
+                    "attempted": None,
+                    "role": None,
+                    "require_l2": None,
+                },
+                [],
+                mode="exam",
+            )
+        )
+        labels = {
+            option["label"]
+            for option in options
+        }
+        self.assertNotIn(
+            "學習主題",
+            labels,
+        )
+        self.assertNotIn(
+            "難度",
+            labels,
+        )
+        self.assertNotIn(
+            "練習用途",
+            labels,
+        )
+        self.assertNotIn(
+            "教學資料",
+            labels,
+        )
+        self.assertIn(
+            "來源",
+            labels,
+        )
+        self.assertIn(
+            "作答狀態",
+            labels,
+        )
+
+    def test_exam_text_search_does_not_match_hidden_skill_metadata(self):
+        item = types.SimpleNamespace(
+            external_id="a001",
+            title="一般題名",
+            source="zerojudge",
+            difficulty="D2",
+            attempted=False,
+            role="Transfer Challenge",
+            has_l2=True,
+            primary_skill="S18_DFS",
+            supporting_skills=(),
+            canonical_url="https://example.invalid/a001",
+        )
+        captured = {}
+
+        def results(items, **kwargs):
+            captured["items"] = list(items)
+
+        with (
+            patch.object(
+                control,
+                "prompt_text",
+                return_value="DFS",
+            ),
+            patch.object(
+                control.PROBLEM_LIBRARY,
+                "items",
+                return_value=[item],
+            ),
+            patch.object(
+                control,
+                "_problem_library_results_view",
+                side_effect=results,
+            ),
+            redirect_stdout(io.StringIO()),
+        ):
+            control._problem_library_text_search(
+                mode="exam",
+            )
+
+        self.assertEqual(
+            captured["items"],
+            [],
+        )
+
+    def test_transfer_implementation_scratch_hides_classification(self):
+        p = placement(
+            role="Transfer Challenge"
+        )
+        with tempfile.TemporaryDirectory() as temp:
+            with patch.object(
+                control,
+                "RUNTIME_DIR",
+                Path(temp),
+            ):
+                path = (
+                    control.create_learning_scratch(
+                        p
+                    )
+                )
+                text = path.read_text(
+                    encoding="utf-8"
+                )
+
+        self.assertNotIn(
+            "Skill:",
+            text,
+        )
+        self.assertNotIn(
+            "Lesson:",
+            text,
+        )
+        self.assertNotIn(
+            "Role:",
+            text,
+        )
+        self.assertIn(
+            "嚴格防劇透",
+            text,
+        )
+
+    def test_exam_duration_uses_presets_instead_of_manual_input(self):
+        with patch.object(
+            control,
+            "choose_grid",
+            return_value=1,
+        ) as menu:
+            value = (
+                control._exam_duration_menu(
+                    60
+                )
+            )
+
+        self.assertEqual(
+            value,
+            60,
+        )
+        self.assertEqual(
+            [
+                int(
+                    option["label"]
+                    .split()[0]
+                )
+                for option in menu.call_args.args[1]
+            ],
+            [
+                30,
+                60,
+                90,
+                120,
+                180,
+            ],
+        )
+
+    def test_learning_status_uses_wide_summary_when_space_allows(self):
+        snapshot = {
+            "target": "3+3",
+            "attempts": 2,
+            "evidence": 1,
+            "evidence_by_track": {
+                "Reading": 0,
+                "Implementation": 1,
+            },
+            "memory_states": 1,
+            "capacity_minutes": 60,
+            "review_selected_minutes": 8,
+            "review_budget_minutes": 18,
+            "review_selected": 1,
+            "review_deferred": 0,
+            "protected_new_learning_minutes": 42,
+            "remote_acknowledged": 1,
+            "remote_pending": 1,
+            "warnings": (),
+        }
+        output = io.StringIO()
+
+        with (
+            patch.object(
+                control,
+                "learning_status_snapshot",
+                return_value=snapshot,
+            ),
+            patch.object(
+                control,
+                "read_key",
+                return_value="ENTER",
+            ),
+            patch(
+                "tools.apcs_control.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=100
+                ),
+            ),
+            redirect_stdout(output),
+        ):
+            control.learning_status_view()
+
+        rendered = output.getvalue()
+        self.assertIn(
+            "目前進度",
+            rendered,
+        )
+        self.assertIn(
+            "今日容量",
+            rendered,
+        )
+        self.assertIn(
+            "LEARNER_READINESS = NOT ASSESSED",
+            rendered,
         )
 
 

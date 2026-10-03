@@ -1,6 +1,6 @@
 {
   "schema_version": "apcs-current-authority-v1",
-  "as_of": "2026-10-03",
+  "as_of": "2026-10-04",
   "product": {
     "stable_runtime": "v2.3",
     "stable_runtime_status": "PRODUCTION_CLOSED",
@@ -27,7 +27,7 @@
     "main_daily_entrypoints": [
       "今日學習",
       "題目庫",
-      "考試模式"
+      "模擬考"
     ]
   },
   "production": {

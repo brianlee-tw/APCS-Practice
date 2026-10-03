@@ -21,7 +21,11 @@ from tools.remote_writeback import (
 )
 
 
-def placement(*, method_confirmation_required=False):
+def placement(
+    *,
+    method_confirmation_required=False,
+    role="Guided Drill",
+):
     return types.SimpleNamespace(
         placement_uid="PL-PB-143-L-FND-01",
         pb_uid="PB-143",
@@ -30,7 +34,7 @@ def placement(*, method_confirmation_required=False):
         url="https://zerojudge.tw/ShowProblem?problemid=d050",
         primary_skill="S01_IO",
         supporting_skills=(),
-        role="Guided Drill",
+        role=role,
         lesson_uid="L-FND-01",
         method_confirmation_required=method_confirmation_required,
         evidence_level_cap=2,
@@ -224,6 +228,38 @@ class ReadingRuntimeV23Test(unittest.TestCase):
         self.assertIn(
             'a.judgeResult === "N/A" ? "未提交/未知" : a.judgeResult',
             source,
+        )
+
+
+    def test_transfer_reading_scratch_hides_classification(self):
+        with tempfile.TemporaryDirectory() as temp:
+            path = create_reading_scratch(
+                Path(temp),
+                placement(
+                    role="Transfer Challenge",
+                ),
+                action="finish",
+                today=dt.date(2026, 10, 4),
+            )
+            text = path.read_text(
+                encoding="utf-8"
+            )
+
+        self.assertNotIn(
+            "- Skill:",
+            text,
+        )
+        self.assertNotIn(
+            "- Lesson:",
+            text,
+        )
+        self.assertNotIn(
+            "- Role:",
+            text,
+        )
+        self.assertIn(
+            "- Problem:",
+            text,
         )
 
 
