@@ -177,7 +177,24 @@ v2.4 的總目標定義為：
 
 ---
 
-# 4｜學習者摩擦預算
+# 4｜中文優先與術語說明
+
+v2.4 的 learner-facing 介面、教學文字與系統提示預設使用**繁體中文**。
+
+規則：
+
+- 能用中文清楚表達的概念，優先使用中文。
+- 第一次出現必要的英文專有名詞時，先給中文解釋，再於括號保留英文原詞。
+- C++ 語法、API、函式名稱、演算法慣用英文名稱若直接保留更精確，可以保留，但周邊解釋應使用中文。
+- 不因工程文件使用英文命名，就要求 learner 理解未解釋的縮寫。
+- learner-facing 文字不得為了「看起來專業」而大量堆疊英文詞彙。
+- 若一個術語本身會造成理解成本，系統應先解釋其用途，再使用縮寫或英文名稱。
+
+此規則同樣受「學習者摩擦預算」約束：語言本身不能成為操作或理解障礙。
+
+---
+
+# 6｜學習者摩擦預算
 
 這是 v2.4 的硬性產品契約。
 
@@ -259,7 +276,7 @@ Novelty / Activity / Placement / Timed 若可由系統判定，不應要求學�
 
 ---
 
-# 5｜核心功能（Core）
+# 6｜核心功能（Core）
 
 以下功能全部列入 v2.4 Core。
 
@@ -498,7 +515,7 @@ real delayed evidence
 
 ---
 
-# 6｜可選功能（Optional）
+# 7｜可選功能（Optional）
 
 以下列入 v2.4 roadmap，但不阻塞版本完成。
 
@@ -565,7 +582,7 @@ real delayed evidence
 
 ---
 
-# 7｜明確不做（Non-goals）
+# 8｜明確不做（Non-goals）
 
 v2.4 不做：
 
@@ -610,7 +627,7 @@ v2.4 不做：
 
 ---
 
-# 8｜題目智慧生命週期
+# 9｜題目智慧生命週期
 
 題目智慧只處理「如何理解與使用題目」，不創造第二份 Problem identity。
 
@@ -722,7 +739,7 @@ AI Candidate
 
 ---
 
-# 9｜外部 OJ 與自建平台的分工
+# 10｜外部 OJ 與自建平台的分工
 
 ```text
 外部 OJ
@@ -742,7 +759,7 @@ APCS Learning System
 
 ---
 
-# 10｜Problem Library 設計
+# 11｜Problem Library 設計
 
 Learner-facing 頁面最多提供必要篩選：
 
@@ -777,7 +794,7 @@ ChatGPT 讀取 Problem Intelligence 後選題。
 
 ---
 
-# 11｜Spoiler Boundary
+# 12｜Spoiler Boundary
 
 任何 learner-facing 題目資料必須分成：
 
@@ -807,7 +824,7 @@ ChatGPT 讀取 Problem Intelligence 後選題。
 
 ---
 
-# 12｜Learner Model v2
+# 13｜Learner Model v2
 
 v2.4 不建立一個新的「學習者總分」。
 
@@ -833,7 +850,7 @@ Exam execution
 
 ---
 
-# 13｜Memory Policy v0.2 原則
+# 14｜Memory Policy v0.2 原則
 
 目前 v0.1 參數是保守先驗，不直接視為個人最佳值。
 
@@ -859,7 +876,7 @@ vs
 
 ---
 
-# 14｜跨日鞏固原則
+# 15｜跨日鞏固原則
 
 不用 sleep tracking。
 
@@ -883,7 +900,7 @@ vs
 
 ---
 
-# 15｜Today v2 的 learner experience
+# 16｜Today v2 的 learner experience
 
 理想畫面：
 
@@ -923,7 +940,7 @@ Why?
 
 ---
 
-# 16｜版本成功指標
+# 17｜版本成功指標
 
 v2.4 不以：
 
@@ -954,7 +971,7 @@ v2.4 不以：
 
 ---
 
-# 17｜三個 learner-facing 主入口上限
+# 18｜三個 learner-facing 主入口上限
 
 v2.4 原則上最多保留三個主要入口：
 
@@ -979,7 +996,7 @@ Exam
 
 ---
 
-# 18｜Gate C0–C10
+# 19｜Gate C0–C10
 
 ## C0｜Authority 與文件收斂
 
@@ -1202,7 +1219,7 @@ LEARNER_READINESS = NOT ASSESSED
 
 ---
 
-# 19｜Gate 執行順序
+# 20｜Gate 執行順序
 
 正式順序：
 
@@ -1230,7 +1247,7 @@ C0
 
 ---
 
-# 20｜Anti-overengineering Stop Rule
+# 21｜Anti-overengineering Stop Rule
 
 任何 feature 在實作前與 review 時都問：
 
@@ -1248,7 +1265,7 @@ C0
 
 ---
 
-# 21｜v2.4 Core / Optional / Non-goals 最終固定版
+# 22｜v2.4 Core / Optional / Non-goals 最終固定版
 
 ## Core
 
@@ -1292,7 +1309,7 @@ C0
 
 ---
 
-# 22｜版本完成定義
+# 23｜版本完成定義
 
 v2.4 完成不是：
 
@@ -1304,7 +1321,7 @@ v2.4 完成不是：
 
 ---
 
-# 23｜與 v2.3 的相容承諾
+# 24｜與 v2.3 的相容承諾
 
 在 v2.4 未完成並通過對應 Gate 前：
 
@@ -1318,7 +1335,7 @@ v2.4 完成不是：
 
 ---
 
-# 24｜最終產品準則
+# 25｜最終產品準則
 
 v2.4 所有設計最後都用一句話判斷：
 
