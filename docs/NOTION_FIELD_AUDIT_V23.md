@@ -1,6 +1,6 @@
 # Notion Core Field Audit for APCS v2.3
 
-Status: **Gate 0 working audit**
+Status: **Phase 2B enforced schema audit**
 
 This audit treats the current Notion system as valuable input, not unquestionable truth. No learner data is mutated by this document.
 
@@ -33,7 +33,9 @@ The immediate consequence is that existing Skill Status values cannot be treated
 - **DERIVE**: value should be computed from other authoritative facts.
 - **MOVE TO GIT**: executable/version-sensitive machine rule should live in the published Git contract.
 - **SYSTEM-MANAGED**: retained in Notion but written by the integration, not manually maintained.
-- **DELETE**: field is redundant or actively misleading once migration is complete.
+- **DEPRECATE**: preserve existing values for history, but stop treating the field as active truth or manually maintaining it.
+- **MIGRATE-FIRST**: remove only after existing values have been archived or projected into a safer historical representation.
+- **DELETE**: field is redundant or actively misleading once migration is complete and no retained values would be lost.
 - **ARCHIVE**: keep only for historical/audit value, outside the active learner workflow.
 
 ## 3. Skill Map v3
@@ -57,11 +59,11 @@ The immediate consequence is that existing Skill Status values cannot be treated
 | Gate Override / Notes | KEEP | Human note only; must not silently override runtime. Any executable override requires a reviewed Git contract change. |
 | 題庫題目 | SYSTEM-MANAGED | Relation view; do not manually maintain as an independent truth. |
 | Evidence Events | SYSTEM-MANAGED | Backlink from Evidence Ledger. |
-| RM | DERIVE | Computed from valid Evidence + versioned gate rules. |
-| IM | DERIVE | Computed from valid Evidence + versioned gate rules. |
-| Skill Status | DERIVE | Computed from prerequisites, evidence, current learning activity, and review state. Existing manual values are not mastery evidence. |
-| Reading Milestone | DERIVE | Navigation alias from readiness/gate state; not manually authored learner truth. |
-| Implementation Milestone | DERIVE | Same as above. |
+| RM | DERIVE | Computed from valid Evidence + versioned gate rules. Current live values: 0 / 39 populated. |
+| IM | DERIVE | Computed from valid Evidence + versioned gate rules. Current live values: 0 / 39 populated. |
+| Skill Status | DEPRECATE, DERIVE | Computed from prerequisites, evidence, current learning activity, and review state. 39 / 39 legacy manual values are preserved for history but ignored by runtime. |
+| Reading Milestone | DEPRECATE, DERIVE | Navigation alias from readiness/gate state. 35 / 39 legacy values remain historical only. |
+| Implementation Milestone | DEPRECATE, DERIVE | Same as above; 35 / 39 legacy values remain historical only. |
 
 ### Required schema refinement
 
@@ -138,8 +140,8 @@ REC should represent one immutable attempt story, not a mutable scheduling objec
 | 技能節點 | SYSTEM-MANAGED | Context relation derived from Placement and actual observed target; not manually copied from all Problem tags. |
 | Evidence Events | SYSTEM-MANAGED | Backlink. |
 | 學習階段 | DERIVE | Prefer explicit Activity/Role in attempt context; avoid overlapping subjective state. |
-| 進度狀態 | DELETE | A completed immutable attempt should not also act as a mutable task/status object. |
-| 複習日期 | DELETE | Scheduling belongs to adaptive Skill x Track engine, not to an individual REC. |
+| 進度狀態 | MIGRATE-FIRST | A completed immutable attempt should not also act as a mutable task/status object. Live audit: 75 legacy/system-test rows still contain historical values; 0 formal learner rows do. Archive before dropping the property. |
+| 複習日期 | DELETE | Scheduling belongs to adaptive Skill x Track engine, not to an individual REC. Live audit: 0 / 137 rows populated; no runtime consumer remains. |
 | 學習歷程候選 | KEEP | Optional portfolio signal, independent from mastery. |
 | 學習歷程證據 | KEEP | Optional human-readable portfolio note. |
 
@@ -194,16 +196,24 @@ Decision:
 - **DELETE/RETIRE FROM DAILY FLOW** duplicate code-solving/runtime steps that VS Code can perform better.
 - **ARCHIVE** historical release receipts and superseded UI-version closure pages outside the learner route.
 
-## 9. Immediate blockers before Notion mutation
+## 9. Phase 2B executable schema boundary
 
-Do not perform destructive migration yet.
+The Git contract now includes `curriculum/notion_schema_policy.v23.json`.
+Remote REC/EV projections are fail-closed against client-forbidden fields via
+`tools/notion_schema_policy.py`.
 
-First implement:
-1. published architecture contract;
-2. validator/compiler boundary;
-3. replacement VS Code paths for fields marked DELETE/DERIVE;
-4. idempotent event/outbox design;
-5. readback/reconciliation tests.
+Current enforced client write boundary:
 
-Only after these pass should Notion fields be removed or converted.
+- REC does not write legacy scheduling/status fields such as `進度狀態` or
+  `複習日期`;
+- EV does not write `Delay Days` or `Valid for Gate`;
+- Published Skill snapshots exclude manual learner-state fields `RM`, `IM`,
+  `Skill Status`, `Reading Milestone`, and `Implementation Milestone`.
 
+This allows legacy Notion values to remain available for audit while preventing
+them from re-entering runtime truth.
+
+## 10. Destructive migration gate
+
+Do not remove a populated property until retained historical values are
+archived or otherwise proven disposable.

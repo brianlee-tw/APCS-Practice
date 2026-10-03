@@ -27,9 +27,15 @@ try:
     from .evidence_outbox import (
         OutboxEnvelope,
     )
+    from .notion_schema_policy import (
+        validate_projection_fields,
+    )
 except ImportError:
     from evidence_outbox import (
         OutboxEnvelope,
+    )
+    from notion_schema_policy import (
+        validate_projection_fields,
     )
 
 
@@ -65,6 +71,22 @@ class RemoteWritebackError(
     ValueError
 ):
     pass
+
+
+def _validate_notion_projection(
+    *,
+    surface: str,
+    properties: dict[str, Any],
+) -> None:
+    try:
+        validate_projection_fields(
+            surface=surface,
+            properties=properties,
+        )
+    except ValueError as exc:
+        raise RemoteWritebackError(
+            str(exc)
+        ) from exc
 
 
 @dataclass(frozen=True)
@@ -435,6 +457,11 @@ def notion_projection(
             "核心收穫"
         ] = attempt.note
 
+    _validate_notion_projection(
+        surface="rec",
+        properties=rec_properties,
+    )
+
     ev_rows = []
 
     for event in bundle.evidence:
@@ -505,8 +532,13 @@ def notion_projection(
                 "Evidence Note"
             ] = event.note
 
-        # Valid for Gate is intentionally absent.  It must be derived by the
-        # versioned MEAS evaluator after the event has been durably written.
+        # Valid for Gate / Delay Days are intentionally absent.  They must be
+        # derived after the event has been durably written.
+
+        _validate_notion_projection(
+            surface="ev",
+            properties=properties,
+        )
 
         ev_rows.append(
             {
