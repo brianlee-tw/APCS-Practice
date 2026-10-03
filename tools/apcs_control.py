@@ -1589,6 +1589,7 @@ def choose_menu(
     back_text: str | None = None,
     selected_index: int | None = None,
     enter_text: str | None = None,
+    mode_toggle: bool = False,
 ):
     if (
         selected_index is not None
@@ -1719,9 +1720,15 @@ def choose_menu(
                     f"↑↓ 選擇 · Enter {selected_action}"
                     f"{RESET}"
                 )
+                extra = (
+                    " · M 切換選題模式"
+                    if mode_toggle
+                    else ""
+                )
                 print(
                     f"{GRAY}"
-                    f"1–{len(options)} 直達 · Esc / Q 關閉"
+                    f"1–{len(options)} 直達"
+                    f"{extra} · Esc / Q 關閉"
                     f"{RESET}"
                 )
             else:
@@ -1731,7 +1738,16 @@ def choose_menu(
                     f"{RESET}"
                 )
                 label = back_text or "返回控制中心"
-                print(f"{GRAY}Esc / Q {label}{RESET}")
+                extra = (
+                    "M 切換選題模式 · "
+                    if mode_toggle
+                    else ""
+                )
+                print(
+                    f"{GRAY}"
+                    f"{extra}Esc / Q {label}"
+                    f"{RESET}"
+                )
 
         # Render the completed frame in one write.  Always clear the visible
         # terminal before redrawing: a HOME-only redraw is unsafe when the
@@ -1755,6 +1771,12 @@ def choose_menu(
         elif key == "ENTER":
             if options[selected].get("enabled", True):
                 return selected
+
+        elif (
+            mode_toggle
+            and key in {"m", "M"}
+        ):
+            return MODE_TOGGLE
 
         elif key in {"ESC", "q", "Q"}:
             return None
@@ -1841,6 +1863,7 @@ def choose_grid(
             back_text=back_text,
             selected_index=selected_index,
             enter_text=enter_text,
+            mode_toggle=mode_toggle,
         )
         return result
 
