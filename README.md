@@ -10,7 +10,7 @@ v2.3 的可靠學習基礎設施已完成並投入正式使用；v2.4 現在進�
 > 本區塊由 `docs/CURRENT_AUTHORITY.json` 產生；不要手動修改。
 
 - 穩定學習執行環境：**v2.3**，狀態 `PRODUCTION_CLOSED`。
-- 下一版本：**v2.4**，目前階段 **C1｜題目智慧最小可用版本**。
+- 下一版本：**v2.4**，目前階段 **C2｜深度教學資料與驗證**。
 - 正式課程：**52 Lessons / 14 Units / 39 Skills**；未有真實 Evidence 前不擴張主線。
 - Production Worker：**#58 @100%** `0eafa60d-6d4d-4edb-b1eb-ac6a9a3625b6`；system-audit = **PASS_CLEAN**；Preview / Version URLs = **DISABLED**。
 - 日常主要介面：**VS Code Control Center**。
