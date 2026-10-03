@@ -54,6 +54,16 @@ except ImportError:
 
 
 try:
+    from .problem_enrichment import (
+        ProblemEnrichmentStore,
+    )
+except ImportError:
+    from problem_enrichment import (
+        ProblemEnrichmentStore,
+    )
+
+
+try:
     from .tag_analytics import (
         build_tag_stats,
         display_tags,
@@ -87,6 +97,10 @@ ENGINE = LearningEngine(STORE)
 CATALOG = CatalogStore(DATA)
 PROBLEM_INTELLIGENCE = ProblemIntelligenceStore(
     DATA / "problem_intelligence"
+)
+PROBLEM_ENRICHMENT = ProblemEnrichmentStore(
+    PROBLEM_INTELLIGENCE,
+    DATA / "problem_enrichment",
 )
 
 START = "<!-- APCS_DASHBOARD_START -->"
@@ -839,6 +853,11 @@ def validate(strict=False):
     errors.extend(
         "題目智慧: " + message
         for message in PROBLEM_INTELLIGENCE.validate_all()
+    )
+
+    errors.extend(
+        "深度教學: " + message
+        for message in PROBLEM_ENRICHMENT.validate_all()
     )
 
     print(
