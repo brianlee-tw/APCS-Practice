@@ -3171,6 +3171,31 @@ def add_solution_asset(
     return target
 
 
+def solutions_for_problem(
+    problem_id: str,
+    *,
+    store=None,
+) -> list[SolutionMeta]:
+    """Return every registered solution for one Catalog problem."""
+
+    store = store or core.CATALOG
+    pid = normalize_problem_id(
+        problem_id
+    )
+
+    return sorted(
+        (
+            item
+            for item in store.load_solutions()
+            if item.problem_id == pid
+        ),
+        key=lambda item: (
+            item.language,
+            item.path,
+        ),
+    )
+
+
 def current_catalog_solution(
     problem,
     *,
@@ -4018,9 +4043,115 @@ def add_solution_ui(problem) -> str | None:
     return str(path)
 
 
+def solution_center_ui(
+    problem,
+    current_filename: str | None,
+) -> str | None:
+    if not problem:
+        return current_filename
+
+    try:
+        solutions = solutions_for_problem(
+            problem["id"]
+        )
+    except CatalogError as exc:
+        clear()
+        heading("Solutions")
+        print()
+        print(f"{RED}✕ Catalog 無法讀取：{exc}{RESET}")
+        pause()
+        return current_filename
+
+    options = []
+
+    for item in solutions:
+        options.append(
+            {
+                "label": (
+                    f"{item.language.upper()} · {Path(item.path).name}"
+                ),
+                "detail": (
+                    f"Complexity {item.complexity or '未記錄'}"
+                    f" · {item.path}"
+                ),
+                "enabled": True,
+                "kind": "open",
+                "solution": item,
+            }
+        )
+
+    options.append(
+        {
+            "label": "新增 Solution",
+            "detail": "建立另一份 C++ / Python 解法；保留既有 solution",
+            "enabled": True,
+            "kind": "add",
+        }
+    )
+
+    selected = choose_menu(
+        f"Solutions · {problem['id']}",
+        options,
+        problem=problem,
+        back_text="返回題目資料",
+    )
+
+    if selected is None:
+        return current_filename
+
+    option = options[selected]
+
+    if option["kind"] == "add":
+        created = add_solution_ui(
+            problem
+        )
+        return created or current_filename
+
+    item = option["solution"]
+    target = ROOT / item.path
+
+    if not target.is_file():
+        clear()
+        heading("Solutions")
+        print()
+        print(
+            f"{RED}"
+            f"✕ Solution 檔案不存在：{item.path}"
+            f"{RESET}"
+        )
+        pause()
+        return current_filename
+
+    if open_in_vscode(target):
+        clear()
+        heading("Solutions")
+        print()
+        print(
+            f"{GREEN}"
+            f"✓ 已開啟 {item.path}"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            "控制中心會以實際開啟的 solution path 辨識目前解法；"
+            "Complexity 也只更新該 solution。"
+            f"{RESET}"
+        )
+        pause()
+        return str(target)
+
+    clear()
+    heading("Solutions")
+    print()
+    print(f"{YELLOW}⚠ 無法自動開啟 VS Code{RESET}")
+    pause()
+    return current_filename
+
+
 def catalog_center(problem, current_filename: str | None):
     try:
         problems = core.CATALOG.load_problems()
+        catalog_solutions = core.CATALOG.load_solutions()
     except CatalogError as exc:
         clear()
         heading("題目資料")
@@ -4032,6 +4163,16 @@ def catalog_center(problem, current_filename: str | None):
     known = bool(
         problem
         and problem["id"] in problems
+    )
+    solution_count = (
+        sum(
+            1
+            for item in catalog_solutions
+            if known
+            and item.problem_id == problem["id"]
+        )
+        if known
+        else 0
     )
 
     options = [
@@ -4050,9 +4191,9 @@ def catalog_center(problem, current_filename: str | None):
             "enabled": known,
         },
         {
-            "label": "新增 Solution",
+            "label": "Solutions",
             "detail": (
-                "為目前題目建立另一份 C++ / Python 解法"
+                f"{solution_count} 份已登錄 · 開啟或新增解法"
                 if known
                 else "需先選擇 Catalog 題目"
             ),
@@ -4077,8 +4218,10 @@ def catalog_center(problem, current_filename: str | None):
         edit_problem_ui(problem)
         return current_filename
 
-    created = add_solution_ui(problem)
-    return created or current_filename
+    return solution_center_ui(
+        problem,
+        current_filename,
+    )
 # ============================================================
 # Today / Notes
 # ============================================================
