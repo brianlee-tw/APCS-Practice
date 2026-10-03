@@ -2111,7 +2111,7 @@ def evidence_context_menu(
             )
 
             if method_confirmed is None:
-                step = "novelty"
+                step = "timed"
                 continue
 
             state["method_confirmed"] = (
