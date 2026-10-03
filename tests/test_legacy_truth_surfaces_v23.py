@@ -1,9 +1,14 @@
 import io
+import json
 import unittest
+from pathlib import Path
 from contextlib import redirect_stdout
 from unittest.mock import patch
 
 from tools import apcs
+
+
+ROOT = Path(__file__).resolve().parents[1]
 
 
 class LegacyTruthSurfaceV23Test(unittest.TestCase):
@@ -50,6 +55,69 @@ class LegacyTruthSurfaceV23Test(unittest.TestCase):
         self.assertIn(
             "Control Center → 今日學習",
             rendered,
+        )
+
+    def test_static_diagnostic_skill_model_is_not_v23_authority(self):
+        model = json.loads(
+            (
+                ROOT
+                / "site"
+                / "data"
+                / "skill-model.v1.json"
+            ).read_text(encoding="utf-8")
+        )
+
+        self.assertEqual(
+            model["scope"],
+            "diagnostic-only",
+        )
+        self.assertIs(
+            model["readinessAuthority"],
+            False,
+        )
+
+    def test_static_diagnostic_page_exposes_authority_boundary(self):
+        html = (
+            ROOT
+            / "site"
+            / "index.html"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn(
+            "diagnostic-only surface",
+            html,
+        )
+        self.assertIn(
+            "不是 v2.3 Learning Runtime",
+            html,
+        )
+        self.assertIn(
+            "不代表 Skill × Track mastery",
+            html,
+        )
+        self.assertIn(
+            "不會寫入 REC / EV",
+            html,
+        )
+
+    def test_static_site_contract_rejects_skill_map_role(self):
+        contract = (
+            ROOT
+            / "site"
+            / "README.md"
+        ).read_text(encoding="utf-8")
+
+        self.assertIn(
+            "DIAGNOSTIC ONLY",
+            contract,
+        )
+        self.assertIn(
+            "not a stale alternate copy of Skill Map v3",
+            contract,
+        )
+        self.assertIn(
+            "readinessAuthority",
+            contract,
         )
 
     def test_low_level_today_warns_before_compatibility_queue(self):
