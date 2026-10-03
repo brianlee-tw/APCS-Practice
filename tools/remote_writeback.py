@@ -58,6 +58,7 @@ LANGUAGE_TO_NOTION = {
 }
 
 REMOTE_JUDGE_RESULTS = {
+    "N/A",
     "AC",
     "WA",
     "TLE",
@@ -372,6 +373,11 @@ def notion_projection(
     """
 
     attempt = bundle.attempt
+    rec_judge_result = (
+        "未提交/未知"
+        if attempt.judge_result == "N/A"
+        else attempt.judge_result
+    )
 
     rec_properties: dict[str, Any] = {
         "Writeback ID": (
@@ -382,7 +388,7 @@ def notion_projection(
             attempt.problem_id
         ),
         "最新提交結果": (
-            attempt.judge_result
+            rec_judge_result
         ),
         "紀錄來源": (
             attempt.source
