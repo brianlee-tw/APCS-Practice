@@ -310,6 +310,36 @@ def all_rows():
     return rows
 
 
+def runtime_scratch_context(path: Path) -> tuple[str | None, str | None]:
+    """Return (track, record_action) encoded by a v2.3 runtime scratch path."""
+
+    parts = {
+        part.lower()
+        for part in path.parts
+    }
+
+    track = (
+        "Reading"
+        if "reading" in parts
+        else (
+            "Implementation"
+            if {"learn", "review"} & parts
+            else None
+        )
+    )
+    action = (
+        "review"
+        if "review" in parts
+        else (
+            "finish"
+            if "learn" in parts
+            else None
+        )
+    )
+
+    return track, action
+
+
 def current_problem(filename: str | None):
     if not filename:
         return None
@@ -364,6 +394,12 @@ def current_problem(filename: str | None):
                 "pb_uid": placement.pb_uid,
                 "published_runtime": True,
                 "url": placement.url,
+                "runtime_track": (
+                    runtime_scratch_context(path)[0]
+                ),
+                "runtime_action": (
+                    runtime_scratch_context(path)[1]
+                ),
             }
 
     match = ID_RE.match(
