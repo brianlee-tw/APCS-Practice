@@ -5,8 +5,8 @@
 ## 版本
 
 - 穩定執行環境：**v2.3**（PRODUCTION_CLOSED）
-- 下一版本：**v2.4**（C1_PROBLEM_INTELLIGENCE_MVP）
-- 目前階段：**C1｜題目智慧最小可用版本**
+- 下一版本：**v2.4**（C2_DEEP_ENRICHMENT）
+- 目前階段：**C2｜深度教學資料與驗證**
 
 ## 正式課程
 
