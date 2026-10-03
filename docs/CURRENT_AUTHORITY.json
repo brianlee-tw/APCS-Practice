@@ -5,7 +5,7 @@
     "stable_runtime": "v2.3",
     "stable_runtime_status": "PRODUCTION_CLOSED",
     "next_version": "v2.4",
-    "next_version_status": "C2_DEEP_ENRICHMENT",
+    "next_version_status": "C3_PROBLEM_LIBRARY_SPOILER_FIREWALL",
     "next_version_contract": "docs/V24_PRODUCT_ARCHITECTURE_CONTRACT.md",
     "learner_readiness": "NOT_ASSESSED"
   },
@@ -47,8 +47,8 @@
     "remote_writeback_status": "PRODUCTION_VERIFIED"
   },
   "current_work": {
-    "gate": "C2",
-    "goal": "深度教學資料與驗證",
+    "gate": "C3",
+    "goal": "題目庫與防劇透",
     "open_nonblocking": [
       {
         "issue": 32,
