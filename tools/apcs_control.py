@@ -4297,22 +4297,22 @@ def _start_new_learning(
     if opened:
         print(
             f"{GREEN}"
-            (
+            + (
                 "✓ 已開啟 Reading formal-response scratch"
                 if track == "Reading"
                 else "✓ 已開啟 B4 learning scratch"
             )
-            f"{RESET}"
+            + f"{RESET}"
         )
         print(
             f"{GRAY}"
-            (
+            + (
                 "先完成 Formal response，再驗證；之後回 Control Center 選「完成題目」。"
                 if track == "Reading"
                 else "完成外部 Judge 後回 Control Center 選「完成題目」；"
             )
             + " Placement UID 會直接接回 EV-v1 outbox。"
-            f"{RESET}"
+            + f"{RESET}"
         )
     else:
         print(
