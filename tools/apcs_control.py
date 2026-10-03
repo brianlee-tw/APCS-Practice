@@ -27,6 +27,10 @@ try:
         RuntimeCurriculum,
         RuntimeCurriculumError,
     )
+    from .adaptive_memory import (
+        next_due_on,
+        retrievability,
+    )
     from .learning_route import (
         select_new_learning_plan,
     )
@@ -49,6 +53,10 @@ except ImportError:
     from runtime_curriculum import (
         RuntimeCurriculum,
         RuntimeCurriculumError,
+    )
+    from adaptive_memory import (
+        next_due_on,
+        retrievability,
     )
     from learning_route import (
         select_new_learning_plan,
