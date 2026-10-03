@@ -30,6 +30,10 @@ try:
     from .learning_route import (
         select_new_learning_plan,
     )
+    from .reading_runtime import (
+        create_reading_scratch,
+        formal_response_ready,
+    )
     from .skill_memory_store import (
         SkillMemoryStore,
     )
@@ -48,6 +52,10 @@ except ImportError:
     )
     from learning_route import (
         select_new_learning_plan,
+    )
+    from reading_runtime import (
+        create_reading_scratch,
+        formal_response_ready,
     )
     from skill_memory_store import (
         SkillMemoryStore,
@@ -310,6 +318,36 @@ def all_rows():
     return rows
 
 
+def runtime_scratch_context(path: Path) -> tuple[str | None, str | None]:
+    """Return (track, record_action) encoded by a v2.3 runtime scratch path."""
+
+    parts = {
+        part.lower()
+        for part in path.parts
+    }
+
+    track = (
+        "Reading"
+        if "reading" in parts
+        else (
+            "Implementation"
+            if {"learn", "review"} & parts
+            else None
+        )
+    )
+    action = (
+        "review"
+        if "review" in parts
+        else (
+            "finish"
+            if "learn" in parts
+            else None
+        )
+    )
+
+    return track, action
+
+
 def current_problem(filename: str | None):
     if not filename:
         return None
@@ -364,6 +402,12 @@ def current_problem(filename: str | None):
                 "pb_uid": placement.pb_uid,
                 "published_runtime": True,
                 "url": placement.url,
+                "runtime_track": (
+                    runtime_scratch_context(path)[0]
+                ),
+                "runtime_action": (
+                    runtime_scratch_context(path)[1]
+                ),
             }
 
     match = ID_RE.match(
@@ -1903,6 +1947,8 @@ def attempt_envelope_for_record(
     placement=None,
     method_confirmed: bool | None = None,
     finished_at: dt.datetime | None = None,
+    track: str = "Implementation",
+    evidence_outcome: str | None = None,
 ):
     if action not in {"finish", "review"}:
         raise ValueError(
@@ -1937,10 +1983,33 @@ def attempt_envelope_for_record(
     evidence = []
     attempt_note = ""
 
+    if track not in {"Reading", "Implementation"}:
+        raise ValueError(
+            f"unsupported Evidence track={track!r}"
+        )
+
+    if track == "Reading":
+        if evidence_outcome not in {
+            "PASS",
+            "PARTIAL",
+            "FAIL",
+        }:
+            raise ValueError(
+                "Reading Evidence requires PASS/PARTIAL/FAIL outcome"
+            )
+        resolved_outcome = evidence_outcome
+    else:
+        resolved_outcome = (
+            "PASS"
+            if result == "AC"
+            else "FAIL"
+        )
+
     claim_allowed = (
         placement is not None
         and (
-            not placement.method_confirmation_required
+            track != "Implementation"
+            or not placement.method_confirmation_required
             or method_confirmed is True
         )
     )
@@ -1948,11 +2017,12 @@ def attempt_envelope_for_record(
     if claim_allowed:
         claim_note = (
             f"{activity or 'Practice'}"
-            f" · {result}"
+            f" · {resolved_outcome}"
         )
 
         if (
-            placement is not None
+            track == "Implementation"
+            and placement is not None
             and placement.method_confirmation_required
         ):
             claim_note += " · target method confirmed"
@@ -1960,17 +2030,14 @@ def attempt_envelope_for_record(
         evidence.append(
             (
                 placement.primary_skill,
-                "Implementation",
-                (
-                    "PASS"
-                    if result == "AC"
-                    else "FAIL"
-                ),
+                track,
+                resolved_outcome,
                 claim_note,
             )
         )
     elif (
-        placement is not None
+        track == "Implementation"
+        and placement is not None
         and placement.method_confirmation_required
     ):
         attempt_note = (
@@ -2007,6 +2074,7 @@ def evidence_context_menu(
     problem,
     *,
     initial: dict | None = None,
+    track: str = "Implementation",
 ):
     placement, placement_warning = (
         placement_for_record(
@@ -2097,7 +2165,8 @@ def evidence_context_menu(
         state["timed"] = timed
 
         if (
-            placement is not None
+            track == "Implementation"
+            and placement is not None
             and placement.method_confirmation_required
         ):
             method_confirmed = (
@@ -2123,7 +2192,274 @@ def evidence_context_menu(
         return state
 
 
+def reading_outcome_menu(
+    problem,
+) -> str | None:
+    options = [
+        {
+            "label": "PASS · 推理成立",
+            "detail": "formal response 的 model / trace / conclusion 經驗證後成立",
+            "enabled": True,
+            "value": "PASS",
+        },
+        {
+            "label": "PARTIAL · 部分成立",
+            "detail": "核心方向有證據，但仍有局部錯誤、缺口或不確定性",
+            "enabled": True,
+            "value": "PARTIAL",
+        },
+        {
+            "label": "FAIL · 未能重建",
+            "detail": "關鍵推理不成立，或仍需要重新學習",
+            "enabled": True,
+            "value": "FAIL",
+        },
+    ]
+
+    selected = choose_menu(
+        "Reading Outcome",
+        options,
+        problem=problem,
+        main=False,
+        back_text="取消 Reading 紀錄",
+    )
+    if selected is None:
+        return None
+    return options[selected]["value"]
+
+
+def record_reading_problem(
+    action: str,
+    problem,
+) -> None:
+    if action not in {"finish", "review"}:
+        raise ValueError(
+            f"unsupported Reading action={action!r}"
+        )
+
+    if not formal_response_ready(
+        Path(problem["path"])
+    ):
+        clear()
+        heading("Reading Evidence")
+        print()
+        print(
+            f"{YELLOW}"
+            "⚠ Formal response 尚未完成；本次不建立 Reading Evidence。"
+            f"{RESET}"
+        )
+        print()
+        print_wrapped(
+            "先在 Reading scratch 留下 reason / trace 並儲存；"
+            "reference / executor / Judge 只能在 formal response 之後使用。",
+            ui_width(),
+            color=GRAY,
+        )
+        pause()
+        return
+
+    outcome = reading_outcome_menu(
+        problem
+    )
+    if outcome is None:
+        return
+
+    clear()
+    heading("Reading 耗時")
+    print()
+    print_problem_context(problem)
+    print()
+    raw_minutes = prompt_text(
+        "本次 Reading 分鐘（可略過）"
+    )
+    if raw_minutes is None:
+        return
+    minutes = None
+    if raw_minutes:
+        if (
+            not raw_minutes.isdigit()
+            or not (1 <= int(raw_minutes) <= 999)
+        ):
+            clear()
+            heading("Reading Evidence")
+            print()
+            print(
+                f"{RED}✕ 分鐘必須是 1–999 的整數{RESET}"
+            )
+            pause()
+            return
+        minutes = int(raw_minutes)
+
+    evidence_context = evidence_context_menu(
+        action,
+        problem,
+        track="Reading",
+    )
+    if evidence_context is RECORD_BACK:
+        return
+
+    placement = evidence_context["placement"]
+
+    clear()
+    heading(
+        "完成 Reading"
+        if action == "finish"
+        else "Reading Review"
+    )
+    print()
+    print_problem_context(problem)
+    print()
+    print(f"Outcome     {outcome}")
+    print(
+        "耗時        "
+        + (
+            f"{minutes} 分鐘"
+            if minutes is not None
+            else "未記錄"
+        )
+    )
+    print(
+        f"Assistance  A{evidence_context['assistance']}"
+    )
+    print(
+        "Independent "
+        + (
+            "是"
+            if evidence_context["independent"]
+            else "否"
+        )
+    )
+    print(
+        f"Novelty     {evidence_context['novelty']}"
+    )
+    print(
+        "Timed       "
+        + (
+            "是"
+            if evidence_context["timed"]
+            else "否"
+        )
+    )
+    if placement is not None:
+        print(
+            "Evidence    "
+            f"{placement.primary_skill} × Reading"
+        )
+        print(f"Placement   {placement.role}")
+    else:
+        print(
+            f"{YELLOW}"
+            "Evidence    尚未建立（無 Published Placement）"
+            f"{RESET}"
+        )
+    print()
+    print_wrapped(
+        "Reading Attempt 使用 Judge Result N/A；不會把 reasoning 偽裝成 AC。",
+        ui_width(),
+        color=GRAY,
+    )
+    print()
+
+    if not confirm("確認保存 Reading Attempt / Evidence？"):
+        return
+
+    envelope = None
+    outbox_warning = None
+    memory_warning = None
+
+    try:
+        envelope = attempt_envelope_for_record(
+            action=action,
+            problem=problem,
+            result="N/A",
+            minutes=minutes,
+            assistance=evidence_context["assistance"],
+            independent=evidence_context["independent"],
+            novelty=evidence_context["novelty"],
+            timed=evidence_context["timed"],
+            placement=placement,
+            track="Reading",
+            evidence_outcome=outcome,
+        )
+        OUTBOX.enqueue(envelope)
+    except (
+        EvidenceOutboxError,
+        OSError,
+        ValueError,
+    ) as exc:
+        outbox_warning = str(exc)
+
+    if (
+        envelope is not None
+        and outbox_warning is None
+    ):
+        try:
+            MEMORY.reconcile(
+                OUTBOX.all_envelopes()
+            )
+        except (
+            EvidenceOutboxError,
+            OSError,
+            ValueError,
+        ) as exc:
+            memory_warning = str(exc)
+
+    clear()
+    heading("Reading Evidence")
+    print()
+
+    if outbox_warning:
+        print(
+            f"{RED}"
+            f"✕ local evidence outbox 寫入失敗：{outbox_warning}"
+            f"{RESET}"
+        )
+        pause()
+        return
+
+    print(
+        f"{GREEN}"
+        "✓ Reading Attempt 已保存到 local evidence outbox"
+        f"{RESET}"
+    )
+    if envelope is not None and envelope.evidence:
+        claim = envelope.evidence[0]
+        print(
+            f"{GREEN}"
+            f"✓ Evidence：{claim.skill_uid} × {claim.track} · {claim.outcome}"
+            f"{RESET}"
+        )
+    if memory_warning:
+        print(
+            f"{YELLOW}"
+            "⚠ Evidence 已保存，但 adaptive memory cache 更新失敗；"
+            "下次 Today 會重新 reconciliation。"
+            f"{RESET}"
+        )
+    else:
+        print(
+            f"{GREEN}✓ Adaptive memory 已更新{RESET}"
+        )
+    print()
+    print(
+        f"{GRAY}"
+        "Remote sync 使用同一 durable writeback_id / event_id；"
+        "Reading 不會要求重做 learner task。"
+        f"{RESET}"
+    )
+    pause()
+
+
 def record_problem(action: str, problem) -> None:
+    if (
+        problem is not None
+        and problem.get("runtime_track") == "Reading"
+    ):
+        record_reading_problem(
+            action,
+            problem,
+        )
+        return
     title = (
         "完成題目"
         if action == "finish"
@@ -3872,6 +4208,8 @@ def _print_new_learning_summary(
 def _start_new_learning(
     route,
     current_filename: str | None,
+    *,
+    track: str = "Implementation",
 ):
     clear()
     heading("開始 New Learning")
@@ -3903,7 +4241,10 @@ def _start_new_learning(
     rule()
     print()
 
-    if placement.role == "Worked Example":
+    if (
+        track == "Implementation"
+        and placement.role == "Worked Example"
+    ):
         print(
             f"{YELLOW}"
             "本次 Placement 是 Worked Example。"
@@ -3930,11 +4271,17 @@ def _start_new_learning(
 
     try:
         scratch = (
-            create_learning_scratch(
+            create_reading_scratch(
+                RUNTIME_DIR,
+                placement,
+                action="finish",
+            )
+            if track == "Reading"
+            else create_learning_scratch(
                 placement
             )
         )
-    except OSError as exc:
+    except (OSError, ValueError) as exc:
         print(
             f"{RED}"
             f"✕ 無法建立 new-learning scratch：{exc}"
@@ -3950,14 +4297,22 @@ def _start_new_learning(
     if opened:
         print(
             f"{GREEN}"
-            "✓ 已開啟 B4 learning scratch"
-            f"{RESET}"
+            + (
+                "✓ 已開啟 Reading formal-response scratch"
+                if track == "Reading"
+                else "✓ 已開啟 B4 learning scratch"
+            )
+            + f"{RESET}"
         )
         print(
             f"{GRAY}"
-            "完成外部 Judge 後回 Control Center 選「完成題目」；"
-            "Placement UID 會直接接回 EV-v1 outbox。"
-            f"{RESET}"
+            + (
+                "先完成 Formal response，再驗證；之後回 Control Center 選「完成題目」。"
+                if track == "Reading"
+                else "完成外部 Judge 後回 Control Center 選「完成題目」；"
+            )
+            + " Placement UID 會直接接回 EV-v1 outbox。"
+            + f"{RESET}"
         )
     else:
         print(
@@ -4039,12 +4394,52 @@ def _start_adaptive_review(
         )
         print(
             f"{GRAY}"
-            "請依題面先完成 trace / reasoning，"
-            "正式作答前不要執行程式驗證。"
+            "先完成 Formal response 的 trace / reasoning；"
+            "儲存以前不得執行程式或查看完整 reference。"
             f"{RESET}"
         )
+
+        try:
+            scratch = create_reading_scratch(
+                RUNTIME_DIR,
+                placement,
+                action="review",
+            )
+        except (OSError, ValueError) as exc:
+            print()
+            print(
+                f"{RED}"
+                f"✕ 無法建立 Reading scratch：{exc}"
+                f"{RESET}"
+            )
+            pause()
+            return current_filename
+
+        opened = open_in_vscode(
+            scratch
+        )
+        print()
+        if opened:
+            print(
+                f"{GREEN}"
+                "✓ 已開啟 Reading formal-response scratch"
+                f"{RESET}"
+            )
+            print(
+                f"{GRAY}"
+                "完成 Formal response → verification 後，"
+                "回控制中心選「複習題目」。"
+                f"{RESET}"
+            )
+        else:
+            print(
+                f"{RED}"
+                "✕ 無法在 VS Code 開啟 Reading scratch"
+                f"{RESET}"
+            )
+
         pause()
-        return current_filename
+        return str(scratch)
 
     try:
         scratch = create_review_scratch(
@@ -4190,23 +4585,35 @@ def today_view(current_filename: str | None):
         and route.skill is not None
         and route.placement is not None
     ):
-        options.append(
-            {
-                "label": (
-                    "新學習 · "
-                    f"{route.skill.uid}"
-                    " · "
-                    f"{route.placement.role}"
-                ),
-                "detail": (
-                    f"{route.placement.lesson_uid}"
-                    f" · {route.placement.problem_id}"
-                ),
-                "enabled": True,
-                "kind": "new",
-                "route": route,
-            }
+        supported_tracks = set(
+            route.skill.tracks
         )
+
+        for track in (
+            "Reading",
+            "Implementation",
+        ):
+            if track not in supported_tracks:
+                continue
+
+            options.append(
+                {
+                    "label": (
+                        "新學習 · "
+                        f"{route.skill.uid}"
+                        f" × {track}"
+                    ),
+                    "detail": (
+                        f"{route.placement.role}"
+                        f" · {route.placement.lesson_uid}"
+                        f" · {route.placement.problem_id}"
+                    ),
+                    "enabled": True,
+                    "kind": "new",
+                    "track": track,
+                    "route": route,
+                }
+            )
 
     for candidate in plan.selected:
         options.append(
@@ -4281,6 +4688,10 @@ def today_view(current_filename: str | None):
         return _start_new_learning(
             option["route"],
             current_filename,
+            track=option.get(
+                "track",
+                "Implementation",
+            ),
         )
 
     return _start_adaptive_review(
@@ -5072,48 +5483,90 @@ def closed_screen() -> None:
     print()
 
 
+def record_action_state(
+    problem,
+) -> tuple[bool, bool, str, str]:
+    """Return Finish/Review enablement for the current learner surface."""
+
+    if not problem:
+        return (
+            False,
+            False,
+            "需先開啟 APCS 題目檔案",
+            "需先開啟 APCS 題目檔案",
+        )
+
+    if problem.get("published_runtime"):
+        runtime_action = problem.get(
+            "runtime_action"
+        )
+        track = (
+            problem.get("runtime_track")
+            or "Implementation"
+        )
+
+        if runtime_action == "review":
+            return (
+                False,
+                True,
+                "此 runtime scratch 是 Review",
+                f"記錄 {track} Review Evidence",
+            )
+
+        if runtime_action == "finish":
+            return (
+                True,
+                False,
+                f"記錄 {track} New Learning Evidence",
+                "此 runtime scratch 是 New Learning",
+            )
+
+    state = problem.get("state")
+    solved = bool(
+        state
+        and state.solved_on
+    )
+
+    return (
+        not solved,
+        solved,
+        (
+            "首次 AC 後記錄掌握程度"
+            if not solved
+            else "已標記 AC；後續請使用「複習題目」"
+        ),
+        (
+            "重做後更新 Result、Recall 與 Evidence"
+            if solved
+            else "需先完成題目並取得 AC"
+        ),
+    )
+
+
 def main() -> int:
     filename = sys.argv[1] if len(sys.argv) >= 2 else None
 
     while True:
         problem = current_problem(filename)
 
+        (
+            finish_enabled,
+            review_enabled,
+            finish_detail,
+            review_detail,
+        ) = record_action_state(
+            problem
+        )
+
         if problem:
-            state = problem.get("state")
-            solved = bool(
-                state
-                and state.solved_on
-            )
-
-            finish_enabled = not solved
-            review_enabled = solved
-
             note = ROOT / "notes" / f"{problem['id']}.md"
-
             note_detail = (
                 "已建立；選取後直接開啟"
                 if note.exists()
                 else "尚未建立；選取後建立並開啟"
             )
-
-            finish_detail = (
-                "首次 AC 後記錄掌握程度"
-                if finish_enabled
-                else "已標記 AC；後續請使用「複習題目」"
-            )
-
-            review_detail = (
-                "重做後更新 Result、Recall 與 Evidence"
-                if review_enabled
-                else "需先完成題目並取得 AC"
-            )
-
         else:
-            finish_enabled = False
-            review_enabled = False
             note_detail = "需先開啟 APCS 題目檔案"
-            finish_detail = "需先開啟 APCS 題目檔案"
-            review_detail = "需先開啟 APCS 題目檔案"
 
         changes = git_changes()
 

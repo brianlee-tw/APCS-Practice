@@ -761,7 +761,7 @@ var STAGES = /* @__PURE__ */ new Set(["\u7B2C\u4E00\u6B21\u63A5\u89F8", "\u7406\
 var ERRORS = /* @__PURE__ */ new Set(["\u8B80\u984C", "\u6F14\u7B97\u6CD5", "\u8CC7\u6599\u7D50\u69CB", "\u908A\u754C\u689D\u4EF6", "\u8907\u96DC\u5EA6", "\u5BE6\u4F5CBug", "\u8A9E\u6CD5"]);
 var REMOTE_WRITEBACK_SCHEMA = "v2.3-remote-writeback-1";
 var REMOTE_RECEIPT_SCHEMA = "v2.3-remote-receipt-1";
-var REMOTE_RESULTS = /* @__PURE__ */ new Set(["AC", "WA", "CE", "RE", "TLE", "MLE"]);
+var REMOTE_RESULTS = /* @__PURE__ */ new Set(["N/A", "AC", "WA", "CE", "RE", "TLE", "MLE"]);
 var REMOTE_TRACKS = /* @__PURE__ */ new Set(["Reading", "Implementation"]);
 var REMOTE_OUTCOMES = /* @__PURE__ */ new Set(["PASS", "PARTIAL", "FAIL"]);
 var REMOTE_ACTIVITIES = /* @__PURE__ */ new Set(["Concept Check", "Guided Drill", "Core Independent", "Transfer Challenge", "Review", "Diagnostic", "Mock"]);
@@ -1738,7 +1738,7 @@ async function writeRemoteBundle(env, body, requestOrigin) {
       "作答平台": { select: { name: p.judge } },
       "題目連結": { url: p.url },
       "難度（D1–D5）": { select: { name: p.difficulty } },
-      "最新提交結果": { select: { name: a.judgeResult } },
+      "最新提交結果": { select: { name: a.judgeResult === "N/A" ? "未提交/未知" : a.judgeResult } },
       "Writeback ID": { rich_text: [{ text: { content: parsed.writebackId } }] },
       "紀錄來源": { select: { name: "VS Code Direct" } },
       "紀錄性質": { select: { name: "正式紀錄" } },
