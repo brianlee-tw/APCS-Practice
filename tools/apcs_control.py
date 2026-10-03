@@ -4830,52 +4830,50 @@ def _start_adaptive_review(
     return str(scratch)
 
 
-def learning_status_view() -> None:
-    snapshot = learning_status_snapshot()
-
+def learning_status_detail_view(snapshot) -> None:
     clear()
-    heading("學習狀態")
+    heading("學習狀態 · 詳細")
     print()
     print(
         f"{GRAY}"
-        "v2.3 derived operational view · 不是 mastery/readiness 宣告"
+        "衍生運作資料；只用於安排與診斷，不是 mastery / readiness 宣告。"
         f"{RESET}"
     )
     print()
 
     print(f"目標      {snapshot['target']}")
     print(
-        f"Attempt   {snapshot['attempts']}"
+        f"作答      {snapshot['attempts']}"
         f" · Evidence {snapshot['evidence']}"
     )
     print(
-        "Track     "
+        "軌道      "
         f"Reading {snapshot['evidence_by_track'].get('Reading', 0)}"
         " · Implementation "
         f"{snapshot['evidence_by_track'].get('Implementation', 0)}"
     )
     print(
-        f"Remote    ACK {snapshot['remote_acknowledged']}"
-        f" · Pending {snapshot['remote_pending']}"
+        f"同步      已確認 {snapshot['remote_acknowledged']}"
+        f" · 待同步 {snapshot['remote_pending']}"
     )
     print(
-        f"Memory    {snapshot['memory_states']} Skill × Track"
+        f"記憶      {snapshot['memory_states']} Skill × Track"
     )
 
     print()
     rule()
     print()
-    print(f"{CYAN}{BOLD}Capacity{RESET}")
+    print(f"{CYAN}{BOLD}今日容量{RESET}")
     print(
         f"總容量    {snapshot['capacity_minutes']} min"
     )
     print(
-        f"Review    {snapshot['review_selected_minutes']}/"
+        f"複習      {snapshot['review_selected_minutes']}/"
         f"{snapshot['review_budget_minutes']} min"
-        f" · {snapshot['review_selected']} selected"
+        f" · {snapshot['review_selected']} 項"
     )
     print(
-        f"Deferred  {snapshot['review_deferred']}"
+        f"安全延後  {snapshot['review_deferred']}"
         " · 不計為欠作業"
     )
     print(
@@ -4885,16 +4883,16 @@ def learning_status_view() -> None:
     print()
     rule()
     print()
-    print(f"{CYAN}{BOLD}Retention · lowest R first{RESET}")
+    print(f"{CYAN}{BOLD}記憶狀態 · 最低 R 優先{RESET}")
 
     if not snapshot["retention"]:
         print(f"{GRAY}尚無可計算的 Skill × Track retention state{RESET}")
     else:
         for item in snapshot["retention"][:10]:
             due_mark = (
-                "due"
+                "到期"
                 if item["due_on"] <= snapshot["date"]
-                else f"due {item['due_on']:%m/%d}"
+                else f"預計 {item['due_on']:%m/%d}"
             )
             print(
                 f"  {item['skill_uid']} × {item['track']}"
@@ -4970,7 +4968,96 @@ def learning_status_view() -> None:
         "Retention / capacity 只用於下一步安排；不等於 RR/IR PASS。"
         f"{RESET}"
     )
-    pause()
+    pause("Enter / Esc 返回學習狀態")
+
+
+def learning_status_view() -> None:
+    snapshot = learning_status_snapshot()
+
+    while True:
+        clear()
+        heading("學習狀態")
+        print()
+        print(
+            f"{GRAY}"
+            "只顯示會影響下一步學習決策的摘要；不是 mastery / readiness 宣告。"
+            f"{RESET}"
+        )
+
+        print()
+        print(f"{CYAN}{BOLD}目前進度{RESET}")
+        print(
+            f"真實作答  {snapshot['attempts']}"
+            f" · 能力證據 {snapshot['evidence']}"
+        )
+        print(
+            "學習軌道  "
+            f"Reading {snapshot['evidence_by_track'].get('Reading', 0)}"
+            " · Implementation "
+            f"{snapshot['evidence_by_track'].get('Implementation', 0)}"
+        )
+        print(
+            f"記憶狀態  {snapshot['memory_states']} 個 Skill × Track"
+        )
+
+        print()
+        rule()
+        print()
+        print(f"{CYAN}{BOLD}今日容量{RESET}")
+        print(
+            f"總容量    {snapshot['capacity_minutes']} min"
+        )
+        print(
+            f"複習      {snapshot['review_selected_minutes']}/"
+            f"{snapshot['review_budget_minutes']} min"
+            f" · {snapshot['review_selected']} 項"
+        )
+        print(
+            f"新學習    ≥ {snapshot['protected_new_learning_minutes']} min 保留"
+        )
+        if snapshot["review_deferred"]:
+            print(
+                f"安全延後  {snapshot['review_deferred']} 項 · 不算欠作業"
+            )
+
+        print()
+        rule()
+        print()
+        print(f"{CYAN}{BOLD}同步狀態{RESET}")
+        print(
+            f"已確認    {snapshot['remote_acknowledged']}"
+            f" · 待同步 {snapshot['remote_pending']}"
+        )
+
+        if snapshot["warnings"]:
+            print()
+            for warning in snapshot["warnings"]:
+                print_wrapped(
+                    f"⚠ {warning}",
+                    ui_width() - 2,
+                    color=YELLOW,
+                )
+
+        print()
+        rule()
+        print(
+            f"{YELLOW}"
+            "LEARNER_READINESS = NOT ASSESSED"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            "D 查看詳細技術狀態 · Enter / Esc 返回控制中心"
+            f"{RESET}"
+        )
+
+        key = read_key()
+        if key in {"ENTER", "ESC", "q", "Q"}:
+            return
+        if key in {"d", "D"}:
+            learning_status_detail_view(
+                snapshot
+            )
 
 
 def today_view(current_filename: str | None):
