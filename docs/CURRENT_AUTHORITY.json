@@ -5,7 +5,7 @@
     "stable_runtime": "v2.3",
     "stable_runtime_status": "PRODUCTION_CLOSED",
     "next_version": "v2.4",
-    "next_version_status": "C0_AUTHORITY_CONVERGENCE",
+    "next_version_status": "C1_PROBLEM_INTELLIGENCE_MVP",
     "next_version_contract": "docs/V24_PRODUCT_ARCHITECTURE_CONTRACT.md",
     "learner_readiness": "NOT_ASSESSED"
   },
@@ -47,8 +47,8 @@
     "remote_writeback_status": "PRODUCTION_VERIFIED"
   },
   "current_work": {
-    "gate": "C0",
-    "goal": "Authority 與文件收斂",
+    "gate": "C1",
+    "goal": "題目智慧最小可用版本",
     "open_nonblocking": [
       {
         "issue": 32,
