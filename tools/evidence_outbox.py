@@ -33,6 +33,7 @@ except ImportError:
 SCHEMA_VERSION = "v2.3-outbox-1"
 
 VALID_JUDGE_RESULTS = {
+    "N/A",
     "AC",
     "WA",
     "TLE",
