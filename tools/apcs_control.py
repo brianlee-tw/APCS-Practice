@@ -27,6 +27,10 @@ try:
         RuntimeCurriculum,
         RuntimeCurriculumError,
     )
+    from .adaptive_memory import (
+        next_due_on,
+        retrievability,
+    )
     from .learning_route import (
         select_new_learning_plan,
     )
@@ -49,6 +53,10 @@ except ImportError:
     from runtime_curriculum import (
         RuntimeCurriculum,
         RuntimeCurriculumError,
+    )
+    from adaptive_memory import (
+        next_due_on,
+        retrievability,
     )
     from learning_route import (
         select_new_learning_plan,
@@ -707,6 +715,127 @@ def adaptive_today_snapshot(
         ),
         "warning": warning,
     }
+
+
+def learning_status_snapshot(
+    *,
+    on_date: dt.date | None = None,
+    total_capacity_minutes: int | None = None,
+):
+    """Build read-only learner operational status from v2.3 durable inputs."""
+
+    on_date = on_date or dt.date.today()
+    today = adaptive_today_snapshot(
+        on_date=on_date,
+        total_capacity_minutes=total_capacity_minutes,
+    )
+    warnings = []
+
+    if today["warning"]:
+        warnings.append(
+            today["warning"]
+        )
+
+    try:
+        envelopes = OUTBOX.all_envelopes()
+        pending = OUTBOX.pending()
+    except (
+        EvidenceOutboxError,
+        OSError,
+        ValueError,
+    ) as exc:
+        envelopes = ()
+        pending = ()
+        warnings.append(str(exc))
+
+    evidence_by_track = {
+        "Reading": 0,
+        "Implementation": 0,
+    }
+    evidence_count = 0
+
+    for envelope in envelopes:
+        for claim in envelope.evidence:
+            evidence_count += 1
+            evidence_by_track[claim.track] = (
+                evidence_by_track.get(
+                    claim.track,
+                    0,
+                )
+                + 1
+            )
+
+    try:
+        states = MEMORY.load_states()
+    except (OSError, ValueError) as exc:
+        states = {}
+        warnings.append(str(exc))
+
+    retention = []
+
+    for state in states.values():
+        current_r = retrievability(
+            state,
+            on_date,
+        )
+        due_on = next_due_on(
+            state,
+            policy=MEMORY.policy,
+        )
+        retention.append(
+            {
+                "skill_uid": state.skill_uid,
+                "track": state.track,
+                "retrievability": current_r,
+                "stability_days": state.stability_days,
+                "last_evidence_on": state.last_evidence_on,
+                "due_on": due_on,
+                "evidence_count": state.evidence_count,
+                "successful_retrievals": state.successful_retrievals,
+                "lapses": state.lapses,
+                "last_outcome": state.last_outcome,
+            }
+        )
+
+    retention.sort(
+        key=lambda item: (
+            item["retrievability"],
+            item["due_on"],
+            item["skill_uid"],
+            item["track"],
+        )
+    )
+
+    plan = today["plan"]
+    protected = max(
+        0,
+        today["capacity_minutes"]
+        - plan.budget_minutes,
+    )
+
+    return {
+        "date": on_date,
+        "target": today["target"],
+        "attempts": len(envelopes),
+        "evidence": evidence_count,
+        "evidence_by_track": evidence_by_track,
+        "remote_pending": len(pending),
+        "remote_acknowledged": max(
+            0,
+            len(envelopes) - len(pending),
+        ),
+        "memory_states": len(states),
+        "retention": tuple(retention),
+        "capacity_minutes": today["capacity_minutes"],
+        "review_budget_minutes": plan.budget_minutes,
+        "review_selected": len(plan.selected),
+        "review_selected_minutes": plan.selected_minutes,
+        "review_deferred": len(plan.deferred),
+        "protected_new_learning_minutes": protected,
+        "warnings": tuple(dict.fromkeys(warnings)),
+        "learner_readiness": "NOT ASSESSED",
+    }
+
 
 def skill_display_name(
     skill_uid: str,
@@ -4628,6 +4757,114 @@ def _start_adaptive_review(
     return str(scratch)
 
 
+def learning_status_view() -> None:
+    snapshot = learning_status_snapshot()
+
+    clear()
+    heading("學習狀態")
+    print()
+    print(
+        f"{GRAY}"
+        "v2.3 derived operational view · 不是 mastery/readiness 宣告"
+        f"{RESET}"
+    )
+    print()
+
+    print(f"目標      {snapshot['target']}")
+    print(
+        f"Attempt   {snapshot['attempts']}"
+        f" · Evidence {snapshot['evidence']}"
+    )
+    print(
+        "Track     "
+        f"Reading {snapshot['evidence_by_track'].get('Reading', 0)}"
+        " · Implementation "
+        f"{snapshot['evidence_by_track'].get('Implementation', 0)}"
+    )
+    print(
+        f"Remote    ACK {snapshot['remote_acknowledged']}"
+        f" · Pending {snapshot['remote_pending']}"
+    )
+    print(
+        f"Memory    {snapshot['memory_states']} Skill × Track"
+    )
+
+    print()
+    rule()
+    print()
+    print(f"{CYAN}{BOLD}Capacity{RESET}")
+    print(
+        f"總容量    {snapshot['capacity_minutes']} min"
+    )
+    print(
+        f"Review    {snapshot['review_selected_minutes']}/"
+        f"{snapshot['review_budget_minutes']} min"
+        f" · {snapshot['review_selected']} selected"
+    )
+    print(
+        f"Deferred  {snapshot['review_deferred']}"
+        " · 不計為欠作業"
+    )
+    print(
+        f"新學習    ≥ {snapshot['protected_new_learning_minutes']} min 保留"
+    )
+
+    print()
+    rule()
+    print()
+    print(f"{CYAN}{BOLD}Retention · lowest R first{RESET}")
+
+    if not snapshot["retention"]:
+        print(f"{GRAY}尚無可計算的 Skill × Track retention state{RESET}")
+    else:
+        for item in snapshot["retention"][:10]:
+            due_mark = (
+                "due"
+                if item["due_on"] <= snapshot["date"]
+                else f"due {item['due_on']:%m/%d}"
+            )
+            print(
+                f"  {item['skill_uid']} × {item['track']}"
+                f" · R≈{item['retrievability']:.0%}"
+                f" · S≈{item['stability_days']:.1f}d"
+                f" · {due_mark}"
+                f" · ev={item['evidence_count']}"
+            )
+
+        hidden = len(snapshot["retention"]) - 10
+        if hidden > 0:
+            print(
+                f"{GRAY}"
+                f"  …另有 {hidden} 個 Skill × Track state"
+                f"{RESET}"
+            )
+
+    if snapshot["warnings"]:
+        print()
+        rule()
+        print()
+        for warning in snapshot["warnings"]:
+            print_wrapped(
+                f"⚠ {warning}",
+                ui_width() - 2,
+                color=YELLOW,
+            )
+
+    print()
+    rule()
+    print(
+        f"{YELLOW}"
+        "LEARNER_READINESS = NOT ASSESSED"
+        f"{RESET}"
+    )
+    print(
+        f"{GRAY}"
+        "Retention / capacity 只用於下一步安排；不等於 RR/IR PASS。"
+        f"{RESET}"
+    )
+    pause()
+
+
 def today_view(current_filename: str | None):
     snapshot = adaptive_today_snapshot()
     plan = snapshot["plan"]
@@ -5720,6 +5957,11 @@ def main() -> int:
                 "enabled": True,
             },
             {
+                "label": "學習狀態",
+                "detail": "Evidence、Retention、Capacity、Remote ACK",
+                "enabled": True,
+            },
+            {
                 "label": "題目資料",
                 "detail": "新增題目、編輯 metadata、建立 solution",
                 "enabled": True,
@@ -5765,18 +6007,21 @@ def main() -> int:
             filename = today_view(filename)
 
         elif selected == 1:
-            filename = catalog_center(problem, filename)
+            learning_status_view()
 
         elif selected == 2:
-            record_problem("finish", problem)
+            filename = catalog_center(problem, filename)
 
         elif selected == 3:
-            record_problem("review", problem)
+            record_problem("finish", problem)
 
         elif selected == 4:
-            open_note(problem)
+            record_problem("review", problem)
 
         elif selected == 5:
+            open_note(problem)
+
+        elif selected == 6:
             git_center()
 
 
