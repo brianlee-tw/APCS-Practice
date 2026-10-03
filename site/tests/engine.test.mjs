@@ -61,7 +61,9 @@ test("unsupported question counts and invalid variants are rejected", () => {
 
 test("diagnostic model is explicitly non-readiness authority", () => {
   assert.equal(skillModel.scope, "diagnostic-only");
+  assert.equal(skillModel.runtimeAuthority, false);
   assert.equal(skillModel.readinessAuthority, false);
+  assert.equal(skillModel.canonicalLearningSkillMap, "Skill Map v3");
   assert.ok(skillModel.bands.every((band) => band.label.startsWith("本次題組：")));
   assert.ok(!levelBand(73).label.includes("準備"));
   assert.ok(!levelBand(100).label.includes("實戰"));
