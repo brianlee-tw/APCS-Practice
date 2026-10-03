@@ -6412,162 +6412,663 @@ def git_center() -> None:
 # Problem Library
 # ============================================================
 
-def _recommended_problem_items(limit: int = 30):
-    """依目前 route 找尚未做的候選，不建立第二套推薦 truth。"""
+PROBLEM_LIBRARY_UNIT_LABELS = {
+    "U-FND": "基礎語法與函式",
+    "U-DAT": "資料處理與模擬",
+    "U-PSV": "問題求解與複雜度",
+    "U-ORD": "排序與關聯容器",
+    "U-PFX": "前綴與差分",
+    "U-WIN": "雙指標與滑動視窗",
+    "U-BIN": "二分搜尋",
+    "U-REC": "遞迴、回溯與解析",
+    "U-DS": "基礎資料結構",
+    "U-GPH": "圖論與樹",
+    "U-GRD": "貪心",
+    "U-DP": "動態規劃",
+    "U-RNG": "區間與離線技巧",
+}
 
-    skill_uid = None
+PROBLEM_LIBRARY_DIFFICULTIES = (
+    ("D1", "D1 · 入門"),
+    ("D2", "D2 · 基礎"),
+    ("D3", "D3 · 中等"),
+    ("D4", "D4 · 進階"),
+    ("D5", "D5 · 高難"),
+)
+
+PROBLEM_LIBRARY_ROLES = (
+    ("Worked Example", "範例拆解"),
+    ("Guided Drill", "引導練習"),
+    ("Core Independent", "獨立練習"),
+    ("Transfer Challenge", "遷移挑戰"),
+    ("Mock", "模擬題"),
+)
+
+PROBLEM_LIBRARY_SOURCE_LABELS = {
+    "zerojudge": "ZeroJudge",
+    "cses": "CSES",
+    "codeforces": "Codeforces",
+    "leetcode": "LeetCode",
+    "apcs": "APCS",
+}
+
+
+def _problem_library_skill_groups():
+    """Return learner-facing Unit → Skill groups in curriculum order."""
+
     try:
-        snapshot = adaptive_today_snapshot()
-        route = snapshot.get("new_learning")
-        if (
-            route is not None
-            and route.skill is not None
-        ):
-            skill_uid = route.skill.uid
-    except Exception:
-        skill_uid = None
+        skills = CURRICULUM.load().get("skills") or []
+    except RuntimeCurriculumError:
+        return []
 
-    if skill_uid:
-        items = PROBLEM_LIBRARY.search(
-            skill=skill_uid,
-            attempted=False,
-            require_l2=True,
-            limit=limit,
+    grouped = {}
+    order = []
+
+    for skill in sorted(
+        skills,
+        key=lambda row: float(
+            row.get("path_order") or 9999
+        ),
+    ):
+        unit = str(
+            skill.get("unit") or "其他"
+        ).strip()
+
+        if unit not in grouped:
+            grouped[unit] = []
+            order.append(unit)
+
+        grouped[unit].append(
+            {
+                "uid": str(
+                    skill.get("uid") or ""
+                ).strip(),
+                "name": str(
+                    skill.get("name") or ""
+                ).strip(),
+            }
         )
-        if not items:
-            items = PROBLEM_LIBRARY.search(
-                skill=skill_uid,
-                attempted=False,
-                limit=limit,
+
+    return [
+        {
+            "uid": unit,
+            "label": (
+                PROBLEM_LIBRARY_UNIT_LABELS.get(
+                    unit,
+                    unit,
+                )
+            ),
+            "skills": tuple(grouped[unit]),
+        }
+        for unit in order
+    ]
+
+
+def _problem_library_item_skill_uids(item) -> set[str]:
+    return {
+        value
+        for value in (
+            item.primary_skill,
+            *item.supporting_skills,
+        )
+        if value
+    }
+
+
+def _problem_library_filter_items(
+    items,
+    filters,
+    *,
+    limit: int = 100,
+):
+    skill_uids = set(
+        filters.get("skill_uids") or ()
+    )
+    source = filters.get("source")
+    difficulty = filters.get("difficulty")
+    attempted = filters.get("attempted")
+    role = filters.get("role")
+    require_l2 = filters.get("require_l2")
+
+    result = []
+
+    for item in items:
+        if source and item.source != source:
+            continue
+
+        if (
+            difficulty
+            and item.difficulty != difficulty
+        ):
+            continue
+
+        if (
+            attempted is not None
+            and item.attempted is not attempted
+        ):
+            continue
+
+        if role and item.role != role:
+            continue
+
+        if (
+            require_l2 is not None
+            and item.has_l2 is not require_l2
+        ):
+            continue
+
+        if skill_uids:
+            # Skill-based browsing would reveal hidden classification.
+            # Never surface unseen Transfer / Mock items through this path.
+            if (
+                not item.attempted
+                and item.role
+                in {"Transfer Challenge", "Mock"}
+            ):
+                continue
+
+            if not (
+                _problem_library_item_skill_uids(
+                    item
+                )
+                & skill_uids
+            ):
+                continue
+
+        result.append(item)
+
+        if len(result) >= max(
+            1,
+            int(limit),
+        ):
+            break
+
+    return result
+
+
+def _problem_library_filter_summary(filters) -> str:
+    parts = []
+
+    skill_label = filters.get(
+        "skill_label"
+    )
+    if skill_label:
+        parts.append(skill_label)
+
+    if filters.get("difficulty"):
+        parts.append(filters["difficulty"])
+
+    if filters.get("source"):
+        parts.append(
+            PROBLEM_LIBRARY_SOURCE_LABELS.get(
+                filters["source"].casefold(),
+                filters["source"],
             )
-        if items:
-            return items, f"目前學習路徑 {skill_uid} · 尚未做"
+        )
+
+    if filters.get("attempted") is False:
+        parts.append("未做")
+    elif filters.get("attempted") is True:
+        parts.append("已做")
+
+    if filters.get("role"):
+        parts.append(
+            dict(PROBLEM_LIBRARY_ROLES).get(
+                filters["role"],
+                filters["role"],
+            )
+        )
+
+    if filters.get("require_l2") is True:
+        parts.append("有教學資料")
+    elif filters.get("require_l2") is False:
+        parts.append("無教學資料")
 
     return (
-        PROBLEM_LIBRARY.search(
-            attempted=False,
-            limit=limit,
-        ),
-        "尚未做 · 依題庫穩定排序",
+        " · ".join(parts)
+        if parts
+        else "尚未設定條件"
     )
 
 
-def problem_library_view() -> None:
-    clear()
-    heading("題目庫")
-    print()
-    print(
-        f"{GRAY}"
-        "直接輸入題號、題名、Skill 或條件；遷移題 / 模擬題仍受防劇透保護。"
-        f"{RESET}"
+def _problem_library_source_label(source: str) -> str:
+    return PROBLEM_LIBRARY_SOURCE_LABELS.get(
+        source.casefold(),
+        source,
     )
-    print_wrapped(
-        "例：dfs 未做、D2 source:cses、tag:prefix、role:transfer、l2；"
-        "輸入「推薦」會依目前學習路徑找尚未做的題。",
-        ui_width() - 2,
-        color=GRAY,
-    )
-    print()
 
-    query = prompt_text(
-        "搜尋（Enter 顯示全部）"
-    )
-    if query is None:
-        return
 
-    recommendation_reason = None
-    if (query or "").strip().casefold() in {
-        "推薦",
-        "recommend",
-    }:
-        items, recommendation_reason = (
-            _recommended_problem_items(
-                limit=30
-            )
-        )
-    else:
-        items = PROBLEM_LIBRARY.smart_search(
-            query or "",
-            limit=30,
-        )
+def _problem_library_choose_skill(
+    filters,
+    all_items,
+):
+    groups = _problem_library_skill_groups()
 
-    if not items:
+    if not groups:
+        clear()
+        heading("題目庫 · 學習主題")
         print()
-        print(f"{YELLOW}沒有符合條件的題目。{RESET}")
-        print_wrapped(
-            "可嘗試移除一個條件，或使用 skill:/tag:、source:、D1–D5、未做/已做。",
-            ui_width() - 2,
-            color=GRAY,
+        print(
+            f"{YELLOW}"
+            "目前無法讀取 Published Curriculum 的 Skill 分組。"
+            f"{RESET}"
         )
         pause()
         return
 
-    options = []
-    for item in items:
-        safe = PROBLEM_LIBRARY.learner_view(
-            item,
-            activity=item.role or "Core Independent",
-            post_attempt=False,
+    unit_options = [
+        {
+            "label": "不限主題",
+            "detail": "清除目前的 Unit / Skill 條件",
+            "enabled": True,
+        }
+    ]
+
+    visible_groups = []
+
+    for group in groups:
+        unit_skill_uids = {
+            skill["uid"]
+            for skill in group["skills"]
+        }
+        count = len(
+            _problem_library_filter_items(
+                all_items,
+                {
+                    "skill_uids": (
+                        unit_skill_uids
+                    ),
+                },
+                limit=10000,
+            )
         )
-        difficulty = safe.get("difficulty") or "—"
-        state = "做過" if item.attempted else "未做"
-        l2 = " · 有教學資料" if item.has_l2 else ""
-        visible_skill = safe.get("primary_skill")
-        skill_text = (
-            f" · {visible_skill}"
-            if visible_skill
-            else ""
+
+        visible_groups.append(group)
+        unit_options.append(
+            {
+                "label": group["label"],
+                "detail": (
+                    f"{len(group['skills'])} 個 Skill"
+                    f" · 題庫 {count} 題"
+                ),
+                "enabled": count > 0,
+            }
+        )
+
+    selected = choose_menu(
+        "題目庫 · 學習主題",
+        unit_options,
+        footer_numbers=False,
+        back_text="返回分類找題",
+    )
+
+    if selected is None:
+        return
+
+    if selected == 0:
+        filters["skill_uids"] = ()
+        filters["skill_label"] = None
+        return
+
+    group = visible_groups[
+        selected - 1
+    ]
+    unit_skill_uids = tuple(
+        skill["uid"]
+        for skill in group["skills"]
+    )
+
+    skill_options = [
+        {
+            "label": f"整個單元 · {group['label']}",
+            "detail": (
+                f"包含 {len(group['skills'])} 個 Skill"
+            ),
+            "enabled": True,
+        }
+    ]
+
+    for skill in group["skills"]:
+        count = len(
+            _problem_library_filter_items(
+                all_items,
+                {
+                    "skill_uids": (
+                        skill["uid"],
+                    ),
+                },
+                limit=10000,
+            )
+        )
+        skill_options.append(
+            {
+                "label": skill["name"],
+                "detail": (
+                    f"{skill['uid']} · 題庫 {count} 題"
+                ),
+                "enabled": count > 0,
+            }
+        )
+
+    skill_selected = choose_menu(
+        f"題目庫 · {group['label']}",
+        skill_options,
+        footer_numbers=False,
+        back_text="返回單元選擇",
+    )
+
+    if skill_selected is None:
+        return
+
+    if skill_selected == 0:
+        filters["skill_uids"] = (
+            unit_skill_uids
+        )
+        filters["skill_label"] = (
+            group["label"]
+        )
+        return
+
+    skill = group["skills"][
+        skill_selected - 1
+    ]
+    filters["skill_uids"] = (
+        skill["uid"],
+    )
+    filters["skill_label"] = (
+        skill["name"]
+    )
+
+
+def _problem_library_choose_difficulty(
+    filters,
+    all_items,
+):
+    options = [
+        {
+            "label": "不限難度",
+            "detail": "顯示所有難度",
+            "enabled": True,
+        }
+    ]
+
+    for value, label in (
+        PROBLEM_LIBRARY_DIFFICULTIES
+    ):
+        count = sum(
+            1
+            for item in all_items
+            if item.difficulty == value
         )
         options.append(
             {
-                "label": f"{item.external_id} · {item.title}",
-                "detail": (
-                    f"{item.source} · {difficulty} · {state}"
-                    f"{skill_text}{l2}"
+                "label": label,
+                "detail": f"題庫 {count} 題",
+                "enabled": count > 0,
+            }
+        )
+
+    selected = choose_menu(
+        "題目庫 · 難度",
+        options,
+        footer_numbers=False,
+        back_text="返回分類找題",
+    )
+
+    if selected is None:
+        return
+
+    filters["difficulty"] = (
+        None
+        if selected == 0
+        else PROBLEM_LIBRARY_DIFFICULTIES[
+            selected - 1
+        ][0]
+    )
+
+
+def _problem_library_choose_source(
+    filters,
+    all_items,
+):
+    sources = sorted(
+        {
+            item.source
+            for item in all_items
+            if item.source
+        },
+        key=lambda value: (
+            _problem_library_source_label(
+                value
+            ).casefold()
+        ),
+    )
+
+    options = [
+        {
+            "label": "不限來源",
+            "detail": "顯示所有 OJ / 題目來源",
+            "enabled": True,
+        }
+    ]
+
+    for source in sources:
+        count = sum(
+            1
+            for item in all_items
+            if item.source == source
+        )
+        options.append(
+            {
+                "label": (
+                    _problem_library_source_label(
+                        source
+                    )
                 ),
+                "detail": f"題庫 {count} 題",
                 "enabled": True,
             }
         )
 
-    if recommendation_reason:
-        print()
-        print(
-            f"{CYAN}推薦依據：{recommendation_reason}{RESET}"
-        )
-        print()
-
     selected = choose_menu(
-        "題目庫 · 搜尋結果",
+        "題目庫 · 來源",
         options,
-        footer_numbers=True,
-        back_text="返回控制中心",
+        footer_numbers=False,
+        back_text="返回分類找題",
     )
+
     if selected is None:
         return
 
-    item = items[selected]
+    filters["source"] = (
+        None
+        if selected == 0
+        else sources[selected - 1]
+    )
+
+
+def _problem_library_choose_status(
+    filters,
+):
+    options = [
+        {
+            "label": "不限作答狀態",
+            "detail": "已做與未做都顯示",
+            "enabled": True,
+        },
+        {
+            "label": "未做",
+            "detail": "只找尚未留下 Attempt 的題目",
+            "enabled": True,
+        },
+        {
+            "label": "已做",
+            "detail": "只找已有 Attempt 的題目",
+            "enabled": True,
+        },
+    ]
+
+    selected = choose_menu(
+        "題目庫 · 作答狀態",
+        options,
+        footer_numbers=False,
+        back_text="返回分類找題",
+    )
+
+    if selected is None:
+        return
+
+    filters["attempted"] = (
+        None
+        if selected == 0
+        else selected == 2
+    )
+
+
+def _problem_library_choose_role(
+    filters,
+    all_items,
+):
+    options = [
+        {
+            "label": "不限練習用途",
+            "detail": "所有活動類型",
+            "enabled": True,
+        }
+    ]
+
+    for value, label in (
+        PROBLEM_LIBRARY_ROLES
+    ):
+        count = sum(
+            1
+            for item in all_items
+            if item.role == value
+        )
+        options.append(
+            {
+                "label": label,
+                "detail": (
+                    f"{value} · 題庫 {count} 題"
+                ),
+                "enabled": count > 0,
+            }
+        )
+
+    selected = choose_menu(
+        "題目庫 · 練習用途",
+        options,
+        footer_numbers=False,
+        back_text="返回分類找題",
+    )
+
+    if selected is None:
+        return
+
+    filters["role"] = (
+        None
+        if selected == 0
+        else PROBLEM_LIBRARY_ROLES[
+            selected - 1
+        ][0]
+    )
+
+
+def _problem_library_choose_teaching(
+    filters,
+):
+    options = [
+        {
+            "label": "不限教學資料",
+            "detail": "有無 L2 教學資料都顯示",
+            "enabled": True,
+        },
+        {
+            "label": "有教學資料",
+            "detail": "作答後可解鎖完整教學內容",
+            "enabled": True,
+        },
+        {
+            "label": "無教學資料",
+            "detail": "只顯示尚未建立 L2 的題目",
+            "enabled": True,
+        },
+    ]
+
+    selected = choose_menu(
+        "題目庫 · 教學資料",
+        options,
+        footer_numbers=False,
+        back_text="返回分類找題",
+    )
+
+    if selected is None:
+        return
+
+    filters["require_l2"] = (
+        None
+        if selected == 0
+        else selected == 1
+    )
+
+
+def _problem_library_item_detail(
+    item,
+):
     view = PROBLEM_LIBRARY.learner_view(
         item,
-        activity=item.role or "Core Independent",
+        activity=(
+            item.role
+            or "Core Independent"
+        ),
         post_attempt=item.attempted,
     )
 
     clear()
-    heading("題目庫")
+    heading("題目庫 · 題目")
     print()
-    print(f"{WHITE}{item.external_id} · {item.title}{RESET}")
-    print(f"{GRAY}{item.canonical_url}{RESET}")
+    print(
+        f"{WHITE}{item.external_id} · "
+        f"{item.title}{RESET}"
+    )
+    print(
+        f"{GRAY}{item.canonical_url}{RESET}"
+    )
     print()
-    print(f"狀態      {'做過' if item.attempted else '未做'}")
-    print(f"難度      {view.get('difficulty') or '—'}")
-    print(f"活動      {view.get('activity') or '—'}")
+    print(
+        f"狀態      "
+        f"{'做過' if item.attempted else '未做'}"
+    )
+    print(
+        f"來源      "
+        f"{_problem_library_source_label(item.source)}"
+    )
+    print(
+        f"難度      "
+        f"{view.get('difficulty') or '—'}"
+    )
+    print(
+        f"活動      "
+        f"{view.get('activity') or '—'}"
+    )
 
     if view.get("primary_skill"):
-        print(f"主要 Skill {view['primary_skill']}")
+        print(
+            f"主要 Skill "
+            f"{view['primary_skill']}"
+        )
 
-    if not item.attempted and (
-        (item.role or "Core Independent")
-        in {"Core Independent", "Transfer Challenge", "Mock"}
+    if (
+        not item.attempted
+        and (
+            item.role
+            or "Core Independent"
+        )
+        in {
+            "Core Independent",
+            "Transfer Challenge",
+            "Mock",
+        }
     ):
         print()
         print(
@@ -6580,17 +7081,32 @@ def problem_library_view() -> None:
         print()
         rule()
         print()
-        print(f"{CYAN}{BOLD}作答後教學{RESET}")
+        print(
+            f"{CYAN}{BOLD}"
+            "作答後教學"
+            f"{RESET}"
+        )
         print_wrapped(
-            view.get("key_observation", "—"),
+            view.get(
+                "key_observation",
+                "—",
+            ),
             ui_width() - 2,
         )
         print(
             f"複雜度    "
-            f"{view.get('time_complexity', '—')} / "
+            f"{view.get('time_complexity', '—')}"
+            " / "
             f"{view.get('space_complexity', '—')}"
         )
-        pitfalls = view.get("common_pitfalls") or []
+
+        pitfalls = (
+            view.get(
+                "common_pitfalls"
+            )
+            or []
+        )
+
         if pitfalls:
             print("常見陷阱")
             for pitfall in pitfalls:
@@ -6600,15 +7116,521 @@ def problem_library_view() -> None:
                     prefix="  - ",
                     continuation_prefix="    ",
                 )
+
         print(
             f"{GRAY}"
-            f"驗證層級  {view.get('trust_status') or '—'}"
+            "驗證層級  "
+            f"{view.get('trust_status') or '—'}"
             f"{RESET}"
         )
 
     print()
+
     if confirm("開啟原題網址？"):
-        webbrowser.open(item.canonical_url)
+        webbrowser.open(
+            item.canonical_url
+        )
+
+    pause(
+        "Enter / Esc 返回題目列表"
+    )
+
+
+def _problem_library_results_view(
+    items,
+    *,
+    title: str = "題目庫 · 結果",
+    context: str | None = None,
+):
+    if not items:
+        clear()
+        heading(title)
+        print()
+        print(
+            f"{YELLOW}"
+            "沒有符合條件的題目。"
+            f"{RESET}"
+        )
+
+        if context:
+            print_wrapped(
+                f"目前條件：{context}",
+                ui_width() - 2,
+                color=GRAY,
+            )
+
+        pause(
+            "Enter / Esc 返回題目庫"
+        )
+        return
+
+    while True:
+        options = []
+
+        for item in items:
+            safe = (
+                PROBLEM_LIBRARY
+                .learner_view(
+                    item,
+                    activity=(
+                        item.role
+                        or "Core Independent"
+                    ),
+                    post_attempt=False,
+                )
+            )
+            state = (
+                "已做"
+                if item.attempted
+                else "未做"
+            )
+            l2 = (
+                " · 有教學"
+                if item.has_l2
+                else ""
+            )
+            role_label = (
+                dict(
+                    PROBLEM_LIBRARY_ROLES
+                ).get(
+                    item.role,
+                    item.role or "—",
+                )
+            )
+            visible_skill = (
+                safe.get(
+                    "primary_skill"
+                )
+            )
+            skill_text = (
+                f" · {visible_skill}"
+                if visible_skill
+                else ""
+            )
+
+            options.append(
+                {
+                    "label": (
+                        f"{item.external_id} · "
+                        f"{item.title}"
+                    ),
+                    "detail": (
+                        f"{_problem_library_source_label(item.source)}"
+                        f" · {item.difficulty or '—'}"
+                        f" · {state}"
+                        f" · {role_label}"
+                        f"{skill_text}{l2}"
+                    ),
+                    "enabled": True,
+                }
+            )
+
+        selected = choose_menu(
+            f"{title} · {len(items)} 題",
+            options,
+            footer_numbers=False,
+            back_text="返回題目庫",
+        )
+
+        if selected is None:
+            return
+
+        _problem_library_item_detail(
+            items[selected]
+        )
+
+
+def _recommended_problem_items(
+    limit: int = 30,
+):
+    """依目前 route 找尚未做候選，不建立第二套推薦 truth。"""
+
+    skill_uid = None
+
+    try:
+        snapshot = (
+            adaptive_today_snapshot()
+        )
+        route = snapshot.get(
+            "new_learning"
+        )
+
+        if (
+            route is not None
+            and route.skill is not None
+        ):
+            skill_uid = route.skill.uid
+
+    except Exception:
+        skill_uid = None
+
+    if skill_uid:
+        candidates = (
+            PROBLEM_LIBRARY.search(
+                skill=skill_uid,
+                attempted=False,
+                require_l2=True,
+                limit=100,
+            )
+        )
+
+        if not candidates:
+            candidates = (
+                PROBLEM_LIBRARY.search(
+                    skill=skill_uid,
+                    attempted=False,
+                    limit=100,
+                )
+            )
+
+        # A recommendation that exposes a hidden Transfer / Mock
+        # classification would violate the spoiler boundary.
+        items = [
+            item
+            for item in candidates
+            if item.role
+            not in {
+                "Transfer Challenge",
+                "Mock",
+            }
+        ][:limit]
+
+        if items:
+            return (
+                items,
+                "依目前 Today 學習路徑，優先尚未做且不洩漏遷移／模擬分類的題目",
+            )
+
+    return (
+        PROBLEM_LIBRARY.search(
+            attempted=False,
+            limit=limit,
+        ),
+        "尚未做 · 依題庫穩定排序",
+    )
+
+
+def _problem_library_filter_view():
+    filters = {
+        "skill_uids": (),
+        "skill_label": None,
+        "difficulty": None,
+        "source": None,
+        "attempted": None,
+        "role": None,
+        "require_l2": None,
+    }
+
+    all_items = (
+        PROBLEM_LIBRARY.items()
+    )
+
+    while True:
+        current = (
+            _problem_library_filter_items(
+                all_items,
+                filters,
+                limit=10000,
+            )
+        )
+        summary = (
+            _problem_library_filter_summary(
+                filters
+            )
+        )
+        has_filters = any(
+            (
+                filters.get(
+                    "skill_uids"
+                ),
+                filters.get(
+                    "difficulty"
+                ),
+                filters.get(
+                    "source"
+                ),
+                filters.get(
+                    "attempted"
+                )
+                is not None,
+                filters.get(
+                    "role"
+                ),
+                filters.get(
+                    "require_l2"
+                )
+                is not None,
+            )
+        )
+
+        options = [
+            {
+                "label": "學習主題",
+                "detail": (
+                    filters.get(
+                        "skill_label"
+                    )
+                    or "不限 · 先選 Unit，再選 Skill"
+                ),
+                "enabled": True,
+            },
+            {
+                "label": "難度",
+                "detail": (
+                    filters.get(
+                        "difficulty"
+                    )
+                    or "不限 · D1–D5"
+                ),
+                "enabled": True,
+            },
+            {
+                "label": "來源",
+                "detail": (
+                    (
+                        _problem_library_source_label(
+                            filters["source"]
+                        )
+                    )
+                    if filters.get(
+                        "source"
+                    )
+                    else "不限"
+                ),
+                "enabled": True,
+            },
+            {
+                "label": "作答狀態",
+                "detail": (
+                    "未做"
+                    if filters.get(
+                        "attempted"
+                    )
+                    is False
+                    else (
+                        "已做"
+                        if filters.get(
+                            "attempted"
+                        )
+                        is True
+                        else "不限"
+                    )
+                ),
+                "enabled": True,
+            },
+            {
+                "label": "練習用途",
+                "detail": (
+                    dict(
+                        PROBLEM_LIBRARY_ROLES
+                    ).get(
+                        filters.get(
+                            "role"
+                        ),
+                        "不限",
+                    )
+                ),
+                "enabled": True,
+            },
+            {
+                "label": "教學資料",
+                "detail": (
+                    "有教學資料"
+                    if filters.get(
+                        "require_l2"
+                    )
+                    is True
+                    else (
+                        "無教學資料"
+                        if filters.get(
+                            "require_l2"
+                        )
+                        is False
+                        else "不限"
+                    )
+                ),
+                "enabled": True,
+            },
+            {
+                "label": (
+                    f"查看結果 · "
+                    f"{len(current)} 題"
+                ),
+                "detail": (
+                    summary
+                ),
+                "enabled": bool(current),
+            },
+            {
+                "label": "清除全部條件",
+                "detail": "恢復成不限",
+                "enabled": has_filters,
+            },
+        ]
+
+        selected = choose_menu(
+            "題目庫 · 分類找題",
+            options,
+            footer_numbers=False,
+            back_text="返回題目庫",
+        )
+
+        if selected is None:
+            return
+
+        if selected == 0:
+            _problem_library_choose_skill(
+                filters,
+                all_items,
+            )
+
+        elif selected == 1:
+            _problem_library_choose_difficulty(
+                filters,
+                all_items,
+            )
+
+        elif selected == 2:
+            _problem_library_choose_source(
+                filters,
+                all_items,
+            )
+
+        elif selected == 3:
+            _problem_library_choose_status(
+                filters,
+            )
+
+        elif selected == 4:
+            _problem_library_choose_role(
+                filters,
+                all_items,
+            )
+
+        elif selected == 5:
+            _problem_library_choose_teaching(
+                filters,
+            )
+
+        elif selected == 6:
+            _problem_library_results_view(
+                current,
+                title="題目庫 · 分類結果",
+                context=summary,
+            )
+
+        elif selected == 7:
+            filters.update(
+                {
+                    "skill_uids": (),
+                    "skill_label": None,
+                    "difficulty": None,
+                    "source": None,
+                    "attempted": None,
+                    "role": None,
+                    "require_l2": None,
+                }
+            )
+
+
+def _problem_library_text_search():
+    clear()
+    heading("題目庫 · 題號／題名")
+    print()
+    print(
+        f"{GRAY}"
+        "這裡只用一般關鍵字搜尋；不需要記任何 tag 或 filter 語法。"
+        f"{RESET}"
+    )
+    print()
+
+    query = prompt_text(
+        "題號或題名"
+    )
+
+    if query is None:
+        return
+
+    items = (
+        PROBLEM_LIBRARY.smart_search(
+            query or "",
+            limit=100,
+        )
+    )
+
+    _problem_library_results_view(
+        items,
+        title="題目庫 · 搜尋結果",
+        context=(
+            f"關鍵字：{query}"
+            if query
+            else "全部題目"
+        ),
+    )
+
+
+def problem_library_view() -> None:
+    while True:
+        options = [
+            {
+                "label": "推薦給我",
+                "detail": "依目前 Today 學習路徑，優先找尚未做且適合直接開始的題目",
+                "enabled": True,
+                "section": "快速開始",
+            },
+            {
+                "label": "分類找題",
+                "detail": "用學習主題、難度、來源、作答狀態、練習用途逐步篩選",
+                "enabled": True,
+                "section": "瀏覽題庫",
+            },
+            {
+                "label": "題號／題名搜尋",
+                "detail": "已知道題目時使用；只輸入一般關鍵字",
+                "enabled": True,
+                "section": "瀏覽題庫",
+            },
+            {
+                "label": "全部題目",
+                "detail": "不套條件，直接瀏覽完整題庫",
+                "enabled": True,
+                "section": "瀏覽題庫",
+            },
+        ]
+
+        selected = choose_menu(
+            "題目庫",
+            options,
+            footer_numbers=False,
+            back_text="返回控制中心",
+        )
+
+        if selected is None:
+            return
+
+        if selected == 0:
+            items, reason = (
+                _recommended_problem_items(
+                    limit=30,
+                )
+            )
+            _problem_library_results_view(
+                items,
+                title="題目庫 · 推薦",
+                context=reason,
+            )
+
+        elif selected == 1:
+            _problem_library_filter_view()
+
+        elif selected == 2:
+            _problem_library_text_search()
+
+        elif selected == 3:
+            _problem_library_results_view(
+                PROBLEM_LIBRARY.items(),
+                title="題目庫 · 全部",
+            )
 
 # ============================================================
 # Exam Runtime
