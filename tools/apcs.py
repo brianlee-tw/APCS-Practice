@@ -38,6 +38,12 @@ except ImportError:
 
 
 try:
+    from .current_authority import sync_current_authority
+except ImportError:
+    from current_authority import sync_current_authority
+
+
+try:
     from .tag_analytics import (
         build_tag_stats,
         display_tags,
@@ -592,6 +598,7 @@ def replace_between(
 
 def sync():
     ensure()
+    sync_current_authority()
     rows, warnings = build()
 
     readme = ROOT / "README.md"
