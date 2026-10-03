@@ -49,6 +49,7 @@ class SkillEvidenceState:
     latest_assistance: int | None
     latest_independent: bool | None
     latest_novelty: str | None
+    latest_order: int
     strong_passes: int
     transfer_passes: int
 
@@ -66,7 +67,10 @@ def _sort_envelopes(envelopes):
 def skill_states(envelopes: Iterable) -> dict[tuple[str, str], SkillEvidenceState]:
     raw: dict[tuple[str, str], dict] = {}
 
-    for envelope in _sort_envelopes(envelopes):
+    for order, envelope in enumerate(
+        _sort_envelopes(envelopes),
+        start=1,
+    ):
         attempt = envelope.attempt
         for claim in envelope.evidence:
             key = (claim.skill_uid, claim.track)
@@ -80,6 +84,7 @@ def skill_states(envelopes: Iterable) -> dict[tuple[str, str], SkillEvidenceStat
                     "latest_assistance": attempt.assistance,
                     "latest_independent": attempt.independent,
                     "latest_novelty": attempt.novelty,
+                    "latest_order": order,
                     "strong_passes": 0,
                     "transfer_passes": 0,
                 },
@@ -92,6 +97,7 @@ def skill_states(envelopes: Iterable) -> dict[tuple[str, str], SkillEvidenceStat
                     "latest_assistance": attempt.assistance,
                     "latest_independent": attempt.independent,
                     "latest_novelty": attempt.novelty,
+                    "latest_order": order,
                 }
             )
 
@@ -149,12 +155,10 @@ def _latest_failed_state(
     if not failed:
         return None
 
-    # states 本身已由時間順序覆寫；沒有額外 timestamp 時，
-    # 以 deterministic key 排序即可，真正優先級由最新 envelope
-    # 產生的 state 集合決定。
     return sorted(
         failed,
         key=lambda state: (
+            -state.latest_order,
             0 if state.latest_outcome == "FAIL" else 1,
             state.skill_uid,
             state.track,
