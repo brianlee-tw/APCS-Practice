@@ -58,6 +58,24 @@ def placement():
     )
 
 
+def confirmation_placement():
+    return PlacementContext(
+        placement_uid="PL-002",
+        pb_uid="PB-002",
+        problem_id="a693",
+        title="Prefix Sum Alternate",
+        url="https://example.invalid/a693",
+        difficulty="D2",
+        primary_skill="S22_Prefix_Sum",
+        supporting_skills=(),
+        role="Core Independent",
+        lesson_uid="L-PFX-01",
+        lesson_order=2,
+        evidence_level_cap=3,
+        method_confirmation_required=True,
+    )
+
+
 class FinishEvidenceUiV23Test(unittest.TestCase):
     def test_finish_uses_primary_skill_only(self):
         envelope = attempt_envelope_for_record(
@@ -107,6 +125,81 @@ class FinishEvidenceUiV23Test(unittest.TestCase):
                 item.skill_uid
                 for item in envelope.evidence
             },
+        )
+
+    def test_unconfirmed_target_method_keeps_attempt_without_skill_evidence(self):
+        envelope = attempt_envelope_for_record(
+            action="finish",
+            problem=problem(),
+            result="AC",
+            minutes=12,
+            assistance=0,
+            independent=True,
+            novelty="new",
+            timed=False,
+            placement=confirmation_placement(),
+            method_confirmed=False,
+            finished_at=FINISHED,
+        )
+
+        self.assertEqual(
+            envelope.attempt.pb_uid,
+            "PB-002",
+        )
+        self.assertEqual(
+            envelope.evidence,
+            (),
+        )
+        self.assertIn(
+            "target method not confirmed",
+            envelope.attempt.note,
+        )
+
+    def test_confirmed_target_method_emits_primary_skill_evidence(self):
+        envelope = attempt_envelope_for_record(
+            action="finish",
+            problem=problem(),
+            result="AC",
+            minutes=12,
+            assistance=0,
+            independent=True,
+            novelty="new",
+            timed=False,
+            placement=confirmation_placement(),
+            method_confirmed=True,
+            finished_at=FINISHED,
+        )
+
+        self.assertEqual(
+            len(envelope.evidence),
+            1,
+        )
+        self.assertEqual(
+            envelope.evidence[0].skill_uid,
+            "S22_Prefix_Sum",
+        )
+        self.assertIn(
+            "target method confirmed",
+            envelope.evidence[0].note,
+        )
+
+    def test_required_confirmation_does_not_guess_true_when_omitted(self):
+        envelope = attempt_envelope_for_record(
+            action="finish",
+            problem=problem(),
+            result="AC",
+            minutes=12,
+            assistance=0,
+            independent=True,
+            novelty="new",
+            timed=False,
+            placement=confirmation_placement(),
+            finished_at=FINISHED,
+        )
+
+        self.assertEqual(
+            envelope.evidence,
+            (),
         )
 
     def test_review_uses_review_activity(self):
