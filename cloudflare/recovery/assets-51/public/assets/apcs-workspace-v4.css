@@ -1,0 +1,6 @@
+/* UI 5.13.4 workspace detail maintenance.
+   The L-FND-01 inline stylesheet is the sole authority for canonical Workspace selectors.
+   This file may style runtime-only nodes only; it MUST NOT override canonical shell / timer / task / plan / record selectors. */
+.apcsV4Debrief{min-height:150px;padding:18px;border:1px solid var(--line);border-radius:18px;background:var(--panel2)}
+.apcsV4Debrief h3{margin:0 0 9px;font-size:15px}
+.apcsV4Debrief p{margin:0;color:var(--text2);font-size:13px;line-height:1.75}

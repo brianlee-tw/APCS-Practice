@@ -1,0 +1,413 @@
+{
+  "schema": "apcs-unit-completion-manifest-v2",
+  "authority_page_id": "3d343be9-58cd-810b-98c2-d849c62bf5d6",
+  "generated_at": "2026-09-12T03:15:00Z",
+  "verification_center": "https://app.notion.com/p/3c643be958cd81ad92fdeb4b22c72c06",
+  "main_lesson_count": 52,
+  "required_core_count": 48,
+  "nonblocking_main_count": 4,
+  "nonblocking_main_lessons": [
+    "L-ORD-03",
+    "L-REC-02",
+    "L-REC-05",
+    "L-RNG-03"
+  ],
+  "units": {
+    "fnd": {
+      "id": "U-FND",
+      "title": "基礎語言與控制",
+      "entry": "Zero-base → C++ 的值、控制流程、函式與邊界。",
+      "carry": [
+        "型別化的值（typed value）",
+        "控制流程與狀態追蹤",
+        "函式邊界",
+        "數值／邊界紀律"
+      ],
+      "required": [
+        "L-FND-01",
+        "L-FND-02",
+        "L-FND-03",
+        "L-FND-04"
+      ],
+      "optional": [],
+      "next": {
+        "label": "前往 U-DAT｜資料表示與模擬",
+        "href": "/visuals/unit/dat"
+      },
+      "content_revision": "U-FND@2026-09-12.FSPC1",
+      "legacy_revisions": [
+        "uclc-v1-U-FND-7bef2dd9"
+      ],
+      "source_unit_page_id": "3c643be9-58cd-81a9-9106-cbedccb7f310"
+    },
+    "dat": {
+      "id": "U-DAT",
+      "title": "資料表示與模擬",
+      "entry": "承接 U-FND 的 value / loop / function / boundary，把單一變數擴成資料表示與狀態更新。",
+      "carry": [
+        "sequence / index",
+        "string / matrix",
+        "state → transition",
+        "representation first"
+      ],
+      "required": [
+        "L-DAT-01",
+        "L-DAT-02",
+        "L-DAT-03",
+        "L-DAT-04"
+      ],
+      "optional": [],
+      "next": {
+        "label": "前往 U-PSV｜解題基礎與複雜度",
+        "href": "/visuals/unit/psv"
+      },
+      "content_revision": "U-DAT@2026-09-12.FSPC1",
+      "legacy_revisions": [
+        "uclc-v1-U-DAT-58e05117"
+      ],
+      "source_unit_page_id": "3c643be9-58cd-8172-9360-de3185bac4ba"
+    },
+    "psv": {
+      "id": "U-PSV",
+      "title": "解題基礎與複雜度",
+      "entry": "承接 U-DAT 的資料表示與 state trace，開始判斷方法是否可行、可驗證。",
+      "carry": [
+        "baseline",
+        "operation count / complexity",
+        "first divergence",
+        "counterexample / correctness"
+      ],
+      "required": [
+        "L-PSV-01",
+        "L-PSV-02",
+        "L-PSV-03",
+        "L-PSV-04"
+      ],
+      "optional": [],
+      "next": {
+        "label": "前往 U-ORD｜排序與關聯容器",
+        "href": "/visuals/unit/ord"
+      },
+      "content_revision": "U-PSV@2026-09-12.FSPC1",
+      "legacy_revisions": [
+        "uclc-v1-U-PSV-73ca40c5"
+      ],
+      "source_unit_page_id": "3c643be9-58cd-8146-8b21-f426b5e3dc14"
+    },
+    "ord": {
+      "id": "U-ORD",
+      "title": "排序與關聯容器",
+      "entry": "承接 U-PSV 的 complexity / correctness 與 U-DAT 的 representation，用 ordering 讓資料關係可被利用。",
+      "carry": [
+        "ordering relation",
+        "record identity",
+        "comparator contract",
+        "lookup / frequency boundary"
+      ],
+      "required": [
+        "L-ORD-01",
+        "L-ORD-02"
+      ],
+      "optional": [
+        {
+          "id": "L-ORD-03",
+          "kind": "Supporting / non-blocking"
+        }
+      ],
+      "next": {
+        "label": "繼續 U-PFX Bridge",
+        "href": "/visuals/unit/pfx"
+      },
+      "verify": {
+        "label": "前往 05｜模考與能力驗證（RR3 / IR3）",
+        "href": "https://app.notion.com/p/3c643be958cd81ad92fdeb4b22c72c06"
+      },
+      "content_revision": "U-ORD@2026-09-12.FSPC1",
+      "legacy_revisions": [
+        "uclc-v1-U-ORD-bdb6ad8d"
+      ],
+      "source_unit_page_id": "3c643be9-58cd-815b-9790-ca3ca7c3ef29"
+    },
+    "pfx": {
+      "id": "U-PFX",
+      "title": "前綴與差分",
+      "entry": "承接 sequence / ordering 與 repeated-work analysis，第一次正式用 preprocessing 消除重複工作。",
+      "carry": [
+        "boundary state",
+        "preprocessing reuse",
+        "difference",
+        "inclusion–exclusion"
+      ],
+      "required": [
+        "L-PFX-01",
+        "L-PFX-02",
+        "L-PFX-03",
+        "L-PFX-04"
+      ],
+      "optional": [],
+      "next": {
+        "label": "前往 U-WIN｜雙指標與滑動視窗",
+        "href": "/visuals/unit/win"
+      },
+      "content_revision": "U-PFX@2026-09-12.FSPC1",
+      "legacy_revisions": [
+        "uclc-v1-U-PFX-76d9d8ab"
+      ],
+      "source_unit_page_id": "3c643be9-58cd-81ff-b36b-f1506c399688"
+    },
+    "win": {
+      "id": "U-WIN",
+      "title": "雙指標與滑動視窗",
+      "entry": "承接 range state 與 ordering，從預先累積改成維護會移動的區間。",
+      "carry": [
+        "safe pointer movement",
+        "[L,R) state",
+        "incremental update",
+        "method applicability"
+      ],
+      "required": [
+        "L-WIN-01",
+        "L-WIN-02",
+        "L-WIN-03"
+      ],
+      "optional": [],
+      "next": {
+        "label": "前往 U-BIN｜二分搜尋與單調性",
+        "href": "/visuals/unit/bin"
+      },
+      "content_revision": "U-WIN@2026-09-12.FSPC1",
+      "legacy_revisions": [
+        "uclc-v1-U-WIN-374379df"
+      ],
+      "source_unit_page_id": "3c643be9-58cd-8178-b4b9-d46876543510"
+    },
+    "bin": {
+      "id": "U-BIN",
+      "title": "二分搜尋與單調性",
+      "entry": "承接 U-WIN 的單向移動 reasoning 與 U-ORD 的 ordering，把它提升成 predicate / boundary monotonicity。",
+      "carry": [
+        "candidate interval",
+        "first-true boundary",
+        "feasible predicate",
+        "answer-space search"
+      ],
+      "required": [
+        "L-BIN-01",
+        "L-BIN-02",
+        "L-BIN-03"
+      ],
+      "optional": [],
+      "next": {
+        "label": "前往 U-REC｜遞迴、回溯與狀態枚舉",
+        "href": "/visuals/unit/rec"
+      },
+      "content_revision": "U-BIN@2026-09-12.FSPC1",
+      "legacy_revisions": [
+        "uclc-v1-U-BIN-7eee4f05"
+      ],
+      "source_unit_page_id": "3c643be9-58cd-816f-ac57-ece44cf69777"
+    },
+    "rec": {
+      "id": "U-REC",
+      "title": "遞迴、回溯與狀態枚舉",
+      "entry": "承接 function/call、correctness 與 state reduction，從縮小搜尋區間進入縮小子問題與搜尋樹。",
+      "carry": [
+        "call stack",
+        "recursive contract",
+        "Choose → Explore → Undo",
+        "safe pruning"
+      ],
+      "required": [
+        "L-REC-01",
+        "L-REC-03",
+        "L-REC-04"
+      ],
+      "optional": [
+        {
+          "id": "L-REC-02",
+          "kind": "Supporting / non-blocking"
+        },
+        {
+          "id": "L-REC-05",
+          "kind": "Supporting / non-blocking"
+        }
+      ],
+      "next": {
+        "label": "前往 U-DS｜線性與優先資料結構",
+        "href": "/visuals/unit/ds"
+      },
+      "content_revision": "U-REC@2026-09-12.FSPC1",
+      "legacy_revisions": [
+        "uclc-v1-U-REC-28eda34f"
+      ],
+      "source_unit_page_id": "3c643be9-58cd-81a4-8996-df16a33fd4ed"
+    },
+    "ds": {
+      "id": "U-DS",
+      "title": "線性與優先資料結構",
+      "entry": "承接 pending-state reasoning 與 ordering，把「下一個要處理誰」交給明確的 container semantics。",
+      "carry": [
+        "LIFO / FIFO",
+        "two-ended semantics",
+        "priority semantics",
+        "frontier selection"
+      ],
+      "required": [
+        "L-DS-01",
+        "L-DS-02",
+        "L-DS-03"
+      ],
+      "optional": [],
+      "next": {
+        "label": "前往 U-GPH｜圖與樹遍歷",
+        "href": "/visuals/unit/gph"
+      },
+      "content_revision": "U-DS@2026-09-12.FSPC1",
+      "legacy_revisions": [
+        "uclc-v1-U-DS-54b31a45"
+      ],
+      "source_unit_page_id": "3c643be9-58cd-815b-b004-cbf7223a3a58"
+    },
+    "gph": {
+      "id": "U-GPH",
+      "title": "圖與樹遍歷",
+      "entry": "承接 DS frontier、REC traversal 與 DAT grid/state，把情境轉成 vertex / edge 並系統化探索。",
+      "carry": [
+        "vertex / edge modeling",
+        "visited timing",
+        "DFS / BFS frontier",
+        "tree parent / depth / subtree"
+      ],
+      "required": [
+        "L-GPH-01",
+        "L-GPH-02",
+        "L-GPH-03",
+        "L-GPH-04"
+      ],
+      "optional": [],
+      "next": {
+        "label": "前往 U-GRD｜貪心",
+        "href": "/visuals/unit/grd"
+      },
+      "note": "X01–X04 是 Optional Extension，完全不列入本完成確認。",
+      "content_revision": "U-GPH@2026-09-12.FSPC1",
+      "legacy_revisions": [
+        "uclc-v1-U-GPH-5bf17563"
+      ],
+      "source_unit_page_id": "3c643be9-58cd-8168-ad87-e6345e0ea95f"
+    },
+    "grd": {
+      "id": "U-GRD",
+      "title": "貪心",
+      "entry": "承接 ordering、counterexample / proof 與 candidate frontier，問何時可以安全地不探索全部候選。",
+      "carry": [
+        "criterion",
+        "counterexample-first",
+        "exchange / invariant",
+        "safe commitment"
+      ],
+      "required": [
+        "L-GRD-01",
+        "L-GRD-02",
+        "L-GRD-03"
+      ],
+      "optional": [],
+      "next": {
+        "label": "前往 U-DP｜動態規劃",
+        "href": "/visuals/unit/dp"
+      },
+      "content_revision": "U-GRD@2026-09-12.FSPC1",
+      "legacy_revisions": [
+        "uclc-v1-U-GRD-daee25cf"
+      ],
+      "source_unit_page_id": "3c643be9-58cd-815d-9dcb-d5d0dcbeb455"
+    },
+    "dp": {
+      "id": "U-DP",
+      "title": "動態規劃",
+      "entry": "承接 subproblem 與 dependency reasoning；當單一路徑無法證明安全時，保存多個子問題答案。",
+      "carry": [
+        "State → Transition → Base → Order → Answer",
+        "dependency ownership",
+        "representation trade-off"
+      ],
+      "required": [
+        "L-DP-01",
+        "L-DP-02",
+        "L-DP-03",
+        "L-DP-04"
+      ],
+      "optional": [],
+      "next": {
+        "label": "前往 U-RNG｜Advanced Calibration",
+        "href": "/visuals/unit/rng"
+      },
+      "content_revision": "U-DP@2026-09-12.FSPC1",
+      "legacy_revisions": [
+        "uclc-v1-U-DP-329c7e93"
+      ],
+      "source_unit_page_id": "3c643be9-58cd-81bc-b6f5-d8b8d8fa65b8"
+    },
+    "rng": {
+      "id": "U-RNG",
+      "title": "區間資料結構與分治",
+      "entry": "承接 ordering、range、divide-and-conquer 與 state representation；本 Unit 是 Advanced Calibration，不是新的 prerequisite wall。",
+      "carry": [
+        "coordinate compression",
+        "offline event order",
+        "range-query representation",
+        "actual-method Evidence discipline"
+      ],
+      "required": [
+        "L-RNG-01",
+        "L-RNG-02",
+        "L-RNG-04"
+      ],
+      "optional": [
+        {
+          "id": "L-RNG-03",
+          "kind": "S36 Extension / non-blocking"
+        }
+      ],
+      "next": {
+        "label": "前往 U-MIX｜綜合建模與考場",
+        "href": "/visuals/unit/mix"
+      },
+      "note": "L-RNG-03（Fenwick / Segment Tree）未完成不得阻擋 Learning Completion，也不得鎖住 U-MIX。",
+      "content_revision": "U-RNG@2026-09-12.FSPC1",
+      "legacy_revisions": [
+        "uclc-v1-U-RNG-8538a193"
+      ],
+      "source_unit_page_id": "3c643be9-58cd-8167-9c30-d70313b47e43"
+    },
+    "mix": {
+      "id": "U-MIX",
+      "title": "綜合建模與考場",
+      "entry": "承接前 13 Units 的 required/core mental models；此處不新增演算法，而是回到陌生題、時間壓力與 method choice。",
+      "carry": [
+        "Representation → Baseline → Bottleneck → Method",
+        "subtask strategy",
+        "first-divergence testing",
+        "timed decision"
+      ],
+      "required": [
+        "L-MIX-01",
+        "L-MIX-02",
+        "L-MIX-03",
+        "L-MIX-04"
+      ],
+      "optional": [],
+      "next": {
+        "label": "前往 05｜模考與能力驗證",
+        "href": "https://app.notion.com/p/3c643be958cd81ad92fdeb4b22c72c06",
+        "external": true
+      },
+      "note": "MIX-04 仍是 portfolio-only / Formal OJ N/A；本 Unit 完成不等於 RR5 / IR5。",
+      "content_revision": "U-MIX@2026-09-12.FSPC1",
+      "legacy_revisions": [
+        "uclc-v1-U-MIX-3769e811"
+      ],
+      "source_unit_page_id": "3c643be9-58cd-8193-ac6b-d2df9b81a203"
+    }
+  }
+}

@@ -1,0 +1,550 @@
+[
+  {
+    "pb_uid": "PB-152",
+    "problem_id": "CUSTOM-DAT01-INDEX-01",
+    "title": "Array / Vector Boundary Trace",
+    "lesson": "L-DAT-01",
+    "role": "Worked Example",
+    "difficulty": "D1",
+    "source": "APCS Custom",
+    "summary": "追蹤 vector 的 size、合法 index 與 push_back 後狀態。",
+    "input": "第一行 n；第二行 n 個整數；第三行 q，接著 q 行操作：ADD i x（把第 i 格加 x）或 PUSH x。",
+    "output": "輸出所有操作完成後的 size，接著輸出最終 sequence。",
+    "constraints": [
+      "1 ≤ n ≤ 20",
+      "所有 i 皆為當下合法 0-index",
+      "0 ≤ q ≤ 20"
+    ],
+    "examples": [
+      {
+        "input": "3\n4 7 2\n2\nADD 1 5\nPUSH 9\n",
+        "output": "4\n4 12 2 9\n",
+        "explanation": "ADD 不改 size；PUSH 後 size 變 4。"
+      }
+    ],
+    "tests": [
+      {
+        "input": "1\n5\n1\nPUSH 8\n",
+        "output": "2\n5 8\n"
+      },
+      {
+        "input": "2\n1 2\n2\nADD 0 3\nADD 1 -1\n",
+        "output": "2\n4 1\n"
+      }
+    ],
+    "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main(){\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    \n    return 0;\n}\n"
+  },
+  {
+    "pb_uid": "PB-153",
+    "problem_id": "CUSTOM-DAT01-VECTOR-CORE-01",
+    "title": "Vector Index / Update / Push Challenge",
+    "lesson": "L-DAT-01",
+    "role": "Core Independent",
+    "difficulty": "D2",
+    "source": "APCS Custom",
+    "summary": "維護 dynamic sequence，正確處理 GET / SET / PUSH 與最後 traversal。",
+    "input": "第一行 n；第二行 n 個整數；第三行 q；接著 q 行為 GET i、SET i x 或 PUSH x。",
+    "output": "每個 GET 輸出一行；全部操作結束後輸出 FINAL: 再接最終 sequence。",
+    "constraints": [
+      "1 ≤ n,q ≤ 2×10^5",
+      "GET/SET 的 index 一定合法",
+      "所有值在 32-bit int 內"
+    ],
+    "examples": [
+      {
+        "input": "3\n4 7 2\n4\nGET 1\nSET 0 9\nPUSH 5\nGET 3\n",
+        "output": "7\n5\nFINAL: 9 7 2 5\n"
+      }
+    ],
+    "tests": [
+      {
+        "input": "1\n3\n3\nGET 0\nPUSH 4\nSET 1 8\n",
+        "output": "3\nFINAL: 3 8\n"
+      },
+      {
+        "input": "2\n0 0\n2\nPUSH 1\nGET 2\n",
+        "output": "1\nFINAL: 0 0 1\n"
+      }
+    ],
+    "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main(){\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    \n    return 0;\n}\n"
+  },
+  {
+    "pb_uid": "PB-154",
+    "problem_id": "CUSTOM-DAT03-COORD-01",
+    "title": "2D Coordinate / Boundary Trace",
+    "lesson": "L-DAT-03",
+    "role": "Worked Example",
+    "difficulty": "D1",
+    "source": "APCS Custom",
+    "summary": "建立 row/column 座標與四方向 boundary invariant。",
+    "input": "輸入 R C r c，表示 R×C grid 與指定 cell。",
+    "output": "依上、右、下、左順序輸出仍在 grid 內的鄰居座標，每行 r c；若沒有則輸出 NONE。",
+    "constraints": [
+      "1 ≤ R,C ≤ 20",
+      "0 ≤ r < R",
+      "0 ≤ c < C"
+    ],
+    "examples": [
+      {
+        "input": "3 4 1 3\n",
+        "output": "0 3\n2 3\n1 2\n",
+        "explanation": "右方超界，其餘三個鄰居合法。"
+      }
+    ],
+    "tests": [
+      {
+        "input": "1 1 0 0\n",
+        "output": "NONE\n"
+      },
+      {
+        "input": "2 2 0 0\n",
+        "output": "0 1\n1 0\n"
+      }
+    ],
+    "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main(){\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    \n    return 0;\n}\n"
+  },
+  {
+    "pb_uid": "PB-155",
+    "problem_id": "CUSTOM-DAT04-STATE-01",
+    "title": "Simulation State / Transition Trace",
+    "lesson": "L-DAT-04",
+    "role": "Worked Example",
+    "difficulty": "D1",
+    "source": "APCS Custom",
+    "summary": "把文字規則拆成 minimal state、transition order 與 termination。",
+    "input": "輸入 steps pos energy。每一步先 pos+=1；若 pos 為 3 的倍數 energy-=1；energy=0 或完成 steps 時停止。",
+    "output": "輸出實際執行步數、最後 pos、最後 energy。",
+    "constraints": [
+      "1 ≤ steps ≤ 100",
+      "0 ≤ pos ≤ 100",
+      "1 ≤ energy ≤ 20"
+    ],
+    "examples": [
+      {
+        "input": "10 0 2\n",
+        "output": "6 6 0\n"
+      }
+    ],
+    "tests": [
+      {
+        "input": "2 0 5\n",
+        "output": "2 2 5\n"
+      },
+      {
+        "input": "3 2 1\n",
+        "output": "1 3 0\n"
+      }
+    ],
+    "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main(){\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    \n    return 0;\n}\n"
+  },
+  {
+    "pb_uid": "PB-156",
+    "problem_id": "CUSTOM-PSV01-BASELINE-01",
+    "title": "Baseline Before Optimization",
+    "lesson": "L-PSV-01",
+    "role": "Worked Example",
+    "difficulty": "D1",
+    "source": "APCS Custom",
+    "summary": "先建立 all-pairs baseline，再用 exact count 理解工作量。",
+    "input": "輸入 n。",
+    "output": "輸出所有 i<j pair 的數量。",
+    "constraints": [
+      "1 ≤ n ≤ 100000",
+      "答案使用 long long"
+    ],
+    "examples": [
+      {
+        "input": "4\n",
+        "output": "6\n"
+      }
+    ],
+    "tests": [
+      {
+        "input": "1\n",
+        "output": "0\n"
+      },
+      {
+        "input": "5\n",
+        "output": "10\n"
+      }
+    ],
+    "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main(){\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    \n    return 0;\n}\n"
+  },
+  {
+    "pb_uid": "PB-157",
+    "problem_id": "CUSTOM-PSV01-PAIR-01",
+    "title": "All-Pairs Baseline Drill",
+    "lesson": "L-PSV-01",
+    "role": "Guided Drill",
+    "difficulty": "D2",
+    "source": "APCS Custom",
+    "summary": "用目前已學內容枚舉 i<j，不漏也不重複。",
+    "input": "第一行 n T；第二行 n 個整數。",
+    "output": "輸出 i<j 且 a[i]+a[j]=T 的 pair 數。",
+    "constraints": [
+      "1 ≤ n ≤ 2000",
+      "|a[i]|,|T| ≤ 10^9"
+    ],
+    "examples": [
+      {
+        "input": "5 6\n1 5 2 4 3\n",
+        "output": "2\n"
+      }
+    ],
+    "tests": [
+      {
+        "input": "4 4\n2 2 2 2\n",
+        "output": "6\n"
+      },
+      {
+        "input": "3 100\n1 2 3\n",
+        "output": "0\n"
+      }
+    ],
+    "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main(){\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    \n    return 0;\n}\n"
+  },
+  {
+    "pb_uid": "PB-158",
+    "problem_id": "CUSTOM-PSV01-CORE-01",
+    "title": "Constraint-to-Baseline Decision",
+    "lesson": "L-PSV-01",
+    "role": "Core Independent",
+    "difficulty": "D2",
+    "source": "APCS Custom",
+    "summary": "在連續區間 domain 建立正確 baseline，並看清 candidate count × 每 candidate 成本。",
+    "input": "第一行 n T；第二行 n 個整數。",
+    "output": "輸出總和恰為 T 的連續區間數。",
+    "constraints": [
+      "Profile A：1 ≤ n ≤ 120",
+      "本題只要求用已學內容建立正確 baseline",
+      "值可為負數；不可假設 sliding window"
+    ],
+    "examples": [
+      {
+        "input": "4 3\n1 2 1 2\n",
+        "output": "3\n"
+      }
+    ],
+    "tests": [
+      {
+        "input": "1 0\n0\n",
+        "output": "1\n"
+      },
+      {
+        "input": "3 0\n1 -1 0\n",
+        "output": "3\n"
+      }
+    ],
+    "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main(){\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    \n    return 0;\n}\n"
+  },
+  {
+    "pb_uid": "PB-159",
+    "problem_id": "CUSTOM-PSV02-COUNT-01",
+    "title": "Operation Count Walkthrough",
+    "lesson": "L-PSV-02",
+    "role": "Worked Example",
+    "difficulty": "D1",
+    "source": "APCS Custom",
+    "summary": "從 exact operation count 推導 growth，而不是看 loop 長相背 Big-O。",
+    "input": "輸入 n。",
+    "output": "輸出三個整數：固定一次 operation 數、單層 loop operation 數、n×n 雙層 loop operation 數。",
+    "constraints": [
+      "1 ≤ n ≤ 10^9",
+      "答案用 long long"
+    ],
+    "examples": [
+      {
+        "input": "4\n",
+        "output": "1 4 16\n"
+      }
+    ],
+    "tests": [
+      {
+        "input": "1\n",
+        "output": "1 1 1\n"
+      },
+      {
+        "input": "8\n",
+        "output": "1 8 64\n"
+      }
+    ],
+    "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main(){\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    \n    return 0;\n}\n"
+  },
+  {
+    "pb_uid": "PB-160",
+    "problem_id": "CUSTOM-PSV02-BUDGET-01",
+    "title": "Complexity Budget Drill",
+    "lesson": "L-PSV-02",
+    "role": "Guided Drill",
+    "difficulty": "D2",
+    "source": "APCS Custom",
+    "summary": "把 statement 重複次數與 constraints 對起來。",
+    "input": "輸入 n 與 mode。mode=1 表單層 n 次；mode=2 表 n² 次；mode=3 表 n(n-1)/2 次。",
+    "output": "輸出 exact operation count。",
+    "constraints": [
+      "1 ≤ n ≤ 10^9",
+      "mode ∈ {1,2,3}",
+      "答案用 long long"
+    ],
+    "examples": [
+      {
+        "input": "5 3\n",
+        "output": "10\n"
+      }
+    ],
+    "tests": [
+      {
+        "input": "100 1\n",
+        "output": "100\n"
+      },
+      {
+        "input": "100 2\n",
+        "output": "10000\n"
+      }
+    ],
+    "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main(){\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    \n    return 0;\n}\n"
+  },
+  {
+    "pb_uid": "PB-161",
+    "problem_id": "CUSTOM-PSV02-CORE-01",
+    "title": "Time / Space Review Packet",
+    "lesson": "L-PSV-02",
+    "role": "Core Independent",
+    "difficulty": "D2",
+    "source": "APCS Custom",
+    "summary": "由 code structure 判定 dominant work 與額外 space。",
+    "input": "輸入 n 與 type：A 表 n 次、B 表 n² 次、C 表 n 次且額外配置 n 個整數。",
+    "output": "輸出 WORK=<operation count> SPACE=<extra integer slots>。",
+    "constraints": [
+      "1 ≤ n ≤ 10^6",
+      "type ∈ {A,B,C}"
+    ],
+    "examples": [
+      {
+        "input": "8 C\n",
+        "output": "WORK=8 SPACE=8\n"
+      }
+    ],
+    "tests": [
+      {
+        "input": "7 A\n",
+        "output": "WORK=7 SPACE=0\n"
+      },
+      {
+        "input": "4 B\n",
+        "output": "WORK=16 SPACE=0\n"
+      }
+    ],
+    "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main(){\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    \n    return 0;\n}\n"
+  },
+  {
+    "pb_uid": "PB-162",
+    "problem_id": "CUSTOM-PSV03-TRACE-01",
+    "title": "Trace Table / First Divergence Walkthrough",
+    "lesson": "L-PSV-03",
+    "role": "Worked Example",
+    "difficulty": "D1",
+    "source": "APCS Custom",
+    "summary": "逐步 trace state，從 expected/actual 第一個不同位置定位原因。",
+    "input": "輸入 n 與 n 個整數。程式狀態 sum 從 0 開始，每步加 a[i]。",
+    "output": "每步輸出 i:sum，最後一行 TOTAL=sum。",
+    "constraints": [
+      "1 ≤ n ≤ 20",
+      "|a[i]| ≤ 100"
+    ],
+    "examples": [
+      {
+        "input": "3\n2 -1 4\n",
+        "output": "0:2\n1:1\n2:5\nTOTAL=5\n"
+      }
+    ],
+    "tests": [
+      {
+        "input": "1\n7\n",
+        "output": "0:7\nTOTAL=7\n"
+      },
+      {
+        "input": "2\n-3 -2\n",
+        "output": "0:-3\n1:-5\nTOTAL=-5\n"
+      }
+    ],
+    "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main(){\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    \n    return 0;\n}\n"
+  },
+  {
+    "pb_uid": "PB-163",
+    "problem_id": "CUSTOM-PSV03-DEBUG-01",
+    "title": "Boundary Bug Hunt Drill",
+    "lesson": "L-PSV-03",
+    "role": "Guided Drill",
+    "difficulty": "D2",
+    "source": "APCS Custom",
+    "summary": "用最小 failing case 找 off-by-one，再做最小 patch。",
+    "input": "輸入 n 與 n 個整數。",
+    "output": "輸出最大元素。請特別處理 n=1 與全負數。",
+    "constraints": [
+      "1 ≤ n ≤ 10^5",
+      "-10^9 ≤ a[i] ≤ 10^9"
+    ],
+    "examples": [
+      {
+        "input": "3\n-5 -2 -9\n",
+        "output": "-2\n"
+      }
+    ],
+    "tests": [
+      {
+        "input": "1\n-7\n",
+        "output": "-7\n"
+      },
+      {
+        "input": "4\n1 9 3 9\n",
+        "output": "9\n"
+      }
+    ],
+    "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main(){\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    \n    return 0;\n}\n"
+  },
+  {
+    "pb_uid": "PB-164",
+    "problem_id": "CUSTOM-PSV03-CORE-READ-01",
+    "title": "Code Reasoning Core：Trace + Completion",
+    "lesson": "L-PSV-03",
+    "role": "Core Independent",
+    "difficulty": "D2",
+    "source": "APCS Custom",
+    "summary": "獨立 trace unfamiliar code，再補出維持 invariant 的最小 statement。",
+    "input": "輸入 n 與 n 個整數。請輸出 prefix maximum sequence。",
+    "output": "輸出 n 個整數，第 i 格為 a[0..i] 的最大值。",
+    "constraints": [
+      "1 ≤ n ≤ 2×10^5",
+      "-10^9 ≤ a[i] ≤ 10^9"
+    ],
+    "examples": [
+      {
+        "input": "5\n3 1 4 2 5\n",
+        "output": "3 3 4 4 5\n"
+      }
+    ],
+    "tests": [
+      {
+        "input": "3\n-2 -5 -1\n",
+        "output": "-2 -2 -1\n"
+      },
+      {
+        "input": "1\n7\n",
+        "output": "7\n"
+      }
+    ],
+    "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main(){\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    \n    return 0;\n}\n"
+  },
+  {
+    "pb_uid": "PB-165",
+    "problem_id": "CUSTOM-PSV03-CORE-DEBUG-01",
+    "title": "Debug / Testing Core：Minimal Counterexample",
+    "lesson": "L-PSV-03",
+    "role": "Core Independent",
+    "difficulty": "D2",
+    "source": "APCS Custom",
+    "summary": "建立最小反例、first divergence、minimal patch，再補 regression tests。",
+    "input": "輸入 n 與 n 個整數。輸出相鄰兩數差的最大絕對值；n=1 時輸出 0。",
+    "output": "輸出一個整數。",
+    "constraints": [
+      "1 ≤ n ≤ 2×10^5",
+      "|a[i]| ≤ 10^9",
+      "差值使用 long long"
+    ],
+    "examples": [
+      {
+        "input": "4\n1 8 3 10\n",
+        "output": "7\n"
+      }
+    ],
+    "tests": [
+      {
+        "input": "1\n5\n",
+        "output": "0\n"
+      },
+      {
+        "input": "2\n-1000000000 1000000000\n",
+        "output": "2000000000\n"
+      }
+    ],
+    "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main(){\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    \n    return 0;\n}\n"
+  },
+  {
+    "pb_uid": "PB-166",
+    "problem_id": "CUSTOM-PSV04-NT-01",
+    "title": "GCD / LCM / Divisibility Walkthrough",
+    "lesson": "L-PSV-04",
+    "role": "Worked Example",
+    "difficulty": "D1",
+    "source": "APCS Custom",
+    "summary": "從 remainder invariant 理解 gcd，再用 overflow-aware 順序算 lcm。",
+    "input": "輸入正整數 a b。",
+    "output": "輸出 gcd(a,b) 與 lcm(a,b)，以空格分隔。",
+    "constraints": [
+      "1 ≤ a,b ≤ 10^9",
+      "lcm 保證不超過 signed 64-bit"
+    ],
+    "examples": [
+      {
+        "input": "12 18\n",
+        "output": "6 36\n"
+      }
+    ],
+    "tests": [
+      {
+        "input": "7 13\n",
+        "output": "1 91\n"
+      },
+      {
+        "input": "10 10\n",
+        "output": "10 10\n"
+      }
+    ],
+    "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main(){\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    \n    return 0;\n}\n"
+  },
+  {
+    "pb_uid": "PB-169",
+    "problem_id": "CUSTOM-ORD02-RANK-01",
+    "title": "多鍵榜單與穩定排序",
+    "lesson": "L-ORD-02",
+    "role": "Core Independent",
+    "difficulty": "D2",
+    "source": "APCS Custom",
+    "summary": "依 score 降冪、penalty 升冪排列 records；完全 tie 時維持輸入順序。",
+    "input": "第一行 n；接下來 n 行，每行 id score penalty。",
+    "output": "輸出 n 行，依排名順序輸出 id。",
+    "constraints": [
+      "1 ≤ n ≤ 200000",
+      "所有 id 相異，1 ≤ id ≤ 1000000000",
+      "0 ≤ score, penalty ≤ 1000000000",
+      "score 與 penalty 完全相同時保持原輸入順序"
+    ],
+    "examples": [
+      {
+        "input": "6\n41 90 120\n18 100 300\n73 90 120\n22 100 180\n55 90 80\n91 100 180\n",
+        "output": "22\n91\n18\n55\n41\n73\n",
+        "explanation": "先比 score，再比 penalty；22 與 91 完全 tie，維持輸入順序。"
+      }
+    ],
+    "tests": [
+      {
+        "input": "4\n10 7 40\n20 9 50\n30 9 20\n40 6 10\n",
+        "output": "30\n20\n10\n40\n"
+      },
+      {
+        "input": "5\n9 100 30\n4 100 30\n8 100 20\n2 90 1\n7 100 30\n",
+        "output": "8\n9\n4\n7\n2\n"
+      },
+      {
+        "input": "1\n999999999 0 1000000000\n",
+        "output": "999999999\n"
+      },
+      {
+        "input": "7\n1 5 9\n2 7 20\n3 7 20\n4 7 10\n5 5 9\n6 5 8\n7 7 10\n",
+        "output": "4\n7\n2\n3\n6\n1\n5\n"
+      }
+    ],
+    "starter": "#include <bits/stdc++.h>\nusing namespace std;\n\nint main(){\n    ios::sync_with_stdio(false);\n    cin.tie(nullptr);\n    int n;\n    if(!(cin >> n)) return 0;\n    // TODO: read records, apply the ranking contract, output ids.\n    return 0;\n}\n"
+  }
+]

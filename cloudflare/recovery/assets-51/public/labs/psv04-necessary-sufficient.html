@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="zh-Hant" data-theme="dark" data-layout="comfortable-desktop" data-content-layout="wide" data-template="l-fnd-01-lab-v1" data-lab="psv04-necessary-sufficient" data-lesson="L-PSV-04" data-lab-contract="predict-operate-explain" data-lab-debrief="true" data-lab-runtime="v2" data-ui-version="5.13.2">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="color-scheme" content="dark">
+<title>Necessary / Sufficient Lab｜APCS Lab</title>
+<link rel="stylesheet" href="/assets/apcs-ui.css">
+<link rel="stylesheet" href="/assets/apcs-lab-v2.css">
+</head>
+<body>
+<div class="lab"><div class="labShell">
+<header class="labTop"><div><span class="labEyebrow">L-PSV-04 · Interactive Lab</span><h1>Necessary / Sufficient Lab</h1><p>用分類題辨認兩種邏輯方向。</p></div><div class="labTopActions"><div class="labProgress" aria-label="Lab progress"><div class="labProgressTrack"><div id="labProgressFill"></div></div><b id="labProgressText">0/3</b></div><button class="btn" id="resetLab" type="button">重設</button></div></header>
+<main class="labBody">
+<section class="card"><div class="labStage" data-stage="predict" data-tone="violet"><div class="labStageHead"><span>01</span><div><h2>Predict</h2><p>「x 可被 6 整除 ⇒ x 可被 3 整除」中，被 3 整除是？</p></div></div><div id="predictionChoices" class="labChoices"></div><div id="predictionFeedback" class="labFeedback"></div><div id="firstPrediction" class="labMemory">第一次 prediction 尚未作答</div></div></section>
+<section class="card"><div class="labStage" data-stage="operate" data-tone="cyan"><div class="labStageHead"><span>02</span><div><h2>Operate</h2><p>直接操作模型、state、mapping 或 test set；不是重新抄一次教材文字。</p></div></div><div id="operateArea"></div></div></section>
+<section class="card"><div class="labStage" data-stage="explain" data-tone="green"><div class="labStageHead"><span>03</span><div><h2>Explain</h2><p>用具體 state / boundary / reason 說明你剛才的操作。</p></div></div><textarea id="explain" rows="4" placeholder="至少 20 字；包含一個可檢查的 state / boundary / reason / counterexample。"></textarea><div class="labActions"><button id="checkExplain" class="btn primary" type="button">檢查 explanation</button></div><div id="explainFeedback" class="labFeedback"></div></div></section>
+<section class="card" id="debrief" hidden><div class="labStage labDebrief" data-stage="debrief" data-tone="pink"><div class="labStageHead"><span>✓</span><div><h2>Debrief</h2><p>把 A⇒B 與 B⇒A 分開，不用語感混在一起。</p></div></div><div class="labDebriefBody"><b>這裡只在 Predict + Operate + Explain 全部完成後解鎖。</b><p>把剛才成功的 representation / invariant / boundary 留成下一題可遷移的規則。</p></div></div></section>
+</main>
+<footer class="labFooter"><span id="labState">完成 Predict → Operate → Explain 才會解鎖 Debrief</span><span>wide content layout · canonical 01 shell</span></footer>
+</div></div>
+<script>window.APCS_LAB_CONFIG={"slug":"psv04-necessary-sufficient","lesson":"L-PSV-04","route":"psv/math-correctness","title":"Necessary / Sufficient Lab","subtitle":"用分類題辨認兩種邏輯方向。","predict":{"q":"「x 可被 6 整除 ⇒ x 可被 3 整除」中，被 3 整除是？","options":["必要條件","充分條件","都不是"],"correct":0,"why":"若可被 6 整除，必然被 3 整除；但反向不成立。","retry":"回到條件與中間狀態重新驗證。"},"operate":{"mode":"choice","tasks":[{"q":"偶數是可被 4 整除的？","options":["必要","充分","必要但不充分"],"correct":2,"why":"可被 4 整除一定偶數，但偶數未必被 4 整除。"},{"q":"x=0 對 x²=0？","options":["必要且充分","只有必要","只有充分"],"correct":0,"why":"實數/整數下兩者等價。"},{"q":"找到滿足條件但結論錯的 case，打破？","options":["充分性","必要性"],"correct":0,"why":"這是 sufficient counterexample。"}]},"debrief":"把 A⇒B 與 B⇒A 分開，不用語感混在一起。"};</script>
+<script src="/assets/apcs-ui.js"></script>
+<script src="/assets/apcs-lab-runtime-v2.js"></script>
+</body></html>

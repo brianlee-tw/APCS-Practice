@@ -1,0 +1,10 @@
+/* UI 5.13.2 behavior extension. L-FND-01 remains the visual authority; this file only exposes behavioral states. */
+#auditProgress,.behaviorFeedback,#recordInsight,#takeQuality{margin-top:10px;padding:10px 12px;border:1px solid var(--line);border-radius:13px;background:rgba(255,255,255,.025);font-size:11px;color:var(--text2);line-height:1.55}
+#auditProgress{display:flex;justify-content:space-between;gap:12px;align-items:center}#auditProgress b{color:var(--green)}
+#recordInsight{display:flex;flex-direction:column;gap:3px;border-color:rgba(83,214,165,.24);background:rgba(83,214,165,.055)}#recordInsight b{color:var(--green)}
+#errorSuggest{border-color:rgba(255,153,102,.23);background:rgba(255,153,102,.05)}#takeQuality{color:var(--muted)}
+button:disabled,.btn:disabled,.submitBtn:disabled{opacity:.42;cursor:not-allowed;filter:saturate(.5)}
+.checkTile[data-audit-card]{position:relative;padding:12px;border:1px solid var(--line);border-radius:14px;background:var(--panel2);cursor:pointer;min-height:64px;display:flex;align-items:flex-start;gap:9px}
+.checkTile[data-audit-card] input{margin-top:2px;accent-color:var(--green)}
+.choice.on,.assistChoice.on,.stageChoice.on,.errChip.on{box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+@media(max-width:720px){#auditProgress{align-items:flex-start;flex-direction:column}}
