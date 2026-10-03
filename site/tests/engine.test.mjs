@@ -23,8 +23,39 @@ test("5 10 and 15 question modes stay balanced across five dimensions", () => {
   }
 });
 
-test("unsupported question counts are rejected", () => {
+test("diagnostic variants stay deterministic, balanced, and rotate repeats", () => {
+  for (const count of [5, 10]) {
+    const first = selectBalancedQuestions(bank.questions, count, 0);
+    const same = selectBalancedQuestions(bank.questions, count, 0);
+    const next = selectBalancedQuestions(bank.questions, count, 1);
+
+    assert.deepEqual(first.map((q) => q.id), same.map((q) => q.id));
+    assert.notDeepEqual(first.map((q) => q.id), next.map((q) => q.id));
+    assert.equal(new Set(first.map((q) => q.id)).size, count);
+    assert.equal(new Set(next.map((q) => q.id)).size, count);
+  }
+
+  const all = selectBalancedQuestions(bank.questions, 15, 2);
+  assert.equal(all.length, 15);
+  assert.equal(new Set(all.map((q) => q.id)).size, 15);
+});
+
+test("diagnostic selection interleaves dimensions instead of blocking by dimension", () => {
+  const selected = selectBalancedQuestions(bank.questions, 10, 0);
+  assert.deepEqual(
+    selected.slice(0, 5).map((q) => q.dimension),
+    ["syntax", "reading", "debug", "algorithm", "implementation"],
+  );
+  assert.deepEqual(
+    selected.slice(5, 10).map((q) => q.dimension),
+    ["syntax", "reading", "debug", "algorithm", "implementation"],
+  );
+});
+
+test("unsupported question counts and invalid variants are rejected", () => {
   assert.throws(() => selectBalancedQuestions(bank.questions, 7), /Unsupported quiz count/);
+  assert.throws(() => selectBalancedQuestions(bank.questions, 5, -1), /Invalid diagnostic variant/);
+  assert.throws(() => selectBalancedQuestions(bank.questions, 5, 1.5), /Invalid diagnostic variant/);
 });
 
 
