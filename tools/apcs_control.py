@@ -44,6 +44,10 @@ try:
         formal_response_ready,
     )
     from .problem_library import ProblemLibrary
+    from .learner_model_v2 import (
+        LearnerSignalStore,
+        learner_model_snapshot,
+    )
     from .skill_memory_store import (
         SkillMemoryStore,
     )
@@ -76,6 +80,10 @@ except ImportError:
         formal_response_ready,
     )
     from problem_library import ProblemLibrary
+    from learner_model_v2 import (
+        LearnerSignalStore,
+        learner_model_snapshot,
+    )
     from skill_memory_store import (
         SkillMemoryStore,
     )
@@ -97,6 +105,7 @@ PROBLEM_LIBRARY = ProblemLibrary(
     OUTBOX,
 )
 COGNITIVE = CognitiveOrchestrator()
+LEARNER_SIGNALS = LearnerSignalStore(RUNTIME_DIR)
 
 DEFAULT_SESSION_MINUTES = 60
 DEFAULT_IMPLEMENTATION_REVIEW_MINUTES = 12
@@ -842,6 +851,19 @@ def learning_status_snapshot(
         - plan.budget_minutes,
     )
 
+    try:
+        learner_signals = LEARNER_SIGNALS.load()
+        learner_model = learner_model_snapshot(
+            envelopes,
+            learner_signals,
+        )
+    except (OSError, ValueError) as exc:
+        learner_model = learner_model_snapshot(
+            envelopes,
+            (),
+        )
+        warnings.append(str(exc))
+
     return {
         "date": on_date,
         "target": today["target"],
@@ -861,6 +883,7 @@ def learning_status_snapshot(
         "review_selected_minutes": plan.selected_minutes,
         "review_deferred": len(plan.deferred),
         "protected_new_learning_minutes": protected,
+        "learner_model": learner_model,
         "warnings": tuple(dict.fromkeys(warnings)),
         "learner_readiness": "NOT ASSESSED",
     }
@@ -4867,6 +4890,41 @@ def learning_status_view() -> None:
                 f"  …另有 {hidden} 個 Skill × Track state"
                 f"{RESET}"
             )
+
+    model = snapshot["learner_model"]
+    print()
+    rule()
+    print()
+    print(f"{CYAN}{BOLD}學習模型 v2{RESET}")
+    print(
+        "提示依賴  "
+        f"高 {len(model['hint_dependence_high'])}"
+    )
+    print(
+        "遷移      "
+        f"待驗證 {len(model['transfer_ready'])}"
+        f" · 已有證據 {len(model['transfer_verified'])}"
+    )
+    print(
+        "重複瓶頸  "
+        f"{len(model['repeated_bottlenecks'])}"
+    )
+    print(
+        "信心抽樣  "
+        f"{len(model['confidence_samples'])}"
+        f"{GRAY} · 不進 readiness Gate{RESET}"
+    )
+
+    for item in model["repeated_bottlenecks"][:3]:
+        print_wrapped(
+            (
+                f"  {item.skill_uid} · {item.category} · "
+                f"{item.root_cause} · "
+                f"{len(item.distinct_problems)} 題重現"
+            ),
+            ui_width() - 2,
+            color=GRAY,
+        )
 
     if snapshot["warnings"]:
         print()
