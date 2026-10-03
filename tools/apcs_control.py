@@ -2693,33 +2693,11 @@ def record_reading_problem(
     if outcome is None:
         return
 
-    clear()
-    heading("Reading 耗時")
-    print()
-    print_problem_context(problem)
-    print()
-    raw_minutes = prompt_text(
-        "本次 Reading 分鐘（可略過）"
-    )
-    if raw_minutes is None:
-        return
+    # Published Reading runtime already knows Activity / Novelty / Timed.
+    # Do not ask for optional minutes here; Exam Runtime owns timed telemetry.
     minutes = None
-    if raw_minutes:
-        if (
-            not raw_minutes.isdigit()
-            or not (1 <= int(raw_minutes) <= 999)
-        ):
-            clear()
-            heading("Reading Evidence")
-            print()
-            print(
-                f"{RED}✕ 分鐘必須是 1–999 的整數{RESET}"
-            )
-            pause()
-            return
-        minutes = int(raw_minutes)
 
-    evidence_context = evidence_context_menu(
+    evidence_context = published_evidence_context_menu(
         action,
         problem,
         track="Reading",
@@ -2740,12 +2718,9 @@ def record_reading_problem(
     print()
     print(f"Outcome     {outcome}")
     print(
-        "耗時        "
-        + (
-            f"{minutes} 分鐘"
-            if minutes is not None
-            else "未記錄"
-        )
+        f"{GRAY}"
+        "耗時        一般 Reading 不另要求填寫；限時資料由考試模式記錄"
+        f"{RESET}"
     )
     print(
         f"Assistance  A{evidence_context['assistance']}"
