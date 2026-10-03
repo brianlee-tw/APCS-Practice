@@ -57,6 +57,11 @@ VALID_ALTERNATE_SOLUTION_RISK = {
     "High",
 }
 
+VALID_CLASSIFICATION_SOURCES = {
+    "AI_CANDIDATE",
+    "HUMAN_CURATOR",
+}
+
 ROOT = Path(__file__).resolve().parents[1]
 DEFAULT_DATA_DIR = ROOT / "data" / "problem_intelligence"
 
@@ -258,6 +263,16 @@ class ProblemIntelligenceStore:
         if source not in SUPPORTED_SOURCES:
             raise ProblemIntelligenceError(
                 f"不支援的來源：{source}"
+            )
+
+        if (
+            source == SOURCE_ZEROJUDGE
+            and not ZEROJUDGE_ID_RE.fullmatch(
+                external_id
+            )
+        ):
+            raise ProblemIntelligenceError(
+                f"ZeroJudge problemid 格式不合法：{external_id!r}"
             )
 
         identity = ExternalIdentity(
@@ -552,6 +567,14 @@ class ProblemIntelligenceStore:
         classification_source = _clean_string(
             candidate.get("classification_source")
         ) or "AI_CANDIDATE"
+
+        if (
+            classification_source
+            not in VALID_CLASSIFICATION_SOURCES
+        ):
+            raise ProblemIntelligenceError(
+                "classification_source 值不合法"
+            )
 
         record["lifecycle"] = L1_CLASSIFIED
         record["classification"] = {
@@ -905,6 +928,16 @@ class ProblemIntelligenceStore:
             ):
                 raise ProblemIntelligenceError(
                     "L1 classification_source 不得為空"
+                )
+
+            if (
+                classification.get(
+                    "classification_source"
+                )
+                not in VALID_CLASSIFICATION_SOURCES
+            ):
+                raise ProblemIntelligenceError(
+                    "classification_source 值不合法"
                 )
 
         integration = record.get("integration")
