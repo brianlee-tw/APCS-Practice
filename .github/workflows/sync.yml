@@ -9,6 +9,8 @@ on:
       - '**/*.py'
       - 'data/**'
       - 'notes/**'
+      - 'docs/CURRENT_AUTHORITY.json'
+      - 'cloudflare/worker/source-authority.json'
 
 permissions:
   contents: write
@@ -48,7 +50,7 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
 
-          git add README.md docs/PROBLEM_INDEX.md docs/REVIEW_QUEUE.md
+          git add README.md docs/PROBLEM_INDEX.md docs/REVIEW_QUEUE.md docs/CURRENT_AUTHORITY.md docs/ARCHITECTURE_V23.md
 
           if git diff --cached --quiet; then
             echo "Generated indexes are already current."
