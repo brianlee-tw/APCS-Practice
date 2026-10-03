@@ -147,6 +147,41 @@ def run_tests() -> bool:
     return True
 
 
+def run_site_tests() -> bool:
+    print(
+        "QUALITY · diagnostic-site regression"
+    )
+
+    result = run(
+        [
+            "node",
+            "--test",
+            "site/tests/engine.test.mjs",
+        ]
+    )
+
+    if result.stdout:
+        print(
+            result.stdout.rstrip()
+        )
+
+    if result.stderr:
+        print(
+            result.stderr.rstrip()
+        )
+
+    if result.returncode != 0:
+        print(
+            "FAIL: diagnostic-site regression tests"
+        )
+        return False
+
+    print(
+        "PASS: diagnostic-site regression tests"
+    )
+    return True
+
+
 def run_validation() -> bool:
     print(
         "QUALITY · validation / warning budget"
@@ -280,6 +315,9 @@ def quality_gate(
 ) -> int:
     if not validate_only:
         if not run_tests():
+            return 1
+
+        if not run_site_tests():
             return 1
 
         if not run_diff_checks():
