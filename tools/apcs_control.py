@@ -30,6 +30,10 @@ try:
     from .learning_route import (
         select_new_learning_plan,
     )
+    from .reading_runtime import (
+        create_reading_scratch,
+        formal_response_ready,
+    )
     from .skill_memory_store import (
         SkillMemoryStore,
     )
@@ -48,6 +52,10 @@ except ImportError:
     )
     from learning_route import (
         select_new_learning_plan,
+    )
+    from reading_runtime import (
+        create_reading_scratch,
+        formal_response_ready,
     )
     from skill_memory_store import (
         SkillMemoryStore,
