@@ -584,17 +584,35 @@ class ProblemEnrichmentStore:
             if verification[field] not in {NOT_RUN, PASS, FAIL}:
                 raise ProblemEnrichmentError(f"verification.{field} 不合法")
 
-        if TRUST_ORDER[trust] >= TRUST_ORDER[COMPILE_VERIFIED] and verification["compile"] != PASS:
-            raise ProblemEnrichmentError("Compile Verified 以上必須有 compile PASS")
-        if TRUST_ORDER[trust] >= TRUST_ORDER[SAMPLE_VERIFIED] and trust != DIFFERENTIAL_VERIFIED and trust != OJ_ACCEPTED:
-            if verification["samples"] != PASS:
-                raise ProblemEnrichmentError("Sample Verified 必須有 samples PASS")
-        if trust == DIFFERENTIAL_VERIFIED and verification["differential"] != PASS:
-            raise ProblemEnrichmentError("Differential Verified 必須有 differential PASS")
-        if trust == OJ_ACCEPTED and (
-            verification["oj"] != PASS or not _text(verification["oj_reference"])
+        if trust in {
+            COMPILE_VERIFIED,
+            SAMPLE_VERIFIED,
+            DIFFERENTIAL_VERIFIED,
+        } and verification["compile"] != PASS:
+            raise ProblemEnrichmentError(
+                "本機驗證狀態必須有 compile PASS"
+            )
+        if (
+            trust == SAMPLE_VERIFIED
+            and verification["samples"] != PASS
         ):
-            raise ProblemEnrichmentError("OJ Accepted 必須有外部判題 reference")
+            raise ProblemEnrichmentError(
+                "Sample Verified 必須有 samples PASS"
+            )
+        if (
+            trust == DIFFERENTIAL_VERIFIED
+            and verification["differential"] != PASS
+        ):
+            raise ProblemEnrichmentError(
+                "Differential Verified 必須有 differential PASS"
+            )
+        if trust == OJ_ACCEPTED and (
+            verification["oj"] != PASS
+            or not _text(verification["oj_reference"])
+        ):
+            raise ProblemEnrichmentError(
+                "OJ Accepted 必須有外部判題 reference"
+            )
 
         if not isinstance(package["provenance"], dict) or set(package["provenance"]) != {
             "generation_source"
