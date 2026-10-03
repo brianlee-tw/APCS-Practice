@@ -4,6 +4,7 @@ from __future__ import annotations
 import contextlib
 import datetime as dt
 import io
+import json
 import os
 import re
 import select
@@ -130,6 +131,8 @@ EXAM = ExamSessionStore(RUNTIME_DIR)
 DEFAULT_SESSION_MINUTES = 60
 DEFAULT_IMPLEMENTATION_REVIEW_MINUTES = 12
 DEFAULT_READING_REVIEW_MINUTES = 6
+TODAY_CAPACITY_PATH = RUNTIME_DIR / "today_capacity.json"
+TODAY_CAPACITY_CHOICES = tuple(range(15, 241, 15))
 
 ID_RE = re.compile(r"^([A-Za-z]\d+|\d+)(?:_|$)")
 
@@ -601,7 +604,7 @@ def today_state():
     return due, overdue
 
 
-def session_capacity_minutes() -> int:
+def _default_session_capacity_minutes() -> int:
     raw = os.environ.get(
         "APCS_SESSION_MINUTES",
         str(DEFAULT_SESSION_MINUTES),
@@ -616,6 +619,145 @@ def session_capacity_minutes() -> int:
         15,
         min(value, 240),
     )
+
+
+def _today_capacity_override(
+    on_date: dt.date,
+) -> int | None:
+    if not TODAY_CAPACITY_PATH.is_file():
+        return None
+
+    try:
+        payload = json.loads(
+            TODAY_CAPACITY_PATH.read_text(
+                encoding="utf-8"
+            )
+        )
+        if payload.get("date") != on_date.isoformat():
+            return None
+
+        minutes = int(
+            payload.get("minutes")
+        )
+    except (
+        OSError,
+        ValueError,
+        TypeError,
+        json.JSONDecodeError,
+    ):
+        return None
+
+    if minutes not in TODAY_CAPACITY_CHOICES:
+        return None
+
+    return minutes
+
+
+def session_capacity_minutes(
+    on_date: dt.date | None = None,
+) -> int:
+    on_date = on_date or dt.date.today()
+
+    override = _today_capacity_override(
+        on_date
+    )
+    if override is not None:
+        return override
+
+    return _default_session_capacity_minutes()
+
+
+def set_today_capacity_minutes(
+    minutes: int,
+    *,
+    on_date: dt.date | None = None,
+) -> None:
+    on_date = on_date or dt.date.today()
+
+    if minutes not in TODAY_CAPACITY_CHOICES:
+        raise ValueError(
+            "今日可用時間必須是 15–240 分鐘，且以 15 分鐘為單位。"
+        )
+
+    TODAY_CAPACITY_PATH.parent.mkdir(
+        parents=True,
+        exist_ok=True,
+    )
+    payload = {
+        "date": on_date.isoformat(),
+        "minutes": minutes,
+    }
+    temp_path = (
+        TODAY_CAPACITY_PATH
+        .with_suffix(".tmp")
+    )
+    temp_path.write_text(
+        json.dumps(
+            payload,
+            ensure_ascii=False,
+            indent=2,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
+    temp_path.replace(
+        TODAY_CAPACITY_PATH
+    )
+
+
+def today_capacity_menu(
+    current_minutes: int,
+) -> int | None:
+    sections = {
+        15: "短時段",
+        75: "標準時段",
+        135: "長時段",
+        195: "延長時段",
+    }
+    options = []
+
+    for minutes in TODAY_CAPACITY_CHOICES:
+        option = {
+            "label": f"{minutes} 分鐘",
+            "detail": (
+                "目前設定"
+                if minutes == current_minutes
+                else "以 15 分鐘為單位"
+            ),
+            "enabled": True,
+            "action": "套用",
+        }
+
+        if minutes in sections:
+            option["section"] = sections[
+                minutes
+            ]
+
+        options.append(option)
+
+    selected_index = min(
+        range(len(TODAY_CAPACITY_CHOICES)),
+        key=lambda index: abs(
+            TODAY_CAPACITY_CHOICES[index]
+            - current_minutes
+        ),
+    )
+
+    selected = choose_menu(
+        "今日學習 · 可用時間",
+        options,
+        footer_numbers=False,
+        back_text="返回今日學習",
+        selected_index=selected_index,
+        enter_text="套用",
+    )
+
+    if selected is None:
+        return None
+
+    return TODAY_CAPACITY_CHOICES[
+        selected
+    ]
 
 
 def curriculum_target() -> str:
@@ -640,7 +782,9 @@ def adaptive_today_snapshot(
     total_capacity_minutes = (
         total_capacity_minutes
         if total_capacity_minutes is not None
-        else session_capacity_minutes()
+        else session_capacity_minutes(
+            on_date
+        )
     )
 
     warning = None
@@ -5506,7 +5650,27 @@ def today_view(current_filename: str | None):
             }
         )
 
-    if not options:
+    options.append(
+        {
+            "label": (
+                "調整今日可用時間 · "
+                f"{snapshot['capacity_minutes']} min"
+            ),
+            "detail": (
+                "15 分鐘為單位 · 只影響今天的學習規劃"
+            ),
+            "enabled": True,
+            "kind": "capacity",
+            "section": "今日設定",
+            "action": "調整",
+        }
+    )
+
+    if not [
+        option
+        for option in options
+        if option["kind"] != "capacity"
+    ]:
         print()
         rule()
         print()
@@ -5539,14 +5703,19 @@ def today_view(current_filename: str | None):
                 f"{RESET}"
             )
 
-        pause()
-        return current_filename
+        print()
+        print(
+            f"{GRAY}"
+            "仍可調整本日可用時間，系統會重新計算規劃。"
+            f"{RESET}"
+        )
 
     print()
     selected = choose_menu(
         "今日學習 · 下一步",
         options,
         main=False,
+        enter_text="開始",
     )
 
     if selected is None:
@@ -5555,6 +5724,42 @@ def today_view(current_filename: str | None):
     option = options[
         selected
     ]
+
+    if option["kind"] == "capacity":
+        selected_minutes = (
+            today_capacity_menu(
+                snapshot[
+                    "capacity_minutes"
+                ]
+            )
+        )
+
+        if selected_minutes is not None:
+            try:
+                set_today_capacity_minutes(
+                    selected_minutes
+                )
+            except (
+                OSError,
+                ValueError,
+            ) as exc:
+                clear()
+                heading(
+                    "今日學習 · 可用時間"
+                )
+                print()
+                print(
+                    f"{RED}"
+                    f"✕ 無法儲存：{exc}"
+                    f"{RESET}"
+                )
+                pause(
+                    "Enter / Esc 返回今日學習"
+                )
+
+        return today_view(
+            current_filename
+        )
 
     if option["kind"] == "new":
         return _start_new_learning(
