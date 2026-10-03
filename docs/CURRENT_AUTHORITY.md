@@ -20,7 +20,7 @@
 
 - 主要介面：**VS Code Control Center**
 - Tracks：Reading, Implementation
-- Today：Skill × Track adaptive memory + capacity governor
+- Today：Skill × Track adaptive memory + capacity governor + cognitive orchestrator
 - Evidence authority：Attempt + explicit Evidence
 
 ## Production
