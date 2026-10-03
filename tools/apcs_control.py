@@ -4242,7 +4242,7 @@ def tag_selector(
 
         print()
         rule()
-        print(f"{GRAY}↑↓ 選擇 · Enter 執行{RESET}")
+        print(f"{GRAY}↑↓ 選擇 · Enter 選擇{RESET}")
         print(f"{GRAY}S 完成 Tags 選擇 · Esc / Q 取消 Tags 編輯{RESET}")
 
         key = read_key()
@@ -4917,7 +4917,7 @@ def _print_new_learning_summary(
 
         print(
             f"{CYAN}{BOLD}"
-            f"New Learning · {skill.uid}"
+            f"新學習 · {skill.uid}"
             f"{RESET}"
         )
         print(
@@ -4926,16 +4926,16 @@ def _print_new_learning_summary(
             f"{RESET}"
         )
         print(
-            f"Unit     {skill.unit}"
+            f"單元      {skill.unit}"
         )
         print(
-            f"Stage    {skill.path_stage}"
+            f"階段      {skill.path_stage}"
         )
         print(
-            f"Status   {route.status}"
+            f"狀態      {route.status}"
         )
         print(
-            f"Evidence "
+            f"證據      "
             + (
                 route.skill_evidence.label()
                 if route.skill_evidence
@@ -4944,12 +4944,12 @@ def _print_new_learning_summary(
             )
         )
         print(
-            f"Why now  "
+            f"安排原因  "
             f"{fit(route.why_now, max(10, ui_width() - 9))}"
         )
 
         if route.prerequisites:
-            print("Prerequisite")
+            print("先備條件")
 
             for item in route.prerequisites:
                 mark = (
@@ -4963,25 +4963,25 @@ def _print_new_learning_summary(
                 )
         else:
             print(
-                f"Prerequisite  {GRAY}none{RESET}"
+                f"先備條件  {GRAY}無{RESET}"
             )
 
         if route.placement is not None:
             placement = route.placement
             print(
-                f"Lesson   {placement.lesson_uid or '—'}"
+                f"課程      {placement.lesson_uid or '—'}"
             )
             print(
-                f"Next     {placement.role}"
+                f"下一步    {placement.role}"
             )
             print(
-                f"Problem  {placement.problem_id}"
+                f"題目      {placement.problem_id}"
                 f" · {fit(placement.title, max(10, ui_width() - 12))}"
             )
         else:
             print(
                 f"{YELLOW}"
-                "Next     Published Placement 不足"
+                "下一步    Published Placement 不足"
                 f"{RESET}"
             )
 
@@ -4990,7 +4990,7 @@ def _print_new_learning_summary(
     if route.blocked_skill is not None:
         print(
             f"{YELLOW}{BOLD}"
-            "New Learning · BLOCKED"
+            "新學習 · 暫時無法開始"
             f"{RESET}"
         )
         print(
@@ -5018,7 +5018,7 @@ def _print_new_learning_summary(
     if route.route_complete:
         print(
             f"{GREEN}"
-            "✓ Required route 已達 B4 start threshold"
+            "✓ Required 主線已達 B4 啟動門檻"
             f"{RESET}"
         )
         print(
@@ -5035,7 +5035,7 @@ def _start_new_learning(
     track: str = "Implementation",
 ):
     clear()
-    heading("開始 New Learning")
+    heading("開始新學習")
     print()
 
     _print_new_learning_summary(
@@ -5158,7 +5158,7 @@ def _start_adaptive_review(
     )
 
     clear()
-    heading("開始 Adaptive Review")
+    heading("開始自適應複習")
     print()
 
     print(
@@ -5167,7 +5167,7 @@ def _start_adaptive_review(
         f"{RESET}"
     )
     print(
-        f"Track   {candidate.track}"
+        f"軌道    {candidate.track}"
     )
     print(
         f"R       ≈ {candidate.retrievability:.0%}"
@@ -5200,12 +5200,12 @@ def _start_adaptive_review(
         f"{fit(placement.title, max(10, ui_width() - 8))}"
     )
     print(
-        f"Role    {placement.role}"
+        f"用途    {placement.role}"
     )
 
     if placement.url:
         print(
-            f"Judge   {placement.url}"
+            f"OJ      {placement.url}"
         )
 
     if candidate.track == "Reading":
@@ -5556,7 +5556,7 @@ def today_view(current_filename: str | None):
         f"容量    {snapshot['capacity_minutes']} min"
     )
     print(
-        f"Review  {plan.selected_minutes}/"
+        f"複習    {plan.selected_minutes}/"
         f"{plan.budget_minutes} min"
     )
 
@@ -5573,7 +5573,7 @@ def today_view(current_filename: str | None):
     if plan.deferred:
         print(
             f"{GRAY}"
-            f"Deferred {len(plan.deferred)} Skill"
+            f"安全延後 {len(plan.deferred)} 項"
             " · 不計為欠作業"
             f"{RESET}"
         )
@@ -5582,7 +5582,7 @@ def today_view(current_filename: str | None):
         print()
         print(
             f"{YELLOW}"
-            "⚠ Adaptive memory reconciliation 有問題"
+            "⚠ 記憶狀態更新有問題"
             f"{RESET}"
         )
         print(
@@ -5600,7 +5600,7 @@ def today_view(current_filename: str | None):
     ]:
         print(
             f"{YELLOW}{BOLD}"
-            "New Learning · BLOCKED"
+            "新學習 · 暫時無法開始"
             f"{RESET}"
         )
         print(
@@ -5619,7 +5619,7 @@ def today_view(current_filename: str | None):
         print()
         print(
             f"{YELLOW}{BOLD}"
-            f"Adaptive Review · {len(plan.selected)}"
+            f"自適應複習 · {len(plan.selected)}"
             f"{RESET}"
         )
 
@@ -6647,7 +6647,7 @@ def git_center() -> None:
                 f"{RESET}"
             )
 
-            detail_color = GRAY if enabled else RED
+            detail_color = GRAY
 
             print(
                 f"     {detail_color}"
