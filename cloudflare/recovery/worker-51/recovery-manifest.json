@@ -1,0 +1,14 @@
+{
+  "schema_version": "apcs-cloudflare-script-recovery-v1",
+  "script_name": "apcs-rec-writeback",
+  "content_type": "multipart/form-data; boundary=da601ff13b985647c8f1bf3e519374c5b0b559ad41785a60cfb706276c19",
+  "files": [
+    {
+      "field": "index.mjs",
+      "path": "modules/index.mjs",
+      "bytes": 92259,
+      "sha256": "c4f2271c73a928a4dd757aaa160be303d3e555b0cfee80f156b2ca6956c7ba67",
+      "kind": "file"
+    }
+  ]
+}
