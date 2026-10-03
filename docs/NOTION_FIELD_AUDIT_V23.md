@@ -140,8 +140,8 @@ REC should represent one immutable attempt story, not a mutable scheduling objec
 | 技能節點 | SYSTEM-MANAGED | Context relation derived from Placement and actual observed target; not manually copied from all Problem tags. |
 | Evidence Events | SYSTEM-MANAGED | Backlink. |
 | 學習階段 | DERIVE | Prefer explicit Activity/Role in attempt context; avoid overlapping subjective state. |
-| 進度狀態 | MIGRATE-FIRST | A completed immutable attempt should not also act as a mutable task/status object. Live audit: 75 legacy/system-test rows still contain historical values; 0 formal learner rows do. Archive before dropping the property. |
-| 複習日期 | DELETE | Scheduling belongs to adaptive Skill x Track engine, not to an individual REC. Live audit: 0 / 137 rows populated; no runtime consumer remains. |
+| 進度狀態 | MIGRATE-FIRST | A completed immutable attempt should not also act as a mutable task/status object. Live audit: 75 legacy/system-test rows contained historical values; 0 formal learner rows did. Archive completed at `curriculum/migration/rec_legacy_progress_status_archive.v23.json`; property is now removal-ready pending explicit destructive-migration approval. |
+| 複習日期 | DELETE | Scheduling belongs to adaptive Skill x Track engine, not to an individual REC. Live audit: 0 / 137 rows populated; no runtime consumer remains. Property is removal-ready pending explicit destructive-migration approval. |
 | 學習歷程候選 | KEEP | Optional portfolio signal, independent from mastery. |
 | 學習歷程證據 | KEEP | Optional human-readable portfolio note. |
 
