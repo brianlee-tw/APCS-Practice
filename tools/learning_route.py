@@ -47,7 +47,7 @@ except ImportError:
     )
 
 
-POLICY_VERSION = "b4-start-v1"
+POLICY_VERSION = "b4-start-v2"
 START_LEVEL = 2
 
 
