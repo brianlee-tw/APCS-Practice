@@ -237,8 +237,14 @@ def derive_skill_track_models(
     grouped: dict[tuple[str, str], dict[str, int]] = {}
 
     for envelope in envelopes:
-        attempt = envelope.attempt
-        for claim in envelope.evidence:
+        attempt = getattr(envelope, "attempt", None)
+        evidence = getattr(envelope, "evidence", ())
+        if attempt is None:
+            # Read-only status callers may provide reduced test/dummy envelopes.
+            # Such rows cannot contribute Assistance / transfer facts, so skip
+            # them rather than inventing operational learner state.
+            continue
+        for claim in evidence:
             key = (claim.skill_uid, claim.track)
             state = grouped.setdefault(
                 key,
