@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import shutil
 import subprocess
@@ -96,6 +97,22 @@ def _same_output(actual: str, expected: str) -> bool:
         return [line.rstrip() for line in text.strip().splitlines()]
 
     return normalize(actual) == normalize(expected)
+
+
+def _sha256_text(text: str) -> str:
+    return hashlib.sha256(text.encode("utf-8")).hexdigest()
+
+
+def _derive_trust(verification: dict[str, Any]) -> str:
+    if verification["oj"] == PASS:
+        return OJ_ACCEPTED
+    if verification["differential"] == PASS:
+        return DIFFERENTIAL_VERIFIED
+    if verification["samples"] == PASS:
+        return SAMPLE_VERIFIED
+    if verification["compile"] == PASS:
+        return COMPILE_VERIFIED
+    return AI_CANDIDATE
 
 
 class ProblemEnrichmentStore:
@@ -274,6 +291,8 @@ class ProblemEnrichmentStore:
                 "differential": NOT_RUN,
                 "oj": NOT_RUN,
                 "oj_reference": None,
+                "solution_sha256": _sha256_text(solution_code),
+                "differential_oracle_sha256": None,
             },
             "provenance": {
                 "generation_source": _text(
@@ -373,12 +392,13 @@ class ProblemEnrichmentStore:
             ok, _ = self._compile(solution, executable)
 
         package["verification"]["compile"] = PASS if ok else FAIL
-        if ok:
-            package["verification"]["trust_status"] = COMPILE_VERIFIED
-        else:
-            package["verification"]["trust_status"] = AI_CANDIDATE
+        if not ok:
             package["verification"]["samples"] = NOT_RUN
             package["verification"]["differential"] = NOT_RUN
+            package["verification"]["differential_oracle_sha256"] = None
+        package["verification"]["trust_status"] = _derive_trust(
+            package["verification"]
+        )
 
         self._save_verification(source, external_id, package)
         return package
@@ -398,7 +418,6 @@ class ProblemEnrichmentStore:
             package["verification"]["compile"] = PASS if ok else FAIL
             if not ok:
                 package["verification"]["samples"] = NOT_RUN
-                package["verification"]["trust_status"] = AI_CANDIDATE
             else:
                 all_pass = True
                 for case in samples:
@@ -407,10 +426,10 @@ class ProblemEnrichmentStore:
                         all_pass = False
                         break
                 package["verification"]["samples"] = PASS if all_pass else FAIL
-                package["verification"]["trust_status"] = (
-                    SAMPLE_VERIFIED if all_pass else COMPILE_VERIFIED
-                )
 
+        package["verification"]["trust_status"] = _derive_trust(
+            package["verification"]
+        )
         self._save_verification(source, external_id, package)
         return package
 
@@ -444,9 +463,7 @@ class ProblemEnrichmentStore:
             package["verification"]["compile"] = PASS if candidate_ok else FAIL
             if not candidate_ok or not oracle_ok:
                 package["verification"]["differential"] = FAIL
-                package["verification"]["trust_status"] = (
-                    COMPILE_VERIFIED if candidate_ok else AI_CANDIDATE
-                )
+                package["verification"]["differential_oracle_sha256"] = None
             else:
                 all_pass = True
                 for case in cases:
@@ -457,13 +474,13 @@ class ProblemEnrichmentStore:
                         break
 
                 package["verification"]["differential"] = PASS if all_pass else FAIL
-                if all_pass:
-                    package["verification"]["trust_status"] = DIFFERENTIAL_VERIFIED
-                elif package["verification"]["samples"] == PASS:
-                    package["verification"]["trust_status"] = SAMPLE_VERIFIED
-                else:
-                    package["verification"]["trust_status"] = COMPILE_VERIFIED
+                package["verification"]["differential_oracle_sha256"] = (
+                    _sha256_text(oracle_code) if all_pass else None
+                )
 
+        package["verification"]["trust_status"] = _derive_trust(
+            package["verification"]
+        )
         self._save_verification(source, external_id, package)
         return package
 
@@ -482,7 +499,9 @@ class ProblemEnrichmentStore:
         package = self.load(source, external_id)
         package["verification"]["oj"] = PASS
         package["verification"]["oj_reference"] = reference
-        package["verification"]["trust_status"] = OJ_ACCEPTED
+        package["verification"]["trust_status"] = _derive_trust(
+            package["verification"]
+        )
         self._save_verification(source, external_id, package)
         return package
 
@@ -575,7 +594,14 @@ class ProblemEnrichmentStore:
 
         verification = package["verification"]
         if not isinstance(verification, dict) or set(verification) != {
-            "trust_status", "compile", "samples", "differential", "oj", "oj_reference"
+            "trust_status",
+            "compile",
+            "samples",
+            "differential",
+            "oj",
+            "oj_reference",
+            "solution_sha256",
+            "differential_oracle_sha256",
         }:
             raise ProblemEnrichmentError("verification schema 不一致")
 
@@ -585,6 +611,11 @@ class ProblemEnrichmentStore:
         for field in ("compile", "samples", "differential", "oj"):
             if verification[field] not in {NOT_RUN, PASS, FAIL}:
                 raise ProblemEnrichmentError(f"verification.{field} 不合法")
+
+        if trust != _derive_trust(verification):
+            raise ProblemEnrichmentError(
+                "trust_status 與實際驗證 receipt 不一致"
+            )
 
         if trust in {
             COMPILE_VERIFIED,
@@ -624,8 +655,32 @@ class ProblemEnrichmentStore:
             raise ProblemEnrichmentError("generation_source 不得為空")
 
         solution = self.solution_path(identity["source"], identity["external_id"])
-        if path is not None and not solution.is_file():
-            raise ProblemEnrichmentError("缺少 solution.cpp")
+        if path is not None:
+            if not solution.is_file():
+                raise ProblemEnrichmentError("缺少 solution.cpp")
+            solution_text = solution.read_text(encoding="utf-8")
+            if _sha256_text(solution_text) != verification["solution_sha256"]:
+                raise ProblemEnrichmentError(
+                    "solution.cpp 已變更，舊驗證 receipt 失效；請重建 L2 package"
+                )
+
+            if verification["differential"] == PASS:
+                oracle = self.oracle_path(
+                    identity["source"],
+                    identity["external_id"],
+                )
+                if not oracle.is_file():
+                    raise ProblemEnrichmentError(
+                        "Differential Verified 缺少 oracle.cpp"
+                    )
+                oracle_text = oracle.read_text(encoding="utf-8")
+                if (
+                    _sha256_text(oracle_text)
+                    != verification["differential_oracle_sha256"]
+                ):
+                    raise ProblemEnrichmentError(
+                        "oracle.cpp 已變更，差分驗證 receipt 失效"
+                    )
 
     def validate_all(self) -> list[str]:
         errors = []
