@@ -32,10 +32,20 @@ mastered.  It remains a retention/review signal only.
 
 ## Start threshold
 
-B4 policy version: `b4-start-v1`.
+B4 policy version: `b4-start-v2`.
 
 A prerequisite Skill is allowed to unlock a dependent Skill when at least one
 of its applicable Tracks has durable Evidence supporting Level 2 or higher.
+
+Evidence strength is additionally bounded by the Published Placement policy:
+`evidence_level_cap` is compiled from the placement role plus reviewed
+authoring overrides.  A Core/Transfer attempt cannot promote beyond that cap
+even when AC/A0/A1 would otherwise satisfy a higher MEAS lower-bound pattern.
+
+For Medium/High alternate-solution-risk Core/Transfer placements,
+`method_confirmation_required=true` forces an explicit learner confirmation
+that the actual solution demonstrated the Primary Skill.  If not confirmed,
+the Attempt remains durable but no Primary Skill EvidenceClaim is emitted.
 
 For the current curriculum every Skill supports both Reading and
 Implementation, so examples include:
