@@ -1,10 +1,12 @@
 {
   "schema_version": "apcs-cloudflare-operational-source-v1",
-  "status": "SCHEMA_COMPAT_PATCH_PENDING_DEPLOY",
+  "status": "PRODUCTION_ACTIVE",
   "worker": "apcs-rec-writeback",
-  "production_version_number": 51,
-  "production_version_id": "6c1e4f06-d7c5-4a33-91eb-9b788386a23d",
-  "deployment_id": "e7641e63-7d35-4468-8369-5072b94b15f2",
+  "production_version_number": 55,
+  "production_version_id": "a8a3e533-70a3-4b95-a34b-5ba22b6d75b3",
+  "deployment_id": "cfdc07b8-6a2b-45b4-8ec0-9812a4e9db78",
+  "production_source_git_commit": "4ce453b55cd61e54495d36edf1156753aac0d6b2",
+  "production_source_blob_sha": "feb6796acafe1c6eeb5335da64c081bcadd8d3ec",
   "source_path": "cloudflare/worker/src/index.mjs",
   "recovery_source_path": "cloudflare/recovery/worker-51/index.mjs",
   "assets_path": "cloudflare/recovery/assets-51/public",
@@ -26,7 +28,42 @@
   },
   "mutation_policy": "Do not modify recovery snapshots. All future Worker edits occur under cloudflare/worker and require safe-release QA.",
   "baseline_source_sha256": "c4f2271c73a928a4dd757aaa160be303d3e555b0cfee80f156b2ca6956c7ba67",
-  "production_runtime_status": "KNOWN_SCHEMA_INCOMPATIBILITY_ON_VERSION_51",
+  "production_runtime_status": "SCHEMA_COMPAT_VERIFIED_ON_VERSION_55",
+  "preview_urls_status": "PENDING_MANUAL_DISABLE",
+  "credential_rotation": {
+    "status": "PASS",
+    "version_number": 53,
+    "version_id": "baffeed6-6fdf-476c-8940-68a116ff1fe7",
+    "old_local_key_rejected": true,
+    "new_key_authenticated": true
+  },
+  "release": {
+    "id": "rec-schema-compat-2026-10-03",
+    "previous_production_version_number": 53,
+    "previous_production_version_id": "baffeed6-6fdf-476c-8940-68a116ff1fe7",
+    "production_version_number": 55,
+    "production_version_id": "a8a3e533-70a3-4b95-a34b-5ba22b6d75b3",
+    "deployment_id": "cfdc07b8-6a2b-45b4-8ec0-9812a4e9db78",
+    "source_git_commit": "4ce453b55cd61e54495d36edf1156753aac0d6b2",
+    "phase1_fresh_rec_ev": "PASS",
+    "phase1_exact_retry": "PASS",
+    "phase1_html_direct": "PASS",
+    "notion_cleanup": "PASS_0_LIVE_TEST_ROWS",
+    "candidate_override_after_cleanup": "PASS",
+    "convergence_readback_1": "PASS",
+    "convergence_readback_2": "PASS",
+    "production_qa": "PASS",
+    "system_audit": "PASS_KNOWN_PB_BACKLOG_ONLY",
+    "learner_readiness": "NOT_ASSESSED"
+  },
+  "known_nonblocking_integrity_backlog": [
+    "PB-179 ACTIVE_DIFFICULTY_MISSING",
+    "PB-179 ACTIVE_SKILL_RELATION_MISSING",
+    "PB-180 ACTIVE_DIFFICULTY_MISSING",
+    "PB-180 ACTIVE_SKILL_RELATION_MISSING",
+    "PB-181 ACTIVE_DIFFICULTY_MISSING",
+    "PB-181 ACTIVE_SKILL_RELATION_MISSING"
+  ],
   "pending_patch": {
     "id": "rec-schema-compat-2026-10-03",
     "reason": "REC-v3.1 live schema removed 進度狀態 and 複習日期, but Worker #51 still wrote them on fresh REC creation.",
@@ -35,6 +72,9 @@
       "Remove legacy HTML Direct REC write to 進度狀態",
       "Remove legacy HTML Direct REC property write to 複習日期 while retaining review-date learner page-body text"
     ],
-    "deployment_status": "NOT_DEPLOYED"
+    "deployment_status": "DEPLOYED_AND_VERIFIED",
+    "production_version_number": 55,
+    "production_version_id": "a8a3e533-70a3-4b95-a34b-5ba22b6d75b3",
+    "deployment_id": "cfdc07b8-6a2b-45b4-8ec0-9812a4e9db78"
   }
 }
