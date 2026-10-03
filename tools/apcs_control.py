@@ -4208,6 +4208,8 @@ def _print_new_learning_summary(
 def _start_new_learning(
     route,
     current_filename: str | None,
+    *,
+    track: str = "Implementation",
 ):
     clear()
     heading("開始 New Learning")
@@ -4239,7 +4241,10 @@ def _start_new_learning(
     rule()
     print()
 
-    if placement.role == "Worked Example":
+    if (
+        track == "Implementation"
+        and placement.role == "Worked Example"
+    ):
         print(
             f"{YELLOW}"
             "本次 Placement 是 Worked Example。"
@@ -4266,11 +4271,17 @@ def _start_new_learning(
 
     try:
         scratch = (
-            create_learning_scratch(
+            create_reading_scratch(
+                RUNTIME_DIR,
+                placement,
+                action="finish",
+            )
+            if track == "Reading"
+            else create_learning_scratch(
                 placement
             )
         )
-    except OSError as exc:
+    except (OSError, ValueError) as exc:
         print(
             f"{RED}"
             f"✕ 無法建立 new-learning scratch：{exc}"
@@ -4286,13 +4297,21 @@ def _start_new_learning(
     if opened:
         print(
             f"{GREEN}"
-            "✓ 已開啟 B4 learning scratch"
+            (
+                "✓ 已開啟 Reading formal-response scratch"
+                if track == "Reading"
+                else "✓ 已開啟 B4 learning scratch"
+            )
             f"{RESET}"
         )
         print(
             f"{GRAY}"
-            "完成外部 Judge 後回 Control Center 選「完成題目」；"
-            "Placement UID 會直接接回 EV-v1 outbox。"
+            (
+                "先完成 Formal response，再驗證；之後回 Control Center 選「完成題目」。"
+                if track == "Reading"
+                else "完成外部 Judge 後回 Control Center 選「完成題目」；"
+            )
+            + " Placement UID 會直接接回 EV-v1 outbox。"
             f"{RESET}"
         )
     else:
@@ -4375,12 +4394,52 @@ def _start_adaptive_review(
         )
         print(
             f"{GRAY}"
-            "請依題面先完成 trace / reasoning，"
-            "正式作答前不要執行程式驗證。"
+            "先完成 Formal response 的 trace / reasoning；"
+            "儲存以前不得執行程式或查看完整 reference。"
             f"{RESET}"
         )
+
+        try:
+            scratch = create_reading_scratch(
+                RUNTIME_DIR,
+                placement,
+                action="review",
+            )
+        except (OSError, ValueError) as exc:
+            print()
+            print(
+                f"{RED}"
+                f"✕ 無法建立 Reading scratch：{exc}"
+                f"{RESET}"
+            )
+            pause()
+            return current_filename
+
+        opened = open_in_vscode(
+            scratch
+        )
+        print()
+        if opened:
+            print(
+                f"{GREEN}"
+                "✓ 已開啟 Reading formal-response scratch"
+                f"{RESET}"
+            )
+            print(
+                f"{GRAY}"
+                "完成 Formal response → verification 後，"
+                "回控制中心選「複習題目」。"
+                f"{RESET}"
+            )
+        else:
+            print(
+                f"{RED}"
+                "✕ 無法在 VS Code 開啟 Reading scratch"
+                f"{RESET}"
+            )
+
         pause()
-        return current_filename
+        return str(scratch)
 
     try:
         scratch = create_review_scratch(
