@@ -1,0 +1,612 @@
+{
+  "schema_version": "rec-legacy-progress-status-archive-v1",
+  "captured_on": "2026-10-03",
+  "source_data_source": "collection://36a43be9-58cd-8015-88d3-000ba21d3afc",
+  "source_field": "進度狀態",
+  "row_count": 75,
+  "formal_learner_rows": 0,
+  "purpose": "Preserve historical/system-test REC progress-status values before removing the mutable scheduling/status property from the active Notion schema.",
+  "authority_note": "Archive only. These values are not v2.3 mastery, readiness, scheduler, or Evidence truth.",
+  "rows": [
+    {
+      "rec_uid": 30,
+      "writeback_id": null,
+      "record_kind": null,
+      "problem_id": null,
+      "legacy_progress_status": "已完成",
+      "created_time": "2026-07-01 02:04:03Z"
+    },
+    {
+      "rec_uid": 31,
+      "writeback_id": null,
+      "record_kind": null,
+      "problem_id": null,
+      "legacy_progress_status": "已完成",
+      "created_time": "2026-07-01 02:10:58Z"
+    },
+    {
+      "rec_uid": 57,
+      "writeback_id": null,
+      "record_kind": null,
+      "problem_id": null,
+      "legacy_progress_status": "已完成",
+      "created_time": "2026-07-29 08:36:50Z"
+    },
+    {
+      "rec_uid": 66,
+      "writeback_id": "system-smoke-2026-08-25-pb25",
+      "record_kind": "系統測試",
+      "problem_id": "ZJ-e339",
+      "legacy_progress_status": "暫停",
+      "created_time": "2026-08-25 01:38:31Z"
+    },
+    {
+      "rec_uid": 67,
+      "writeback_id": null,
+      "record_kind": "系統測試",
+      "problem_id": null,
+      "legacy_progress_status": "暫停",
+      "created_time": "2026-08-25 01:38:41Z"
+    },
+    {
+      "rec_uid": 68,
+      "writeback_id": "cf-smoke-20260825-110144",
+      "record_kind": "系統測試",
+      "problem_id": "ZJ-e339",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-25 03:01:45Z"
+    },
+    {
+      "rec_uid": 69,
+      "writeback_id": "61c340d6-8454-4b48-a84a-46b8d5e70ad8",
+      "record_kind": "系統測試",
+      "problem_id": "ZJ-e339",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-25 03:13:51Z"
+    },
+    {
+      "rec_uid": 70,
+      "writeback_id": "0c017899-1502-4333-bd08-4d48202ef2c2",
+      "record_kind": null,
+      "problem_id": "ZJ-e339",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-25 04:14:20Z"
+    },
+    {
+      "rec_uid": 71,
+      "writeback_id": "route-v1-preview-f1ecd363ebcd4ad89cbf266bbd063f92",
+      "record_kind": "系統測試",
+      "problem_id": "LC-303",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-25 13:40:48Z"
+    },
+    {
+      "rec_uid": 72,
+      "writeback_id": "route-v1-preview-f76624b6ea9247218228931e04f97a07",
+      "record_kind": "系統測試",
+      "problem_id": "LC-303",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-25 14:17:17Z"
+    },
+    {
+      "rec_uid": 73,
+      "writeback_id": "fnd01-system-pb-142-c3641ee057f04f5e89864c4e0b58280b",
+      "record_kind": "系統測試",
+      "problem_id": "ZJ-a002",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-26 04:01:51Z"
+    },
+    {
+      "rec_uid": 74,
+      "writeback_id": "fnd01-system-pb-143-8906b46c0d7546a49954e961a2b94ca6",
+      "record_kind": "系統測試",
+      "problem_id": "ZJ-d050",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-26 04:01:54Z"
+    },
+    {
+      "rec_uid": 75,
+      "writeback_id": "fnd01-system-pb-144-574ea218371a4b56bafb14301d7d6590",
+      "record_kind": "系統測試",
+      "problem_id": "CF-1A",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-26 04:01:57Z"
+    },
+    {
+      "rec_uid": 76,
+      "writeback_id": "fnd01-system-pb-142-b2f8782abbf34a8a868f601e46d72ac9",
+      "record_kind": "系統測試",
+      "problem_id": "ZJ-a002",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-26 04:02:31Z"
+    },
+    {
+      "rec_uid": 77,
+      "writeback_id": "fnd01-system-pb-143-c3dc07708bf048b08c34d6d18178ebb1",
+      "record_kind": "系統測試",
+      "problem_id": "ZJ-d050",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-26 04:02:35Z"
+    },
+    {
+      "rec_uid": 78,
+      "writeback_id": "fnd01-system-pb-144-f56ecb8e0b8f44acb03cd0ce99d001ec",
+      "record_kind": "系統測試",
+      "problem_id": "CF-1A",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-26 04:02:39Z"
+    },
+    {
+      "rec_uid": 79,
+      "writeback_id": "ufnd510-system-r5-pb-20-31858615e54f47aeb0b9e3f3eec4f91e",
+      "record_kind": "系統測試",
+      "problem_id": "ZJ-j605",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-26 11:51:48Z"
+    },
+    {
+      "rec_uid": 80,
+      "writeback_id": "ufnd510-system-r5-pb-147-d4d6a19a08164805b8a40f161a5074ce",
+      "record_kind": "系統測試",
+      "problem_id": "LC-2520",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-26 11:51:50Z"
+    },
+    {
+      "rec_uid": 81,
+      "writeback_id": "ufnd510-system-r5-pb-149-c6aa27f2a92842858e238f89163477c1",
+      "record_kind": "系統測試",
+      "problem_id": "CF-486A",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-26 11:51:52Z"
+    },
+    {
+      "rec_uid": 82,
+      "writeback_id": "ufnd510-system-r8-pb-20-761d27ae358445079f71096ebe1d5dd7",
+      "record_kind": "系統測試",
+      "problem_id": "ZJ-j605",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-26 12:21:18Z"
+    },
+    {
+      "rec_uid": 83,
+      "writeback_id": "ufnd510-system-r8-pb-147-9d37e69686ff4122a5f651696f8219c8",
+      "record_kind": "系統測試",
+      "problem_id": "LC-2520",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-26 12:21:20Z"
+    },
+    {
+      "rec_uid": 84,
+      "writeback_id": "ufnd510-system-r8-pb-149-7c0116c2a49646bba06f34400459d087",
+      "record_kind": "系統測試",
+      "problem_id": "CF-486A",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-26 12:21:22Z"
+    },
+    {
+      "rec_uid": 85,
+      "writeback_id": "ufnd511-system-r4-pb-144-98841ee74b4e48768bfec3632b4688d7",
+      "record_kind": "系統測試",
+      "problem_id": "CF-1A",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-26 14:33:17Z"
+    },
+    {
+      "rec_uid": 86,
+      "writeback_id": "ufnd511-system-r4-pb-20-619744e75e514670acf97e2ba822e13b",
+      "record_kind": "系統測試",
+      "problem_id": "ZJ-j605",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-26 14:33:21Z"
+    },
+    {
+      "rec_uid": 87,
+      "writeback_id": "ufnd511-system-r4-pb-151-50169c2caf1f4769967a29fe5aa6d9db",
+      "record_kind": "系統測試",
+      "problem_id": "CUSTOM-FND03-REF-SCOPE-01",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-26 14:33:25Z"
+    },
+    {
+      "rec_uid": 88,
+      "writeback_id": "ufnd511-system-r4-pb-147-dca6a80ee5994305937a181ade52d5a4",
+      "record_kind": "系統測試",
+      "problem_id": "LC-2520",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-26 14:33:37Z"
+    },
+    {
+      "rec_uid": 89,
+      "writeback_id": "ufnd511-system-r4-pb-150-4fd4912782ce428e8b0be07ffe44db07",
+      "record_kind": "系統測試",
+      "problem_id": "CSES-1094",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-26 14:33:55Z"
+    },
+    {
+      "rec_uid": 90,
+      "writeback_id": "ufnd511-system-r4-pb-149-a9dc93324edf458ca863ce26f2613823",
+      "record_kind": "系統測試",
+      "problem_id": "CF-486A",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-26 14:33:58Z"
+    },
+    {
+      "rec_uid": 91,
+      "writeback_id": "udat512-system-r2-pb-98-7ee39935a4154f71aa0a39e9bf4fde44",
+      "record_kind": "系統測試",
+      "problem_id": "CF-580A",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 14:41:44Z"
+    },
+    {
+      "rec_uid": 92,
+      "writeback_id": "udat512-system-r2-pb-97-ca859093aa8641f9a29ffddee0206a7b",
+      "record_kind": "系統測試",
+      "problem_id": "CF-71A",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 14:41:49Z"
+    },
+    {
+      "rec_uid": 93,
+      "writeback_id": "udat512-system-r2-pb-10-6275ef7766dc4e5781d12339b6354b89",
+      "record_kind": "系統測試",
+      "problem_id": "ZJ-q182",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 14:41:53Z"
+    },
+    {
+      "rec_uid": 94,
+      "writeback_id": "udat512-system-r2-pb-42-0c1e9a3eb18c45eaa087c209673f8e1c",
+      "record_kind": "系統測試",
+      "problem_id": "CSES-1069",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 14:41:56Z"
+    },
+    {
+      "rec_uid": 95,
+      "writeback_id": "udat512-system-r2-pb-37-dae0ae87b34f424684904d4ded57b57d",
+      "record_kind": "系統測試",
+      "problem_id": "ZJ-b266",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 14:42:03Z"
+    },
+    {
+      "rec_uid": 96,
+      "writeback_id": "udat512-system-r2-pb-9-22aeb02871a648239c4db176b00a22e8",
+      "record_kind": "系統測試",
+      "problem_id": "ZJ-j606",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 14:42:05Z"
+    },
+    {
+      "rec_uid": 97,
+      "writeback_id": "udat512-system-r2-pb-114-afd720a6a9ae4bbeae85112b5a7988ef",
+      "record_kind": "系統測試",
+      "problem_id": "APCS-ZJ-o711",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 14:42:19Z"
+    },
+    {
+      "rec_uid": 98,
+      "writeback_id": "udat512-system-r2-pb-120-bd869d321eac45ecaccdcd9910446ffa",
+      "record_kind": "系統測試",
+      "problem_id": "APCS-ZJ-q836",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 14:42:22Z"
+    },
+    {
+      "rec_uid": 99,
+      "writeback_id": "udat512-system-r2-pb-115-7701c8e158a94dde9160a136ba901039",
+      "record_kind": "系統測試",
+      "problem_id": "APCS-ZJ-o712",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 14:42:25Z"
+    },
+    {
+      "rec_uid": 100,
+      "writeback_id": "udat512-system-r2-pb-152-4d4ad0bfc86b482ca84e606e06acd9a1",
+      "record_kind": "系統測試",
+      "problem_id": "CUSTOM-DAT01-INDEX-01",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:05:35Z"
+    },
+    {
+      "rec_uid": 101,
+      "writeback_id": "udat512-system-r2-pb-98-fd352ad8801f40b1acfebb65b7b1e7ee",
+      "record_kind": "系統測試",
+      "problem_id": "CF-580A",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:05:38Z"
+    },
+    {
+      "rec_uid": 102,
+      "writeback_id": "udat512-system-r2-pb-153-2859e4f835b149b2b5839c1cb8663769",
+      "record_kind": "系統測試",
+      "problem_id": "CUSTOM-DAT01-VECTOR-CORE-01",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:05:43Z"
+    },
+    {
+      "rec_uid": 103,
+      "writeback_id": "udat512-system-r2-pb-97-d27d921d9bff4661a8a2eacb672b538e",
+      "record_kind": "系統測試",
+      "problem_id": "CF-71A",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:05:46Z"
+    },
+    {
+      "rec_uid": 104,
+      "writeback_id": "udat512-system-r2-pb-10-0dd2b39dc71047d4bb0f36a927122bf7",
+      "record_kind": "系統測試",
+      "problem_id": "ZJ-q182",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:05:49Z"
+    },
+    {
+      "rec_uid": 105,
+      "writeback_id": "udat512-system-r2-pb-42-2b493bd1e7444878a1da1cf5f85630d4",
+      "record_kind": "系統測試",
+      "problem_id": "CSES-1069",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:05:51Z"
+    },
+    {
+      "rec_uid": 106,
+      "writeback_id": "udat512-system-r2-pb-154-8cbf6c1297944feda1473a9ffdf1edf1",
+      "record_kind": "系統測試",
+      "problem_id": "CUSTOM-DAT03-COORD-01",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:05:55Z"
+    },
+    {
+      "rec_uid": 107,
+      "writeback_id": "udat512-system-r2-pb-37-621dec19a5604fe8b90d8e011f2a290d",
+      "record_kind": "系統測試",
+      "problem_id": "ZJ-b266",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:05:58Z"
+    },
+    {
+      "rec_uid": 108,
+      "writeback_id": "udat512-system-r2-pb-9-49727267556f4603b7692728a3a3a36f",
+      "record_kind": "系統測試",
+      "problem_id": "ZJ-j606",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:06:02Z"
+    },
+    {
+      "rec_uid": 109,
+      "writeback_id": "udat512-system-r2-pb-155-2b05075c6de54552a5a82881954e72eb",
+      "record_kind": "系統測試",
+      "problem_id": "CUSTOM-DAT04-STATE-01",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:06:04Z"
+    },
+    {
+      "rec_uid": 110,
+      "writeback_id": "udat512-system-r2-pb-114-ecdfeeb6851545b886a6ec5c1e540281",
+      "record_kind": "系統測試",
+      "problem_id": "APCS-ZJ-o711",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:06:07Z"
+    },
+    {
+      "rec_uid": 111,
+      "writeback_id": "udat512-system-r2-pb-120-5c76cd5c26d7459790670274ddd850d7",
+      "record_kind": "系統測試",
+      "problem_id": "APCS-ZJ-q836",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:06:09Z"
+    },
+    {
+      "rec_uid": 112,
+      "writeback_id": "udat512-system-r2-pb-115-8a909a41299b489d821d0406cedbe9a1",
+      "record_kind": "系統測試",
+      "problem_id": "APCS-ZJ-o712",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:06:14Z"
+    },
+    {
+      "rec_uid": 113,
+      "writeback_id": "udat512-system-r2-pb-152-0c21f3a335ad4c039a2cf137dd7a67b5",
+      "record_kind": "系統測試",
+      "problem_id": "CUSTOM-DAT01-INDEX-01",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:08:46Z"
+    },
+    {
+      "rec_uid": 114,
+      "writeback_id": "udat512-system-r2-pb-98-481e688e3d0c4feabe12114ec52186bf",
+      "record_kind": "系統測試",
+      "problem_id": "CF-580A",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:08:50Z"
+    },
+    {
+      "rec_uid": 115,
+      "writeback_id": "udat512-system-r2-pb-153-8219a8d29f2341d89a00e72a7251c3db",
+      "record_kind": "系統測試",
+      "problem_id": "CUSTOM-DAT01-VECTOR-CORE-01",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:08:52Z"
+    },
+    {
+      "rec_uid": 116,
+      "writeback_id": "udat512-system-r2-pb-97-92ab601bb2c4496cb229192a419c1f10",
+      "record_kind": "系統測試",
+      "problem_id": "CF-71A",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:08:57Z"
+    },
+    {
+      "rec_uid": 117,
+      "writeback_id": "udat512-system-r2-pb-10-6be61c4b313b433fa58e50f0e197f18a",
+      "record_kind": "系統測試",
+      "problem_id": "ZJ-q182",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:09:02Z"
+    },
+    {
+      "rec_uid": 118,
+      "writeback_id": "udat512-system-r2-pb-42-15744a96b88a49ad9eb08cfab7651a30",
+      "record_kind": "系統測試",
+      "problem_id": "CSES-1069",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:09:04Z"
+    },
+    {
+      "rec_uid": 119,
+      "writeback_id": "udat512-system-r2-pb-154-593d49eda7b1444c9e525d7c79ec8ec5",
+      "record_kind": "系統測試",
+      "problem_id": "CUSTOM-DAT03-COORD-01",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:09:06Z"
+    },
+    {
+      "rec_uid": 120,
+      "writeback_id": "udat512-system-r2-pb-37-e0e0e7fad23142c2ab1c8a2dbac38369",
+      "record_kind": "系統測試",
+      "problem_id": "ZJ-b266",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:09:09Z"
+    },
+    {
+      "rec_uid": 121,
+      "writeback_id": "udat512-system-r2-pb-9-480ef0d132f244faa56f2bf1f0789728",
+      "record_kind": "系統測試",
+      "problem_id": "ZJ-j606",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:09:11Z"
+    },
+    {
+      "rec_uid": 122,
+      "writeback_id": "udat512-system-r2-pb-155-a76c27aaa9c04530be66f2e2b81ba749",
+      "record_kind": "系統測試",
+      "problem_id": "CUSTOM-DAT04-STATE-01",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:09:14Z"
+    },
+    {
+      "rec_uid": 123,
+      "writeback_id": "udat512-system-r2-pb-114-386e2f4a4f9b4a77a00346fc262b5d25",
+      "record_kind": "系統測試",
+      "problem_id": "APCS-ZJ-o711",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:09:16Z"
+    },
+    {
+      "rec_uid": 124,
+      "writeback_id": "udat512-system-r2-pb-120-292502d1223e4018b650f12f24bc9f64",
+      "record_kind": "系統測試",
+      "problem_id": "APCS-ZJ-q836",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:09:19Z"
+    },
+    {
+      "rec_uid": 125,
+      "writeback_id": "udat512-system-r2-pb-115-09ec9cac8668435fb16888bd3a0456fc",
+      "record_kind": "系統測試",
+      "problem_id": "APCS-ZJ-o712",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 15:09:21Z"
+    },
+    {
+      "rec_uid": 126,
+      "writeback_id": "labs5121-system-pb-152-6b93ec53b0ca4649b1155bc3f5cf91c3",
+      "record_kind": "系統測試",
+      "problem_id": "CUSTOM-DAT01-INDEX-01",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 16:24:18Z"
+    },
+    {
+      "rec_uid": 127,
+      "writeback_id": "labs5121-system-pb-98-14f560491fab4aa28f939f2d52f5f9fa",
+      "record_kind": "系統測試",
+      "problem_id": "CF-580A",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 16:24:19Z"
+    },
+    {
+      "rec_uid": 128,
+      "writeback_id": "labs5121-system-pb-152-96dc6642a8734ef39369b1f073fedaac",
+      "record_kind": "系統測試",
+      "problem_id": "CUSTOM-DAT01-INDEX-01",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 16:26:07Z"
+    },
+    {
+      "rec_uid": 129,
+      "writeback_id": "labs5121-system-pb-98-92022323daff4a549dca692b660e8941",
+      "record_kind": "系統測試",
+      "problem_id": "CF-580A",
+      "legacy_progress_status": "進行中",
+      "created_time": "2026-08-27 16:26:09Z"
+    },
+    {
+      "rec_uid": 130,
+      "writeback_id": "qa.psv.5.13.0.a448cdd0-06ba-4b73-b9c7-f9a46c317c81",
+      "record_kind": "系統測試",
+      "problem_id": "CUSTOM-PSV01-BASELINE-01",
+      "legacy_progress_status": "已完成",
+      "created_time": "2026-08-28 00:09:03Z"
+    },
+    {
+      "rec_uid": 131,
+      "writeback_id": "qa.ui.5.13.1.7d49a5ec-b680-4f19-9c3f-d73b01f8c8e1",
+      "record_kind": "系統測試",
+      "problem_id": "CUSTOM-PSV01-BASELINE-01",
+      "legacy_progress_status": "已完成",
+      "created_time": "2026-08-28 01:16:18Z"
+    },
+    {
+      "rec_uid": 132,
+      "writeback_id": "qa.ui.5.13.2.7a4a34a1-1a08-4dd2-a93e-e73760746887",
+      "record_kind": "系統測試",
+      "problem_id": "CUSTOM-PSV01-BASELINE-01",
+      "legacy_progress_status": "已完成",
+      "created_time": "2026-08-28 02:33:39Z"
+    },
+    {
+      "rec_uid": 133,
+      "writeback_id": "qa.ui.5.13.3.7bcd5aa9-7f59-4ebe-ac89-99601319303d",
+      "record_kind": "系統測試",
+      "problem_id": "CUSTOM-PSV01-BASELINE-01",
+      "legacy_progress_status": "已完成",
+      "created_time": "2026-08-28 12:12:14Z"
+    },
+    {
+      "rec_uid": 134,
+      "writeback_id": "qa.ui.5.13.4.41a08489-46eb-4f5c-ace6-6ac676cbf092",
+      "record_kind": "系統測試",
+      "problem_id": "CUSTOM-PSV01-BASELINE-01",
+      "legacy_progress_status": "已完成",
+      "created_time": "2026-08-28 14:29:50Z"
+    },
+    {
+      "rec_uid": 135,
+      "writeback_id": "qa.uord.5.14.0.2bac4d86-0b2e-4623-86a5-e38c83a2b42f",
+      "record_kind": "系統測試",
+      "problem_id": "CUSTOM-ORD02-RANK-01",
+      "legacy_progress_status": "已完成",
+      "created_time": "2026-08-29 03:22:46Z"
+    },
+    {
+      "rec_uid": 136,
+      "writeback_id": "qa.upfx.5.15.0.89f85bab-1bab-4d9d-829e-d6b220107ea3",
+      "record_kind": "系統測試",
+      "problem_id": "LC-1109",
+      "legacy_progress_status": "已完成",
+      "created_time": "2026-08-29 06:56:19Z"
+    },
+    {
+      "rec_uid": 137,
+      "writeback_id": "qa.batch.5.16.0.eae522ad-05ab-4bca-b321-4f9714614088",
+      "record_kind": "系統測試",
+      "problem_id": "CSES-1084",
+      "legacy_progress_status": "已完成",
+      "created_time": "2026-08-29 12:58:49Z"
+    }
+  ]
+}

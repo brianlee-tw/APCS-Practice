@@ -115,6 +115,37 @@ class NotionSchemaPolicyV23Test(unittest.TestCase):
                 )
             )
 
+    def test_legacy_progress_status_archive_is_complete_and_nonformal(self):
+        archive = json.loads(
+            (
+                ROOT
+                / "curriculum"
+                / "migration"
+                / "rec_legacy_progress_status_archive.v23.json"
+            ).read_text(
+                encoding="utf-8"
+            )
+        )
+
+        self.assertEqual(
+            archive["row_count"],
+            75,
+        )
+        self.assertEqual(
+            len(archive["rows"]),
+            75,
+        )
+        self.assertEqual(
+            archive["formal_learner_rows"],
+            0,
+        )
+        self.assertTrue(
+            all(
+                row["legacy_progress_status"]
+                for row in archive["rows"]
+            )
+        )
+
     def test_published_skill_contract_excludes_manual_learner_state(self):
         published = json.loads(
             (
