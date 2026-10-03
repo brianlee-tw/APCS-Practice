@@ -5,8 +5,8 @@
 ## 版本
 
 - 穩定執行環境：**v2.3**（PRODUCTION_CLOSED）
-- 下一版本：**v2.4**（C4_COGNITIVE_ORCHESTRATOR）
-- 目前階段：**C4｜認知編排器與 Today v2**
+- 下一版本：**v2.4**（C5_LEARNER_MODEL_V2）
+- 目前階段：**C5｜學習者模型 v2**
 
 ## 正式課程
 
