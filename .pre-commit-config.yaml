@@ -20,8 +20,8 @@ repos:
 
 - repo: local
   hooks:
-  - id: apcs-validate
-    name: APCS metadata validation
-    entry: python tools/apcs.py validate
+  - id: apcs-quality-gate
+    name: APCS full local quality gate
+    entry: python tools/quality_gate.py
     language: system
     pass_filenames: false

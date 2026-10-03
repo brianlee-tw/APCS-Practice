@@ -166,7 +166,16 @@ python3 tools/quality_gate.py
 
 目前少數歷史題目仍有明確列出的 metadata 缺口；這些 warning 被記錄在 `.github/apcs-known-warnings.txt`。既有 warning 可以減少，但新增或重複增加的 warning 會使 quality gate 失敗。
 
-只執行 validator：
+本機 canonical gate 只有一個：
+
+```bash
+python3 tools/quality_gate.py
+```
+
+Control Center 的 Commit 流程與 repository pre-commit hook 都使用這個完整 gate；
+不要把較弱的 metadata-only validator 當成 commit acceptance。
+
+只執行 validator（diagnostic / debugging 用，不代表 commit gate）：
 
 ```bash
 python3 tools/apcs.py validate
@@ -192,6 +201,11 @@ Pull Request / main push 會：
 2. 驗證 Catalog 與 learning data。
 3. enforce known-warning budget。
 4. syntax-check 本次新增或修改的 solution source。
+
+Repository policy should require the APCS Validate check contexts `metadata` and
+`changed-solutions` before merging to `main`.  `sync` is post-main
+generated-artifact work and must not be a pull-request required check.
+Path-conditional `validate-site` also must not be globally required.
 
 ### main dashboard sync
 
