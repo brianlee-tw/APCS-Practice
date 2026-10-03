@@ -14,6 +14,7 @@ from tools.runtime_curriculum import PlacementContext
 def problem(*, action="finish"):
     return {
         "id": "d050",
+        "title": "d050 妳那裡現在幾點了？",
         "path": Path("/tmp/d050.cpp"),
         "published_runtime": True,
         "runtime_action": action,
