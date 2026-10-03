@@ -5,7 +5,7 @@
     "stable_runtime": "v2.3",
     "stable_runtime_status": "PRODUCTION_CLOSED",
     "next_version": "v2.4",
-    "next_version_status": "C7_CALIBRATION_INFRA",
+    "next_version_status": "C8_GENUINE_LEARNER_PILOT",
     "next_version_contract": "docs/V24_PRODUCT_ARCHITECTURE_CONTRACT.md",
     "learner_readiness": "NOT_ASSESSED"
   },
@@ -47,8 +47,8 @@
     "remote_writeback_status": "PRODUCTION_VERIFIED"
   },
   "current_work": {
-    "gate": "C7",
-    "goal": "記憶校準基礎設施",
+    "gate": "C8",
+    "goal": "真實學習者試用",
     "open_nonblocking": [
       {
         "issue": 32,
@@ -57,6 +57,10 @@
       {
         "issue": 40,
         "scope": "Needs QA staging / content curation"
+      },
+      {
+        "issue": 80,
+        "scope": "v2.4 genuine learner pilot"
       }
     ]
   },
