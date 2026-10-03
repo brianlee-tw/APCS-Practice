@@ -146,6 +146,13 @@ TODAY_CAPACITY_CHOICES = (
     240,
 )
 SELECTION_MODES = ("practice", "exam")
+EXAM_DURATION_CHOICES = (
+    30,
+    60,
+    90,
+    120,
+    180,
+)
 
 ID_RE = re.compile(r"^([A-Za-z]\d+|\d+)(?:_|$)")
 
@@ -8957,49 +8964,326 @@ def problem_library_view() -> None:
 # Exam Runtime
 # ============================================================
 
-def _exam_start_ui() -> None:
+def _exam_duration_menu(
+    current: int = 60,
+) -> int | None:
+    options = [
+        {
+            "label": f"{minutes} 分",
+            "detail": (
+                "常用"
+                if minutes == current
+                else ""
+            ),
+            "enabled": True,
+            "action": "套用",
+        }
+        for minutes in EXAM_DURATION_CHOICES
+    ]
+    selected_index = min(
+        range(
+            len(EXAM_DURATION_CHOICES)
+        ),
+        key=lambda index: abs(
+            EXAM_DURATION_CHOICES[index]
+            - current
+        ),
+    )
+    selected = choose_grid(
+        "模擬考 · 時間",
+        options,
+        selected_index=selected_index,
+        enter_text="套用",
+        back_text="返回",
+        wide_columns=5,
+        compact_columns=2,
+    )
+    if selected is None:
+        return None
+    return EXAM_DURATION_CHOICES[
+        selected
+    ]
+
+
+def _exam_question_count_menu() -> int | None:
+    counts = (1, 2, 3, 4)
+    selected = choose_grid(
+        "模擬考 · 題數",
+        [
+            {
+                "label": f"{count} 題",
+                "detail": (
+                    "完整 mixed set"
+                    if count == 4
+                    else "短時限練習"
+                ),
+                "enabled": True,
+                "action": "選擇",
+            }
+            for count in counts
+        ],
+        selected_index=1,
+        enter_text="選擇",
+        back_text="返回",
+        wide_columns=4,
+        compact_columns=2,
+    )
+    if selected is None:
+        return None
+    return counts[selected]
+
+
+def _quick_exam_problem_ids(
+    count: int,
+) -> list[str]:
+    candidates = list(
+        _exam_safe_problem_items(
+            limit=200,
+        )
+    )
+    preferred = [
+        item
+        for item in candidates
+        if item.role
+        in {
+            "Core Independent",
+            "Transfer Challenge",
+            "Mock",
+        }
+    ]
+    if len(preferred) < count:
+        preferred = candidates
+
+    selected = []
+    used_skills = set()
+
+    # First pass: maximize Skill diversity without revealing it to learner.
+    for item in preferred:
+        skill = item.primary_skill or ""
+        if (
+            skill
+            and skill in used_skills
+        ):
+            continue
+        selected.append(item)
+        if skill:
+            used_skills.add(skill)
+        if len(selected) >= count:
+            break
+
+    if len(selected) < count:
+        selected_ids = {
+            item.external_id
+            for item in selected
+        }
+        for item in preferred:
+            if item.external_id in selected_ids:
+                continue
+            selected.append(item)
+            if len(selected) >= count:
+                break
+
+    return [
+        item.external_id
+        for item in selected[:count]
+    ]
+
+
+def _exam_library_pick_ids() -> list[str] | None:
+    candidates = _exam_safe_problem_items(
+        limit=40,
+    )
+    chosen: list[str] = []
+
+    while True:
+        options = [
+            {
+                "label": (
+                    f"完成選題 · {len(chosen)} 題"
+                ),
+                "detail": "最多 4 題",
+                "enabled": bool(chosen),
+                "action": "完成",
+                "kind": "done",
+            }
+        ]
+
+        for item in candidates:
+            picked = (
+                item.external_id in chosen
+            )
+            options.append(
+                {
+                    "label": (
+                        f"{'✓ ' if picked else ''}"
+                        f"{item.external_id} · {item.title}"
+                    ),
+                    "detail": (
+                        _problem_library_safe_detail(
+                            item,
+                            "exam",
+                        )
+                    ),
+                    "enabled": (
+                        picked
+                        or len(chosen) < 4
+                    ),
+                    "action": (
+                        "取消"
+                        if picked
+                        else "加入"
+                    ),
+                    "kind": "problem",
+                    "problem_id": item.external_id,
+                }
+            )
+
+        selected = choose_menu(
+            "模擬考 · 題庫選題",
+            options,
+            footer_numbers=False,
+            back_text="返回",
+            enter_text="選擇",
+        )
+        if selected is None:
+            return None
+
+        option = options[selected]
+        if option["kind"] == "done":
+            return list(chosen)
+
+        pid = option["problem_id"]
+        if pid in chosen:
+            chosen.remove(pid)
+        else:
+            chosen.append(pid)
+
+
+def _exam_custom_problem_ids() -> list[str] | None:
     clear()
-    heading("考試模式")
+    heading("模擬考 · 自訂題組")
     print()
     print(
         f"{GRAY}"
-        "輸入本次題號即可；時間點與切題由系統自動記錄。"
+        "只有指定特定題組時才需要手動輸入題號。"
         f"{RESET}"
     )
     print()
-
     raw = prompt_text(
         "題號（空白或逗號分隔）",
         required=True,
     )
     if raw is None:
-        return
-
-    problem_ids = [
+        return None
+    return [
         token.strip().lower()
-        for token in re.split(r"[\s,]+", raw)
+        for token in re.split(
+            r"[\s,]+",
+            raw,
+        )
         if token.strip()
     ]
 
-    raw_minutes = prompt_text(
-        "考試時間（分鐘）",
-        current="60",
-        required=True,
+
+def _exam_start_ui() -> None:
+    options = [
+        {
+            "label": "快速組題",
+            "detail": "系統從未做／獨立題池建立 mixed set；不顯示分類",
+            "enabled": True,
+            "section": "建議",
+            "action": "開始設定",
+            "kind": "quick",
+        },
+        {
+            "label": "從題庫選題",
+            "detail": "strict spoiler；最多選 4 題",
+            "enabled": True,
+            "section": "選題",
+            "action": "選擇",
+            "kind": "library",
+        },
+        {
+            "label": "輸入題號",
+            "detail": "只在已有指定題組時使用",
+            "enabled": True,
+            "section": "選題",
+            "action": "輸入",
+            "kind": "custom",
+        },
+    ]
+
+    selected = choose_grid(
+        "模擬考 · 建立題組",
+        options,
+        back_text="返回控制中心",
     )
-    if raw_minutes is None:
+    if selected is None:
+        return
+
+    kind = options[selected]["kind"]
+    problem_ids = None
+
+    if kind == "quick":
+        count = (
+            _exam_question_count_menu()
+        )
+        if count is None:
+            return
+        problem_ids = (
+            _quick_exam_problem_ids(
+                count
+            )
+        )
+        if len(problem_ids) < count:
+            clear()
+            heading("模擬考")
+            print()
+            print(
+                f"{YELLOW}"
+                "目前沒有足夠的安全題目建立這個題組。"
+                f"{RESET}"
+            )
+            pause()
+            return
+
+    elif kind == "library":
+        problem_ids = (
+            _exam_library_pick_ids()
+        )
+        if problem_ids is None:
+            return
+
+    else:
+        problem_ids = (
+            _exam_custom_problem_ids()
+        )
+        if problem_ids is None:
+            return
+
+    minutes = _exam_duration_menu(
+        60
+    )
+    if minutes is None:
         return
 
     try:
-        minutes = int(raw_minutes)
         EXAM.start(
             problem_ids,
             duration_minutes=minutes,
         )
-    except (ValueError, ExamRuntimeError) as exc:
+    except (
+        ValueError,
+        ExamRuntimeError,
+    ) as exc:
+        clear()
+        heading("模擬考")
         print()
-        print(f"{RED}✕ {exc}{RESET}")
+        print(
+            f"{RED}✕ {exc}{RESET}"
+        )
         pause()
-        return
+
 
 
 def _exam_submit_ui(session) -> None:
@@ -9025,7 +9309,7 @@ def _exam_submit_ui(session) -> None:
             for value in values
         ],
         footer_numbers=True,
-        back_text="返回考試模式",
+        back_text="返回模擬考",
     )
     if selected is None:
         return
@@ -9043,7 +9327,7 @@ def _exam_submit_ui(session) -> None:
 def _exam_end_ui() -> None:
     reasons = list(POSTMORTEM_REASONS.items())
     selected = choose_menu(
-        "考試後檢討 · 主要失分原因",
+        "模擬考後檢討 · 主要失分原因",
         [
             {
                 "label": label,
@@ -9074,7 +9358,7 @@ def _exam_end_ui() -> None:
 
     summary = EXAM.summary(session)
     clear()
-    heading("考試完成")
+    heading("模擬考完成")
     print()
     print(f"總時間    {summary['elapsed_minutes']} min")
     print(
@@ -9107,28 +9391,19 @@ def exam_center() -> None:
             session = EXAM.active()
         except ExamRuntimeError as exc:
             clear()
-            heading("考試模式")
+            heading("模擬考")
             print()
             print(f"{RED}✕ {exc}{RESET}")
             pause()
             return
 
         if session is None:
-            selected = choose_menu(
-                "考試模式",
-                [
-                    {
-                        "label": "開始計時練習",
-                        "detail": "mixed set / 模擬考 · 最少輸入題號與時間",
-                        "enabled": True,
-                    }
-                ],
-                footer_numbers=True,
-                back_text="返回控制中心",
-            )
-            if selected is None:
-                return
             _exam_start_ui()
+            try:
+                if EXAM.active() is None:
+                    return
+            except ExamRuntimeError:
+                return
             continue
 
         summary = EXAM.summary(session)
@@ -9204,7 +9479,7 @@ def exam_center() -> None:
         print()
 
         chosen = choose_menu(
-            "考試模式 · 下一步",
+            "模擬考 · 下一步",
             options,
             footer_numbers=True,
             back_text="返回控制中心（計時持續）",
