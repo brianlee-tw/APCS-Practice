@@ -10,6 +10,7 @@ from tools.apcs_control import (
     next_solution_path,
     normalize_problem_id,
     solution_template,
+    solutions_for_problem,
 )
 from tools.catalog_store import (
     CatalogError,
@@ -141,6 +142,55 @@ class ApcsControlCatalogTest(unittest.TestCase):
             )
         )
 
+
+
+    def test_solutions_for_problem_lists_all_registered_variants(self):
+        self.store.add_solution(
+            SolutionMeta(
+                "a001",
+                "solutions/a001_alt.py",
+                "python",
+                "O(N)",
+            )
+        )
+
+        items = solutions_for_problem(
+            "A001",
+            store=self.store,
+        )
+
+        self.assertEqual(
+            [item.path for item in items],
+            [
+                "solutions/a001_old.cpp",
+                "solutions/a001_alt.py",
+            ],
+        )
+        self.assertEqual(
+            [item.language for item in items],
+            ["cpp", "python"],
+        )
+
+    def test_solutions_for_problem_does_not_mix_problem_identity(self):
+        self.store.create_problem_with_solution(
+            ProblemMeta("b130", "Other"),
+            SolutionMeta(
+                "b130",
+                "solutions/b130.cpp",
+                "cpp",
+                "O(1)",
+            ),
+        )
+
+        items = solutions_for_problem(
+            "a001",
+            store=self.store,
+        )
+
+        self.assertEqual(
+            [item.problem_id for item in items],
+            ["a001"],
+        )
 
 
     def test_missing_finish_complexity_detects_blank(self):
