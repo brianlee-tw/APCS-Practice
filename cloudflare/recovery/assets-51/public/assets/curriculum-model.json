@@ -1,0 +1,435 @@
+{
+  "schema": "CURRICULUM-READMODEL-v1",
+  "source": "Notion curriculum controlled build snapshot",
+  "generated": "2026-08-26",
+  "stages": [
+    {
+      "id": "foundation",
+      "name": "Foundation",
+      "units": [
+        "U-FND",
+        "U-DAT"
+      ]
+    },
+    {
+      "id": "apcs3",
+      "name": "APCS 3+3 Core",
+      "units": [
+        "U-PSV",
+        "U-ORD"
+      ],
+      "checkpoint": "RR3 + IR3 benchmark"
+    },
+    {
+      "id": "bridge",
+      "name": "Bridge｜3+3→5+5",
+      "units": [
+        "U-PFX",
+        "U-WIN",
+        "U-BIN",
+        "U-REC",
+        "U-DS"
+      ]
+    },
+    {
+      "id": "apcs5",
+      "name": "APCS 5+5 Core",
+      "units": [
+        "U-GPH",
+        "U-GRD",
+        "U-DP",
+        "U-MIX"
+      ]
+    },
+    {
+      "id": "advanced",
+      "name": "Advanced Calibration",
+      "units": [
+        "U-RNG"
+      ]
+    }
+  ],
+  "units": [
+    {
+      "id": "U-FND",
+      "slug": "fnd",
+      "order": 1,
+      "name": "基礎語言與控制",
+      "stage": "Foundation",
+      "cl": "CL1",
+      "gate": "可靠讀碼、從空白完成短程式；能手算 expression / control flow 並辨認 integer division、overflow、off-by-one。",
+      "lessons": [
+        [
+          "L-FND-01",
+          "值、型別、運算式、I/O、基礎位元運算"
+        ],
+        [
+          "L-FND-02",
+          "Conditionals、Loops、狀態與 invariant"
+        ],
+        [
+          "L-FND-03",
+          "Functions、Scope、Reference、程式分解"
+        ],
+        [
+          "L-FND-04",
+          "整數陷阱、Overflow、Boundary 與基礎 Debug"
+        ]
+      ]
+    },
+    {
+      "id": "U-DAT",
+      "slug": "dat",
+      "order": 2,
+      "name": "資料表示與模擬",
+      "stage": "Foundation",
+      "cl": "CL2",
+      "gate": "能把題目翻成資料結構與 state transition，並自行設計邊界測資。",
+      "lessons": [
+        [
+          "L-DAT-01",
+          "Array / Vector：索引、走訪與邊界"
+        ],
+        [
+          "L-DAT-02",
+          "String：字元序列、切分與轉換"
+        ],
+        [
+          "L-DAT-03",
+          "Matrix / 2D Data：座標、方向與邊界"
+        ],
+        [
+          "L-DAT-04",
+          "Simulation：State、Transition 與停止條件"
+        ]
+      ]
+    },
+    {
+      "id": "U-PSV",
+      "slug": "psv",
+      "order": 3,
+      "name": "解題基礎與複雜度",
+      "stage": "APCS 3+3 Core",
+      "cl": "CL2",
+      "gate": "看到 constraints 能排除不可行複雜度；能建立 baseline、找最小反例、定位第一個 divergence。",
+      "lessons": [
+        [
+          "L-PSV-01",
+          "Constraints、Brute Force 與 Baseline"
+        ],
+        [
+          "L-PSV-02",
+          "Complexity：操作次數、Time / Space 與 Amortized 直覺"
+        ],
+        [
+          "L-PSV-03",
+          "Code Reasoning：Trace、Debug、Completion 與 Testing"
+        ],
+        [
+          "L-PSV-04",
+          "Correctness、Math Modeling 與 Number Theory 基礎"
+        ]
+      ]
+    },
+    {
+      "id": "U-ORD",
+      "slug": "ord",
+      "order": 4,
+      "name": "排序與關聯容器",
+      "stage": "APCS 3+3 Core",
+      "cl": "CL2→CL3",
+      "gate": "能以 Pair/Struct 表達多欄位資料並正確排序；Map/Set 為 Supporting，不是 universal IR3 blocker。",
+      "checkpoint": "完成 U-FND / U-DAT / U-PSV / U-ORD required Skill Gates 後進 RR3 + IR3 benchmark。",
+      "lessons": [
+        [
+          "L-ORD-01",
+          "Sorting、Comparator、穩定性與成本"
+        ],
+        [
+          "L-ORD-02",
+          "Pair / Struct：資料建模與多鍵排序"
+        ],
+        [
+          "L-ORD-03",
+          "Map / Set：查找、計數與 Ordered Association"
+        ]
+      ]
+    },
+    {
+      "id": "U-PFX",
+      "slug": "pfx",
+      "order": 5,
+      "name": "前綴與差分",
+      "stage": "Bridge｜3+3→5+5",
+      "cl": "CL3",
+      "gate": "從 baseline 推導 prefix；自行推公式；完成 Core Independent 並建立 Evidence。",
+      "lessons": [
+        [
+          "L-PFX-01",
+          "Prefix Sum 的核心直覺：把重複區間加總變成 O(1)"
+        ],
+        [
+          "L-PFX-02",
+          "Prefix Value Relationships：區間條件轉成 Prefix States"
+        ],
+        [
+          "L-PFX-03",
+          "2D Prefix Sum：矩形查詢與 Inclusion–Exclusion"
+        ],
+        [
+          "L-PFX-04",
+          "Difference Array：用端點事件處理大量區間更新"
+        ]
+      ]
+    },
+    {
+      "id": "U-WIN",
+      "slug": "win",
+      "order": 6,
+      "name": "雙指標與滑動視窗",
+      "stage": "Bridge｜3+3→5+5",
+      "cl": "CL3",
+      "gate": "從性質推導 pointer movement，並以 amortized reasoning 說明 O(N)。",
+      "lessons": [
+        [
+          "L-WIN-01",
+          "Two Pointers：單向移動與 Invariant"
+        ],
+        [
+          "L-WIN-02",
+          "Sliding Window：Expand / Shrink 與維護狀態"
+        ],
+        [
+          "L-WIN-03",
+          "Window 失效條件：負數、非單調與替代策略"
+        ]
+      ]
+    },
+    {
+      "id": "U-BIN",
+      "slug": "bin",
+      "order": 7,
+      "name": "二分搜尋與單調性",
+      "stage": "Bridge｜3+3→5+5",
+      "cl": "CL3",
+      "gate": "每個分支都能說明區間為何縮小；能自行定義 predicate 並驗證單調性。",
+      "lessons": [
+        [
+          "L-BIN-01",
+          "Exact Binary Search：區間 Invariant 與終止條件"
+        ],
+        [
+          "L-BIN-02",
+          "Boundary Search：First True、Lower / Upper Bound"
+        ],
+        [
+          "L-BIN-03",
+          "Binary Search on Answer：Predicate 與上下界"
+        ]
+      ]
+    },
+    {
+      "id": "U-REC",
+      "slug": "rec",
+      "order": 8,
+      "name": "遞迴、回溯與狀態枚舉",
+      "stage": "Bridge｜3+3→5+5",
+      "cl": "CL3",
+      "gate": "能追蹤 call stack、設計 terminating recursion，理解搜尋樹與 Choose → Explore → Undo。",
+      "lessons": [
+        [
+          "L-REC-01",
+          "Recursion / Divide & Conquer：Call Stack 與子問題"
+        ],
+        [
+          "L-REC-02",
+          "Expression Parsing / Recursive Descent：Token、Grammar 與 Syntax Tree"
+        ],
+        [
+          "L-REC-03",
+          "Backtracking：Choose → Explore → Undo"
+        ],
+        [
+          "L-REC-04",
+          "Pruning、Visited / Used State 與搜尋空間"
+        ],
+        [
+          "L-REC-05",
+          "Bitmask / Bitwise State：集合表示與 Subset Enumeration"
+        ]
+      ]
+    },
+    {
+      "id": "U-DS",
+      "slug": "ds",
+      "order": 9,
+      "name": "線性與優先資料結構",
+      "stage": "Bridge｜3+3→5+5",
+      "cl": "CL3",
+      "gate": "由『下一個要取誰』決定資料結構，而不是看到題名套模板。",
+      "lessons": [
+        [
+          "L-DS-01",
+          "Stack / Queue / Deque：操作語意與成本"
+        ],
+        [
+          "L-DS-02",
+          "Stack / Deque Applications：括號、資料流與 Monotone Process 入門"
+        ],
+        [
+          "L-DS-03",
+          "Priority Queue / Heap：最佳候選與 Custom Ordering"
+        ]
+      ]
+    },
+    {
+      "id": "U-GPH",
+      "slug": "gph",
+      "order": 10,
+      "name": "圖與樹遍歷",
+      "stage": "APCS 5+5 Core",
+      "cl": "CL3",
+      "gate": "把情境翻成 vertex/edge；獨立寫 DFS/BFS 並說明 visited 時機、queue/stack state 與複雜度。",
+      "lessons": [
+        [
+          "L-GPH-01",
+          "Graph / Tree Modeling 與 Adjacency List"
+        ],
+        [
+          "L-GPH-02",
+          "DFS：Connected Components、Flood Fill 與 Tree Traversal"
+        ],
+        [
+          "L-GPH-03",
+          "BFS：Layer Expansion 與 Unweighted Shortest Path"
+        ],
+        [
+          "L-GPH-04",
+          "Tree State：Parent、Depth、Subtree 與 Traversal Invariant"
+        ]
+      ],
+      "extension": [
+        [
+          "L-GPH-X01",
+          "Dijkstra"
+        ],
+        [
+          "L-GPH-X02",
+          "Topological Sort"
+        ],
+        [
+          "L-GPH-X03",
+          "DSU / Union-Find"
+        ],
+        [
+          "L-GPH-X04",
+          "Minimum Spanning Tree"
+        ]
+      ]
+    },
+    {
+      "id": "U-GRD",
+      "slug": "grd",
+      "order": 11,
+      "name": "貪心",
+      "stage": "APCS 5+5 Core",
+      "cl": "CL3",
+      "gate": "能提出 greedy criterion、主動找反例，並用交換／不變量解釋正確性。",
+      "lessons": [
+        [
+          "L-GRD-01",
+          "Greedy Choice：局部決策與失敗反例"
+        ],
+        [
+          "L-GRD-02",
+          "Sorting + Greedy：Interval / Scheduling Patterns"
+        ],
+        [
+          "L-GRD-03",
+          "Exchange Argument、Invariant 與 Greedy Correctness"
+        ]
+      ]
+    },
+    {
+      "id": "U-DP",
+      "slug": "dp",
+      "order": 12,
+      "name": "動態規劃",
+      "stage": "APCS 5+5 Core",
+      "cl": "CL3→CL4",
+      "gate": "自行定義 state 語意、解釋每一維與計算順序。",
+      "lessons": [
+        [
+          "L-DP-01",
+          "DP 五問法：State、Transition、Base、Order、Answer"
+        ],
+        [
+          "L-DP-02",
+          "1D / 2D DP：從表格語意到轉移"
+        ],
+        [
+          "L-DP-03",
+          "0/1 Knapsack 與 Iteration Order"
+        ],
+        [
+          "L-DP-04",
+          "LIS：O(N²) DP → O(N log N) Tails"
+        ]
+      ]
+    },
+    {
+      "id": "U-RNG",
+      "slug": "rng",
+      "order": 13,
+      "name": "區間資料結構與分治",
+      "stage": "Advanced Calibration",
+      "cl": "CL4→CL5",
+      "gate": "Supporting/Extension；不能因未完成 Fenwick / Segment Tree 而阻擋 5+5 readiness。",
+      "lessons": [
+        [
+          "L-RNG-01",
+          "Coordinate Compression：值域、Rank 與重複值"
+        ],
+        [
+          "L-RNG-02",
+          "Offline Counting：Event Ordering 與 Inversion-style Query"
+        ],
+        [
+          "L-RNG-03",
+          "Fenwick Tree / Segment Tree：Dynamic Prefix / Range Information"
+        ],
+        [
+          "L-RNG-04",
+          "Divide & Conquer Counting：Merge State 與 Range Transfer"
+        ]
+      ]
+    },
+    {
+      "id": "U-MIX",
+      "slug": "mix",
+      "order": 14,
+      "name": "綜合建模與考場",
+      "stage": "APCS 5+5 Core",
+      "cl": "CL3→CL5",
+      "gate": "APCS 5+5 Core required Skill Gates + mixed benchmark + no critical gap；不能用平均、刷題數或 Extension 取代。",
+      "lessons": [
+        [
+          "L-MIX-01",
+          "Constraints、Subtasks 與可證明分數策略"
+        ],
+        [
+          "L-MIX-02",
+          "陌生題建模：Representation → Baseline → Bottleneck → Method"
+        ],
+        [
+          "L-MIX-03",
+          "Testing、Debug、時間分配與提交策略"
+        ],
+        [
+          "L-MIX-04",
+          "Mixed 5+5 Benchmark Preparation / Portfolio Review"
+        ]
+      ]
+    }
+  ]
+}
