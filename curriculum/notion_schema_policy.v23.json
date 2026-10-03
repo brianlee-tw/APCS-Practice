@@ -38,14 +38,11 @@
       "data_source": "collection://36a43be9-58cd-8015-88d3-000ba21d3afc",
       "client_forbidden_writes": [
         "題目",
-        "PB UID",
-        "Problem ID",
         "來源平台",
         "作答平台",
         "題目連結",
         "難度（D1–D5）",
         "練習日期",
-        "學習階段",
         "進度狀態",
         "複習日期"
       ],
