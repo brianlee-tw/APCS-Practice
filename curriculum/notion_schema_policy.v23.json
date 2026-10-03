@@ -1,0 +1,116 @@
+{
+  "schema_version": "notion-schema-policy-v1",
+  "contract_version": "v2.3",
+  "databases": {
+    "skill_map": {
+      "data_source": "collection://49e0d7dc-4902-4254-859f-03c617ebb2cf",
+      "derived_not_runtime_authority": [
+        "RM",
+        "IM",
+        "Skill Status",
+        "Reading Milestone",
+        "Implementation Milestone"
+      ],
+      "system_managed": [
+        "題庫題目",
+        "Evidence Events"
+      ]
+    },
+    "problem_bank": {
+      "data_source": "collection://5e0d55cd-c617-4bf2-ac94-5e4e643e5aa6",
+      "migrate_to_published_placement": [
+        "技能節點",
+        "題目角色",
+        "Primary Lesson",
+        "Lesson Order"
+      ],
+      "derived_not_manual": [
+        "Record Prompt Ready"
+      ],
+      "system_managed": [
+        "PB UID",
+        "Placement QA",
+        "解題紀錄",
+        "Evidence Events"
+      ]
+    },
+    "rec": {
+      "data_source": "collection://36a43be9-58cd-8015-88d3-000ba21d3afc",
+      "client_forbidden_writes": [
+        "題目",
+        "PB UID",
+        "Problem ID",
+        "來源平台",
+        "作答平台",
+        "題目連結",
+        "難度（D1–D5）",
+        "練習日期",
+        "學習階段",
+        "進度狀態",
+        "複習日期"
+      ],
+      "delete_after_migration": [
+        "進度狀態",
+        "複習日期"
+      ],
+      "system_managed": [
+        "REC UID",
+        "Writeback ID",
+        "題庫題目",
+        "Attempt Started At",
+        "Attempt Finished At",
+        "Independent Known",
+        "紀錄來源",
+        "紀錄性質",
+        "技能節點",
+        "Evidence Events"
+      ]
+    },
+    "ev": {
+      "data_source": "collection://0075c9be-b4d8-41c1-b933-bebd2ccda749",
+      "client_forbidden_writes": [
+        "Delay Days",
+        "Valid for Gate"
+      ],
+      "derived_not_manual": [
+        "Delay Days",
+        "Valid for Gate"
+      ],
+      "system_managed": [
+        "EV UID",
+        "Event ID",
+        "日期",
+        "Independent Known",
+        "Timed Known",
+        "Skill",
+        "Problem",
+        "Solve Record"
+      ]
+    }
+  },
+  "migration_state": {
+    "rec_progress_status": {
+      "field": "進度狀態",
+      "classification": "MIGRATE-FIRST",
+      "observed_nonempty_rows": 75,
+      "observed_formal_rows_with_value": 0,
+      "note": "Historical system-test/legacy values must be archived before property removal."
+    },
+    "rec_review_date": {
+      "field": "複習日期",
+      "classification": "REMOVE",
+      "observed_nonempty_rows": 0,
+      "observed_formal_rows_with_value": 0,
+      "note": "Adaptive Skill x Track scheduling fully replaces this REC-level date."
+    },
+    "skill_manual_state": {
+      "fields": [
+        "Skill Status",
+        "Reading Milestone",
+        "Implementation Milestone"
+      ],
+      "classification": "DEPRECATE",
+      "note": "Preserve historical values for now; runtime ignores them and derives capability state from Evidence."
+    }
+  }
+}
