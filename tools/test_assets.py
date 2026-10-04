@@ -609,6 +609,50 @@ class TestAssetStore:
 
         return None
 
+    def validate_all(self) -> list[str]:
+        errors: list[str] = []
+
+        if not self.data_dir.is_dir():
+            return errors
+
+        for path in sorted(
+            self.data_dir.glob("*/*/tests.json")
+        ):
+            try:
+                source = path.parent.parent.name
+                external_id = path.parent.name
+                bundle = self._load_dedicated(
+                    source,
+                    external_id,
+                )
+                if bundle is None:
+                    errors.append(
+                        f"{path}: 無法載入"
+                    )
+                    continue
+
+                # A durable bundle may contain candidates for curation, but
+                # they must never masquerade as verified cases.
+                for case in bundle.cases:
+                    if (
+                        case.trust
+                        == TRUST_CANDIDATE
+                        and case.suite
+                        == SUITE_FAST
+                    ):
+                        errors.append(
+                            f"{path}: {case.case_id} CANDIDATE "
+                            "不得進 fast suite"
+                        )
+
+            except TestAssetError as exc:
+                errors.append(
+                    str(exc)
+                )
+
+        return errors
+
+
     @staticmethod
     def visible_cases(
         bundle: TestBundle,
