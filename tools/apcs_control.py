@@ -1512,10 +1512,8 @@ def _control_dashboard_lines(
 
     if problem is not None:
         try:
-            solution = (
-                current_catalog_solution(
-                    problem
-                )
+            solution = current_catalog_solution(
+                problem
             )
         except Exception:
             solution = None
@@ -1564,6 +1562,13 @@ def _control_dashboard_lines(
                 "OJ 已連結"
             )
 
+        if str(
+            problem.get("path") or ""
+        ).casefold().endswith(".cpp"):
+            problem_lines.append(
+                "Ctrl+Shift+B → 測試中心"
+            )
+
     plan = snapshot["plan"]
     protected = max(
         0,
@@ -1572,20 +1577,12 @@ def _control_dashboard_lines(
     )
     today_lines = [
         (
-            f"{snapshot['capacity_minutes']} 分"
+            f"可用 {snapshot['capacity_minutes']} 分"
             f" · 複習 {plan.selected_minutes}/"
             f"{plan.budget_minutes} 分"
         ),
         (
-            f"新學習 ≥ {protected} 分"
-            + (
-                f" · {snapshot['new_learning'].skill.uid}"
-                if (
-                    snapshot["new_learning"] is not None
-                    and snapshot["new_learning"].skill is not None
-                )
-                else ""
-            )
+            f"新學習保留 ≥ {protected} 分"
         ),
     ]
 
@@ -1605,100 +1602,176 @@ def _control_dashboard_lines(
             f"認知修復 {len(snapshot['cognitive_tasks'])} 項"
         )
 
-    return problem_lines, today_lines
+    next_lines = []
+    route = snapshot.get(
+        "new_learning"
+    )
+    if (
+        route is not None
+        and getattr(
+            route,
+            "skill",
+            None,
+        ) is not None
+        and getattr(
+            route,
+            "placement",
+            None,
+        ) is not None
+    ):
+        next_lines.extend(
+            [
+                (
+                    "新學習 · "
+                    f"{route.skill.uid}"
+                ),
+                (
+                    f"{route.placement.lesson_uid or '—'}"
+                    f" · {route.placement.problem_id}"
+                ),
+            ]
+        )
+    elif plan.selected:
+        candidate = plan.selected[0]
+        next_lines.extend(
+            [
+                (
+                    "優先複習 · "
+                    f"{candidate.skill_uid}"
+                ),
+                (
+                    f"{candidate.track}"
+                    f" · R≈{candidate.retrievability:.0%}"
+                ),
+            ]
+        )
+    elif snapshot.get(
+        "cognitive_tasks"
+    ):
+        task = snapshot[
+            "cognitive_tasks"
+        ][0]
+        next_lines.extend(
+            [
+                "認知修復",
+                (
+                    ", ".join(
+                        task.skill_uids
+                    )
+                    if getattr(
+                        task,
+                        "skill_uids",
+                        None,
+                    )
+                    else task.kind
+                ),
+            ]
+        )
+    else:
+        next_lines.extend(
+            [
+                "目前沒有強制下一題",
+                "可從題目庫 deliberate practice",
+            ]
+        )
 
+    return (
+        next_lines,
+        problem_lines,
+        today_lines,
+    )
 
 
 def print_control_dashboard(
     problem,
     snapshot,
 ) -> None:
-    problem_lines, today_lines = (
-        _control_dashboard_lines(
-            problem,
-            snapshot,
-        )
+    (
+        next_lines,
+        problem_lines,
+        today_lines,
+    ) = _control_dashboard_lines(
+        problem,
+        snapshot,
     )
     width = ui_width()
 
-    if width >= 88:
+    if width >= 86:
         gap = 3
-        left_width = (
-            width - gap
-        ) // 2
-        right_width = (
-            width - gap - left_width
+        widths = workbench_pane_widths(
+            width,
+            (31, 39, 30),
+            gap=gap,
+            min_width=20,
+        )
+        titles = (
+            "現在可做",
+            "目前題目",
+            "今日容量",
+        )
+        columns = (
+            next_lines,
+            problem_lines,
+            today_lines,
         )
 
         print(
-            f"{CYAN}{BOLD}"
-            f"{pad_display('目前題目', left_width)}"
-            f"{RESET}"
-            " │ "
-            f"{CYAN}{BOLD}"
-            f"{pad_display('今日規劃', right_width)}"
-            f"{RESET}"
+            (" " * gap).join(
+                f"{CYAN}{BOLD}"
+                f"{pad_display(title, pane_width)}"
+                f"{RESET}"
+                for title, pane_width
+                in zip(
+                    titles,
+                    widths,
+                )
+            )
         )
 
         rows = max(
-            len(problem_lines),
-            len(today_lines),
+            len(column)
+            for column in columns
         )
-        for index in range(rows):
-            left = (
-                problem_lines[index]
-                if index < len(problem_lines)
-                else ""
-            )
-            right = (
-                today_lines[index]
-                if index < len(today_lines)
-                else ""
-            )
+        for row in range(rows):
+            cells = []
+            for column, pane_width in zip(
+                columns,
+                widths,
+            ):
+                value = (
+                    column[row]
+                    if row < len(column)
+                    else ""
+                )
+                cells.append(
+                    pad_display(
+                        value,
+                        pane_width,
+                    )
+                )
             print(
-                f"{pad_display(left, left_width)}"
-                " │ "
-                f"{fit(right, right_width)}"
+                (" " * gap).join(
+                    cells
+                )
             )
     else:
-        print(
-            f"{CYAN}{BOLD}"
-            "目前題目"
-            f"{RESET}"
-        )
-        for line in problem_lines:
-            print_wrapped(
-                line,
-                width,
-                color=(
-                    WHITE
-                    if line == problem_lines[0]
-                    else GRAY
-                ),
-            )
-
-        print()
-        print(
-            f"{CYAN}{BOLD}"
-            "今日規劃"
-            f"{RESET}"
-        )
-        for index, line in enumerate(
-            today_lines
+        for title, lines in (
+            ("現在可做", next_lines),
+            ("目前題目", problem_lines),
+            ("今日容量", today_lines),
         ):
-            color = (
-                GREEN
-                if (
-                    index == 2
-                    and not snapshot["plan"].selected
+            print(
+                f"{CYAN}{BOLD}"
+                f"{title}"
+                f"{RESET}"
+            )
+            for line in lines:
+                print_wrapped(
+                    line,
+                    width,
+                    color=GRAY,
                 )
-                else GRAY
-            )
-            print_wrapped(
-                line,
-                width,
-                color=color,
-            )
+            print()
 
     if snapshot["curriculum_blocker"]:
         print_wrapped(
@@ -1714,6 +1787,7 @@ def print_control_dashboard(
             width,
             color=YELLOW,
         )
+
 
 
 def choose_menu(
