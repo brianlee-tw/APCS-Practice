@@ -50,6 +50,10 @@ try:
     from .problem_library import ProblemLibrary, LibraryItem
     from .test_assets import TestAssetStore
     from .workbench_context import resolve_problem_context
+    from .workbench_tui import (
+        terminal_width as workbench_width,
+        terminal_height as workbench_height,
+    )
     from .learner_model_v2 import (
         LearnerSignalStore,
         learner_model_snapshot,
@@ -96,6 +100,10 @@ except ImportError:
     from problem_library import ProblemLibrary, LibraryItem
     from test_assets import TestAssetStore
     from workbench_context import resolve_problem_context
+    from workbench_tui import (
+        terminal_width as workbench_width,
+        terminal_height as workbench_height,
+    )
     from learner_model_v2 import (
         LearnerSignalStore,
         learner_model_snapshot,
@@ -320,14 +328,11 @@ def print_wrapped(
 
 
 def ui_width() -> int:
-    columns = shutil.get_terminal_size((80, 24)).columns
-    # Keep the command center compact even when the terminal is very wide.
-    return min(94, max(28, columns - 2))
+    return workbench_width()
 
 
 def ui_height() -> int:
-    lines = shutil.get_terminal_size((80, 24)).lines
-    return max(18, min(42, lines - 1))
+    return workbench_height()
 
 
 def rule() -> None:
