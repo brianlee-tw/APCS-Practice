@@ -896,5 +896,253 @@ class C8LearnerUxTest(unittest.TestCase):
         )
 
 
+    def test_legacy_finish_initializes_runtime_flag_before_branching(self):
+        legacy_problem = {
+            "id": "r488",
+            "title": "彗星撞擊",
+            "path": Path("/tmp/r488.cpp"),
+            "published_runtime": False,
+            "runtime_track": "Implementation",
+            "state": None,
+        }
+
+        with (
+            patch.object(
+                control,
+                "missing_finish_complexity",
+                return_value=None,
+            ),
+            patch.object(
+                control,
+                "recall_menu",
+                return_value=None,
+            ),
+        ):
+            control.record_problem(
+                "finish",
+                legacy_problem,
+            )
+
+    def test_problem_library_uses_published_curriculum_as_baseline_coverage(self):
+        published = PlacementContext(
+            placement_uid="PL-PB-1-L-FND-01",
+            pb_uid="PB-1",
+            problem_id="zj-d050",
+            title="妳那裡現在幾點了？",
+            url="https://example.invalid/d050",
+            difficulty="D1",
+            primary_skill="S01_IO",
+            supporting_skills=(),
+            role="Guided Drill",
+            lesson_uid="L-FND-01",
+            lesson_order=1,
+            source_platform="zerojudge",
+        )
+
+        with (
+            patch.object(
+                control.PROBLEM_LIBRARY,
+                "items",
+                return_value=[],
+            ),
+            patch.object(
+                control.PROBLEM_LIBRARY,
+                "attempted_pb_uids",
+                return_value=set(),
+            ),
+            patch.object(
+                control.CURRICULUM,
+                "all_placements",
+                return_value=(published,),
+            ),
+        ):
+            items = (
+                control._problem_library_items()
+            )
+
+        self.assertEqual(
+            len(items),
+            1,
+        )
+        self.assertEqual(
+            items[0].external_id,
+            "zj-d050",
+        )
+        self.assertEqual(
+            items[0].primary_skill,
+            "S01_IO",
+        )
+
+    def test_selection_mode_badge_is_visually_distinct(self):
+        practice = (
+            control.selection_mode_badge(
+                "practice"
+            )
+        )
+        exam = (
+            control.selection_mode_badge(
+                "exam"
+            )
+        )
+
+        self.assertIn(
+            "[ 練習 ]",
+            practice,
+        )
+        self.assertIn(
+            "[ 考試 · 防劇透 ]",
+            exam,
+        )
+        self.assertNotEqual(
+            practice,
+            exam,
+        )
+
+    def test_wide_problem_filter_shows_choices_and_live_count_together(self):
+        def item(problem_id):
+            return types.SimpleNamespace(
+                external_id=problem_id,
+                title=f"題目 {problem_id}",
+                source="zerojudge",
+                difficulty="D1",
+                attempted=False,
+                role="Guided Drill",
+                has_l2=False,
+                primary_skill="S01_IO",
+                supporting_skills=(),
+            )
+
+        output = io.StringIO()
+        with (
+            patch(
+                "tools.apcs_control.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=100,
+                    lines=42,
+                ),
+            ),
+            patch.object(
+                control,
+                "read_key",
+                return_value="ESC",
+            ),
+            redirect_stdout(output),
+        ):
+            result = (
+                control._problem_library_filter_choice(
+                    {
+                        "skill_uids": (),
+                        "skill_label": None,
+                        "difficulty": None,
+                        "source": None,
+                        "attempted": None,
+                        "role": None,
+                        "require_l2": None,
+                    },
+                    [
+                        item("a001"),
+                        item("a002"),
+                    ],
+                    mode="practice",
+                )
+            )
+
+        self.assertIsNone(result)
+        rendered = output.getvalue()
+        self.assertIn(
+            "篩選條件",
+            rendered,
+        )
+        self.assertIn(
+            "可選值",
+            rendered,
+        )
+        self.assertIn(
+            "目前 2 題",
+            rendered,
+        )
+
+    def test_solution_language_labels_are_learner_facing(self):
+        self.assertEqual(
+            control._solution_language_label(
+                "cpp"
+            ),
+            "C++",
+        )
+        self.assertEqual(
+            control._solution_language_label(
+                "python"
+            ),
+            "Python",
+        )
+
+    def test_wide_today_view_keeps_plan_and_actions_on_one_screen(self):
+        plan = types.SimpleNamespace(
+            budget_minutes=18,
+            selected=(),
+            selected_minutes=0,
+            deferred=(),
+        )
+        snapshot = {
+            "target": "3+3",
+            "capacity_minutes": 60,
+            "plan": plan,
+            "warning": None,
+        }
+        options = [
+            {
+                "label": "新學習 · S01_IO × Reading",
+                "detail": "Guided Drill · d050",
+                "enabled": True,
+                "kind": "new",
+            },
+            {
+                "label": "調整今日可用時間 · 60 min",
+                "detail": "只影響今天",
+                "enabled": True,
+                "kind": "capacity",
+                "action": "調整",
+            },
+        ]
+
+        output = io.StringIO()
+        with (
+            patch(
+                "tools.apcs_control.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=100,
+                    lines=42,
+                ),
+            ),
+            patch.object(
+                control,
+                "read_key",
+                return_value="ESC",
+            ),
+            redirect_stdout(output),
+        ):
+            result = (
+                control._today_action_menu(
+                    snapshot,
+                    options,
+                )
+            )
+
+        self.assertIsNone(result)
+        rendered = output.getvalue()
+        self.assertIn(
+            "下一步",
+            rendered,
+        )
+        self.assertIn(
+            "今日規劃",
+            rendered,
+        )
+        self.assertIn(
+            "可用時間  60 分",
+            rendered,
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
