@@ -387,6 +387,30 @@ def ui_height() -> int:
     return workbench_height()
 
 
+def pad_frame_before_footer(
+    buffer: io.StringIO,
+    *,
+    footer_rows: int = 3,
+    bottom_margin: int = 1,
+) -> None:
+    """Use otherwise-empty vertical space without forcing terminal scroll."""
+
+    used_rows = (
+        buffer.getvalue().count("\n")
+    )
+    available = (
+        ui_height()
+        - used_rows
+        - max(0, footer_rows)
+        - max(0, bottom_margin)
+    )
+
+    for _ in range(
+        max(0, available)
+    ):
+        print()
+
+
 def rule() -> None:
     print("─" * ui_width())
 
@@ -2049,6 +2073,10 @@ def choose_menu(
                 )
                 print()
 
+            pad_frame_before_footer(
+                output,
+                footer_rows=3,
+            )
             rule()
 
             selected_action = (
@@ -2416,7 +2444,10 @@ def choose_grid(
                     color=GRAY,
                 )
 
-            print()
+            pad_frame_before_footer(
+                output,
+                footer_rows=3,
+            )
             rule()
             footer = (
                 "←→ 選擇 · ↑↓ 換列"
@@ -6766,6 +6797,7 @@ def learning_status_view() -> None:
                 f"{pad_display('今日容量', right)}"
                 f"{RESET}"
             )
+            print()
             for index in range(
                 max(
                     len(progress),
@@ -6789,7 +6821,9 @@ def learning_status_view() -> None:
                 )
 
             print()
+            print()
             rule()
+            print()
             print()
             sync = (
                 f"同步狀態：已確認 "
@@ -7204,6 +7238,7 @@ def _today_action_menu(
                 f"{pad_display('規劃與執行', right)}"
                 f"{RESET}"
             )
+            print()
 
             max_rows = max(
                 12,
@@ -7365,7 +7400,10 @@ def _today_action_menu(
                     color=YELLOW,
                 )
 
-            print()
+            pad_frame_before_footer(
+                output,
+                footer_rows=3,
+            )
             rule()
             action = (
                 options[selected].get(
@@ -12440,7 +12478,16 @@ def _problem_library_workbench(
                 )
             )
 
-        print()
+        footer_gap = max(
+            1,
+            ui_height()
+            - min(rows, max_rows)
+            - 13,
+        )
+        for _ in range(
+            footer_gap
+        ):
+            print()
         rule()
 
         if focus == 0:
@@ -13524,6 +13571,90 @@ def _exam_end_ui() -> None:
     pause()
 
 
+def _exam_abort_ui(
+    session,
+) -> bool:
+    summary = EXAM.summary(
+        session
+    )
+    untouched = (
+        summary["compile_count"] == 0
+        and summary["submit_count"] == 0
+    )
+
+    clear()
+    heading(
+        "關閉誤開考試"
+        if untouched
+        else "放棄本次模擬考"
+    )
+    print()
+    print(
+        aligned_field(
+            "時間",
+            (
+                f"{summary['elapsed_minutes']}"
+                f" / {session['duration_minutes']} min"
+            ),
+        )
+    )
+    print(
+        aligned_field(
+            "編譯",
+            f"{summary['compile_count']} 次",
+        )
+    )
+    print(
+        aligned_field(
+            "提交",
+            f"{summary['submit_count']} 次",
+        )
+    )
+    print()
+    print(
+        f"{YELLOW}"
+        "這會關閉目前 Exam Runtime；本次不進入考後檢討。"
+        f"{RESET}"
+    )
+    print(
+        f"{GRAY}"
+        "會保留 ABORTED telemetry；不建立 learner Evidence。"
+        f"{RESET}"
+    )
+
+    if not confirm(
+        "確定關閉本次考試？"
+    ):
+        return False
+
+    try:
+        EXAM.abort()
+    except ExamRuntimeError as exc:
+        print(
+            f"{RED}✕ {exc}{RESET}"
+        )
+        pause()
+        return False
+
+    clear()
+    heading("模擬考已關閉")
+    print()
+    print(
+        f"{GREEN}"
+        "✓ 已解除進行中的考試 session"
+        f"{RESET}"
+    )
+    print(
+        f"{GRAY}"
+        "本次記為 ABORTED；不進 postmortem，也不產生 Evidence。"
+        f"{RESET}"
+    )
+    pause(
+        "Enter / Esc 返回控制中心"
+    )
+    return True
+
+
 def exam_center() -> None:
     while True:
         try:
@@ -13583,13 +13714,25 @@ def exam_center() -> None:
                         else "請先選題"
                     ),
                     "enabled": bool(session["selected_problem_id"]),
+                    "section": "考試操作",
                     "kind": "submit",
                 },
                 {
                     "label": "結束並檢討",
-                    "detail": "只問一個主要失分原因",
+                    "detail": "正式完成本次模擬考；只問一個主要失分原因",
                     "enabled": True,
+                    "section": "考試操作",
                     "kind": "end",
+                },
+                {
+                    "label": "關閉本次考試",
+                    "detail": (
+                        "誤開／放棄時使用；再次確認後標記 ABORTED，"
+                        "不進檢討、不產生 Evidence"
+                    ),
+                    "enabled": True,
+                    "section": "考試控制",
+                    "kind": "abort",
                 },
             ]
         )
@@ -13645,8 +13788,13 @@ def exam_center() -> None:
                 pause()
         elif option["kind"] == "submit":
             _exam_submit_ui(session)
-        else:
+        elif option["kind"] == "end":
             _exam_end_ui()
+        else:
+            if _exam_abort_ui(
+                session
+            ):
+                return
 
 
 # ============================================================
