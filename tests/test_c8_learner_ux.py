@@ -1701,12 +1701,16 @@ class C8LearnerUxTest(unittest.TestCase):
             "Ctrl+Shift+B 測試中心",
             rendered,
         )
-        self.assertNotIn(
-            "Expected",
+        self.assertIn(
+            "Input / Expected / Actual / Diff",
             rendered,
         )
         self.assertNotIn(
-            "Actual",
+            "7 -3",
+            rendered,
+        )
+        self.assertNotIn(
+            "999",
             rendered,
         )
 
@@ -1962,6 +1966,97 @@ class C8LearnerUxTest(unittest.TestCase):
         self.assertIn(
             "題目側欄",
             rendered,
+        )
+
+
+    def test_problem_library_workbench_mode_toggle_returns_sentinel_and_preserves_state(self):
+        item = types.SimpleNamespace(
+            external_id="a001",
+            title="測試題",
+            source="zerojudge",
+            difficulty="D1",
+            attempted=False,
+            role="Guided Drill",
+            has_l2=False,
+            primary_skill="S01_IO",
+            supporting_skills=(),
+            canonical_url="https://example.invalid/a001",
+        )
+        state = {
+            "library_result_index": 0,
+            "library_filter_kind": "results",
+            "library_focus": 1,
+            "library_filters_practice": {
+                "skill_uids": (),
+                "skill_label": None,
+                "difficulty": "D1",
+                "source": None,
+                "attempted": None,
+                "role": None,
+                "require_l2": None,
+            },
+            "library_filters_exam": None,
+            "library_query_practice": "a001",
+            "library_query_exam": "",
+        }
+
+        with (
+            patch.dict(
+                control.UI_STATE,
+                state,
+                clear=True,
+            ),
+            patch.object(
+                control,
+                "_problem_library_items",
+                return_value=[item],
+            ),
+            patch.object(
+                control.TEST_ASSETS,
+                "load",
+                return_value=None,
+            ),
+            patch.object(
+                control,
+                "read_key",
+                return_value="M",
+            ),
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=100,
+                    lines=42,
+                ),
+            ),
+            redirect_stdout(io.StringIO()),
+        ):
+            result = (
+                control._problem_library_workbench(
+                    mode="practice",
+                )
+            )
+
+        self.assertIs(
+            result,
+            control.MODE_TOGGLE,
+        )
+        self.assertEqual(
+            control.UI_STATE[
+                "library_focus"
+            ],
+            1,
+        )
+        self.assertEqual(
+            control.UI_STATE[
+                "library_query_practice"
+            ],
+            "a001",
+        )
+        self.assertEqual(
+            control.UI_STATE[
+                "library_filters_practice"
+            ]["difficulty"],
+            "D1",
         )
 
 
