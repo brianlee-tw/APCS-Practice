@@ -1624,7 +1624,7 @@ class C8LearnerUxTest(unittest.TestCase):
             [item],
         )
 
-    def test_problem_library_sidebar_shows_test_inventory_without_test_content(self):
+    def test_problem_library_sidebar_groups_test_assets_without_input_output(self):
         item = types.SimpleNamespace(
             external_id="a001",
             title="測試題",
@@ -1637,23 +1637,33 @@ class C8LearnerUxTest(unittest.TestCase):
             supporting_skills=(),
             canonical_url="https://example.invalid/a001",
         )
+        bundle = types.SimpleNamespace(
+            cases=(
+                types.SimpleNamespace(
+                    case_id="S1",
+                    name="官方範例 1",
+                    provenance="OFFICIAL",
+                    verified=True,
+                ),
+                types.SimpleNamespace(
+                    case_id="E1",
+                    name="最小邊界",
+                    provenance="AI_GENERATED",
+                    verified=True,
+                ),
+                types.SimpleNamespace(
+                    case_id="G1",
+                    name="AI candidate",
+                    provenance="AI_GENERATED",
+                    verified=False,
+                ),
+            )
+        )
 
-        with (
-            patch.object(
-                control.TEST_ASSETS,
-                "load",
-                return_value=object(),
-            ),
-            patch.object(
-                control.TEST_ASSETS,
-                "inventory",
-                return_value={
-                    "official": 2,
-                    "verified": 6,
-                    "candidate": 3,
-                    "total": 9,
-                },
-            ),
+        with patch.object(
+            control.TEST_ASSETS,
+            "load",
+            return_value=bundle,
         ):
             lines = (
                 control._problem_library_inspector_lines(
@@ -1664,23 +1674,289 @@ class C8LearnerUxTest(unittest.TestCase):
 
         rendered = "\n".join(lines)
         self.assertIn(
-            "官方      2",
+            "官方 1",
             rendered,
         )
         self.assertIn(
-            "已驗證    6",
+            "S1 · 官方範例 1",
             rendered,
         )
         self.assertIn(
-            "Candidate 3",
+            "已驗證延伸 1",
             rendered,
         )
         self.assertIn(
-            "詳情      Ctrl+Shift+B 測試中心",
+            "E1 · 最小邊界",
+            rendered,
+        )
+        self.assertIn(
+            "Candidate 1",
+            rendered,
+        )
+        self.assertIn(
+            "未驗證，不影響 PASS / FAIL",
+            rendered,
+        )
+        self.assertIn(
+            "Ctrl+Shift+B 測試中心",
             rendered,
         )
         self.assertNotIn(
-            "Input",
+            "Expected",
+            rendered,
+        )
+        self.assertNotIn(
+            "Actual",
+            rendered,
+        )
+
+    def test_problem_library_sidebar_anonymizes_edge_case_names_for_unattempted_independent_work(self):
+        item = types.SimpleNamespace(
+            external_id="a001",
+            title="獨立題",
+            source="zerojudge",
+            difficulty="D2",
+            attempted=False,
+            role="Core Independent",
+            has_l2=False,
+            primary_skill="S01_IO",
+            supporting_skills=(),
+            canonical_url="https://example.invalid/a001",
+        )
+        bundle = types.SimpleNamespace(
+            cases=(
+                types.SimpleNamespace(
+                    case_id="E1",
+                    name="Overflow Trap",
+                    provenance="AI_GENERATED",
+                    verified=True,
+                ),
+            )
+        )
+
+        with patch.object(
+            control.TEST_ASSETS,
+            "load",
+            return_value=bundle,
+        ):
+            rendered = "\n".join(
+                control._problem_library_inspector_lines(
+                    item,
+                    mode="practice",
+                )
+            )
+
+        self.assertIn(
+            "E1 · Local Case 1",
+            rendered,
+        )
+        self.assertNotIn(
+            "Overflow Trap",
+            rendered,
+        )
+
+    def test_problem_library_exam_sidebar_hides_generated_test_inventory_before_attempt(self):
+        item = types.SimpleNamespace(
+            external_id="a001",
+            title="考試題",
+            source="zerojudge",
+            difficulty="D5",
+            attempted=False,
+            role="Mock",
+            has_l2=True,
+            primary_skill="S18_DFS",
+            supporting_skills=(),
+            canonical_url="https://example.invalid/a001",
+        )
+        bundle = types.SimpleNamespace(
+            cases=(
+                types.SimpleNamespace(
+                    case_id="S1",
+                    name="官方範例 1",
+                    provenance="OFFICIAL",
+                    verified=True,
+                ),
+                types.SimpleNamespace(
+                    case_id="E1",
+                    name="DFS Trap",
+                    provenance="AI_GENERATED",
+                    verified=True,
+                ),
+                types.SimpleNamespace(
+                    case_id="G1",
+                    name="candidate",
+                    provenance="AI_GENERATED",
+                    verified=False,
+                ),
+            )
+        )
+
+        with patch.object(
+            control.TEST_ASSETS,
+            "load",
+            return_value=bundle,
+        ):
+            rendered = "\n".join(
+                control._problem_library_inspector_lines(
+                    item,
+                    mode="exam",
+                )
+            )
+
+        self.assertIn(
+            "官方 1",
+            rendered,
+        )
+        self.assertIn(
+            "延伸測資  作答後解鎖",
+            rendered,
+        )
+        self.assertNotIn(
+            "DFS Trap",
+            rendered,
+        )
+        self.assertNotIn(
+            "S18_DFS",
+            rendered,
+        )
+        self.assertNotIn(
+            "D5",
+            rendered,
+        )
+
+
+    def test_problem_library_saved_filters_are_isolated_between_practice_and_exam(self):
+        state = {
+            "library_filters_practice": {
+                "skill_uids": ("S18_DFS",),
+                "skill_label": "DFS",
+                "difficulty": "D4",
+                "source": "zerojudge",
+                "attempted": False,
+                "role": "Core Independent",
+                "require_l2": True,
+            },
+            "library_filters_exam": {
+                "skill_uids": ("SHOULD_NOT_SURVIVE",),
+                "skill_label": "hidden",
+                "difficulty": "D5",
+                "source": "zerojudge",
+                "attempted": False,
+                "role": "Mock",
+                "require_l2": True,
+            },
+        }
+
+        with patch.dict(
+            control.UI_STATE,
+            state,
+            clear=False,
+        ):
+            practice = (
+                control._problem_library_saved_filters(
+                    "practice"
+                )
+            )
+            exam = (
+                control._problem_library_saved_filters(
+                    "exam"
+                )
+            )
+
+        self.assertEqual(
+            practice["skill_uids"],
+            ("S18_DFS",),
+        )
+        self.assertEqual(
+            practice["difficulty"],
+            "D4",
+        )
+        self.assertEqual(
+            exam["skill_uids"],
+            (),
+        )
+        self.assertIsNone(
+            exam["difficulty"],
+        )
+        self.assertIsNone(
+            exam["role"],
+        )
+        self.assertIsNone(
+            exam["require_l2"],
+        )
+        self.assertEqual(
+            exam["source"],
+            "zerojudge",
+        )
+        self.assertFalse(
+            exam["attempted"],
+        )
+
+    def test_problem_library_workbench_fits_compact_wide_width_without_fixed_96_column_overflow(self):
+        item = types.SimpleNamespace(
+            external_id="a001",
+            title="測試題",
+            source="zerojudge",
+            difficulty="D1",
+            attempted=False,
+            role="Guided Drill",
+            has_l2=False,
+            primary_skill="S01_IO",
+            supporting_skills=(),
+            canonical_url="https://example.invalid/a001",
+        )
+        output = io.StringIO()
+        state = {
+            "library_result_index": 0,
+            "library_filter_kind": "results",
+            "library_focus": 0,
+            "library_filters_practice": None,
+            "library_filters_exam": None,
+            "library_query_practice": "",
+            "library_query_exam": "",
+        }
+
+        with (
+            patch.dict(
+                control.UI_STATE,
+                state,
+                clear=True,
+            ),
+            patch.object(
+                control,
+                "_problem_library_items",
+                return_value=[item],
+            ),
+            patch.object(
+                control.TEST_ASSETS,
+                "load",
+                return_value=None,
+            ),
+            patch.object(
+                control,
+                "read_key",
+                return_value="ESC",
+            ),
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=88,
+                    lines=42,
+                ),
+            ),
+            redirect_stdout(output),
+        ):
+            control._problem_library_workbench(
+                mode="practice",
+            )
+
+        rendered = output.getvalue()
+        self.assertIn(
+            "題目 · 1 題",
+            rendered,
+        )
+        self.assertIn(
+            "題目側欄",
             rendered,
         )
 
