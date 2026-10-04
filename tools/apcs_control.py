@@ -47,7 +47,7 @@ try:
         create_reading_scratch,
         formal_response_ready,
     )
-    from .problem_library import ProblemLibrary
+    from .problem_library import ProblemLibrary, LibraryItem
     from .learner_model_v2 import (
         LearnerSignalStore,
         learner_model_snapshot,
@@ -91,7 +91,7 @@ except ImportError:
         create_reading_scratch,
         formal_response_ready,
     )
-    from problem_library import ProblemLibrary
+    from problem_library import ProblemLibrary, LibraryItem
     from learner_model_v2 import (
         LearnerSignalStore,
         learner_model_snapshot,
@@ -308,6 +308,11 @@ def ui_width() -> int:
     columns = shutil.get_terminal_size((80, 24)).columns
     # Keep the command center compact even when the terminal is very wide.
     return min(94, max(28, columns - 2))
+
+
+def ui_height() -> int:
+    lines = shutil.get_terminal_size((80, 24)).lines
+    return max(18, min(42, lines - 1))
 
 
 def rule() -> None:
@@ -872,6 +877,47 @@ def selection_mode_label(
         "練習"
         if mode == "practice"
         else "考試"
+    )
+
+
+def selection_mode_badge(
+    mode: str | None = None,
+) -> str:
+    mode = mode or selection_mode()
+    if mode == "exam":
+        return (
+            f"{YELLOW}{BOLD}"
+            "[ 考試 · 防劇透 ]"
+            f"{RESET}"
+        )
+    return (
+        f"{GREEN}{BOLD}"
+        "[ 練習 ]"
+        f"{RESET}"
+    )
+
+
+def print_selection_mode_banner(
+    mode: str | None = None,
+    *,
+    toggle_hint: bool = True,
+) -> None:
+    mode = mode or selection_mode()
+    explanation = (
+        "只顯示中性題目資訊"
+        if mode == "exam"
+        else "可依 Unit / Skill / 難度分類練習"
+    )
+    hint = (
+        f" {GRAY}· M 切換{RESET}"
+        if toggle_hint
+        else ""
+    )
+    print(
+        "選題模式  "
+        + selection_mode_badge(mode)
+        + f" {GRAY}{explanation}{RESET}"
+        + hint
     )
 
 
@@ -1620,6 +1666,13 @@ def choose_menu(
                     problem,
                     snapshot,
                 )
+                if mode_toggle:
+                    print()
+                    print_selection_mode_banner()
+                print()
+
+            elif mode_toggle:
+                print_selection_mode_banner()
                 print()
 
             elif problem is not None:
@@ -1980,17 +2033,12 @@ def choose_grid(
                     problem,
                     snapshot,
                 )
-                print(
-                    f"{GRAY}"
-                    "選題模式："
-                    f"{selection_mode_label()}"
-                    + (
-                        " · M 切換"
-                        if mode_toggle
-                        else ""
-                    )
-                    + f"{RESET}"
-                )
+                if mode_toggle:
+                    print()
+                    print_selection_mode_banner()
+                print()
+            elif mode_toggle:
+                print_selection_mode_banner()
                 print()
             elif problem is not None:
                 print_problem_context(
@@ -3598,6 +3646,14 @@ def record_reading_problem(
 
 
 def record_problem(action: str, problem) -> None:
+    published_runtime = bool(
+        problem
+        and problem.get(
+            "published_runtime",
+            False,
+        )
+    )
+
     if (
         problem is not None
         and problem.get("runtime_track") == "Reading"
@@ -3751,13 +3807,13 @@ def record_problem(action: str, problem) -> None:
 
         if step == "complexity":
             clear()
-            heading("完成題目 · Complexity")
+            heading("完成題目 · 複雜度")
             print()
             print_problem_context(problem)
             print()
             print(
                 f"{YELLOW}"
-                "此 solution 尚未記錄 Complexity。"
+                "此解法尚未記錄複雜度。"
                 f"{RESET}"
             )
             print(
@@ -3774,7 +3830,7 @@ def record_problem(action: str, problem) -> None:
             print()
 
             value = prompt_text(
-                "Complexity（必填）",
+                "複雜度（必填）",
                 current=finish_complexity,
                 required=True,
             )
@@ -3824,7 +3880,7 @@ def record_problem(action: str, problem) -> None:
 
         if complexity_solution is not None:
             print(
-                "Complexity  "
+                "複雜度      "
                 f"{CYAN}{finish_complexity}{RESET}"
             )
 
@@ -3943,13 +3999,6 @@ def record_problem(action: str, problem) -> None:
 
     print()
     print(f"{GRAY}正在更新學習紀錄…{RESET}")
-
-    published_runtime = bool(
-        problem.get(
-            "published_runtime",
-            False,
-        )
-    )
 
     try:
         if published_runtime:
@@ -4082,7 +4131,7 @@ def record_problem(action: str, problem) -> None:
         if complexity_solution is not None:
             print(
                 f"{GREEN}"
-                f"✓ Complexity 已寫入 Catalog："
+                f"✓ 複雜度已寫入題目資料："
                 f"{finish_complexity}"
                 f"{RESET}"
             )
@@ -5176,7 +5225,7 @@ def add_solution_ui(problem) -> str | None:
         return None
 
     clear()
-    heading("新增 Solution")
+    heading("新增解法")
     print()
     print(f"{WHITE}{problem_line(problem)}{RESET}")
     print()
@@ -5186,7 +5235,7 @@ def add_solution_ui(problem) -> str | None:
         return None
 
     if not confirm(
-        f"為 {pid} 建立新的 {language} solution？"
+        f"為 {pid} 建立新的 {language} 解法？"
     ):
         return None
 
@@ -5221,6 +5270,23 @@ def add_solution_ui(problem) -> str | None:
     return str(path)
 
 
+def _solution_language_label(
+    language: str,
+) -> str:
+    folded = str(
+        language or ""
+    ).strip().casefold()
+    return {
+        "cpp": "C++",
+        "c++": "C++",
+        "py": "Python",
+        "python": "Python",
+    }.get(
+        folded,
+        str(language or "—"),
+    )
+
+
 def solution_center_ui(
     problem,
     current_filename: str | None,
@@ -5234,51 +5300,201 @@ def solution_center_ui(
         )
     except CatalogError as exc:
         clear()
-        heading("Solutions")
+        heading("題目資料 · 解法")
         print()
-        print(f"{RED}✕ Catalog 無法讀取：{exc}{RESET}")
+        print(
+            f"{RED}"
+            f"✕ 題目資料無法讀取：{exc}"
+            f"{RESET}"
+        )
         pause()
         return current_filename
 
-    options = []
-
-    for item in solutions:
-        options.append(
-            {
-                "label": (
-                    f"{item.language.upper()} · {Path(item.path).name}"
-                ),
-                "detail": (
-                    f"Complexity {item.complexity or '未記錄'}"
-                    f" · {item.path}"
-                ),
-                "enabled": True,
-                "kind": "open",
-                "solution": item,
-            }
-        )
-
+    options = [
+        {
+            "label": (
+                f"{_solution_language_label(item.language)}"
+                f" · {Path(item.path).name}"
+            ),
+            "detail": (
+                f"複雜度 "
+                f"{item.complexity or '未記錄'}"
+            ),
+            "enabled": True,
+            "kind": "open",
+            "solution": item,
+            "action": "開啟",
+        }
+        for item in solutions
+    ]
     options.append(
         {
-            "label": "新增 Solution",
-            "detail": "建立另一份 C++ / Python 解法；保留既有 solution",
+            "label": "新增解法",
+            "detail": "建立另一份 C++ / Python 解法；保留既有解法",
             "enabled": True,
             "kind": "add",
+            "action": "建立",
         }
     )
 
-    selected = choose_menu(
-        f"Solutions · {problem['id']}",
-        options,
-        problem=problem,
-        back_text="返回題目資料",
-    )
+    if ui_width() < 86:
+        selected = choose_menu(
+            f"題目資料 · 解法 · {problem['id']}",
+            options,
+            problem=problem,
+            back_text="返回題目資料",
+            enter_text="選擇",
+        )
+    else:
+        selected = first_enabled(
+            options
+        )
+        while True:
+            output = io.StringIO()
+            with contextlib.redirect_stdout(
+                output
+            ):
+                heading("題目資料 · 解法")
+                print()
+                print_problem_context(
+                    problem
+                )
+                print()
+
+                width = ui_width()
+                gap = 4
+                left = 42
+                right = max(
+                    32,
+                    width - left - gap,
+                )
+
+                print(
+                    f"{CYAN}{BOLD}"
+                    f"{pad_display(
+                        f'已登錄解法 · {len(solutions)}',
+                        left,
+                    )}"
+                    f"{RESET}"
+                    + " " * gap
+                    + f"{CYAN}{BOLD}"
+                    "選中解法資訊"
+                    f"{RESET}"
+                )
+
+                left_rows = []
+                for index, option in enumerate(
+                    options
+                ):
+                    prefix = (
+                        "›"
+                        if index == selected
+                        else " "
+                    )
+                    label = (
+                        f"{prefix} {index + 1} "
+                        f"{option['label']}"
+                    )
+                    color = (
+                        CYAN + BOLD
+                        if index == selected
+                        else ""
+                    )
+                    left_rows.append(
+                        (
+                            fit(label, left),
+                            color,
+                        )
+                    )
+
+                option = options[selected]
+                info_rows = []
+                if option["kind"] == "open":
+                    item = option["solution"]
+                    info_rows = [
+                        (
+                            "語言      "
+                            f"{_solution_language_label(item.language)}"
+                        ),
+                        (
+                            "複雜度    "
+                            f"{item.complexity or '未記錄'}"
+                        ),
+                        "檔案",
+                        f"  {item.path}",
+                    ]
+                else:
+                    info_rows = [
+                        "建立新的解法檔案",
+                        "語言可選 C++ / Python",
+                        "既有解法不會被覆寫",
+                    ]
+
+                rows = max(
+                    len(left_rows),
+                    len(info_rows),
+                )
+                for row in range(rows):
+                    left_text, left_color = (
+                        left_rows[row]
+                        if row < len(left_rows)
+                        else ("", "")
+                    )
+                    right_text = (
+                        info_rows[row]
+                        if row < len(info_rows)
+                        else ""
+                    )
+                    print(
+                        f"{left_color}"
+                        f"{pad_display(left_text, left)}"
+                        f"{RESET if left_color else ''}"
+                        + " " * gap
+                        + f"{fit(right_text, right)}"
+                    )
+
+                print()
+                rule()
+                print(
+                    f"{GRAY}"
+                    "↑↓ 選擇 · Enter "
+                    f"{option.get('action') or '選擇'}"
+                    " · Esc 返回題目資料"
+                    f"{RESET}"
+                )
+
+            sys.stdout.write(
+                "\033[2J\033[H"
+                + output.getvalue()
+            )
+            sys.stdout.flush()
+
+            key = read_key()
+            if key == "UP":
+                selected = move_enabled(
+                    options,
+                    selected,
+                    -1,
+                )
+            elif key == "DOWN":
+                selected = move_enabled(
+                    options,
+                    selected,
+                    1,
+                )
+            elif key == "ENTER":
+                break
+            elif key in {
+                "ESC",
+                "q",
+                "Q",
+            }:
+                return current_filename
 
     if selected is None:
         return current_filename
 
     option = options[selected]
-
     if option["kind"] == "add":
         created = add_solution_ui(
             problem
@@ -5290,11 +5506,11 @@ def solution_center_ui(
 
     if not target.is_file():
         clear()
-        heading("Solutions")
+        heading("題目資料 · 解法")
         print()
         print(
             f"{RED}"
-            f"✕ Solution 檔案不存在：{item.path}"
+            f"✕ 解法檔案不存在：{item.path}"
             f"{RESET}"
         )
         pause()
@@ -5302,7 +5518,7 @@ def solution_center_ui(
 
     if open_in_vscode(target):
         clear()
-        heading("Solutions")
+        heading("題目資料 · 解法")
         print()
         print(
             f"{GREEN}"
@@ -5311,30 +5527,46 @@ def solution_center_ui(
         )
         print(
             f"{GRAY}"
-            "控制中心會以實際開啟的 solution path 辨識目前解法；"
-            "Complexity 也只更新該 solution。"
+            "控制中心會依實際開啟的解法檔案辨識目前解法；"
+            "複雜度只更新這一份解法。"
             f"{RESET}"
         )
         pause()
         return str(target)
 
     clear()
-    heading("Solutions")
+    heading("題目資料 · 解法")
     print()
-    print(f"{YELLOW}⚠ 無法自動開啟 VS Code{RESET}")
+    print(
+        f"{YELLOW}"
+        "⚠ 無法自動開啟 VS Code"
+        f"{RESET}"
+    )
     pause()
     return current_filename
 
 
-def catalog_center(problem, current_filename: str | None):
+
+def catalog_center(
+    problem,
+    current_filename: str | None,
+):
     try:
-        problems = core.CATALOG.load_problems()
-        catalog_solutions = core.CATALOG.load_solutions()
+        problems = (
+            core.CATALOG.load_problems()
+        )
+        catalog_solutions = (
+            core.CATALOG.load_solutions()
+        )
     except CatalogError as exc:
         clear()
         heading("題目資料")
         print()
-        print(f"{RED}✕ Catalog 無法讀取：{exc}{RESET}")
+        print(
+            f"{RED}"
+            f"✕ 題目資料無法讀取：{exc}"
+            f"{RESET}"
+        )
         pause()
         return current_filename
 
@@ -5346,8 +5578,11 @@ def catalog_center(problem, current_filename: str | None):
         sum(
             1
             for item in catalog_solutions
-            if known
-            and item.problem_id == problem["id"]
+            if (
+                known
+                and item.problem_id
+                == problem["id"]
+            )
         )
         if known
         else 0
@@ -5356,33 +5591,42 @@ def catalog_center(problem, current_filename: str | None):
     options = [
         {
             "label": "新增題目",
-            "detail": "建立 metadata 與第一份 solution",
+            "detail": "建立題目 metadata 與第一份解法",
             "enabled": True,
+            "section": "題目",
+            "action": "建立",
         },
         {
             "label": "編輯目前題目",
             "detail": (
-                "修改 title / source / difficulty / tags / complexity"
+                "修改標題、來源、難度、標籤等 metadata"
                 if known
-                else "目前檔案不在 Catalog"
+                else "目前檔案不在題目資料庫"
             ),
             "enabled": known,
+            "section": "題目",
+            "action": "編輯",
         },
         {
-            "label": "Solutions",
+            "label": "解法",
             "detail": (
                 f"{solution_count} 份已登錄 · 開啟或新增解法"
                 if known
-                else "需先選擇 Catalog 題目"
+                else "需先選擇已登錄題目"
             ),
             "enabled": known,
+            "section": "解法",
+            "action": "查看",
         },
     ]
 
-    selected = choose_menu(
+    selected = choose_grid(
         "題目資料",
         options,
         problem=problem,
+        back_text="返回更多工具",
+        wide_columns=3,
+        compact_columns=2,
     )
 
     if selected is None:
@@ -5400,6 +5644,8 @@ def catalog_center(problem, current_filename: str | None):
         problem,
         current_filename,
     )
+
+
 # ============================================================
 # Today / Notes
 # ============================================================
@@ -6158,126 +6404,263 @@ def learning_status_view() -> None:
 
 
 
+def _today_action_menu(
+    snapshot,
+    options,
+):
+    if ui_width() < 86:
+        return choose_menu(
+            "今日學習 · 下一步",
+            options,
+            main=False,
+            enter_text="開始",
+        )
+
+    selected = first_enabled(
+        options
+    )
+    plan = snapshot["plan"]
+
+    while True:
+        output = io.StringIO()
+        with contextlib.redirect_stdout(
+            output
+        ):
+            heading("今日學習")
+            print()
+
+            width = ui_width()
+            gap = 4
+            left = 56
+            right = max(
+                30,
+                width - left - gap,
+            )
+
+            print(
+                f"{CYAN}{BOLD}"
+                f"{pad_display('下一步', left)}"
+                f"{RESET}"
+                + " " * gap
+                + f"{CYAN}{BOLD}"
+                "今日規劃"
+                f"{RESET}"
+            )
+
+            window = min(
+                8,
+                len(options),
+            )
+            start = max(
+                0,
+                min(
+                    selected - 3,
+                    len(options) - window,
+                ),
+            )
+            visible = list(
+                range(
+                    start,
+                    start + window,
+                )
+            )
+
+            task_rows = []
+            for index in visible:
+                option = options[index]
+                prefix = (
+                    "›"
+                    if index == selected
+                    else " "
+                )
+                color = (
+                    CYAN + BOLD
+                    if index == selected
+                    else ""
+                )
+                task_rows.append(
+                    (
+                        fit(
+                            f"{prefix} {index + 1} "
+                            f"{option['label']}",
+                            left,
+                        ),
+                        color,
+                    )
+                )
+                detail = (
+                    option.get("detail")
+                    or ""
+                )
+                if detail:
+                    task_rows.append(
+                        (
+                            fit(
+                                "    " + detail,
+                                left,
+                            ),
+                            GRAY,
+                        )
+                    )
+
+            protected = max(
+                0,
+                snapshot["capacity_minutes"]
+                - plan.budget_minutes,
+            )
+            plan_rows = [
+                (
+                    f"目標      "
+                    f"{snapshot['target']}"
+                ),
+                (
+                    f"可用時間  "
+                    f"{snapshot['capacity_minutes']} 分"
+                ),
+                (
+                    f"複習      "
+                    f"{plan.selected_minutes}/"
+                    f"{plan.budget_minutes} 分"
+                    f" · {len(plan.selected)} 項"
+                ),
+                (
+                    f"新學習    ≥ "
+                    f"{protected} 分"
+                ),
+            ]
+
+            if plan.deferred:
+                plan_rows.append(
+                    f"安全延後  "
+                    f"{len(plan.deferred)} 項"
+                )
+            elif not plan.selected:
+                plan_rows.append(
+                    "複習狀態  今天沒有到期複習"
+                )
+
+            plan_rows.extend(
+                [
+                    "",
+                    "目前選中",
+                    options[selected]["label"],
+                ]
+            )
+            detail = (
+                options[selected].get(
+                    "detail"
+                )
+                or ""
+            )
+            if detail:
+                plan_rows.extend(
+                    wrap_display(
+                        detail,
+                        right,
+                    )
+                )
+
+            rows = max(
+                len(task_rows),
+                len(plan_rows),
+            )
+            for row in range(rows):
+                left_text, left_color = (
+                    task_rows[row]
+                    if row < len(task_rows)
+                    else ("", "")
+                )
+                right_text = (
+                    plan_rows[row]
+                    if row < len(plan_rows)
+                    else ""
+                )
+                print(
+                    f"{left_color}"
+                    f"{pad_display(left_text, left)}"
+                    f"{RESET if left_color else ''}"
+                    + " " * gap
+                    + f"{fit(right_text, right)}"
+                )
+
+            if snapshot["warning"]:
+                print()
+                print_wrapped(
+                    f"⚠ {snapshot['warning']}",
+                    width,
+                    color=YELLOW,
+                )
+
+            print()
+            rule()
+            action = (
+                options[selected].get(
+                    "action"
+                )
+                or (
+                    "調整"
+                    if options[selected].get(
+                        "kind"
+                    )
+                    == "capacity"
+                    else "開始"
+                )
+            )
+            print(
+                f"{GRAY}"
+                f"↑↓ 選擇 · Enter {action}"
+                " · Esc / Q 返回控制中心"
+                f"{RESET}"
+            )
+
+        sys.stdout.write(
+            "\033[2J\033[H"
+            + output.getvalue()
+        )
+        sys.stdout.flush()
+
+        key = read_key()
+        if key == "UP":
+            selected = move_enabled(
+                options,
+                selected,
+                -1,
+            )
+        elif key == "DOWN":
+            selected = move_enabled(
+                options,
+                selected,
+                1,
+            )
+        elif key == "ENTER":
+            return selected
+        elif key in {
+            "ESC",
+            "q",
+            "Q",
+        }:
+            return None
+        elif (
+            key.isdigit()
+            and len(options) <= 9
+        ):
+            index = int(key) - 1
+            if (
+                0 <= index < len(options)
+                and options[index].get(
+                    "enabled",
+                    True,
+                )
+            ):
+                return index
+
+
 def today_view(current_filename: str | None):
     snapshot = adaptive_today_snapshot()
     plan = snapshot["plan"]
     route = snapshot[
         "new_learning"
     ]
-
-    clear()
-    heading("今日學習")
-    print()
-
-    print(
-        f"目標    {snapshot['target']}"
-    )
-    print(
-        f"容量    {snapshot['capacity_minutes']} min"
-    )
-    print(
-        f"複習    {plan.selected_minutes}/"
-        f"{plan.budget_minutes} min"
-    )
-
-    protected = max(
-        0,
-        snapshot["capacity_minutes"]
-        - plan.budget_minutes,
-    )
-
-    print(
-        f"新學習  ≥ {protected} min 保留"
-    )
-
-    if plan.deferred:
-        print(
-            f"{GRAY}"
-            f"安全延後 {len(plan.deferred)} 項"
-            " · 不計為欠作業"
-            f"{RESET}"
-        )
-
-    if snapshot["warning"]:
-        print()
-        print(
-            f"{YELLOW}"
-            "⚠ 記憶狀態更新有問題"
-            f"{RESET}"
-        )
-        print(
-            f"{GRAY}"
-            f"{fit(snapshot['warning'], ui_width())}"
-            f"{RESET}"
-        )
-
-    print()
-    rule()
-    print()
-
-    if snapshot[
-        "curriculum_blocker"
-    ]:
-        print(
-            f"{YELLOW}{BOLD}"
-            "新學習 · 暫時無法開始"
-            f"{RESET}"
-        )
-        print(
-            f"{GRAY}"
-            f"{fit(snapshot['curriculum_blocker'], ui_width())}"
-            f"{RESET}"
-        )
-    else:
-        _print_new_learning_summary(
-            route
-        )
-
-    if plan.selected:
-        print()
-        rule()
-        print()
-        print(
-            f"{YELLOW}{BOLD}"
-            f"自適應複習 · {len(plan.selected)}"
-            f"{RESET}"
-        )
-
-        for candidate in plan.selected:
-            print(
-                f"  {candidate.skill_uid}"
-                f" × {candidate.track}"
-                f" · R≈{candidate.retrievability:.0%}"
-                f" · {candidate.estimated_minutes} min"
-            )
-
-    cognitive_plan = snapshot["cognitive_plan"]
-    if cognitive_plan.selected:
-        print()
-        rule()
-        print()
-        print(
-            f"{CYAN}{BOLD}"
-            f"認知練習 · {len(cognitive_plan.selected)}"
-            f"{RESET}"
-        )
-        for task in cognitive_plan.selected:
-            label = {
-                "repair": "最小修復",
-                "discrimination": "方法辨識",
-                "transfer": "遷移驗證",
-            }.get(task.kind, task.kind)
-            print(
-                f"  {label}"
-                f" · {task.estimated_minutes} min"
-            )
-            print_wrapped(
-                task.reason,
-                ui_width() - 4,
-                prefix="    ",
-                continuation_prefix="    ",
-                color=GRAY,
-            )
 
     options = []
 
@@ -6361,7 +6744,7 @@ def today_view(current_filename: str | None):
                 f"{snapshot['capacity_minutes']} min"
             ),
             "detail": (
-                "15 分鐘為單位 · 只影響今天的學習規劃"
+                "短時段細分、長時段粗分 · 只影響今天的學習規劃"
             ),
             "enabled": True,
             "kind": "capacity",
@@ -6414,12 +6797,9 @@ def today_view(current_filename: str | None):
             f"{RESET}"
         )
 
-    print()
-    selected = choose_menu(
-        "今日學習 · 下一步",
+    selected = _today_action_menu(
+        snapshot,
         options,
-        main=False,
-        enter_text="開始",
     )
 
     if selected is None:
@@ -6490,7 +6870,7 @@ def today_view(current_filename: str | None):
 def _attempted_problem_ids() -> set[str]:
     return {
         str(item.external_id).strip().lower()
-        for item in PROBLEM_LIBRARY.items()
+        for item in _problem_library_items()
         if item.attempted
     }
 
@@ -7604,6 +7984,93 @@ PROBLEM_LIBRARY_SOURCE_LABELS = {
 }
 
 
+def _problem_library_items() -> list[LibraryItem]:
+    """Learner-facing union of L0/L1 intelligence and Published placements.
+
+    Problem Intelligence remains the richer browse source. Published
+    Curriculum fills baseline coverage so an empty local intelligence cache
+    never turns the learner-facing library into a 0-item dead end.
+    No new identity or classification truth is created here.
+    """
+
+    indexed = list(
+        PROBLEM_LIBRARY.items()
+    )
+    by_key = {
+        (
+            item.source.casefold(),
+            item.external_id.casefold(),
+        ): item
+        for item in indexed
+    }
+
+    attempted = (
+        PROBLEM_LIBRARY.attempted_pb_uids()
+    )
+
+    try:
+        placements = (
+            CURRICULUM.all_placements()
+        )
+    except RuntimeCurriculumError:
+        placements = ()
+
+    for placement in placements:
+        source = (
+            placement.source_platform
+            or placement.judge_platform
+            or "published"
+        ).strip().casefold()
+        external_id = (
+            placement.problem_id
+            .strip()
+        )
+        key = (
+            source,
+            external_id.casefold(),
+        )
+        if key in by_key:
+            continue
+
+        by_key[key] = LibraryItem(
+            source=source,
+            external_id=external_id,
+            canonical_url=placement.url,
+            title=placement.title,
+            statement_summary="",
+            lifecycle="PUBLISHED",
+            classification_status="PUBLISHED",
+            difficulty=(
+                placement.difficulty
+                or None
+            ),
+            primary_skill=(
+                placement.primary_skill
+                or None
+            ),
+            supporting_skills=tuple(
+                placement.supporting_skills
+            ),
+            role=placement.role or None,
+            pb_uid=placement.pb_uid or None,
+            attempted=bool(
+                placement.pb_uid
+                and placement.pb_uid
+                in attempted
+            ),
+            has_l2=False,
+            trust_status=None,
+        )
+
+    return sorted(
+        by_key.values(),
+        key=lambda item: (
+            item.source,
+            item.external_id,
+        ),
+    )
+
+
 def _problem_library_skill_groups():
     """Return learner-facing Unit → Skill groups in curriculum order."""
 
@@ -8424,20 +8891,32 @@ def _recommended_problem_items(
     except Exception:
         skill_uid = None
 
+    items = _problem_library_items()
+
     if skill_uid:
         candidates = (
-            PROBLEM_LIBRARY.search(
-                skill=skill_uid,
-                attempted=False,
-                require_l2=True,
+            _problem_library_filter_items(
+                items,
+                {
+                    "skill_uids": (
+                        skill_uid,
+                    ),
+                    "attempted": False,
+                    "require_l2": True,
+                },
                 limit=100,
             )
         )
         if not candidates:
             candidates = (
-                PROBLEM_LIBRARY.search(
-                    skill=skill_uid,
-                    attempted=False,
+                _problem_library_filter_items(
+                    items,
+                    {
+                        "skill_uids": (
+                            skill_uid,
+                        ),
+                        "attempted": False,
+                    },
                     limit=100,
                 )
             )
@@ -8451,12 +8930,16 @@ def _recommended_problem_items(
             )
 
     return (
-        PROBLEM_LIBRARY.search(
-            attempted=False,
+        _problem_library_filter_items(
+            items,
+            {
+                "attempted": False,
+            },
             limit=limit,
         ),
         "練習模式 · 尚未做 · 題庫穩定排序",
     )
+
 
 
 def _exam_safe_problem_items(
@@ -8465,18 +8948,22 @@ def _exam_safe_problem_items(
 ):
     """Strict-spoiler candidate pool for exam-style selection."""
 
-    items = list(
-        PROBLEM_LIBRARY.search(
-            attempted=False,
+    all_items = (
+        _problem_library_items()
+    )
+    items = (
+        _problem_library_filter_items(
+            all_items,
+            {
+                "attempted": False,
+            },
             limit=limit,
         )
     )
     if items:
         return items
 
-    return list(
-        PROBLEM_LIBRARY.items()
-    )[:limit]
+    return all_items[:limit]
 
 
 def _problem_library_filter_options(
@@ -8650,6 +9137,84 @@ def _problem_library_filter_options(
     return options
 
 
+def _problem_library_choice_preview(
+    kind: str,
+    filters,
+    *,
+    mode: str,
+) -> list[str]:
+    if kind == "skill":
+        current = (
+            filters.get("skill_label")
+            or "不限"
+        )
+        return [
+            f"目前：{current}",
+            "Unit → Skill",
+            "先選單元，再選 Skill",
+        ]
+
+    if kind == "difficulty":
+        return [
+            "不限  D1  D2",
+            "D3    D4  D5",
+        ]
+
+    if kind == "source":
+        sources = sorted(
+            {
+                _problem_library_source_label(
+                    item.source
+                )
+                for item
+                in _problem_library_items()
+                if item.source
+            }
+        )
+        return (
+            ["不限"]
+            + sources[:6]
+        )
+
+    if kind == "status":
+        return [
+            "不限",
+            "未做",
+            "已做",
+        ]
+
+    if kind == "role":
+        return [
+            "不限",
+            "範例拆解",
+            "引導練習",
+            "獨立練習",
+            "遷移挑戰",
+            "模擬題",
+        ]
+
+    if kind == "teaching":
+        return [
+            "不限",
+            "有教學資料",
+            "無教學資料",
+        ]
+
+    if kind == "clear":
+        return [
+            "清除所有條件",
+            "回到完整題庫",
+        ]
+
+    if kind == "results":
+        return [
+            "S 或 Enter",
+            "開啟目前結果",
+        ]
+
+    return []
+
+
 def _problem_library_filter_choice(
     filters,
     current,
@@ -8689,35 +9254,44 @@ def _problem_library_filter_choice(
             heading(
                 "題目庫 · 分類找題"
             )
-            print(
-                f"{GRAY}"
-                f"選題模式：{selection_mode_label(mode)}"
-                + (
-                    " · 可依主題練習"
-                    if mode == "practice"
-                    else " · 嚴格防劇透"
-                )
-                + f"{RESET}"
+            print_selection_mode_banner(
+                mode,
+                toggle_hint=False,
             )
             print()
 
             width = ui_width()
-            left = 42
+            gap = 3
+            left = 28
+            middle = 24
             right = max(
                 28,
-                width - left - 3,
+                width
+                - left
+                - middle
+                - gap * 2,
+            )
+
+            result_color = (
+                GREEN
+                if current
+                else YELLOW
             )
             print(
                 f"{CYAN}{BOLD}"
                 f"{pad_display('篩選條件', left)}"
                 f"{RESET}"
-                " │ "
-                f"{CYAN}{BOLD}"
-                f"目前結果 · {len(current)} 題"
+                + " " * gap
+                + f"{CYAN}{BOLD}"
+                f"{pad_display('可選值', middle)}"
+                f"{RESET}"
+                + " " * gap
+                + f"{result_color}{BOLD}"
+                f"目前 {len(current)} 題"
                 f"{RESET}"
             )
 
-            left_lines = []
+            filter_rows = []
             for index, option in enumerate(
                 options
             ):
@@ -8728,9 +9302,14 @@ def _problem_library_filter_choice(
                     if index == selected
                     else " "
                 )
+                value = (
+                    option.get("detail")
+                    or "不限"
+                )
                 label = (
-                    f"{prefix} {option['label']}"
-                    f"：{option.get('detail') or '不限'}"
+                    f"{prefix} "
+                    f"{option['label']}："
+                    f"{value}"
                 )
                 color = (
                     CYAN + BOLD
@@ -8744,52 +9323,95 @@ def _problem_library_filter_choice(
                         else ""
                     )
                 )
-                left_lines.append(
+                filter_rows.append(
                     (
                         fit(label, left),
                         color,
                     )
                 )
 
-            preview = [
+            selected_kind = (
+                options[selected]["kind"]
+            )
+            choice_rows = (
+                _problem_library_choice_preview(
+                    selected_kind,
+                    filters,
+                    mode=mode,
+                )
+            )
+
+            preview_count = max(
+                6,
+                min(
+                    14,
+                    ui_height() - 17,
+                ),
+            )
+            result_rows = [
                 (
                     f"{item.external_id} · "
-                    f"{fit(item.title, max(8, right - 8))}"
+                    f"{fit(
+                        item.title,
+                        max(8, right - 8),
+                    )}"
                 )
-                for item in current[:6]
+                for item in current[
+                    :preview_count
+                ]
             ]
-            if not preview:
-                preview = [
+            if not result_rows:
+                result_rows = [
                     "沒有符合條件的題目"
                 ]
+            elif (
+                len(current)
+                > preview_count
+            ):
+                result_rows.append(
+                    f"…另有 "
+                    f"{len(current) - preview_count} 題"
+                )
 
             rows = max(
-                len(left_lines),
-                len(preview),
+                len(filter_rows),
+                len(choice_rows),
+                len(result_rows),
             )
+
             for row in range(rows):
                 left_text, left_color = (
-                    left_lines[row]
-                    if row < len(left_lines)
+                    filter_rows[row]
+                    if row < len(filter_rows)
                     else ("", "")
                 )
-                right_text = (
-                    preview[row]
-                    if row < len(preview)
+                middle_text = (
+                    choice_rows[row]
+                    if row < len(choice_rows)
                     else ""
                 )
+                right_text = (
+                    result_rows[row]
+                    if row < len(result_rows)
+                    else ""
+                )
+
                 print(
                     f"{left_color}"
                     f"{pad_display(left_text, left)}"
                     f"{RESET if left_color else ''}"
-                    " │ "
-                    f"{fit(right_text, right)}"
+                    + " " * gap
+                    + f"{GRAY}"
+                    f"{pad_display(middle_text, middle)}"
+                    f"{RESET}"
+                    + " " * gap
+                    + f"{fit(right_text, right)}"
                 )
 
             print()
             print(
-                f"{GREEN if current else GRAY}"
-                f"S 查看 {len(current)} 題"
+                f"{result_color}{BOLD}"
+                f"S 查看目前 {len(current)} 題"
                 f"{RESET}"
             )
             print()
@@ -8841,6 +9463,7 @@ def _problem_library_filter_choice(
             return None
 
 
+
 def _problem_library_filter_view(
     *,
     mode: str,
@@ -8854,8 +9477,8 @@ def _problem_library_filter_view(
         "role": None,
         "require_l2": None,
     }
-    all_items = list(
-        PROBLEM_LIBRARY.items()
+    all_items = (
+        _problem_library_items()
     )
 
     while True:
@@ -8949,13 +9572,17 @@ def _problem_library_text_search(
     if query is None:
         return
 
+    folded = str(
+        query or ""
+    ).strip().casefold()
+    all_items = (
+        _problem_library_items()
+    )
+
     if mode == "exam":
-        folded = str(
-            query or ""
-        ).strip().casefold()
         items = [
             item
-            for item in PROBLEM_LIBRARY.items()
+            for item in all_items
             if (
                 not folded
                 or folded
@@ -8966,12 +9593,25 @@ def _problem_library_text_search(
             )
         ][:100]
     else:
-        items = (
-            PROBLEM_LIBRARY.smart_search(
-                query or "",
-                limit=100,
+        items = [
+            item
+            for item in all_items
+            if (
+                not folded
+                or folded
+                in " ".join(
+                    [
+                        item.external_id,
+                        item.title,
+                        item.source,
+                        item.difficulty or "",
+                        item.role or "",
+                        item.primary_skill or "",
+                        *item.supporting_skills,
+                    ]
+                ).casefold()
             )
-        )
+        ][:100]
 
     _problem_library_results_view(
         items,
@@ -9122,7 +9762,7 @@ def problem_library_view() -> None:
             )
         elif kind == "all":
             _problem_library_results_view(
-                PROBLEM_LIBRARY.items(),
+                _problem_library_items(),
                 title="題目庫 · 全部",
                 mode=mode,
             )
