@@ -25,7 +25,7 @@
     },
     {
       "label": "APCS｜01 編譯並執行 C++",
-      "detail": "Ctrl+Shift+B｜編譯目前 C++，成功後直接執行",
+      "detail": "Ctrl+Shift+B｜儲存、編譯並執行 Fast Test Suite；有測資時開啟 Test Center",
       "type": "process",
       "command": "python3",
       "args": [
