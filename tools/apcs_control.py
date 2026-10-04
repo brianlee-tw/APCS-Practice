@@ -177,6 +177,10 @@ ID_RE = re.compile(r"^([A-Za-z]\d+|\d+)(?:_|$)")
 RESET = "\033[0m"
 BOLD = "\033[1m"
 
+ANSI_RE = re.compile(
+    r"\x1b\[[0-?]*[ -/]*[@-~]"
+)
+
 CYAN = "\033[96m"
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
@@ -213,31 +217,58 @@ def char_width(ch: str) -> int:
 
 
 def display_width(text: str) -> int:
-    return sum(char_width(ch) for ch in text)
+    visible = ANSI_RE.sub(
+        "",
+        str(text),
+    )
+    return sum(
+        char_width(ch)
+        for ch in visible
+    )
 
 
 def fit(text: str, width: int) -> str:
-    """Single-line fallback for compact status fields.
+    """Single-line ANSI-safe fallback for compact status fields.
 
     Learner-facing prose should prefer wrap_display() so information is not
     silently lost behind an ellipsis.
     """
+    width = max(1, int(width))
     text = str(text)
 
     if display_width(text) <= width:
         return text
 
-    out = ""
+    out = []
     used = 0
+    index = 0
 
-    for ch in text:
+    while index < len(text):
+        match = ANSI_RE.match(
+            text,
+            index,
+        )
+        if match is not None:
+            out.append(
+                match.group(0)
+            )
+            index = match.end()
+            continue
+
+        ch = text[index]
         w = char_width(ch)
         if used + w + 1 > width:
             break
-        out += ch
-        used += w
 
-    return out + "…"
+        out.append(ch)
+        used += w
+        index += 1
+
+    out.append("…")
+    if "\033[" in text:
+        out.append(RESET)
+
+    return "".join(out)
 
 
 def pad_display(
@@ -8587,10 +8618,13 @@ def git_center() -> None:
 
             width = ui_width()
             gap = 4
-            left = 54
-            right = max(
-                30,
-                width - left - gap,
+            left, right = (
+                workbench_pane_widths(
+                    width,
+                    (58, 42),
+                    gap=gap,
+                    min_width=26,
+                )
             )
 
             left_lines = [
