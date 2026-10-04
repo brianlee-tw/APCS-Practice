@@ -1595,11 +1595,20 @@ def _control_dashboard_lines(
             "今天沒有到期複習"
         )
 
-    if snapshot.get(
-        "cognitive_tasks"
-    ):
+    cognitive_plan = snapshot.get(
+        "cognitive_plan"
+    )
+    cognitive_selected = tuple(
+        getattr(
+            cognitive_plan,
+            "selected",
+            (),
+        )
+        or ()
+    )
+    if cognitive_selected:
         today_lines.append(
-            f"認知修復 {len(snapshot['cognitive_tasks'])} 項"
+            f"認知修復 {len(cognitive_selected)} 項"
         )
 
     next_lines = []
@@ -1645,12 +1654,8 @@ def _control_dashboard_lines(
                 ),
             ]
         )
-    elif snapshot.get(
-        "cognitive_tasks"
-    ):
-        task = snapshot[
-            "cognitive_tasks"
-        ][0]
+    elif cognitive_selected:
+        task = cognitive_selected[0]
         next_lines.extend(
             [
                 "認知修復",
@@ -6825,6 +6830,9 @@ def today_view(current_filename: str | None):
     plan = snapshot["plan"]
     route = snapshot[
         "new_learning"
+    ]
+    cognitive_plan = snapshot[
+        "cognitive_plan"
     ]
 
     options = []
