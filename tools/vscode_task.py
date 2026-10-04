@@ -10,59 +10,114 @@ import sys
 import webbrowser
 from pathlib import Path
 
-import apcs as core
-import apcs_control as control
-from catalog_store import CatalogStore
-from exam_runtime import ExamSessionStore
-from local_test_runner import (
-    OUTPUT_LIMIT,
-    PASS,
-    RUNTIME_ERROR,
-    TIMEOUT,
-    UNVERIFIED,
-    WRONG_OUTPUT,
-    CaseResult,
-    CompileResult,
-    LocalTestError,
-    SuiteResult,
-    compile_cpp as compile_cpp_safe,
-    run_case,
-    run_suite,
-    unified_diff,
-)
-from runtime_curriculum import RuntimeCurriculum
-from test_assets import (
-    SUITE_FAST,
-    SUITE_FULL,
-    TestAssetStore,
-    TestBundle,
-)
-from workbench_context import (
-    ProblemContext,
-    resolve_problem_context,
-)
-from workbench_tui import (
-    BOLD,
-    CYAN,
-    GRAY,
-    GREEN,
-    RED,
-    RESET,
-    WHITE,
-    YELLOW,
-    clear,
-    command_bar,
-    fit,
-    heading,
-    pad,
-    pane_widths,
-    render_columns,
-    rule,
-    status_badge,
-    terminal_height,
-    terminal_width,
-    wrap,
-)
+try:
+    from . import apcs as core
+    from . import apcs_control as control
+    from .catalog_store import CatalogStore
+    from .exam_runtime import ExamSessionStore
+    from .local_test_runner import (
+        OUTPUT_LIMIT,
+        PASS,
+        RUNTIME_ERROR,
+        TIMEOUT,
+        UNVERIFIED,
+        WRONG_OUTPUT,
+        CaseResult,
+        CompileResult,
+        LocalTestError,
+        SuiteResult,
+        compile_cpp as compile_cpp_safe,
+        run_case,
+        run_suite,
+        unified_diff,
+    )
+    from .runtime_curriculum import RuntimeCurriculum
+    from .test_assets import (
+        SUITE_FAST,
+        SUITE_FULL,
+        TestAssetStore,
+        TestBundle,
+    )
+    from .workbench_context import (
+        ProblemContext,
+        resolve_problem_context,
+    )
+    from .workbench_tui import (
+        BOLD,
+        CYAN,
+        GRAY,
+        GREEN,
+        RED,
+        RESET,
+        WHITE,
+        YELLOW,
+        clear,
+        command_bar,
+        fit,
+        heading,
+        pad,
+        pane_widths,
+        render_columns,
+        rule,
+        status_badge,
+        terminal_height,
+        terminal_width,
+        wrap,
+    )
+except ImportError:
+    import apcs as core
+    import apcs_control as control
+    from catalog_store import CatalogStore
+    from exam_runtime import ExamSessionStore
+    from local_test_runner import (
+        OUTPUT_LIMIT,
+        PASS,
+        RUNTIME_ERROR,
+        TIMEOUT,
+        UNVERIFIED,
+        WRONG_OUTPUT,
+        CaseResult,
+        CompileResult,
+        LocalTestError,
+        SuiteResult,
+        compile_cpp as compile_cpp_safe,
+        run_case,
+        run_suite,
+        unified_diff,
+    )
+    from runtime_curriculum import RuntimeCurriculum
+    from test_assets import (
+        SUITE_FAST,
+        SUITE_FULL,
+        TestAssetStore,
+        TestBundle,
+    )
+    from workbench_context import (
+        ProblemContext,
+        resolve_problem_context,
+    )
+    from workbench_tui import (
+        BOLD,
+        CYAN,
+        GRAY,
+        GREEN,
+        RED,
+        RESET,
+        WHITE,
+        YELLOW,
+        clear,
+        command_bar,
+        fit,
+        heading,
+        pad,
+        pane_widths,
+        render_columns,
+        rule,
+        status_badge,
+        terminal_height,
+        terminal_width,
+        wrap,
+    )
 
 
 ROOT = Path(__file__).resolve().parents[1]
