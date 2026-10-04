@@ -9,6 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 EXCLUDE = {
     ".git",
     ".github",
+    ".apcs",
     ".vscode",
     "tools",
     "tests",
@@ -41,6 +42,20 @@ def catalog_paths():
         }
 
 
+def is_excluded_solution_path(
+    relative: Path,
+) -> bool:
+    return (
+        any(
+            part in EXCLUDE
+            or part == ".cph"
+            for part in relative.parts[:-1]
+        )
+        or "tempCodeRunner"
+        in relative.name
+    )
+
+
 def disk_solution_paths():
     result = set()
 
@@ -56,14 +71,9 @@ def disk_solution_paths():
             ROOT
         )
 
-        if any(
-            part in EXCLUDE
-            or part == ".cph"
-            for part in relative.parts[:-1]
+        if is_excluded_solution_path(
+            relative
         ):
-            continue
-
-        if "tempCodeRunner" in path.name:
             continue
 
         result.add(
@@ -76,6 +86,16 @@ def disk_solution_paths():
 class CatalogAuthorityTest(
     unittest.TestCase
 ):
+    def test_local_runtime_sources_are_not_catalog_candidates(self):
+        self.assertTrue(
+            is_excluded_solution_path(
+                Path(
+                    ".apcs/runtime/learn/2026-10-03/"
+                    "zj-d050__PL-PB-143-L-FND-01.cpp"
+                )
+            )
+        )
+
     def test_every_solution_source_is_catalog_registered(self):
         self.assertEqual(
             disk_solution_paths(),
