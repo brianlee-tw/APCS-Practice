@@ -9220,21 +9220,10 @@ def _problem_library_testcase_lines(
         )
 
     if strict and pre_attempt:
-        lines.extend(
-            [
-                f"  延伸測資  作答後解鎖",
-                (
-                    f"  Candidate {len(candidates)}"
-                    if candidates
-                    else ""
-                ),
-            ]
+        lines.append(
+            "  延伸測資  作答後解鎖"
         )
-        return [
-            line
-            for line in lines
-            if line
-        ]
+        return lines
 
     lines.append(
         f"  已驗證延伸 {len(verified_generated)}"
