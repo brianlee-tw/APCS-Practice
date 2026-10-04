@@ -12029,7 +12029,7 @@ def _problem_library_workbench(
         left, middle, right = (
             workbench_pane_widths(
                 width,
-                (27, 38, 35),
+                (30, 37, 33),
                 gap=gap,
                 min_width=20,
             )
@@ -12038,7 +12038,7 @@ def _problem_library_workbench(
         headers = [
             "篩選",
             f"題目 · {len(current)} 題",
-            "題目側欄",
+            "題目資訊",
         ]
         header_cells = []
         for index, label in enumerate(
@@ -12053,18 +12053,20 @@ def _problem_library_workbench(
                     else right
                 )
             )
+            active = focus == index
             color = (
-                GREEN + BOLD
-                if index == 1
-                else (
-                    CYAN + BOLD
-                    if focus == index
-                    else GRAY
-                )
+                CYAN + BOLD
+                if active
+                else GRAY
+            )
+            visible_label = (
+                f"› {label}"
+                if active
+                else label
             )
             header_cells.append(
                 f"{color}"
-                f"{pad_display(label, pane_width)}"
+                f"{pad_display(visible_label, pane_width)}"
                 f"{RESET}"
             )
         print(
@@ -12072,6 +12074,7 @@ def _problem_library_workbench(
                 header_cells
             )
         )
+        print()
 
         max_rows = max(
             12,
@@ -12099,29 +12102,24 @@ def _problem_library_workbench(
                     )
                     else ""
                 )
-                left_lines.append(
-                    (
-                        fit(
-                            f"{prefix} "
-                            f"{option['label']}",
-                            left,
-                        ),
-                        color,
+                detail = str(
+                    option.get(
+                        "detail"
                     )
+                    or ""
+                )
+                summary = (
+                    f"{option['label']} · {detail}"
+                    if detail
+                    else option["label"]
                 )
                 left_lines.append(
                     (
                         fit(
-                            "    "
-                            + str(
-                                option.get(
-                                    "detail"
-                                )
-                                or ""
-                            ),
+                            f"{prefix} {summary}",
                             left,
                         ),
-                        GRAY,
+                        color,
                     )
                 )
         else:
@@ -12255,19 +12253,6 @@ def _problem_library_workbench(
                     color,
                 )
             )
-            middle_lines.append(
-                (
-                    fit(
-                        "    "
-                        + _problem_library_safe_detail(
-                            item,
-                            mode,
-                        ),
-                        middle,
-                    ),
-                    GRAY,
-                )
-            )
 
         if not current:
             middle_lines = [
@@ -12298,7 +12283,7 @@ def _problem_library_workbench(
 
         if focus == 2:
             inspector = [
-                "› 題目側欄",
+                "› 題目資訊",
                 *inspector,
             ]
 
@@ -12362,8 +12347,13 @@ def _problem_library_workbench(
 
         print(
             f"{GRAY}"
-            "Tab / Shift+Tab 切換區域"
-            f" · ↑↓ 選擇 · {action}"
+            "Tab / → 下一區 · Shift+Tab / ← 上一區"
+            " · ↑↓ 選擇"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            f"{action}"
             " · / 搜尋 · M 切換模式 · Esc 返回"
             f"{RESET}"
         )
@@ -12384,7 +12374,7 @@ def _problem_library_workbench(
             ] = focus
             return MODE_TOGGLE
 
-        if key == "TAB":
+        if key in {"TAB", "RIGHT"}:
             focus = (
                 focus + 1
             ) % 3
@@ -12393,7 +12383,7 @@ def _problem_library_workbench(
             ] = focus
             continue
 
-        if key == "BACKTAB":
+        if key in {"BACKTAB", "LEFT"}:
             focus = (
                 focus - 1
             ) % 3
