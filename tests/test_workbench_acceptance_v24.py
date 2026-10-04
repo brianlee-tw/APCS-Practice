@@ -205,6 +205,95 @@ class WorkbenchAcceptanceV24Test(unittest.TestCase):
             48,
         )
 
+    def test_choose_menu_keeps_context_inside_redrawn_frame(self):
+        output = io.StringIO()
+        with (
+            patch.object(
+                control,
+                "read_key",
+                return_value="ESC",
+            ),
+            redirect_stdout(output),
+        ):
+            result = control.choose_menu(
+                "模擬考 · 下一步",
+                [
+                    {
+                        "label": "d050",
+                        "detail": "保持作答",
+                        "enabled": True,
+                    },
+                ],
+                context_lines=[
+                    "時間      12/60 min · 剩餘約 48 min",
+                    "目前題目  d050",
+                ],
+            )
+
+        self.assertIsNone(result)
+        rendered = output.getvalue()
+        self.assertIn(
+            "12/60 min",
+            rendered,
+        )
+        self.assertIn(
+            "目前題目  d050",
+            rendered,
+        )
+
+    def test_exam_center_passes_live_runtime_status_into_menu_frame(self):
+        session = {
+            "duration_minutes": 60,
+            "problem_ids": [
+                "d050",
+                "a001",
+            ],
+            "selected_problem_id": "d050",
+        }
+        summary = {
+            "elapsed_minutes": 12,
+            "compile_count": 3,
+            "submit_count": 1,
+            "switch_count": 2,
+        }
+
+        with (
+            patch.object(
+                control.EXAM,
+                "active",
+                return_value=session,
+            ),
+            patch.object(
+                control.EXAM,
+                "summary",
+                return_value=summary,
+            ),
+            patch.object(
+                control,
+                "choose_menu",
+                return_value=None,
+            ) as menu,
+        ):
+            control.exam_center()
+
+        context_lines = (
+            menu.call_args.kwargs[
+                "context_lines"
+            ]
+        )
+        self.assertIn(
+            "時間      12/60 min · 剩餘約 48 min",
+            context_lines,
+        )
+        self.assertIn(
+            "目前題目  d050",
+            context_lines,
+        )
+        self.assertIn(
+            "編譯 3 · 提交 1 · 切題 2",
+            context_lines,
+        )
+
     def test_git_center_fits_exact_86_column_boundary(self):
         output = io.StringIO()
         changes = [
