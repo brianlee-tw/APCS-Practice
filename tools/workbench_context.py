@@ -176,18 +176,44 @@ def resolve_problem_context(
                 ),
                 title=placement.title,
                 source=(
-                    placement.source_platform
-                    or placement.judge_platform
+                    getattr(
+                        placement,
+                        "source_platform",
+                        None,
+                    )
+                    or getattr(
+                        placement,
+                        "judge_platform",
+                        None,
+                    )
                     or None
                 ),
                 canonical_url=(
-                    placement.url
+                    getattr(
+                        placement,
+                        "url",
+                        None,
+                    )
                     or None
                 ),
                 solution_path=source_path,
                 placement_uid=placement_uid,
-                role=placement.role or None,
-                pb_uid=placement.pb_uid or None,
+                role=(
+                    getattr(
+                        placement,
+                        "role",
+                        None,
+                    )
+                    or None
+                ),
+                pb_uid=(
+                    getattr(
+                        placement,
+                        "pb_uid",
+                        None,
+                    )
+                    or None
+                ),
                 identity_origin="published_placement",
             )
 
