@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import re
 import shutil
 import unicodedata
 from dataclasses import dataclass
@@ -15,6 +16,10 @@ RED = "\033[91m"
 WHITE = "\033[97m"
 GRAY = "\033[90m"
 
+ANSI_RE = re.compile(
+    r"\x1b\[[0-?]*[ -/]*[@-~]"
+)
+
 
 def char_width(ch: str) -> int:
     if unicodedata.combining(ch):
@@ -28,9 +33,13 @@ def char_width(ch: str) -> int:
 
 
 def display_width(text: str) -> int:
+    visible = ANSI_RE.sub(
+        "",
+        str(text),
+    )
     return sum(
         char_width(ch)
-        for ch in str(text)
+        for ch in visible
     )
 
 
@@ -44,17 +53,36 @@ def fit(
     if display_width(text) <= width:
         return text
 
-    result = ""
+    result = []
     used = 0
+    index = 0
 
-    for ch in text:
+    while index < len(text):
+        match = ANSI_RE.match(
+            text,
+            index,
+        )
+        if match is not None:
+            result.append(
+                match.group(0)
+            )
+            index = match.end()
+            continue
+
+        ch = text[index]
         size = char_width(ch)
         if used + size + 1 > width:
             break
-        result += ch
-        used += size
 
-    return result + "…"
+        result.append(ch)
+        used += size
+        index += 1
+
+    result.append("…")
+    if "\033[" in text:
+        result.append(RESET)
+
+    return "".join(result)
 
 
 def pad(
@@ -153,17 +181,33 @@ def heading(
     width = terminal_width()
     left = f"APCS · {title}"
     if suffix:
-        space = max(
-            1,
-            width
-            - display_width(left)
-            - display_width(suffix),
-        )
-        print(
-            f"{CYAN}{BOLD}{left}{RESET}"
-            + " " * space
-            + suffix
-        )
+        if (
+            display_width(left)
+            + 1
+            + display_width(suffix)
+            <= width
+        ):
+            space = max(
+                1,
+                width
+                - display_width(left)
+                - display_width(suffix),
+            )
+            print(
+                f"{CYAN}{BOLD}{left}{RESET}"
+                + " " * space
+                + suffix
+            )
+        else:
+            print(
+                f"{CYAN}{BOLD}{left}{RESET}"
+            )
+            print(
+                fit(
+                    suffix,
+                    width,
+                )
+            )
     else:
         print(
             f"{CYAN}{BOLD}{left}{RESET}"
@@ -209,10 +253,27 @@ def pane_widths(
     if not ratios:
         return ()
 
-    usable = (
+    usable = max(
+        len(ratios),
         total
-        - gap * (len(ratios) - 1)
+        - gap * (len(ratios) - 1),
     )
+
+    if usable < min_width * len(ratios):
+        base = max(
+            1,
+            usable // len(ratios),
+        )
+        widths = [
+            base
+            for _ in ratios
+        ]
+        for index in range(
+            usable - base * len(ratios)
+        ):
+            widths[index] += 1
+        return tuple(widths)
+
     raw_total = sum(ratios)
     widths = [
         max(
@@ -279,13 +340,38 @@ def render_columns(
 def command_bar(
     commands: list[tuple[str, str]],
 ) -> None:
-    print(rule())
+    width = terminal_width()
+    print(rule(width))
     parts = [
         f"{key} {label}"
         for key, label in commands
     ]
-    print(
-        f"{GRAY}"
-        + " · ".join(parts)
-        + f"{RESET}"
-    )
+
+    lines = []
+    current = ""
+
+    for part in parts:
+        candidate = (
+            part
+            if not current
+            else f"{current} · {part}"
+        )
+        if (
+            current
+            and display_width(candidate)
+            > width
+        ):
+            lines.append(current)
+            current = part
+        else:
+            current = candidate
+
+    if current:
+        lines.append(current)
+
+    for line in lines:
+        print(
+            f"{GRAY}"
+            f"{fit(line, width)}"
+            f"{RESET}"
+        )
