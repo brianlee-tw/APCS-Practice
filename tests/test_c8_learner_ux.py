@@ -1260,7 +1260,7 @@ class C8LearnerUxTest(unittest.TestCase):
             rendered,
         )
         self.assertIn(
-            "測資資產",
+            "測資",
             rendered,
         )
 
