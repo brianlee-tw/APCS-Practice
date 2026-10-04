@@ -9211,7 +9211,7 @@ def _problem_library_inspector_lines(
             f"已驗證    {inventory['verified']}",
             f"Candidate {inventory['candidate']}",
             "",
-            f"{GRAY}Expected / Actual / Diff 於 Ctrl+Shift+B 測試中心顯示{RESET}",
+            f"{GRAY}詳情      Ctrl+Shift+B 測試中心{RESET}",
         ]
     )
 
