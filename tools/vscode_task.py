@@ -811,12 +811,18 @@ def _test_center(
                 )
             )
         else:
-            print(
+            no_case_line = (
                 status_badge(
                     "尚無可執行的可信測資",
                     status="neutral",
                 )
                 + f"  {GRAY}· Enter / I 手動執行{RESET}"
+            )
+            print(
+                fit(
+                    no_case_line,
+                    width,
+                )
             )
 
         inventory = TEST_ASSETS.inventory(
@@ -1002,7 +1008,12 @@ def _test_center(
 
         if message:
             print()
-            print(message)
+            print(
+                fit(
+                    message,
+                    width,
+                )
+            )
 
         oj_url = _oj_url(
             context,
