@@ -8799,6 +8799,84 @@ def _problem_library_filter_options(
     return options
 
 
+def _problem_library_choice_preview(
+    kind: str,
+    filters,
+    *,
+    mode: str,
+) -> list[str]:
+    if kind == "skill":
+        current = (
+            filters.get("skill_label")
+            or "不限"
+        )
+        return [
+            f"目前：{current}",
+            "Unit → Skill",
+            "先選單元，再選 Skill",
+        ]
+
+    if kind == "difficulty":
+        return [
+            "不限  D1  D2",
+            "D3    D4  D5",
+        ]
+
+    if kind == "source":
+        sources = sorted(
+            {
+                _problem_library_source_label(
+                    item.source
+                )
+                for item
+                in _problem_library_items()
+                if item.source
+            }
+        )
+        return (
+            ["不限"]
+            + sources[:6]
+        )
+
+    if kind == "status":
+        return [
+            "不限",
+            "未做",
+            "已做",
+        ]
+
+    if kind == "role":
+        return [
+            "不限",
+            "範例拆解",
+            "引導練習",
+            "獨立練習",
+            "遷移挑戰",
+            "模擬題",
+        ]
+
+    if kind == "teaching":
+        return [
+            "不限",
+            "有教學資料",
+            "無教學資料",
+        ]
+
+    if kind == "clear":
+        return [
+            "清除所有條件",
+            "回到完整題庫",
+        ]
+
+    if kind == "results":
+        return [
+            "S 或 Enter",
+            "開啟目前結果",
+        ]
+
+    return []
+
+
 def _problem_library_filter_choice(
     filters,
     current,
@@ -8845,22 +8923,37 @@ def _problem_library_filter_choice(
             print()
 
             width = ui_width()
-            left = 42
+            gap = 3
+            left = 28
+            middle = 24
             right = max(
                 28,
-                width - left - 3,
+                width
+                - left
+                - middle
+                - gap * 2,
+            )
+
+            result_color = (
+                GREEN
+                if current
+                else YELLOW
             )
             print(
                 f"{CYAN}{BOLD}"
                 f"{pad_display('篩選條件', left)}"
                 f"{RESET}"
-                " │ "
-                f"{CYAN}{BOLD}"
-                f"目前結果 · {len(current)} 題"
+                + " " * gap
+                + f"{CYAN}{BOLD}"
+                f"{pad_display('可選值', middle)}"
+                f"{RESET}"
+                + " " * gap
+                + f"{result_color}{BOLD}"
+                f"目前 {len(current)} 題"
                 f"{RESET}"
             )
 
-            left_lines = []
+            filter_rows = []
             for index, option in enumerate(
                 options
             ):
@@ -8871,9 +8964,14 @@ def _problem_library_filter_choice(
                     if index == selected
                     else " "
                 )
+                value = (
+                    option.get("detail")
+                    or "不限"
+                )
                 label = (
-                    f"{prefix} {option['label']}"
-                    f"：{option.get('detail') or '不限'}"
+                    f"{prefix} "
+                    f"{option['label']}："
+                    f"{value}"
                 )
                 color = (
                     CYAN + BOLD
@@ -8887,52 +8985,95 @@ def _problem_library_filter_choice(
                         else ""
                     )
                 )
-                left_lines.append(
+                filter_rows.append(
                     (
                         fit(label, left),
                         color,
                     )
                 )
 
-            preview = [
+            selected_kind = (
+                options[selected]["kind"]
+            )
+            choice_rows = (
+                _problem_library_choice_preview(
+                    selected_kind,
+                    filters,
+                    mode=mode,
+                )
+            )
+
+            preview_count = max(
+                6,
+                min(
+                    14,
+                    ui_height() - 17,
+                ),
+            )
+            result_rows = [
                 (
                     f"{item.external_id} · "
-                    f"{fit(item.title, max(8, right - 8))}"
+                    f"{fit(
+                        item.title,
+                        max(8, right - 8),
+                    )}"
                 )
-                for item in current[:6]
+                for item in current[
+                    :preview_count
+                ]
             ]
-            if not preview:
-                preview = [
+            if not result_rows:
+                result_rows = [
                     "沒有符合條件的題目"
                 ]
+            elif (
+                len(current)
+                > preview_count
+            ):
+                result_rows.append(
+                    f"…另有 "
+                    f"{len(current) - preview_count} 題"
+                )
 
             rows = max(
-                len(left_lines),
-                len(preview),
+                len(filter_rows),
+                len(choice_rows),
+                len(result_rows),
             )
+
             for row in range(rows):
                 left_text, left_color = (
-                    left_lines[row]
-                    if row < len(left_lines)
+                    filter_rows[row]
+                    if row < len(filter_rows)
                     else ("", "")
                 )
-                right_text = (
-                    preview[row]
-                    if row < len(preview)
+                middle_text = (
+                    choice_rows[row]
+                    if row < len(choice_rows)
                     else ""
                 )
+                right_text = (
+                    result_rows[row]
+                    if row < len(result_rows)
+                    else ""
+                )
+
                 print(
                     f"{left_color}"
                     f"{pad_display(left_text, left)}"
                     f"{RESET if left_color else ''}"
-                    " │ "
-                    f"{fit(right_text, right)}"
+                    + " " * gap
+                    + f"{GRAY}"
+                    f"{pad_display(middle_text, middle)}"
+                    f"{RESET}"
+                    + " " * gap
+                    + f"{fit(right_text, right)}"
                 )
 
             print()
             print(
-                f"{GREEN if current else GRAY}"
-                f"S 查看 {len(current)} 題"
+                f"{result_color}{BOLD}"
+                f"S 查看目前 {len(current)} 題"
                 f"{RESET}"
             )
             print()
@@ -8982,6 +9123,7 @@ def _problem_library_filter_choice(
             "Q",
         }:
             return None
+
 
 
 def _problem_library_filter_view(
