@@ -514,6 +514,19 @@ def current_problem(filename: str | None):
         .resolve()
     )
 
+    legacy_placement_match = re.search(
+        r"__([A-Za-z0-9_.:-]+)$",
+        Path(filename).stem,
+    )
+    placement_uid = (
+        context.placement_uid
+        or (
+            legacy_placement_match.group(1)
+            if legacy_placement_match
+            else None
+        )
+    )
+
     state = None
     due = None
     matched_path = (
@@ -562,7 +575,7 @@ def current_problem(filename: str | None):
         "state": state,
         "due": due,
         "placement_uid": (
-            context.placement_uid
+            placement_uid
         ),
         "pb_uid": context.pb_uid,
         "published_runtime": (
