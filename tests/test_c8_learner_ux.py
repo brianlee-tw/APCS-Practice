@@ -114,6 +114,60 @@ class C8LearnerUxTest(unittest.TestCase):
             "delayed_retest",
         )
 
+    def test_published_result_reuses_explicit_exam_submit_only(self):
+        session = {
+            "events": [
+                {
+                    "type": "SUBMIT",
+                    "problem_id": "d050",
+                    "result": "WA",
+                },
+            ],
+        }
+        with patch.object(
+            control.EXAM,
+            "active",
+            return_value=session,
+        ):
+            self.assertEqual(
+                control.inferred_published_result(
+                    problem()
+                ),
+                "WA",
+            )
+
+        session["events"][0]["result"] = "N/A"
+        with patch.object(
+            control.EXAM,
+            "active",
+            return_value=session,
+        ):
+            self.assertIsNone(
+                control.inferred_published_result(
+                    problem()
+                )
+            )
+
+    def test_published_result_does_not_infer_without_exam_submit(self):
+        with patch.object(
+            control.EXAM,
+            "active",
+            return_value={
+                "events": [
+                    {
+                        "type": "COMPILE",
+                        "problem_id": "d050",
+                        "success": True,
+                    },
+                ],
+            },
+        ):
+            self.assertIsNone(
+                control.inferred_published_result(
+                    problem()
+                )
+            )
+
     def test_published_context_skips_novelty_and_timed_prompts_when_known(self):
         with (
             patch.object(
