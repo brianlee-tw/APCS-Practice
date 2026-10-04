@@ -294,6 +294,61 @@ class WorkbenchAcceptanceV24Test(unittest.TestCase):
             context_lines,
         )
 
+    def test_test_center_no_case_path_stays_inside_narrow_terminal(self):
+        compiled = CompileResult(
+            success=True,
+            executable=Path("/tmp/a.out"),
+            duration_ms=40,
+            stdout="",
+            stderr="",
+        )
+        output = io.StringIO()
+
+        with (
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=34,
+                    lines=24,
+                ),
+            ),
+            patch.object(
+                vscode_task.control,
+                "selection_mode",
+                return_value="practice",
+            ),
+            patch.object(
+                vscode_task.control,
+                "read_key",
+                return_value="ESC",
+            ),
+            patch.object(
+                vscode_task,
+                "_post_attempt",
+                return_value=False,
+            ),
+            redirect_stdout(output),
+        ):
+            code = vscode_task._test_center(
+                "/tmp/very_long_solution_name.cpp",
+                Path("/tmp/a.out"),
+                None,
+                None,
+                SuiteResult(()),
+                compiled,
+            )
+
+        self.assertEqual(code, 0)
+        rendered = output.getvalue()
+        self.assertIn(
+            "執行資訊",
+            rendered,
+        )
+        self.assert_frame_width(
+            rendered,
+            32,
+        )
+
     def test_git_center_fits_exact_86_column_boundary(self):
         output = io.StringIO()
         changes = [
