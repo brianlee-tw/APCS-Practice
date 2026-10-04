@@ -11860,7 +11860,7 @@ def _problem_library_workbench(
                     if mode == "exam"
                     else "題號／題名／Skill"
                 ),
-                default=query,
+                current=query,
             )
             if raw is not None:
                 query = raw.strip()
