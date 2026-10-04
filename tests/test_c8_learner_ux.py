@@ -153,6 +153,72 @@ class C8LearnerUxTest(unittest.TestCase):
         novelty.assert_not_called()
         timed.assert_not_called()
 
+    def test_published_finish_requires_authoritative_oj_result_before_evidence(self):
+        with (
+            patch.object(
+                control,
+                "review_result_menu",
+                return_value=None,
+            ) as result_menu,
+            patch.object(
+                control,
+                "published_evidence_context_menu",
+            ) as evidence_menu,
+        ):
+            control.record_problem(
+                "finish",
+                problem(action="finish"),
+            )
+
+        result_menu.assert_called_once()
+        self.assertEqual(
+            result_menu.call_args.kwargs["action"],
+            "finish",
+        )
+        evidence_menu.assert_not_called()
+
+    def test_failure_bottleneck_menu_is_one_explicit_learner_choice(self):
+        with patch.object(
+            control,
+            "choose_menu",
+            return_value=7,
+        ):
+            value = control.failure_bottleneck_menu(
+                problem()
+            )
+
+        self.assertEqual(
+            value,
+            "State / Index",
+        )
+
+    def test_attempt_note_can_keep_failure_bottleneck_without_promoting_it(self):
+        envelope = control.attempt_envelope_for_record(
+            action="finish",
+            problem=problem(),
+            result="WA",
+            minutes=None,
+            assistance=0,
+            independent=True,
+            novelty="new",
+            timed=False,
+            placement=placement(),
+            bottleneck="Debugging",
+        )
+
+        self.assertEqual(
+            envelope.attempt.judge_result,
+            "WA",
+        )
+        self.assertIn(
+            "Bottleneck: Debugging",
+            envelope.attempt.note,
+        )
+        self.assertEqual(
+            envelope.evidence[0].outcome,
+            "FAIL",
+        )
+
     def test_learning_status_defaults_to_decision_summary(self):
         snapshot = {
             "target": "3+3",
