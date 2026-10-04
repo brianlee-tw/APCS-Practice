@@ -359,6 +359,9 @@ def read_key() -> str:
         if ch in {b"\r", b"\n"}:
             return "ENTER"
 
+        if ch == b"\t":
+            return "TAB"
+
         if ch == b"\x1b":
             ready, _, _ = select.select([fd], [], [], 0.04)
 
@@ -385,6 +388,8 @@ def read_key() -> str:
                 return "RIGHT"
             if third == b"D":
                 return "LEFT"
+            if third == b"Z":
+                return "BACKTAB"
 
             return "ESC"
 
