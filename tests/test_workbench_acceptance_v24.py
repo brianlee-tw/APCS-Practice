@@ -379,6 +379,57 @@ class WorkbenchAcceptanceV24Test(unittest.TestCase):
             32,
         )
 
+    def test_low_density_grid_uses_available_vertical_space(self):
+        output = io.StringIO()
+
+        with (
+            patch.object(
+                control,
+                "read_key",
+                return_value="ESC",
+            ),
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=100,
+                    lines=42,
+                ),
+            ),
+            redirect_stdout(output),
+        ):
+            control.choose_grid(
+                "今日學習 · 可用時間",
+                [
+                    {
+                        "label": "15 分",
+                        "detail": "",
+                        "enabled": True,
+                    },
+                    {
+                        "label": "30 分",
+                        "detail": "",
+                        "enabled": True,
+                    },
+                    {
+                        "label": "45 分",
+                        "detail": "",
+                        "enabled": True,
+                    },
+                ],
+                wide_columns=3,
+            )
+
+        lines = output.getvalue().splitlines()
+        footer_index = next(
+            index
+            for index, line in enumerate(lines)
+            if "←→ 選擇" in line
+        )
+        self.assertGreaterEqual(
+            footer_index,
+            30,
+        )
+
     def test_git_center_fits_exact_86_column_boundary(self):
         output = io.StringIO()
         changes = [
