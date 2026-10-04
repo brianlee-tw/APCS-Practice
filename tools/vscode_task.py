@@ -770,12 +770,13 @@ def _test_center(
         )
         print()
 
+        width = terminal_width()
         warning_count = (
             _compile_warning_count(
                 compile_result
             )
         )
-        print(
+        compile_line = (
             status_badge(
                 "編譯成功",
                 status="ok",
@@ -787,14 +788,26 @@ def _test_center(
                 else ""
             )
         )
+        print(
+            fit(
+                compile_line,
+                width,
+            )
+        )
 
         if results.cases:
-            print(
+            summary_line = (
                 _summary_badge(results)
                 + (
                     f"  {GRAY}· Full Suite{RESET}"
                     if full_mode
                     else f"  {GRAY}· Fast Suite{RESET}"
+                )
+            )
+            print(
+                fit(
+                    summary_line,
+                    width,
                 )
             )
         else:
@@ -809,30 +822,36 @@ def _test_center(
         inventory = TEST_ASSETS.inventory(
             bundle
         )
-        print(
-            f"{GRAY}"
+        for line in wrap(
             "測資資產  "
             f"官方 {inventory['official']}"
             f" · 已驗證 {inventory['verified']}"
-            f" · Candidate {inventory['candidate']}"
-            f"{RESET}"
-        )
-        print(
-            f"{GRAY}"
+            f" · Candidate {inventory['candidate']}",
+            width,
+        ):
+            print(
+                f"{GRAY}{line}{RESET}"
+            )
+        for line in wrap(
             "來源檔案  "
             f"{Path(filename).name}"
-            f" · 比較規則：忽略最後換行與行尾空白"
-            f"{RESET}"
-        )
+            " · 比較規則：忽略最後換行與行尾空白",
+            width,
+        ):
+            print(
+                f"{GRAY}{line}{RESET}"
+            )
         print()
 
-        width = terminal_width()
-        left, right = pane_widths(
-            width,
-            (42, 58),
-            gap=3,
-            min_width=28,
-        )
+        if width >= 64:
+            left, right = pane_widths(
+                width,
+                (42, 58),
+                gap=3,
+                min_width=28,
+            )
+        else:
+            left = right = width
 
         list_lines = [
             f"{CYAN}{BOLD}"
@@ -954,18 +973,32 @@ def _test_center(
                     ]
                 )
 
-        for line in render_columns(
-            [
-                list_lines,
-                detail_lines,
-            ],
-            (left, right),
-            gap=3,
-        )[: max(
+        if width >= 64:
+            frame_lines = render_columns(
+                [
+                    list_lines,
+                    detail_lines,
+                ],
+                (left, right),
+                gap=3,
+            )
+        else:
+            frame_lines = [
+                *list_lines,
+                "",
+                *detail_lines,
+            ]
+
+        for line in frame_lines[: max(
             12,
             terminal_height() - 14,
         )]:
-            print(line)
+            print(
+                fit(
+                    line,
+                    width,
+                )
+            )
 
         if message:
             print()
