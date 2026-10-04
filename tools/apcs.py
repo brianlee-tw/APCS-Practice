@@ -64,6 +64,12 @@ except ImportError:
 
 
 try:
+    from .test_assets import TestAssetStore
+except ImportError:
+    from test_assets import TestAssetStore
+
+
+try:
     from .tag_analytics import (
         build_tag_stats,
         display_tags,
@@ -101,6 +107,10 @@ PROBLEM_INTELLIGENCE = ProblemIntelligenceStore(
 PROBLEM_ENRICHMENT = ProblemEnrichmentStore(
     PROBLEM_INTELLIGENCE,
     DATA / "problem_enrichment",
+)
+TEST_ASSETS = TestAssetStore(
+    DATA / "problem_enrichment",
+    ROOT / ".apcs" / "runtime",
 )
 
 START = "<!-- APCS_DASHBOARD_START -->"
@@ -858,6 +868,11 @@ def validate(strict=False):
     errors.extend(
         "深度教學: " + message
         for message in PROBLEM_ENRICHMENT.validate_all()
+    )
+
+    errors.extend(
+        "本地測資: " + message
+        for message in TEST_ASSETS.validate_all()
     )
 
     print(
