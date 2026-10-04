@@ -1827,13 +1827,13 @@ def choose_menu(
             print()
 
             if main and snapshot is not None:
+                if mode_toggle:
+                    print_selection_mode_banner()
+                    print()
                 print_control_dashboard(
                     problem,
                     snapshot,
                 )
-                if mode_toggle:
-                    print()
-                    print_selection_mode_banner()
                 print()
 
             elif mode_toggle:
@@ -2194,13 +2194,13 @@ def choose_grid(
             print()
 
             if main and snapshot is not None:
+                if mode_toggle:
+                    print_selection_mode_banner()
+                    print()
                 print_control_dashboard(
                     problem,
                     snapshot,
                 )
-                if mode_toggle:
-                    print()
-                    print_selection_mode_banner()
                 print()
             elif mode_toggle:
                 print_selection_mode_banner()
@@ -13071,7 +13071,7 @@ def closed_screen() -> None:
     heading("控制中心已關閉")
     print()
     print(f"{CYAN}Ctrl+Alt+A{RESET}    重新開啟")
-    print(f"{CYAN}Ctrl+Shift+B{RESET}  編譯並執行")
+    print(f"{CYAN}Ctrl+Shift+B{RESET}  編譯並開啟測試中心")
     print()
 
 
