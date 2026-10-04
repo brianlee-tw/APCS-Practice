@@ -615,9 +615,18 @@ class C8LearnerUxTest(unittest.TestCase):
                 snapshot,
             )
 
+        rendered_wide = wide.getvalue()
         self.assertIn(
-            "│",
-            wide.getvalue(),
+            "現在可做",
+            rendered_wide,
+        )
+        self.assertIn(
+            "目前題目",
+            rendered_wide,
+        )
+        self.assertIn(
+            "今日容量",
+            rendered_wide,
         )
 
         narrow = io.StringIO()
@@ -635,13 +644,18 @@ class C8LearnerUxTest(unittest.TestCase):
                 snapshot,
             )
 
-        self.assertNotIn(
-            "│",
-            narrow.getvalue(),
+        rendered_narrow = narrow.getvalue()
+        self.assertIn(
+            "現在可做",
+            rendered_narrow,
         )
         self.assertIn(
-            "今日規劃",
-            narrow.getvalue(),
+            "目前題目",
+            rendered_narrow,
+        )
+        self.assertIn(
+            "今日容量",
+            rendered_narrow,
         )
 
 
@@ -1171,7 +1185,11 @@ class C8LearnerUxTest(unittest.TestCase):
         self.assertIsNone(result)
         rendered = output.getvalue()
         self.assertIn(
-            "下一步",
+            "學習活動",
+            rendered,
+        )
+        self.assertIn(
+            "規劃與執行",
             rendered,
         )
         self.assertIn(
@@ -2060,6 +2078,121 @@ class C8LearnerUxTest(unittest.TestCase):
                 "library_filters_practice"
             ]["difficulty"],
             "D1",
+        )
+
+
+    def test_today_reading_detail_routes_to_lesson_context_without_claiming_implementation_flow(self):
+        route = types.SimpleNamespace(
+            skill=types.SimpleNamespace(
+                uid="S01_IO",
+            ),
+            placement=types.SimpleNamespace(
+                problem_id="d050",
+                title="妳那裡現在幾點了？",
+                role="Guided Drill",
+                lesson_uid="L-FND-01",
+            ),
+        )
+        plan = types.SimpleNamespace(
+            budget_minutes=18,
+            selected=(),
+            selected_minutes=0,
+            deferred=(),
+        )
+        snapshot = {
+            "target": "3+3",
+            "capacity_minutes": 60,
+            "plan": plan,
+        }
+        option = {
+            "label": "新學習 · S01_IO × Reading",
+            "kind": "new",
+            "track": "Reading",
+            "route": route,
+        }
+
+        rendered = "\n".join(
+            control._today_option_detail_lines(
+                snapshot,
+                option,
+            )
+        )
+
+        self.assertIn(
+            "Track     Reading",
+            rendered,
+        )
+        self.assertIn(
+            "Lesson    L-FND-01",
+            rendered,
+        )
+        self.assertIn(
+            "Lesson context → Formal response",
+            rendered,
+        )
+        self.assertNotIn(
+            "Ctrl+Shift+B",
+            rendered,
+        )
+
+    def test_today_implementation_detail_routes_to_test_center_then_oj(self):
+        route = types.SimpleNamespace(
+            skill=types.SimpleNamespace(
+                uid="S01_IO",
+            ),
+            placement=types.SimpleNamespace(
+                problem_id="d050",
+                title="妳那裡現在幾點了？",
+                role="Guided Drill",
+                lesson_uid="L-FND-01",
+            ),
+        )
+        plan = types.SimpleNamespace(
+            budget_minutes=18,
+            selected=(),
+            selected_minutes=0,
+            deferred=(),
+        )
+        snapshot = {
+            "target": "3+3",
+            "capacity_minutes": 60,
+            "plan": plan,
+        }
+        option = {
+            "label": "新學習 · S01_IO × Implementation",
+            "kind": "new",
+            "track": "Implementation",
+            "route": route,
+        }
+
+        rendered = "\n".join(
+            control._today_option_detail_lines(
+                snapshot,
+                option,
+            )
+        )
+
+        self.assertIn(
+            "Track     Implementation",
+            rendered,
+        )
+        self.assertIn(
+            "VS Code scratch → Ctrl+Shift+B → 正式 OJ → 完成題目",
+            rendered,
+        )
+
+    def test_closed_screen_names_test_center_for_ctrl_shift_b(self):
+        output = io.StringIO()
+        with redirect_stdout(output):
+            control.closed_screen()
+
+        self.assertIn(
+            "Ctrl+Shift+B",
+            output.getvalue(),
+        )
+        self.assertIn(
+            "測試中心",
+            output.getvalue(),
         )
 
 
