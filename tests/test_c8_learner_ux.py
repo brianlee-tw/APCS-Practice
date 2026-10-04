@@ -1816,6 +1816,10 @@ class C8LearnerUxTest(unittest.TestCase):
             rendered,
         )
         self.assertNotIn(
+            "Candidate 1",
+            rendered,
+        )
+        self.assertNotIn(
             "S18_DFS",
             rendered,
         )
