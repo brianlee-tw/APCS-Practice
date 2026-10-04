@@ -192,6 +192,11 @@ MODE_TOGGLE = object()
 UI_STATE = {
     "library_result_index": 0,
     "library_filter_kind": "results",
+    "library_focus": 0,
+    "library_filters_practice": None,
+    "library_filters_exam": None,
+    "library_query_practice": "",
+    "library_query_exam": "",
 }
 
 
@@ -10922,6 +10927,1026 @@ def _problem_library_filter_browser(
             return
 
 
+
+def _problem_library_empty_filters():
+    return {
+        "skill_uids": (),
+        "skill_label": None,
+        "difficulty": None,
+        "source": None,
+        "attempted": None,
+        "role": None,
+        "require_l2": None,
+    }
+
+
+def _problem_library_saved_filters(
+    mode: str,
+):
+    key = (
+        "library_filters_exam"
+        if mode == "exam"
+        else "library_filters_practice"
+    )
+    saved = UI_STATE.get(key)
+    filters = (
+        dict(saved)
+        if isinstance(saved, dict)
+        else _problem_library_empty_filters()
+    )
+
+    # Exam selection must never inherit hidden classification filters.
+    if mode == "exam":
+        filters.update(
+            {
+                "skill_uids": (),
+                "skill_label": None,
+                "difficulty": None,
+                "role": None,
+                "require_l2": None,
+            }
+        )
+
+    return filters
+
+
+def _problem_library_save_filters(
+    mode: str,
+    filters,
+) -> None:
+    key = (
+        "library_filters_exam"
+        if mode == "exam"
+        else "library_filters_practice"
+    )
+    UI_STATE[key] = dict(filters)
+
+
+def _problem_library_saved_query(
+    mode: str,
+) -> str:
+    key = (
+        "library_query_exam"
+        if mode == "exam"
+        else "library_query_practice"
+    )
+    return str(
+        UI_STATE.get(key)
+        or ""
+    )
+
+
+def _problem_library_save_query(
+    mode: str,
+    query: str,
+) -> None:
+    key = (
+        "library_query_exam"
+        if mode == "exam"
+        else "library_query_practice"
+    )
+    UI_STATE[key] = str(
+        query or ""
+    ).strip()
+
+
+def _problem_library_query_filter(
+    items,
+    query: str,
+    *,
+    mode: str,
+):
+    folded = str(
+        query or ""
+    ).strip().casefold()
+
+    if not folded:
+        return list(items)
+
+    if mode == "exam":
+        return [
+            item
+            for item in items
+            if folded
+            in (
+                f"{item.external_id} "
+                f"{item.title}"
+            ).casefold()
+        ]
+
+    return [
+        item
+        for item in items
+        if folded
+        in " ".join(
+            [
+                item.external_id,
+                item.title,
+                item.source,
+                item.difficulty or "",
+                item.role or "",
+                item.primary_skill or "",
+                *item.supporting_skills,
+            ]
+        ).casefold()
+    ]
+
+
+def _problem_library_workbench_filter_options(
+    filters,
+    *,
+    mode: str,
+):
+    if mode == "exam":
+        return [
+            {
+                "label": "安全選題",
+                "detail": "優先未做題 · strict spoiler",
+                "kind": "safe",
+                "enabled": True,
+            },
+            {
+                "label": "來源",
+                "detail": (
+                    _problem_library_source_label(
+                        filters["source"]
+                    )
+                    if filters.get("source")
+                    else "不限"
+                ),
+                "kind": "source",
+                "enabled": True,
+            },
+            {
+                "label": "作答狀態",
+                "detail": (
+                    "未做"
+                    if filters.get("attempted") is False
+                    else (
+                        "已做"
+                        if filters.get("attempted") is True
+                        else "不限"
+                    )
+                ),
+                "kind": "status",
+                "enabled": True,
+            },
+            {
+                "label": "清除全部條件",
+                "detail": "回到完整 strict-spoiler 題庫",
+                "kind": "clear",
+                "enabled": True,
+            },
+        ]
+
+    return [
+        {
+            "label": "推薦給我",
+            "detail": "依 Today 路徑找尚未做題",
+            "kind": "recommend",
+            "enabled": True,
+        },
+        {
+            "label": "學習主題",
+            "detail": (
+                filters.get("skill_label")
+                or "不限 · Unit → Skill"
+            ),
+            "kind": "skill",
+            "enabled": True,
+        },
+        {
+            "label": "難度",
+            "detail": (
+                filters.get("difficulty")
+                or "不限 · D1–D5"
+            ),
+            "kind": "difficulty",
+            "enabled": True,
+        },
+        {
+            "label": "來源",
+            "detail": (
+                _problem_library_source_label(
+                    filters["source"]
+                )
+                if filters.get("source")
+                else "不限"
+            ),
+            "kind": "source",
+            "enabled": True,
+        },
+        {
+            "label": "作答狀態",
+            "detail": (
+                "未做"
+                if filters.get("attempted") is False
+                else (
+                    "已做"
+                    if filters.get("attempted") is True
+                    else "不限"
+                )
+            ),
+            "kind": "status",
+            "enabled": True,
+        },
+        {
+            "label": "練習用途",
+            "detail": dict(
+                PROBLEM_LIBRARY_ROLES
+            ).get(
+                filters.get("role"),
+                "不限",
+            ),
+            "kind": "role",
+            "enabled": True,
+        },
+        {
+            "label": "教學資料",
+            "detail": (
+                "有教學資料"
+                if filters.get("require_l2") is True
+                else (
+                    "無教學資料"
+                    if filters.get("require_l2") is False
+                    else "不限"
+                )
+            ),
+            "kind": "teaching",
+            "enabled": True,
+        },
+        {
+            "label": "清除全部條件",
+            "detail": "恢復完整練習題庫",
+            "kind": "clear",
+            "enabled": True,
+        },
+    ]
+
+
+def _problem_library_apply_preset(
+    mode: str,
+    filters,
+):
+    if mode == "exam":
+        filters.update(
+            _problem_library_empty_filters()
+        )
+        filters["attempted"] = False
+        return "優先未做 · strict spoiler"
+
+    items, reason = _recommended_problem_items(
+        limit=10000,
+    )
+    ids = {
+        (
+            item.source.casefold(),
+            item.external_id.casefold(),
+        )
+        for item in items
+    }
+    return (
+        reason,
+        ids,
+    )
+
+
+def _problem_library_workbench(
+    *,
+    mode: str,
+):
+    all_items = (
+        _problem_library_items()
+    )
+    filters = (
+        _problem_library_saved_filters(
+            mode
+        )
+    )
+    query = (
+        _problem_library_saved_query(
+            mode
+        )
+    )
+
+    focus = int(
+        UI_STATE.get(
+            "library_focus",
+            0,
+        )
+    )
+    focus = max(
+        0,
+        min(2, focus),
+    )
+    filter_index = 0
+    choice_index = 0
+    result_index = min(
+        int(
+            UI_STATE.get(
+                "library_result_index",
+                0,
+            )
+        ),
+        max(0, len(all_items) - 1),
+    )
+    editing_kind = None
+    skill_unit = None
+    preset_ids = None
+    preset_note = ""
+
+    while True:
+        current = (
+            _problem_library_filter_items(
+                all_items,
+                filters,
+                limit=10000,
+            )
+        )
+        current = (
+            _problem_library_query_filter(
+                current,
+                query,
+                mode=mode,
+            )
+        )
+        if preset_ids is not None:
+            current = [
+                item
+                for item in current
+                if (
+                    item.source.casefold(),
+                    item.external_id.casefold(),
+                )
+                in preset_ids
+            ]
+
+        result_index = min(
+            result_index,
+            max(0, len(current) - 1),
+        )
+
+        filter_options = (
+            _problem_library_workbench_filter_options(
+                filters,
+                mode=mode,
+            )
+        )
+        filter_index = min(
+            filter_index,
+            len(filter_options) - 1,
+        )
+
+        choices = []
+        if editing_kind is not None:
+            choices = (
+                _problem_library_direct_choices(
+                    editing_kind,
+                    filters,
+                    all_items,
+                    skill_unit=skill_unit,
+                )
+            )
+            choice_index = min(
+                choice_index,
+                max(0, len(choices) - 1),
+            )
+
+        clear()
+        heading("題目庫")
+        print_selection_mode_banner(
+            mode,
+            toggle_hint=True,
+        )
+        if query:
+            print(
+                f"{GRAY}"
+                f"搜尋：{query}"
+                " · / 修改 · X 清除"
+                f"{RESET}"
+            )
+        elif preset_note:
+            print(
+                f"{GRAY}"
+                f"目前：{preset_note}"
+                f"{RESET}"
+            )
+        print()
+
+        width = ui_width()
+        gap = 3
+        left = 27
+        middle = 36
+        right = max(
+            27,
+            width
+            - left
+            - middle
+            - gap * 2,
+        )
+
+        headers = [
+            "篩選",
+            f"題目 · {len(current)} 題",
+            "題目側欄",
+        ]
+        header_cells = []
+        for index, label in enumerate(
+            headers
+        ):
+            pane_width = (
+                left
+                if index == 0
+                else (
+                    middle
+                    if index == 1
+                    else right
+                )
+            )
+            color = (
+                CYAN + BOLD
+                if focus == index
+                else GRAY
+            )
+            header_cells.append(
+                f"{color}"
+                f"{pad_display(label, pane_width)}"
+                f"{RESET}"
+            )
+        print(
+            (" " * gap).join(
+                header_cells
+            )
+        )
+
+        left_lines = []
+        if editing_kind is None:
+            for index, option in enumerate(
+                filter_options
+            ):
+                prefix = (
+                    "›"
+                    if (
+                        focus == 0
+                        and index == filter_index
+                    )
+                    else " "
+                )
+                color = (
+                    CYAN + BOLD
+                    if (
+                        focus == 0
+                        and index == filter_index
+                    )
+                    else ""
+                )
+                left_lines.append(
+                    (
+                        fit(
+                            f"{prefix} "
+                            f"{option['label']}",
+                            left,
+                        ),
+                        color,
+                    )
+                )
+                left_lines.append(
+                    (
+                        fit(
+                            "    "
+                            + str(
+                                option.get(
+                                    "detail"
+                                )
+                                or ""
+                            ),
+                            left,
+                        ),
+                        GRAY,
+                    )
+                )
+        else:
+            left_lines.append(
+                (
+                    fit(
+                        "← 返回篩選條件",
+                        left,
+                    ),
+                    GRAY,
+                )
+            )
+            selected_filter = (
+                filter_options[
+                    filter_index
+                ]["label"]
+            )
+            left_lines.append(
+                (
+                    fit(
+                        f"{selected_filter} · 選項",
+                        left,
+                    ),
+                    CYAN + BOLD,
+                )
+            )
+            for index, choice in enumerate(
+                choices
+            ):
+                prefix = (
+                    "›"
+                    if index == choice_index
+                    else " "
+                )
+                color = (
+                    CYAN + BOLD
+                    if index == choice_index
+                    else ""
+                )
+                left_lines.append(
+                    (
+                        fit(
+                            f"{prefix} "
+                            f"{choice['label']}",
+                            left,
+                        ),
+                        color,
+                    )
+                )
+                if choice.get("detail"):
+                    left_lines.append(
+                        (
+                            fit(
+                                "    "
+                                + str(
+                                    choice["detail"]
+                                ),
+                                left,
+                            ),
+                            GRAY,
+                        )
+                    )
+
+        visible = max(
+            8,
+            min(
+                16,
+                ui_height() - 13,
+            ),
+        )
+        start_index = max(
+            0,
+            min(
+                result_index
+                - visible // 2,
+                len(current) - visible,
+            ),
+        )
+
+        middle_lines = []
+        for index in range(
+            start_index,
+            min(
+                len(current),
+                start_index + visible,
+            ),
+        ):
+            item = current[index]
+            prefix = (
+                "›"
+                if (
+                    focus == 1
+                    and index == result_index
+                )
+                else " "
+            )
+            color = (
+                CYAN + BOLD
+                if (
+                    focus == 1
+                    and index == result_index
+                )
+                else ""
+            )
+            middle_lines.append(
+                (
+                    fit(
+                        f"{prefix} "
+                        f"{item.external_id} · "
+                        f"{item.title}",
+                        middle,
+                    ),
+                    color,
+                )
+            )
+            middle_lines.append(
+                (
+                    fit(
+                        "    "
+                        + _problem_library_safe_detail(
+                            item,
+                            mode,
+                        ),
+                        middle,
+                    ),
+                    GRAY,
+                )
+            )
+
+        if not current:
+            middle_lines = [
+                (
+                    "沒有符合條件的題目",
+                    YELLOW,
+                )
+            ]
+
+        if current:
+            selected_item = current[
+                result_index
+            ]
+            inspector = (
+                _problem_library_inspector_lines(
+                    selected_item,
+                    mode=mode,
+                )
+            )
+        else:
+            selected_item = None
+            inspector = [
+                f"{YELLOW}"
+                "目前沒有題目"
+                f"{RESET}",
+                "",
+                "調整左側篩選條件",
+                "或按 X 清除搜尋。",
+            ]
+
+        if focus == 2:
+            inspector = [
+                f"{CYAN}{BOLD}"
+                "› 題目側欄"
+                f"{RESET}",
+                *inspector,
+            ]
+
+        inspector_lines = [
+            (
+                fit(
+                    line,
+                    right,
+                ),
+                "",
+            )
+            for line in inspector
+        ]
+
+        rows = max(
+            len(left_lines),
+            len(middle_lines),
+            len(inspector_lines),
+        )
+        max_rows = max(
+            12,
+            ui_height() - 10,
+        )
+
+        for row in range(
+            min(rows, max_rows)
+        ):
+            cells = []
+            for lines, pane_width in (
+                (left_lines, left),
+                (middle_lines, middle),
+                (inspector_lines, right),
+            ):
+                if row < len(lines):
+                    value, color = (
+                        lines[row]
+                    )
+                else:
+                    value, color = (
+                        "",
+                        "",
+                    )
+                cells.append(
+                    f"{color}"
+                    f"{pad_display(value, pane_width)}"
+                    f"{RESET if color else ''}"
+                )
+            print(
+                (" " * gap).join(
+                    cells
+                )
+            )
+
+        print()
+        rule()
+
+        if focus == 0:
+            if editing_kind is None:
+                action = "Enter 選擇條件"
+            else:
+                action = "Enter 套用 · Esc 返回條件"
+        elif focus == 1:
+            action = "Enter 開啟 OJ"
+        else:
+            action = "Enter 開啟 OJ · D 詳細資料"
+
+        print(
+            f"{GRAY}"
+            "Tab / Shift+Tab 切換區域"
+            f" · ↑↓ 選擇 · {action}"
+            " · / 搜尋 · M 切換模式 · Esc 返回"
+            f"{RESET}"
+        )
+
+        key = read_key()
+
+        if key in {"m", "M"}:
+            _problem_library_save_filters(
+                mode,
+                filters,
+            )
+            _problem_library_save_query(
+                mode,
+                query,
+            )
+            UI_STATE[
+                "library_focus"
+            ] = focus
+            return MODE_TOGGLE
+
+        if key == "TAB":
+            focus = (
+                focus + 1
+            ) % 3
+            UI_STATE[
+                "library_focus"
+            ] = focus
+            continue
+
+        if key == "BACKTAB":
+            focus = (
+                focus - 1
+            ) % 3
+            UI_STATE[
+                "library_focus"
+            ] = focus
+            continue
+
+        if key == "UP":
+            if focus == 0:
+                if editing_kind is None:
+                    filter_index = (
+                        filter_index - 1
+                    ) % len(filter_options)
+                elif choices:
+                    choice_index = (
+                        choice_index - 1
+                    ) % len(choices)
+            elif focus == 1 and current:
+                result_index = (
+                    result_index - 1
+                ) % len(current)
+                UI_STATE[
+                    "library_result_index"
+                ] = result_index
+            continue
+
+        if key == "DOWN":
+            if focus == 0:
+                if editing_kind is None:
+                    filter_index = (
+                        filter_index + 1
+                    ) % len(filter_options)
+                elif choices:
+                    choice_index = (
+                        choice_index + 1
+                    ) % len(choices)
+            elif focus == 1 and current:
+                result_index = (
+                    result_index + 1
+                ) % len(current)
+                UI_STATE[
+                    "library_result_index"
+                ] = result_index
+            continue
+
+        if key == "/" :
+            raw = prompt_text(
+                (
+                    "題號／題名"
+                    if mode == "exam"
+                    else "題號／題名／Skill"
+                ),
+                default=query,
+            )
+            if raw is not None:
+                query = raw.strip()
+                preset_ids = None
+                preset_note = ""
+                _problem_library_save_query(
+                    mode,
+                    query,
+                )
+                result_index = 0
+                UI_STATE[
+                    "library_result_index"
+                ] = 0
+            continue
+
+        if key in {"x", "X"}:
+            query = ""
+            preset_ids = None
+            preset_note = ""
+            _problem_library_save_query(
+                mode,
+                "",
+            )
+            result_index = 0
+            UI_STATE[
+                "library_result_index"
+            ] = 0
+            continue
+
+        if key == "ENTER":
+            if focus == 0:
+                if editing_kind is None:
+                    option = (
+                        filter_options[
+                            filter_index
+                        ]
+                    )
+                    kind = option["kind"]
+
+                    if kind == "recommend":
+                        recommendation = (
+                            _problem_library_apply_preset(
+                                mode,
+                                filters,
+                            )
+                        )
+                        preset_note, preset_ids = (
+                            recommendation
+                        )
+                        query = ""
+                        _problem_library_save_query(
+                            mode,
+                            "",
+                        )
+                        result_index = 0
+                        continue
+
+                    if kind == "safe":
+                        preset_note = (
+                            _problem_library_apply_preset(
+                                mode,
+                                filters,
+                            )
+                        )
+                        preset_ids = None
+                        query = ""
+                        _problem_library_save_query(
+                            mode,
+                            "",
+                        )
+                        _problem_library_save_filters(
+                            mode,
+                            filters,
+                        )
+                        result_index = 0
+                        continue
+
+                    if kind == "clear":
+                        filters = (
+                            _problem_library_empty_filters()
+                        )
+                        preset_ids = None
+                        preset_note = ""
+                        query = ""
+                        skill_unit = None
+                        _problem_library_save_filters(
+                            mode,
+                            filters,
+                        )
+                        _problem_library_save_query(
+                            mode,
+                            "",
+                        )
+                        result_index = 0
+                        continue
+
+                    editing_kind = kind
+                    choice_index = 0
+                    skill_unit = None
+                    continue
+
+                if choices:
+                    choice = choices[
+                        choice_index
+                    ]
+                    action = choice.get(
+                        "action"
+                    )
+
+                    if action == "skill_unit":
+                        skill_unit = (
+                            choice["unit"]
+                        )
+                        choice_index = 0
+                        continue
+
+                    if action == "skill_back":
+                        skill_unit = None
+                        choice_index = 0
+                        continue
+
+                    skill_unit = (
+                        _problem_library_apply_direct_choice(
+                            filters,
+                            choice,
+                            skill_unit=skill_unit,
+                        )
+                    )
+                    preset_ids = None
+                    preset_note = ""
+                    editing_kind = None
+                    choice_index = 0
+                    result_index = 0
+                    _problem_library_save_filters(
+                        mode,
+                        filters,
+                    )
+                    UI_STATE[
+                        "library_result_index"
+                    ] = 0
+                    continue
+
+            elif (
+                selected_item is not None
+                and focus in {1, 2}
+            ):
+                if selected_item.canonical_url:
+                    webbrowser.open(
+                        selected_item.canonical_url
+                    )
+                continue
+
+        if (
+            key in {"o", "O"}
+            and selected_item is not None
+        ):
+            if selected_item.canonical_url:
+                webbrowser.open(
+                    selected_item.canonical_url
+                )
+            continue
+
+        if (
+            key in {"d", "D"}
+            and focus == 2
+            and selected_item is not None
+        ):
+            _problem_library_item_detail(
+                selected_item,
+                mode=mode,
+            )
+            continue
+
+        if key in {
+            "ESC",
+            "q",
+            "Q",
+        }:
+            if (
+                focus == 0
+                and editing_kind is not None
+            ):
+                if (
+                    editing_kind == "skill"
+                    and skill_unit is not None
+                ):
+                    skill_unit = None
+                    choice_index = 0
+                    continue
+                editing_kind = None
+                choice_index = 0
+                continue
+
+            _problem_library_save_filters(
+                mode,
+                filters,
+            )
+            _problem_library_save_query(
+                mode,
+                query,
+            )
+            UI_STATE[
+                "library_focus"
+            ] = focus
+            return None
+
+
 def _problem_library_filter_view(
     *,
     mode: str,
@@ -11093,6 +12118,31 @@ def _problem_library_text_search(
 def problem_library_view() -> None:
     while True:
         mode = selection_mode()
+
+        if ui_width() >= 86:
+            result = (
+                _problem_library_workbench(
+                    mode=mode,
+                )
+            )
+            if result is MODE_TOGGLE:
+                try:
+                    toggle_selection_mode()
+                except (
+                    OSError,
+                    ValueError,
+                ) as exc:
+                    clear()
+                    heading("題目庫")
+                    print()
+                    print(
+                        f"{RED}"
+                        f"✕ 無法切換選題模式：{exc}"
+                        f"{RESET}"
+                    )
+                    pause()
+                continue
+            return
 
         if mode == "practice":
             options = [
