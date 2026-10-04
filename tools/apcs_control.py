@@ -53,6 +53,7 @@ try:
     from .workbench_tui import (
         terminal_width as workbench_width,
         terminal_height as workbench_height,
+        pane_widths as workbench_pane_widths,
     )
     from .learner_model_v2 import (
         LearnerSignalStore,
@@ -103,6 +104,7 @@ except ImportError:
     from workbench_tui import (
         terminal_width as workbench_width,
         terminal_height as workbench_height,
+        pane_widths as workbench_pane_widths,
     )
     from learner_model_v2 import (
         LearnerSignalStore,
@@ -9161,6 +9163,120 @@ def _problem_test_inventory(item) -> dict[str, int]:
     )
 
 
+def _problem_library_testcase_lines(
+    item,
+    *,
+    mode: str,
+) -> list[str]:
+    try:
+        bundle = TEST_ASSETS.load(
+            item.source or None,
+            item.external_id,
+            include_candidates=True,
+        )
+    except Exception:
+        bundle = None
+
+    if bundle is None:
+        return [
+            "測資",
+            "  尚未建立本地測資資產",
+        ]
+
+    strict = mode == "exam"
+    pre_attempt = not item.attempted
+    lines = ["測資"]
+
+    official = [
+        case
+        for case in bundle.cases
+        if case.provenance == "OFFICIAL"
+    ]
+    verified_generated = [
+        case
+        for case in bundle.cases
+        if (
+            case.provenance != "OFFICIAL"
+            and case.verified
+        )
+    ]
+    candidates = [
+        case
+        for case in bundle.cases
+        if not case.verified
+    ]
+
+    lines.append(
+        f"  官方 {len(official)}"
+    )
+    for case in official[:3]:
+        lines.append(
+            f"    {case.case_id} · "
+            f"{fit(case.name, 20)}"
+        )
+    if len(official) > 3:
+        lines.append(
+            f"    …另有 {len(official) - 3} 組"
+        )
+
+    if strict and pre_attempt:
+        lines.extend(
+            [
+                f"  延伸測資  作答後解鎖",
+                (
+                    f"  Candidate {len(candidates)}"
+                    if candidates
+                    else ""
+                ),
+            ]
+        )
+        return [
+            line
+            for line in lines
+            if line
+        ]
+
+    lines.append(
+        f"  已驗證延伸 {len(verified_generated)}"
+    )
+    for index, case in enumerate(
+        verified_generated[:3],
+        start=1,
+    ):
+        reveal_name = (
+            item.attempted
+            or item.role
+            not in {
+                "Core Independent",
+                "Transfer Challenge",
+                "Mock",
+            }
+        )
+        label = (
+            case.name
+            if reveal_name
+            else f"Local Case {index}"
+        )
+        lines.append(
+            f"    {case.case_id} · "
+            f"{fit(label, 20)}"
+        )
+    if len(verified_generated) > 3:
+        lines.append(
+            f"    …另有 {len(verified_generated) - 3} 組"
+        )
+
+    lines.append(
+        f"  Candidate {len(candidates)}"
+    )
+    if candidates:
+        lines.append(
+            "    未驗證，不影響 PASS / FAIL"
+        )
+
+    return lines
+
+
 def _problem_library_inspector_lines(
     item,
     *,
@@ -9176,18 +9292,16 @@ def _problem_library_inspector_lines(
     ]
 
     if strict:
-        inventory = _problem_test_inventory(
-            item
-        )
         lines.extend(
             [
                 "",
                 f"{YELLOW}{BOLD}考試 · 防劇透{RESET}",
                 "Skill / 難度 / 用途已隱藏",
                 "",
-                "測資",
-                f"官方      {inventory['official']}",
-                "延伸測資  作答後解鎖",
+                *_problem_library_testcase_lines(
+                    item,
+                    mode=mode,
+                ),
             ]
         )
         return lines
@@ -9197,21 +9311,14 @@ def _problem_library_inspector_lines(
             f"難度      {item.difficulty or '—'}",
             f"用途      {dict(PROBLEM_LIBRARY_ROLES).get(item.role, item.role or '—')}",
             f"Skill     {item.primary_skill or '—'}",
-        ]
-    )
-
-    inventory = _problem_test_inventory(
-        item
-    )
-    lines.extend(
-        [
             "",
-            f"{CYAN}{BOLD}測資資產{RESET}",
-            f"官方      {inventory['official']}",
-            f"已驗證    {inventory['verified']}",
-            f"Candidate {inventory['candidate']}",
+            *_problem_library_testcase_lines(
+                item,
+                mode=mode,
+            ),
             "",
-            f"{GRAY}詳情      Ctrl+Shift+B 測試中心{RESET}",
+            f"{GRAY}Input / Expected / Actual / Diff{RESET}",
+            f"{GRAY}於 Ctrl+Shift+B 測試中心顯示{RESET}",
         ]
     )
 
@@ -9225,6 +9332,7 @@ def _problem_library_inspector_lines(
         )
 
     return lines
+
 
 
 def _problem_library_results_view(
@@ -11342,14 +11450,13 @@ def _problem_library_workbench(
 
         width = ui_width()
         gap = 3
-        left = 27
-        middle = 36
-        right = max(
-            27,
-            width
-            - left
-            - middle
-            - gap * 2,
+        left, middle, right = (
+            workbench_pane_widths(
+                width,
+                (27, 38, 35),
+                gap=gap,
+                min_width=20,
+            )
         )
 
         headers = [
@@ -11371,9 +11478,13 @@ def _problem_library_workbench(
                 )
             )
             color = (
-                CYAN + BOLD
-                if focus == index
-                else GRAY
+                GREEN + BOLD
+                if index == 1
+                else (
+                    CYAN + BOLD
+                    if focus == index
+                    else GRAY
+                )
             )
             header_cells.append(
                 f"{color}"
