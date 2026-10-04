@@ -292,6 +292,20 @@ def pad_display(
     )
 
 
+def aligned_field(
+    label: str,
+    value,
+    *,
+    label_width: int = 10,
+) -> str:
+    """Render one learner-facing key/value row with stable visual alignment."""
+
+    return (
+        f"{pad_display(label, label_width)}"
+        f"{value}"
+    )
+
+
 def wrap_display(text: str, width: int) -> list[str]:
     """Wrap text by terminal display width without dropping content."""
     width = max(1, int(width))
@@ -822,12 +836,15 @@ def today_capacity_menu(
 ) -> int | None:
     options = [
         {
-            "label": f"{minutes} 分",
-            "detail": (
-                "目前設定"
-                if minutes == current_minutes
-                else ""
+            "label": (
+                f"{minutes} 分"
+                + (
+                    " · 目前"
+                    if minutes == current_minutes
+                    else ""
+                )
             ),
+            "detail": "",
             "enabled": True,
             "action": "套用",
         }
@@ -851,7 +868,7 @@ def today_capacity_menu(
         back_text="返回今日學習",
         selected_index=selected_index,
         enter_text="套用",
-        wide_columns=5,
+        wide_columns=3,
         compact_columns=2,
     )
 
@@ -1537,8 +1554,14 @@ def _control_dashboard_lines(
     snapshot,
 ):
     problem_lines = [
-        problem_line(problem),
-        problem_status(problem),
+        aligned_field(
+            "題目",
+            problem_line(problem),
+        ),
+        aligned_field(
+            "狀態",
+            problem_status(problem),
+        ),
     ]
 
     if problem is not None:
@@ -1559,9 +1582,18 @@ def _control_dashboard_lines(
                     else solution.language
                 )
             )
-            problem_lines.append(
-                f"解法 {language}"
-                f" · 複雜度 {solution.complexity or '未記錄'}"
+            problem_lines.extend(
+                [
+                    aligned_field(
+                        "語言",
+                        language,
+                    ),
+                    aligned_field(
+                        "複雜度",
+                        solution.complexity
+                        or "未記錄",
+                    ),
+                ]
             )
 
         try:
@@ -1583,21 +1615,31 @@ def _control_dashboard_lines(
 
         if inventory["total"]:
             problem_lines.append(
-                "測資 "
-                f"官方 {inventory['official']}"
-                f" · 已驗證 {inventory['verified']}"
+                aligned_field(
+                    "測資",
+                    (
+                        f"官方 {inventory['official']}"
+                        f" / 已驗證 {inventory['verified']}"
+                    ),
+                )
             )
 
         if problem.get("url"):
             problem_lines.append(
-                "OJ 已連結"
+                aligned_field(
+                    "OJ",
+                    "已連結",
+                )
             )
 
         if str(
             problem.get("path") or ""
         ).casefold().endswith(".cpp"):
             problem_lines.append(
-                "Ctrl+Shift+B → 測試中心"
+                aligned_field(
+                    "測試",
+                    "Ctrl+Shift+B",
+                )
             )
 
     plan = snapshot["plan"]
@@ -1607,24 +1649,30 @@ def _control_dashboard_lines(
         - plan.budget_minutes,
     )
     today_lines = [
-        (
-            f"可用 {snapshot['capacity_minutes']} 分"
-            f" · 複習 {plan.selected_minutes}/"
-            f"{plan.budget_minutes} 分"
+        aligned_field(
+            "可用",
+            f"{snapshot['capacity_minutes']} 分",
         ),
-        (
-            f"新學習保留 ≥ {protected} 分"
+        aligned_field(
+            "複習",
+            (
+                f"{plan.selected_minutes}"
+                f" / {plan.budget_minutes} 分"
+            ),
+        ),
+        aligned_field(
+            "新學習",
+            f"≥ {protected} 分",
+        ),
+        aligned_field(
+            "到期",
+            (
+                f"{len(plan.selected)} 項"
+                if plan.selected
+                else "今天無到期複習"
+            ),
         ),
     ]
-
-    if plan.selected:
-        today_lines.append(
-            f"到期複習 {len(plan.selected)} 項"
-        )
-    else:
-        today_lines.append(
-            "今天沒有到期複習"
-        )
 
     cognitive_plan = snapshot.get(
         "cognitive_plan"
@@ -1639,7 +1687,10 @@ def _control_dashboard_lines(
     )
     if cognitive_selected:
         today_lines.append(
-            f"認知修復 {len(cognitive_selected)} 項"
+            aligned_field(
+                "修復",
+                f"{len(cognitive_selected)} 項",
+            )
         )
 
     next_lines = []
@@ -1661,13 +1712,20 @@ def _control_dashboard_lines(
     ):
         next_lines.extend(
             [
-                (
-                    "新學習 · "
-                    f"{route.skill.uid}"
+                aligned_field(
+                    "活動",
+                    "新學習",
                 ),
-                (
-                    f"{route.placement.lesson_uid or '—'}"
-                    f" · {route.placement.problem_id}"
+                aligned_field(
+                    "Skill",
+                    route.skill.uid,
+                ),
+                aligned_field(
+                    "題目",
+                    (
+                        f"{route.placement.lesson_uid or '—'}"
+                        f" · {route.placement.problem_id}"
+                    ),
                 ),
             ]
         )
@@ -1675,13 +1733,21 @@ def _control_dashboard_lines(
         candidate = plan.selected[0]
         next_lines.extend(
             [
-                (
-                    "優先複習 · "
-                    f"{candidate.skill_uid}"
+                aligned_field(
+                    "活動",
+                    "優先複習",
                 ),
-                (
-                    f"{candidate.track}"
-                    f" · R≈{candidate.retrievability:.0%}"
+                aligned_field(
+                    "Skill",
+                    candidate.skill_uid,
+                ),
+                aligned_field(
+                    "軌道",
+                    candidate.track,
+                ),
+                aligned_field(
+                    "回憶率",
+                    f"R≈{candidate.retrievability:.0%}",
                 ),
             ]
         )
@@ -1689,25 +1755,37 @@ def _control_dashboard_lines(
         task = cognitive_selected[0]
         next_lines.extend(
             [
-                "認知修復",
-                (
-                    ", ".join(
-                        task.skill_uids
-                    )
-                    if getattr(
-                        task,
-                        "skill_uids",
-                        None,
-                    )
-                    else task.kind
+                aligned_field(
+                    "活動",
+                    "認知修復",
+                ),
+                aligned_field(
+                    "Skill",
+                    (
+                        ", ".join(
+                            task.skill_uids
+                        )
+                        if getattr(
+                            task,
+                            "skill_uids",
+                            None,
+                        )
+                        else task.kind
+                    ),
                 ),
             ]
         )
     else:
         next_lines.extend(
             [
-                "目前沒有強制下一題",
-                "可從題目庫 deliberate practice",
+                aligned_field(
+                    "活動",
+                    "自由練習",
+                ),
+                aligned_field(
+                    "下一步",
+                    "可從題目庫選題",
+                ),
             ]
         )
 
@@ -1763,6 +1841,7 @@ def print_control_dashboard(
                 )
             )
         )
+        print()
 
         rows = max(
             len(column)
@@ -6613,40 +6692,69 @@ def learning_status_view() -> None:
             )
 
             progress = [
-                (
-                    f"真實作答 {snapshot['attempts']}"
-                    f" · Evidence {snapshot['evidence']}"
+                aligned_field(
+                    "作答",
+                    snapshot["attempts"],
                 ),
-                (
-                    "Reading "
-                    f"{snapshot['evidence_by_track'].get('Reading', 0)}"
-                    " · Implementation "
-                    f"{snapshot['evidence_by_track'].get('Implementation', 0)}"
+                aligned_field(
+                    "Evidence",
+                    snapshot["evidence"],
                 ),
-                (
-                    f"記憶狀態 {snapshot['memory_states']} 個 Skill × Track"
+                aligned_field(
+                    "Reading",
+                    snapshot[
+                        "evidence_by_track"
+                    ].get("Reading", 0),
+                ),
+                aligned_field(
+                    "實作",
+                    snapshot[
+                        "evidence_by_track"
+                    ].get(
+                        "Implementation",
+                        0,
+                    ),
+                ),
+                aligned_field(
+                    "記憶",
+                    (
+                        f"{snapshot['memory_states']}"
+                        " 個 Skill × Track"
+                    ),
                 ),
             ]
             capacity = [
-                (
-                    f"總容量 {snapshot['capacity_minutes']} min"
+                aligned_field(
+                    "總容量",
+                    f"{snapshot['capacity_minutes']} min",
                 ),
-                (
-                    f"複習 {snapshot['review_selected_minutes']}/"
-                    f"{snapshot['review_budget_minutes']} min"
-                    f" · {snapshot['review_selected']} 項"
+                aligned_field(
+                    "複習",
+                    (
+                        f"{snapshot['review_selected_minutes']}"
+                        f" / {snapshot['review_budget_minutes']} min"
+                    ),
                 ),
-                (
-                    f"新學習 ≥ "
-                    f"{snapshot['protected_new_learning_minutes']} min"
+                aligned_field(
+                    "項目",
+                    f"{snapshot['review_selected']} 項",
+                ),
+                aligned_field(
+                    "新學習",
+                    (
+                        "≥ "
+                        f"{snapshot['protected_new_learning_minutes']} min"
+                    ),
                 ),
             ]
             if snapshot[
                 "review_deferred"
             ]:
                 capacity.append(
-                    f"安全延後 "
-                    f"{snapshot['review_deferred']} 項"
+                    aligned_field(
+                        "延後",
+                        f"{snapshot['review_deferred']} 項",
+                    )
                 )
 
             print(
@@ -13026,7 +13134,7 @@ def _exam_duration_menu(
         selected_index=selected_index,
         enter_text="套用",
         back_text="返回",
-        wide_columns=5,
+        wide_columns=3,
         compact_columns=2,
     )
     if selected is None:
@@ -13056,7 +13164,7 @@ def _exam_question_count_menu() -> int | None:
         selected_index=1,
         enter_text="選擇",
         back_text="返回",
-        wide_columns=4,
+        wide_columns=2,
         compact_columns=2,
     )
     if selected is None:
@@ -13487,18 +13595,33 @@ def exam_center() -> None:
         )
 
         context_lines = [
-            (
-                f"時間      {elapsed}/{session['duration_minutes']} min"
-                f" · 剩餘約 {remaining} min"
+            aligned_field(
+                "時間",
+                (
+                    f"{elapsed}"
+                    f" / {session['duration_minutes']} min"
+                ),
             ),
-            (
-                "目前題目  "
-                f"{session['selected_problem_id'] or '掃題中'}"
+            aligned_field(
+                "剩餘",
+                f"約 {remaining} min",
             ),
-            (
-                f"編譯 {summary['compile_count']} · "
-                f"提交 {summary['submit_count']} · "
-                f"切題 {summary['switch_count']}"
+            aligned_field(
+                "題目",
+                session["selected_problem_id"]
+                or "掃題中",
+            ),
+            aligned_field(
+                "編譯",
+                f"{summary['compile_count']} 次",
+            ),
+            aligned_field(
+                "提交",
+                f"{summary['submit_count']} 次",
+            ),
+            aligned_field(
+                "切題",
+                f"{summary['switch_count']} 次",
             ),
             "Ctrl+Shift+B 編譯會自動留下考試時間點。",
         ]
