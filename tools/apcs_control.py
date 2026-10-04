@@ -7603,6 +7603,99 @@ def push_commit(skip_confirm=False) -> bool:
     return False
 
 
+def suggested_commit_message() -> str:
+    changes = git_changes()
+    staged_paths = []
+
+    for change in changes:
+        code = change["code"]
+        if (
+            code != "??"
+            and code[0] != " "
+        ):
+            staged_paths.extend(
+                change["paths"]
+            )
+
+    if not staged_paths:
+        return "chore: update APCS learning system"
+
+    try:
+        problems = core.CATALOG.load_problems()
+        solutions = core.CATALOG.load_solutions()
+    except CatalogError:
+        problems = {}
+        solutions = []
+
+    path_to_problem = {
+        item.path: item.problem_id
+        for item in solutions
+    }
+    problem_ids = {
+        path_to_problem[path]
+        for path in staged_paths
+        if path in path_to_problem
+    }
+
+    test_problem_ids = set()
+    for path in staged_paths:
+        parts = Path(path).parts
+        if (
+            len(parts) >= 4
+            and parts[0] == "data"
+            and parts[1] == "problem_enrichment"
+        ):
+            test_problem_ids.add(
+                parts[3]
+            )
+
+    if (
+        len(test_problem_ids) == 1
+        and not problem_ids
+    ):
+        pid = next(
+            iter(test_problem_ids)
+        )
+        return (
+            f"test: add verified cases for {pid}"
+        )
+
+    if len(problem_ids) == 1:
+        pid = next(
+            iter(problem_ids)
+        )
+        title = (
+            problems[pid].title
+            if pid in problems
+            else ""
+        )
+        return (
+            f"solve: {pid}"
+            + (
+                f" {title}"
+                if title
+                else ""
+            )
+        )
+
+    if all(
+        path.startswith("docs/")
+        for path in staged_paths
+    ):
+        return "docs: update APCS learning system"
+
+    if any(
+        (
+            path.startswith("tools/")
+            or path.startswith("tests/")
+        )
+        for path in staged_paths
+    ):
+        return "feat: refine APCS learning runtime"
+
+    return "chore: update APCS learning system"
+
+
 def create_commit() -> None:
     changes = git_changes()
     staged = staged_count(changes)
@@ -7612,13 +7705,21 @@ def create_commit() -> None:
     print()
 
     if staged == 0:
-        print(f"{YELLOW}尚未有 staged changes。{RESET}")
+        print(
+            f"{YELLOW}"
+            "尚未有已暫存變更。"
+            f"{RESET}"
+        )
         print("請先使用「加入暫存區」。")
         pause()
         return
 
     if not whitespace_ok():
-        print(f"{RED}✕ Git whitespace 檢查未通過{RESET}")
+        print(
+            f"{RED}"
+            "✕ Git whitespace 檢查未通過"
+            f"{RESET}"
+        )
         print("請先修正後再 Commit。")
         pause()
         return
@@ -7646,7 +7747,6 @@ def create_commit() -> None:
 
         if output:
             print()
-
             for line in output.splitlines()[-12:]:
                 print(
                     fit(
@@ -7671,39 +7771,77 @@ def create_commit() -> None:
         "--stat",
     ).stdout.strip()
 
-    print(f"已暫存  {staged} 個變更")
-    print()
-
+    print(
+        f"已暫存  {staged} 個變更"
+    )
     if stat:
         for line in stat.splitlines()[-5:]:
-            print(fit(line, ui_width()))
+            print(
+                fit(
+                    line,
+                    ui_width(),
+                )
+            )
 
+    suggestion = (
+        suggested_commit_message()
+    )
     print()
-    print(f"{GRAY}Commit message{RESET}")
-    print(f"{GRAY}留空直接 Enter 可取消{RESET}")
+    print(
+        f"{CYAN}{BOLD}"
+        "建議 Commit message"
+        f"{RESET}"
+    )
+    print(
+        f"{WHITE}{suggestion}{RESET}"
+    )
+    print(
+        f"{GRAY}"
+        "直接 Enter 採用 · 輸入文字可改寫 · Q 取消"
+        f"{RESET}"
+    )
     print()
 
     try:
-        message = input("> ").strip()
-    except (EOFError, KeyboardInterrupt):
+        raw = input("> ").strip()
+    except (
+        EOFError,
+        KeyboardInterrupt,
+    ):
         return
 
-    if not message:
+    if raw.casefold() == "q":
         return
+
+    message = raw or suggestion
 
     clear()
     heading("確認 Commit")
     print()
 
-    print(f"{GRAY}Message{RESET}")
-    print(fit(message, ui_width()))
+    print(
+        f"{GRAY}Message{RESET}"
+    )
+    print(
+        fit(
+            message,
+            ui_width(),
+        )
+    )
     print()
 
     if stat:
         for line in stat.splitlines()[-5:]:
-            print(fit(line, ui_width()))
+            print(
+                fit(
+                    line,
+                    ui_width(),
+                )
+            )
 
-    if not confirm("建立這個 Commit？"):
+    if not confirm(
+        "建立這個 Commit？"
+    ):
         return
 
     result = run_git(
@@ -7717,7 +7855,11 @@ def create_commit() -> None:
     print()
 
     if result.returncode != 0:
-        print(f"{RED}✕ Commit 失敗{RESET}")
+        print(
+            f"{RED}"
+            "✕ Commit 失敗"
+            f"{RESET}"
+        )
 
         error = (
             result.stderr.strip()
@@ -7727,7 +7869,12 @@ def create_commit() -> None:
         if error:
             print()
             for line in error.splitlines()[-6:]:
-                print(fit(line, ui_width()))
+                print(
+                    fit(
+                        line,
+                        ui_width(),
+                    )
+                )
 
         pause()
         return
@@ -7738,19 +7885,31 @@ def create_commit() -> None:
         "HEAD",
     ).stdout.strip()
 
-    print(f"{GREEN}✓ Commit 已建立{RESET}")
-    print(f"SHA  {sha}")
+    print(
+        f"{GREEN}"
+        "✓ Commit 已建立"
+        f"{RESET}"
+    )
+    print(
+        f"SHA  {sha}"
+    )
     print()
-
-    if confirm("現在 Push 到 GitHub？"):
-        push_commit(skip_confirm=True)
+    print(
+        f"{GRAY}"
+        "建議在一個穩定工作段結束後再 Push；"
+        "不要求每題立即 Push。"
+        f"{RESET}"
+    )
+    pause()
 
 
 def git_center() -> None:
     selected = 0
 
     while True:
-        validation_code, errors, warnings = validate_summary()
+        validation_code, errors, warnings = (
+            validate_summary()
+        )
         changes = git_changes()
         staged = staged_count(changes)
         unstaged = unstaged_count(changes)
@@ -7780,176 +7939,276 @@ def git_center() -> None:
 
         options = [
             {
-                "label": "查看變更",
+                "label": "查看差異",
                 "detail": (
-                    f"{len(changes)} 個變更 · "
-                    f"{staged} 已暫存"
+                    f"{len(changes)} 個變更"
                 ),
                 "enabled": True,
             },
             {
-                "label": "加入暫存區",
+                "label": "加入暫存",
                 "detail": (
-                    f"{unstaged} 個未暫存變更"
+                    f"{unstaged} 個未暫存"
                     if unstaged
-                    else "目前沒有未暫存變更"
+                    else "無未暫存變更"
                 ),
                 "enabled": unstaged > 0,
             },
             {
-                "label": "建立 Commit",
+                "label": "Commit",
                 "detail": (
-                    f"{staged} 個 staged changes"
+                    f"{staged} 個已暫存"
                     if staged
-                    else "請先加入暫存區"
+                    else "尚未暫存"
                 ),
-                "enabled": staged > 0 and format_ok,
+                "enabled": (
+                    staged > 0
+                    and format_ok
+                ),
             },
             {
-                "label": "Push 到 GitHub",
+                "label": "Push",
                 "detail": (
-                    f"ahead {sync['ahead']} · "
-                    f"behind {sync['behind']}"
+                    f"↑{sync['ahead']} · "
+                    f"↓{sync['behind']}"
                     if sync["upstream"]
-                    else "尚未設定 upstream"
+                    else "建立 upstream"
                 ),
                 "enabled": push_enabled,
             },
         ]
 
-        # 狀態更新後，若目前選項失效才重新找可用項目。
         if (
             selected >= len(options)
-            or not options[selected]["enabled"]
+            or not options[selected][
+                "enabled"
+            ]
         ):
-            selected = first_enabled(options)
-
-        clear()
-        heading("檢查與提交")
-        print()
-
-        data_color = GREEN if validation_code == 0 else RED
-        data_mark = "✓" if validation_code == 0 else "✕"
-
-        print(
-            f"資料  "
-            f"{data_color}"
-            f"{data_mark} "
-            f"{fit(validation_text, ui_width() - 7)}"
-            f"{RESET}"
-        )
-
-        print(
-            f"格式  "
-            f"{GREEN if format_ok else RED}"
-            f"{'✓ 通過' if format_ok else '✕ 有問題'}"
-            f"{RESET}"
-        )
-
-        print(
-            f"Git   {len(changes)} 變更 · "
-            f"{staged} staged"
-        )
-
-        if sync["upstream"]:
-            sync_color = (
-                YELLOW
-                if sync["behind"] > 0
-                else GRAY
+            selected = first_enabled(
+                options
             )
 
-            print(
-                f"{sync_color}"
-                f"同步  ↑{sync['ahead']} · ↓{sync['behind']}"
-                f"{RESET}"
+        if ui_width() < 86:
+            chosen = choose_menu(
+                "檢查與提交",
+                options,
+                footer_numbers=True,
+                back_text="返回控制中心",
             )
-
-        print()
-        rule()
-        print()
-
-        for index, option in enumerate(options):
-            enabled = option["enabled"]
-            prefix = "›" if index == selected else " "
-
-            if not enabled:
-                label_color = GRAY
-            elif index == selected:
-                label_color = CYAN + BOLD
-            else:
-                label_color = ""
-
-            print(
-                f"{label_color}"
-                f"{prefix} {index + 1}  {option['label']}"
-                f"{RESET}"
-            )
-
-            detail_color = GRAY
-
-            print(
-                f"     {detail_color}"
-                f"{fit(option['detail'], ui_width() - 5)}"
-                f"{RESET}"
-            )
+            if chosen is None:
+                return
+        else:
+            clear()
+            heading("檢查與提交")
             print()
 
-        rule()
-        print(f"{GRAY}↑↓ 選擇 · Enter 執行{RESET}")
-        print(f"{GRAY}1–4 直達 · Esc / Q 返回控制中心{RESET}")
-
-        key = read_key()
-
-        if key == "UP":
-            selected = move_enabled(
-                options,
-                selected,
-                -1,
+            width = ui_width()
+            gap = 4
+            left = 54
+            right = max(
+                30,
+                width - left - gap,
             )
-            continue
 
-        if key == "DOWN":
-            selected = move_enabled(
-                options,
-                selected,
-                1,
+            left_lines = [
+                f"{CYAN}{BOLD}變更{RESET}",
+            ]
+            visible_changes = max(
+                6,
+                min(
+                    14,
+                    ui_height() - 18,
+                ),
             )
-            continue
+            for change in changes[
+                :visible_changes
+            ]:
+                left_lines.append(
+                    f"{status_color(change['code'])}"
+                    f"{change['code']}"
+                    f"{RESET} "
+                    f"{fit(change['display'], left - 4)}"
+                )
+            if not changes:
+                left_lines.append(
+                    f"{GREEN}✓ 工作區乾淨{RESET}"
+                )
+            elif len(changes) > visible_changes:
+                left_lines.append(
+                    f"{GRAY}"
+                    f"…另有 {len(changes) - visible_changes} 個變更"
+                    f"{RESET}"
+                )
 
-        if key in {"ESC", "q", "Q"}:
-            return
+            data_color = (
+                GREEN
+                if validation_code == 0
+                else RED
+            )
+            right_lines = [
+                f"{CYAN}{BOLD}品質與同步{RESET}",
+                (
+                    f"資料      {data_color}"
+                    f"{'✓' if validation_code == 0 else '✕'} "
+                    f"{validation_text}{RESET}"
+                ),
+                (
+                    f"格式      "
+                    f"{GREEN if format_ok else RED}"
+                    f"{'✓ 通過' if format_ok else '✕ 有問題'}"
+                    f"{RESET}"
+                ),
+                (
+                    f"已暫存    {staged}"
+                    f" · 未暫存 {unstaged}"
+                ),
+                (
+                    f"Branch    "
+                    f"{sync['branch'] or '—'}"
+                ),
+                (
+                    f"同步      ↑{sync['ahead']}"
+                    f" · ↓{sync['behind']}"
+                ),
+                "",
+                f"{CYAN}{BOLD}建議 Commit{RESET}",
+                fit(
+                    suggested_commit_message(),
+                    right,
+                ),
+            ]
 
-        chosen = None
+            rows = max(
+                len(left_lines),
+                len(right_lines),
+            )
+            for row in range(rows):
+                a = (
+                    left_lines[row]
+                    if row < len(left_lines)
+                    else ""
+                )
+                b = (
+                    right_lines[row]
+                    if row < len(right_lines)
+                    else ""
+                )
+                print(
+                    f"{pad_display(a, left)}"
+                    + " " * gap
+                    + f"{fit(b, right)}"
+                )
 
-        if key == "ENTER":
-            if options[selected]["enabled"]:
-                chosen = selected
+            print()
+            print(
+                f"{GRAY}操作{RESET}"
+            )
+            cell_gap = 3
+            cell_width = (
+                width
+                - cell_gap * 3
+            ) // 4
+            cells = []
+            for index, option in enumerate(
+                options
+            ):
+                label = (
+                    f"{index + 1} "
+                    f"{option['label']}"
+                )
+                if not option["enabled"]:
+                    cells.append(
+                        f"{GRAY}"
+                        f"{pad_display(label, cell_width)}"
+                        f"{RESET}"
+                    )
+                elif index == selected:
+                    cells.append(
+                        f"{CYAN}{BOLD}"
+                        f"› "
+                        f"{pad_display(label, max(1, cell_width - 2))}"
+                        f"{RESET}"
+                    )
+                else:
+                    cells.append(
+                        pad_display(
+                            label,
+                            cell_width,
+                        )
+                    )
+            print(
+                (" " * cell_gap).join(
+                    cells
+                )
+            )
+            print()
+            print_wrapped(
+                options[selected]["detail"],
+                width,
+                color=GRAY,
+            )
 
-        elif key in {"1", "2", "3", "4"}:
-            index = int(key) - 1
+            print()
+            rule()
+            print(
+                f"{GRAY}"
+                "←→ 選操作 · Enter 執行"
+                " · 1–4 直達 · Esc 返回控制中心"
+                f"{RESET}"
+            )
 
-            if options[index]["enabled"]:
-                selected = index
-                chosen = index
+            key = read_key()
+            if key == "LEFT":
+                selected = move_enabled(
+                    options,
+                    selected,
+                    -1,
+                )
+                continue
+            if key == "RIGHT":
+                selected = move_enabled(
+                    options,
+                    selected,
+                    1,
+                )
+                continue
+            if key in {
+                "ESC",
+                "q",
+                "Q",
+            }:
+                return
 
-        if chosen is None:
-            continue
+            chosen = None
+            if key == "ENTER":
+                if options[selected][
+                    "enabled"
+                ]:
+                    chosen = selected
+            elif key in {
+                "1",
+                "2",
+                "3",
+                "4",
+            }:
+                index = int(key) - 1
+                if options[index][
+                    "enabled"
+                ]:
+                    selected = index
+                    chosen = index
+
+            if chosen is None:
+                continue
 
         if chosen == 0:
             review_changes()
-
         elif chosen == 1:
             stage_changes()
-
         elif chosen == 2:
             create_commit()
-
         elif chosen == 3:
             push_commit()
-
-        # Action 執行後回到這一層重新讀取 Git state。
-        # selected 會保留；只有該項因狀態改變而 disabled
-        # 才會在下一輪自動移到可用項目。
 
 
 # ============================================================
