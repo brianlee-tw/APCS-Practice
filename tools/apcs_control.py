@@ -49,6 +49,7 @@ try:
     )
     from .problem_library import ProblemLibrary, LibraryItem
     from .test_assets import TestAssetStore
+    from .workbench_context import resolve_problem_context
     from .learner_model_v2 import (
         LearnerSignalStore,
         learner_model_snapshot,
@@ -94,6 +95,7 @@ except ImportError:
     )
     from problem_library import ProblemLibrary, LibraryItem
     from test_assets import TestAssetStore
+    from workbench_context import resolve_problem_context
     from learner_model_v2 import (
         LearnerSignalStore,
         learner_model_snapshot,
@@ -474,114 +476,98 @@ def current_problem(filename: str | None):
     if not filename:
         return None
 
-    path = Path(filename)
-    candidate = (
-        path
-        if path.is_absolute()
-        else ROOT / path
-    )
-    resolved = candidate.resolve()
+    try:
+        context = resolve_problem_context(
+            filename,
+            root=ROOT,
+            store=core.CATALOG,
+            curriculum=CURRICULUM,
+            intelligence_dir=(
+                ROOT
+                / "data"
+                / "problem_intelligence"
+            ),
+        )
+    except (
+        OSError,
+        CatalogError,
+        RuntimeCurriculumError,
+    ):
+        context = None
 
-    placement_match = re.search(
-        r"__([A-Za-z0-9_.:-]+)$",
-        path.stem,
-    )
-    placement_uid = (
-        placement_match.group(1)
-        if placement_match
-        else None
-    )
-
-    # v2.3 runtime scratch identity is the Published Placement, not the
-    # legacy local-catalog filename convention.  This allows CF / CSES /
-    # LeetCode / APCS canonical Problem IDs to participate in B4 without
-    # inventing a second local Problem identity.
-    if placement_uid:
-        try:
-            placement = (
-                CURRICULUM
-                .placement_by_uid(
-                    placement_uid
-                )
-            )
-        except RuntimeCurriculumError:
-            placement = None
-
-        if placement is not None:
-            return {
-                "id": (
-                    placement.problem_id
-                    .strip()
-                    .lower()
-                ),
-                "title": placement.title,
-                "path": path,
-                "state": None,
-                "due": None,
-                "placement_uid": (
-                    placement_uid
-                ),
-                "pb_uid": placement.pb_uid,
-                "published_runtime": True,
-                "url": placement.url,
-                "runtime_track": (
-                    runtime_scratch_context(path)[0]
-                ),
-                "runtime_action": (
-                    runtime_scratch_context(path)[1]
-                ),
-            }
-
-    match = ID_RE.match(
-        path.stem
-    )
-
-    if not match:
+    if context is None:
         return None
 
-    pid = match.group(1).lower()
+    pid = context.problem_id
+    resolved = (
+        context.solution_path
+        .resolve()
+    )
+
+    state = None
+    due = None
+    matched_path = (
+        context.solution_path
+    )
 
     for row in all_rows():
-        if row[0] == pid:
-            matched_path = next(
-                (
-                    solution.path
-                    for solution in row[1]
-                    if solution.path.resolve()
-                    == resolved
-                ),
-                resolved,
-            )
+        if row[0] != pid:
+            continue
 
-            return {
-                "id": pid,
-                "title": clean_title(
-                    pid,
-                    row[2].title,
-                ),
-                "path": matched_path,
-                "state": row[3],
-                "due": row[5],
-                "placement_uid": (
-                    placement_uid
-                ),
-                "published_runtime": False,
-            }
+        state = row[3]
+        due = row[5]
+
+        exact = next(
+            (
+                solution.path
+                for solution in row[1]
+                if solution.path.resolve()
+                == resolved
+            ),
+            None,
+        )
+        if exact is not None:
+            matched_path = exact
+        break
+
+    published_runtime = (
+        context.identity_origin
+        == "published_placement"
+    )
+    track, action = (
+        runtime_scratch_context(
+            context.solution_path
+        )
+        if published_runtime
+        else (None, None)
+    )
 
     return {
         "id": pid,
         "title": clean_title(
             pid,
-            path.stem,
+            context.title,
         ),
-        "path": path,
-        "state": None,
-        "due": None,
+        "path": matched_path,
+        "state": state,
+        "due": due,
         "placement_uid": (
-            placement_uid
+            context.placement_uid
         ),
-        "published_runtime": False,
+        "pb_uid": context.pb_uid,
+        "published_runtime": (
+            published_runtime
+        ),
+        "url": context.canonical_url,
+        "source": context.source,
+        "role": context.role,
+        "runtime_track": track,
+        "runtime_action": action,
+        "identity_origin": (
+            context.identity_origin
+        ),
     }
+
 
 
 def problem_line(problem) -> str:
