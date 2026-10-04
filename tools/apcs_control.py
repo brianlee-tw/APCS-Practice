@@ -11299,11 +11299,18 @@ def _problem_library_workbench(
 
         choices = []
         if editing_kind is not None:
+            choice_base_items = (
+                _problem_library_query_filter(
+                    all_items,
+                    query,
+                    mode=mode,
+                )
+            )
             choices = (
                 _problem_library_direct_choices(
                     editing_kind,
                     filters,
-                    all_items,
+                    choice_base_items,
                     skill_unit=skill_unit,
                 )
             )
@@ -11780,6 +11787,9 @@ def _problem_library_workbench(
                     kind = option["kind"]
 
                     if kind == "recommend":
+                        filters = (
+                            _problem_library_empty_filters()
+                        )
                         recommendation = (
                             _problem_library_apply_preset(
                                 mode,
@@ -11790,11 +11800,18 @@ def _problem_library_workbench(
                             recommendation
                         )
                         query = ""
+                        _problem_library_save_filters(
+                            mode,
+                            filters,
+                        )
                         _problem_library_save_query(
                             mode,
                             "",
                         )
                         result_index = 0
+                        UI_STATE[
+                            "library_result_index"
+                        ] = 0
                         continue
 
                     if kind == "safe":
