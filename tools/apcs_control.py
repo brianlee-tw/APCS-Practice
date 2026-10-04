@@ -5218,7 +5218,7 @@ def add_solution_ui(problem) -> str | None:
         return None
 
     clear()
-    heading("新增 Solution")
+    heading("新增解法")
     print()
     print(f"{WHITE}{problem_line(problem)}{RESET}")
     print()
@@ -5228,7 +5228,7 @@ def add_solution_ui(problem) -> str | None:
         return None
 
     if not confirm(
-        f"為 {pid} 建立新的 {language} solution？"
+        f"為 {pid} 建立新的 {language} 解法？"
     ):
         return None
 
@@ -5263,6 +5263,23 @@ def add_solution_ui(problem) -> str | None:
     return str(path)
 
 
+def _solution_language_label(
+    language: str,
+) -> str:
+    folded = str(
+        language or ""
+    ).strip().casefold()
+    return {
+        "cpp": "C++",
+        "c++": "C++",
+        "py": "Python",
+        "python": "Python",
+    }.get(
+        folded,
+        str(language or "—"),
+    )
+
+
 def solution_center_ui(
     problem,
     current_filename: str | None,
@@ -5276,51 +5293,201 @@ def solution_center_ui(
         )
     except CatalogError as exc:
         clear()
-        heading("Solutions")
+        heading("題目資料 · 解法")
         print()
-        print(f"{RED}✕ Catalog 無法讀取：{exc}{RESET}")
+        print(
+            f"{RED}"
+            f"✕ 題目資料無法讀取：{exc}"
+            f"{RESET}"
+        )
         pause()
         return current_filename
 
-    options = []
-
-    for item in solutions:
-        options.append(
-            {
-                "label": (
-                    f"{item.language.upper()} · {Path(item.path).name}"
-                ),
-                "detail": (
-                    f"Complexity {item.complexity or '未記錄'}"
-                    f" · {item.path}"
-                ),
-                "enabled": True,
-                "kind": "open",
-                "solution": item,
-            }
-        )
-
+    options = [
+        {
+            "label": (
+                f"{_solution_language_label(item.language)}"
+                f" · {Path(item.path).name}"
+            ),
+            "detail": (
+                f"複雜度 "
+                f"{item.complexity or '未記錄'}"
+            ),
+            "enabled": True,
+            "kind": "open",
+            "solution": item,
+            "action": "開啟",
+        }
+        for item in solutions
+    ]
     options.append(
         {
-            "label": "新增 Solution",
-            "detail": "建立另一份 C++ / Python 解法；保留既有 solution",
+            "label": "新增解法",
+            "detail": "建立另一份 C++ / Python 解法；保留既有解法",
             "enabled": True,
             "kind": "add",
+            "action": "建立",
         }
     )
 
-    selected = choose_menu(
-        f"Solutions · {problem['id']}",
-        options,
-        problem=problem,
-        back_text="返回題目資料",
-    )
+    if ui_width() < 86:
+        selected = choose_menu(
+            f"題目資料 · 解法 · {problem['id']}",
+            options,
+            problem=problem,
+            back_text="返回題目資料",
+            enter_text="選擇",
+        )
+    else:
+        selected = first_enabled(
+            options
+        )
+        while True:
+            output = io.StringIO()
+            with contextlib.redirect_stdout(
+                output
+            ):
+                heading("題目資料 · 解法")
+                print()
+                print_problem_context(
+                    problem
+                )
+                print()
+
+                width = ui_width()
+                gap = 4
+                left = 42
+                right = max(
+                    32,
+                    width - left - gap,
+                )
+
+                print(
+                    f"{CYAN}{BOLD}"
+                    f"{pad_display(
+                        f'已登錄解法 · {len(solutions)}',
+                        left,
+                    )}"
+                    f"{RESET}"
+                    + " " * gap
+                    + f"{CYAN}{BOLD}"
+                    "選中解法資訊"
+                    f"{RESET}"
+                )
+
+                left_rows = []
+                for index, option in enumerate(
+                    options
+                ):
+                    prefix = (
+                        "›"
+                        if index == selected
+                        else " "
+                    )
+                    label = (
+                        f"{prefix} {index + 1} "
+                        f"{option['label']}"
+                    )
+                    color = (
+                        CYAN + BOLD
+                        if index == selected
+                        else ""
+                    )
+                    left_rows.append(
+                        (
+                            fit(label, left),
+                            color,
+                        )
+                    )
+
+                option = options[selected]
+                info_rows = []
+                if option["kind"] == "open":
+                    item = option["solution"]
+                    info_rows = [
+                        (
+                            "語言      "
+                            f"{_solution_language_label(item.language)}"
+                        ),
+                        (
+                            "複雜度    "
+                            f"{item.complexity or '未記錄'}"
+                        ),
+                        "檔案",
+                        f"  {item.path}",
+                    ]
+                else:
+                    info_rows = [
+                        "建立新的解法檔案",
+                        "語言可選 C++ / Python",
+                        "既有解法不會被覆寫",
+                    ]
+
+                rows = max(
+                    len(left_rows),
+                    len(info_rows),
+                )
+                for row in range(rows):
+                    left_text, left_color = (
+                        left_rows[row]
+                        if row < len(left_rows)
+                        else ("", "")
+                    )
+                    right_text = (
+                        info_rows[row]
+                        if row < len(info_rows)
+                        else ""
+                    )
+                    print(
+                        f"{left_color}"
+                        f"{pad_display(left_text, left)}"
+                        f"{RESET if left_color else ''}"
+                        + " " * gap
+                        + f"{fit(right_text, right)}"
+                    )
+
+                print()
+                rule()
+                print(
+                    f"{GRAY}"
+                    "↑↓ 選擇 · Enter "
+                    f"{option.get('action') or '選擇'}"
+                    " · Esc 返回題目資料"
+                    f"{RESET}"
+                )
+
+            sys.stdout.write(
+                "\033[2J\033[H"
+                + output.getvalue()
+            )
+            sys.stdout.flush()
+
+            key = read_key()
+            if key == "UP":
+                selected = move_enabled(
+                    options,
+                    selected,
+                    -1,
+                )
+            elif key == "DOWN":
+                selected = move_enabled(
+                    options,
+                    selected,
+                    1,
+                )
+            elif key == "ENTER":
+                break
+            elif key in {
+                "ESC",
+                "q",
+                "Q",
+            }:
+                return current_filename
 
     if selected is None:
         return current_filename
 
     option = options[selected]
-
     if option["kind"] == "add":
         created = add_solution_ui(
             problem
@@ -5332,11 +5499,11 @@ def solution_center_ui(
 
     if not target.is_file():
         clear()
-        heading("Solutions")
+        heading("題目資料 · 解法")
         print()
         print(
             f"{RED}"
-            f"✕ Solution 檔案不存在：{item.path}"
+            f"✕ 解法檔案不存在：{item.path}"
             f"{RESET}"
         )
         pause()
@@ -5344,7 +5511,7 @@ def solution_center_ui(
 
     if open_in_vscode(target):
         clear()
-        heading("Solutions")
+        heading("題目資料 · 解法")
         print()
         print(
             f"{GREEN}"
@@ -5353,30 +5520,46 @@ def solution_center_ui(
         )
         print(
             f"{GRAY}"
-            "控制中心會以實際開啟的 solution path 辨識目前解法；"
-            "Complexity 也只更新該 solution。"
+            "控制中心會依實際開啟的解法檔案辨識目前解法；"
+            "複雜度只更新這一份解法。"
             f"{RESET}"
         )
         pause()
         return str(target)
 
     clear()
-    heading("Solutions")
+    heading("題目資料 · 解法")
     print()
-    print(f"{YELLOW}⚠ 無法自動開啟 VS Code{RESET}")
+    print(
+        f"{YELLOW}"
+        "⚠ 無法自動開啟 VS Code"
+        f"{RESET}"
+    )
     pause()
     return current_filename
 
 
-def catalog_center(problem, current_filename: str | None):
+
+def catalog_center(
+    problem,
+    current_filename: str | None,
+):
     try:
-        problems = core.CATALOG.load_problems()
-        catalog_solutions = core.CATALOG.load_solutions()
+        problems = (
+            core.CATALOG.load_problems()
+        )
+        catalog_solutions = (
+            core.CATALOG.load_solutions()
+        )
     except CatalogError as exc:
         clear()
         heading("題目資料")
         print()
-        print(f"{RED}✕ Catalog 無法讀取：{exc}{RESET}")
+        print(
+            f"{RED}"
+            f"✕ 題目資料無法讀取：{exc}"
+            f"{RESET}"
+        )
         pause()
         return current_filename
 
@@ -5388,8 +5571,11 @@ def catalog_center(problem, current_filename: str | None):
         sum(
             1
             for item in catalog_solutions
-            if known
-            and item.problem_id == problem["id"]
+            if (
+                known
+                and item.problem_id
+                == problem["id"]
+            )
         )
         if known
         else 0
@@ -5398,33 +5584,42 @@ def catalog_center(problem, current_filename: str | None):
     options = [
         {
             "label": "新增題目",
-            "detail": "建立 metadata 與第一份 solution",
+            "detail": "建立題目 metadata 與第一份解法",
             "enabled": True,
+            "section": "題目",
+            "action": "建立",
         },
         {
             "label": "編輯目前題目",
             "detail": (
-                "修改 title / source / difficulty / tags / complexity"
+                "修改標題、來源、難度、標籤等 metadata"
                 if known
-                else "目前檔案不在 Catalog"
+                else "目前檔案不在題目資料庫"
             ),
             "enabled": known,
+            "section": "題目",
+            "action": "編輯",
         },
         {
-            "label": "Solutions",
+            "label": "解法",
             "detail": (
                 f"{solution_count} 份已登錄 · 開啟或新增解法"
                 if known
-                else "需先選擇 Catalog 題目"
+                else "需先選擇已登錄題目"
             ),
             "enabled": known,
+            "section": "解法",
+            "action": "查看",
         },
     ]
 
-    selected = choose_menu(
+    selected = choose_grid(
         "題目資料",
         options,
         problem=problem,
+        back_text="返回更多工具",
+        wide_columns=3,
+        compact_columns=2,
     )
 
     if selected is None:
@@ -5442,6 +5637,8 @@ def catalog_center(problem, current_filename: str | None):
         problem,
         current_filename,
     )
+
+
 # ============================================================
 # Today / Notes
 # ============================================================
