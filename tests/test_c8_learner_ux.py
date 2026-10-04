@@ -1682,7 +1682,7 @@ class C8LearnerUxTest(unittest.TestCase):
             rendered,
         )
         self.assertIn(
-            "已驗證延伸 1",
+            "AI 生成已驗證 1",
             rendered,
         )
         self.assertIn(
