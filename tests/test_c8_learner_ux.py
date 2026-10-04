@@ -683,7 +683,8 @@ class C8LearnerUxTest(unittest.TestCase):
             patch(
                 "tools.apcs_control.shutil.get_terminal_size",
                 return_value=types.SimpleNamespace(
-                    columns=80
+                    columns=80,
+                    lines=42,
                 ),
             ),
         ):
@@ -729,7 +730,8 @@ class C8LearnerUxTest(unittest.TestCase):
             patch(
                 "tools.apcs_control.shutil.get_terminal_size",
                 return_value=types.SimpleNamespace(
-                    columns=100
+                    columns=100,
+                    lines=42,
                 ),
             ),
             redirect_stdout(wide),
@@ -776,7 +778,8 @@ class C8LearnerUxTest(unittest.TestCase):
             patch(
                 "tools.apcs_control.shutil.get_terminal_size",
                 return_value=types.SimpleNamespace(
-                    columns=50
+                    columns=50,
+                    lines=42,
                 ),
             ),
             redirect_stdout(narrow),
@@ -844,7 +847,8 @@ class C8LearnerUxTest(unittest.TestCase):
             patch(
                 "tools.apcs_control.shutil.get_terminal_size",
                 return_value=types.SimpleNamespace(
-                    columns=100
+                    columns=100,
+                    lines=42,
                 ),
             ),
             redirect_stdout(io.StringIO()),
@@ -1167,7 +1171,8 @@ class C8LearnerUxTest(unittest.TestCase):
             patch(
                 "tools.apcs_control.shutil.get_terminal_size",
                 return_value=types.SimpleNamespace(
-                    columns=100
+                    columns=100,
+                    lines=42,
                 ),
             ),
             redirect_stdout(output),
