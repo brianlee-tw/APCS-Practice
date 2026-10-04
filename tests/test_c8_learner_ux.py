@@ -504,8 +504,8 @@ class C8LearnerUxTest(unittest.TestCase):
 
         with (
             patch.object(
-                control.PROBLEM_LIBRARY,
-                "items",
+                control,
+                "_problem_library_items",
                 return_value=[
                     item("a001"),
                     item("a002"),
