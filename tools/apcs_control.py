@@ -1671,6 +1671,10 @@ def choose_menu(
                     print_selection_mode_banner()
                 print()
 
+            elif mode_toggle:
+                print_selection_mode_banner()
+                print()
+
             elif problem is not None:
                 print_problem_context(problem)
                 print()
@@ -2032,6 +2036,9 @@ def choose_grid(
                 if mode_toggle:
                     print()
                     print_selection_mode_banner()
+                print()
+            elif mode_toggle:
+                print_selection_mode_banner()
                 print()
             elif problem is not None:
                 print_problem_context(
