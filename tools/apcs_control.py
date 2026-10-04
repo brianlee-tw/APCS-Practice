@@ -1666,6 +1666,9 @@ def choose_menu(
                     problem,
                     snapshot,
                 )
+                if mode_toggle:
+                    print()
+                    print_selection_mode_banner()
                 print()
 
             elif problem is not None:
@@ -2026,17 +2029,9 @@ def choose_grid(
                     problem,
                     snapshot,
                 )
-                print(
-                    f"{GRAY}"
-                    "選題模式："
-                    f"{selection_mode_label()}"
-                    + (
-                        " · M 切換"
-                        if mode_toggle
-                        else ""
-                    )
-                    + f"{RESET}"
-                )
+                if mode_toggle:
+                    print()
+                    print_selection_mode_banner()
                 print()
             elif problem is not None:
                 print_problem_context(
@@ -8736,15 +8731,9 @@ def _problem_library_filter_choice(
             heading(
                 "題目庫 · 分類找題"
             )
-            print(
-                f"{GRAY}"
-                f"選題模式：{selection_mode_label(mode)}"
-                + (
-                    " · 可依主題練習"
-                    if mode == "practice"
-                    else " · 嚴格防劇透"
-                )
-                + f"{RESET}"
+            print_selection_mode_banner(
+                mode,
+                toggle_hint=False,
             )
             print()
 
