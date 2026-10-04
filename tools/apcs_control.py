@@ -1490,6 +1490,60 @@ def _control_dashboard_lines(
         problem_status(problem),
     ]
 
+    if problem is not None:
+        try:
+            solution = (
+                current_catalog_solution(
+                    problem
+                )
+            )
+        except Exception:
+            solution = None
+
+        if solution is not None:
+            language = (
+                "C++"
+                if solution.language == "cpp"
+                else (
+                    "Python"
+                    if solution.language == "python"
+                    else solution.language
+                )
+            )
+            problem_lines.append(
+                f"解法 {language}"
+                f" · 複雜度 {solution.complexity or '未記錄'}"
+            )
+
+        try:
+            bundle = TEST_ASSETS.load(
+                problem.get("source"),
+                problem["id"],
+                include_candidates=True,
+            )
+            inventory = TEST_ASSETS.inventory(
+                bundle
+            )
+        except Exception:
+            inventory = {
+                "official": 0,
+                "verified": 0,
+                "candidate": 0,
+                "total": 0,
+            }
+
+        if inventory["total"]:
+            problem_lines.append(
+                "測資 "
+                f"官方 {inventory['official']}"
+                f" · 已驗證 {inventory['verified']}"
+            )
+
+        if problem.get("url"):
+            problem_lines.append(
+                "OJ 已連結"
+            )
+
     plan = snapshot["plan"]
     protected = max(
         0,
@@ -1498,12 +1552,12 @@ def _control_dashboard_lines(
     )
     today_lines = [
         (
-            f"{snapshot['capacity_minutes']} min"
+            f"{snapshot['capacity_minutes']} 分"
             f" · 複習 {plan.selected_minutes}/"
-            f"{plan.budget_minutes} min"
+            f"{plan.budget_minutes} 分"
         ),
         (
-            f"新學習 ≥ {protected} min"
+            f"新學習 ≥ {protected} 分"
             + (
                 f" · {snapshot['new_learning'].skill.uid}"
                 if (
@@ -1524,7 +1578,15 @@ def _control_dashboard_lines(
             "今天沒有到期複習"
         )
 
+    if snapshot.get(
+        "cognitive_tasks"
+    ):
+        today_lines.append(
+            f"認知修復 {len(snapshot['cognitive_tasks'])} 項"
+        )
+
     return problem_lines, today_lines
+
 
 
 def print_control_dashboard(
