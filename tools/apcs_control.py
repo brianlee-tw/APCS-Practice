@@ -6360,7 +6360,7 @@ def learning_status_view() -> None:
             rule()
             print()
             sync = (
-                f"同步：已確認 "
+                f"同步狀態：已確認 "
                 f"{snapshot['remote_acknowledged']}"
                 f" · 待同步 {snapshot['remote_pending']}"
             )
