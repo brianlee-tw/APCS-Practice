@@ -6574,6 +6574,255 @@ def learning_status_view() -> None:
 
 
 
+def _today_option_section(
+    option,
+) -> str:
+    kind = option.get("kind")
+    return {
+        "new": "新學習",
+        "review": "到期複習",
+        "cognitive": "修復 / 遷移",
+        "capacity": "今日設定",
+    }.get(
+        kind,
+        "其他",
+    )
+
+
+def _today_empty_state_lines(
+    snapshot,
+    options,
+) -> list[str]:
+    actionable = [
+        option
+        for option in options
+        if option.get("kind")
+        != "capacity"
+    ]
+    if actionable:
+        return []
+
+    route = snapshot.get(
+        "new_learning"
+    )
+    if (
+        route is not None
+        and getattr(
+            route,
+            "route_complete",
+            False,
+        )
+    ):
+        return [
+            "目前沒有新的 Required Skill start action。",
+            "這不代表 RR / IR readiness 已通過。",
+        ]
+
+    if (
+        route is not None
+        and getattr(
+            route,
+            "blocked_skill",
+            None,
+        ) is not None
+    ):
+        return [
+            "目前新學習被 prerequisite Evidence 擋住。",
+            "系統不會用 Skill Status 或單次 AC 強制解鎖。",
+        ]
+
+    return [
+        "目前沒有可安全啟動的 Today action。",
+        "仍可調整今日可用時間或從題目庫 deliberate practice。",
+    ]
+
+
+def _today_option_detail_lines(
+    snapshot,
+    option,
+) -> list[str]:
+    plan = snapshot["plan"]
+    protected = max(
+        0,
+        snapshot["capacity_minutes"]
+        - plan.budget_minutes,
+    )
+    lines = [
+        "今日規劃",
+        f"目標      {snapshot['target']}",
+        (
+            f"可用時間  "
+            f"{snapshot['capacity_minutes']} 分"
+        ),
+        (
+            f"複習      "
+            f"{plan.selected_minutes}/"
+            f"{plan.budget_minutes} 分"
+            f" · {len(plan.selected)} 項"
+        ),
+        f"新學習    ≥ {protected} 分",
+    ]
+
+    if plan.deferred:
+        lines.append(
+            f"安全延後  {len(plan.deferred)} 項"
+        )
+    elif not plan.selected:
+        lines.append(
+            "複習狀態  今天沒有到期複習"
+        )
+
+    lines.extend(
+        [
+            "",
+            "目前選中",
+            option["label"],
+        ]
+    )
+
+    kind = option.get("kind")
+
+    if kind == "new":
+        route = option.get(
+            "route"
+        )
+        placement = getattr(
+            route,
+            "placement",
+            None,
+        )
+        skill = getattr(
+            route,
+            "skill",
+            None,
+        )
+        track = option.get(
+            "track",
+            "Implementation",
+        )
+
+        if skill is not None:
+            lines.append(
+                f"Skill     {skill.uid}"
+            )
+
+        lines.append(
+            f"Track     {track}"
+        )
+
+        if placement is not None:
+            lines.extend(
+                [
+                    (
+                        f"題目      "
+                        f"{placement.problem_id} · "
+                        f"{placement.title}"
+                    ),
+                    (
+                        f"用途      "
+                        f"{placement.role}"
+                    ),
+                    (
+                        f"Lesson    "
+                        f"{placement.lesson_uid or '—'}"
+                    ),
+                ]
+            )
+
+        lines.extend(
+            [
+                "",
+                "執行流程",
+                (
+                    "Lesson context → Formal response → 驗證 → 完成題目"
+                    if track == "Reading"
+                    else (
+                        "VS Code scratch → Ctrl+Shift+B → "
+                        "正式 OJ → 完成題目"
+                    )
+                ),
+            ]
+        )
+
+    elif kind == "review":
+        candidate = option.get(
+            "candidate"
+        )
+        if candidate is not None:
+            lines.extend(
+                [
+                    (
+                        f"Skill     "
+                        f"{candidate.skill_uid}"
+                    ),
+                    (
+                        f"Track     "
+                        f"{candidate.track}"
+                    ),
+                    (
+                        f"R         "
+                        f"≈ {candidate.retrievability:.0%}"
+                    ),
+                    (
+                        f"到期      "
+                        f"{candidate.due_on:%Y-%m-%d}"
+                    ),
+                    (
+                        f"預估      "
+                        f"{candidate.estimated_minutes} 分"
+                    ),
+                    "",
+                    (
+                        "執行流程  retrieval scratch → "
+                        "Judge / verification → 完成複習"
+                    ),
+                ]
+            )
+
+    elif kind == "cognitive":
+        task = option.get(
+            "task"
+        )
+        if task is not None:
+            lines.extend(
+                [
+                    (
+                        f"類型      "
+                        f"{task.kind}"
+                    ),
+                    (
+                        "Skill     "
+                        + ", ".join(
+                            task.skill_uids
+                        )
+                    ),
+                    (
+                        f"預估      "
+                        f"{task.estimated_minutes} 分"
+                    ),
+                    (
+                        f"原因      "
+                        f"{task.reason}"
+                    ),
+                ]
+            )
+
+    elif kind == "capacity":
+        lines.extend(
+            [
+                "",
+                "可選時間",
+                (
+                    "15 / 30 / 45 / 60 / 75 / 90 / "
+                    "120 / 150 / 180 / 240 分"
+                ),
+                "只影響今天；不改長期 curriculum / memory policy。",
+            ]
+        )
+
+    return lines
+
+
 def _today_action_menu(
     snapshot,
     options,
@@ -6589,7 +6838,6 @@ def _today_action_menu(
     selected = first_enabled(
         options
     )
-    plan = snapshot["plan"]
 
     while True:
         output = io.StringIO()
@@ -6600,44 +6848,77 @@ def _today_action_menu(
             print()
 
             width = ui_width()
-            gap = 4
-            left = 56
-            right = max(
-                30,
-                width - left - gap,
+            gap = 3
+            left, right = (
+                workbench_pane_widths(
+                    width,
+                    (46, 54),
+                    gap=gap,
+                    min_width=28,
+                )
             )
 
             print(
                 f"{CYAN}{BOLD}"
-                f"{pad_display('下一步', left)}"
+                f"{pad_display('學習活動', left)}"
                 f"{RESET}"
                 + " " * gap
                 + f"{CYAN}{BOLD}"
-                "今日規劃"
+                f"{pad_display('規劃與執行', right)}"
                 f"{RESET}"
             )
 
-            window = min(
-                8,
-                len(options),
+            max_rows = max(
+                12,
+                ui_height() - 10,
             )
-            start = max(
-                0,
+            window = max(
+                4,
                 min(
-                    selected - 3,
-                    len(options) - window,
+                    9,
+                    max_rows // 2,
                 ),
             )
-            visible = list(
-                range(
-                    start,
-                    start + window,
-                )
+            start_index = max(
+                0,
+                min(
+                    selected
+                    - window // 2,
+                    len(options)
+                    - window,
+                ),
+            )
+            visible = range(
+                start_index,
+                min(
+                    len(options),
+                    start_index + window,
+                ),
             )
 
             task_rows = []
+            previous_section = None
+
             for index in visible:
                 option = options[index]
+                section = (
+                    _today_option_section(
+                        option
+                    )
+                )
+
+                if (
+                    section
+                    != previous_section
+                ):
+                    task_rows.append(
+                        (
+                            section,
+                            GRAY,
+                        )
+                    )
+                    previous_section = section
+
                 prefix = (
                     "›"
                     if index == selected
@@ -6658,6 +6939,7 @@ def _today_action_menu(
                         color,
                     )
                 )
+
                 detail = (
                     option.get("detail")
                     or ""
@@ -6673,76 +6955,46 @@ def _today_action_menu(
                         )
                     )
 
-            protected = max(
-                0,
-                snapshot["capacity_minutes"]
-                - plan.budget_minutes,
+            detail_lines = (
+                _today_option_detail_lines(
+                    snapshot,
+                    options[selected],
+                )
             )
-            plan_rows = [
-                (
-                    f"目標      "
-                    f"{snapshot['target']}"
-                ),
-                (
-                    f"可用時間  "
-                    f"{snapshot['capacity_minutes']} 分"
-                ),
-                (
-                    f"複習      "
-                    f"{plan.selected_minutes}/"
-                    f"{plan.budget_minutes} 分"
-                    f" · {len(plan.selected)} 項"
-                ),
-                (
-                    f"新學習    ≥ "
-                    f"{protected} 分"
-                ),
-            ]
 
-            if plan.deferred:
-                plan_rows.append(
-                    f"安全延後  "
-                    f"{len(plan.deferred)} 項"
+            empty_lines = (
+                _today_empty_state_lines(
+                    snapshot,
+                    options,
                 )
-            elif not plan.selected:
-                plan_rows.append(
-                    "複習狀態  今天沒有到期複習"
-                )
-
-            plan_rows.extend(
-                [
-                    "",
-                    "目前選中",
-                    options[selected]["label"],
-                ]
             )
-            detail = (
-                options[selected].get(
-                    "detail"
-                )
-                or ""
-            )
-            if detail:
-                plan_rows.extend(
-                    wrap_display(
-                        detail,
-                        right,
-                    )
+            if empty_lines:
+                detail_lines.extend(
+                    [
+                        "",
+                        "目前狀態",
+                        *empty_lines,
+                    ]
                 )
 
             rows = max(
                 len(task_rows),
-                len(plan_rows),
+                len(detail_lines),
             )
-            for row in range(rows):
+            for row in range(
+                min(
+                    rows,
+                    max_rows,
+                )
+            ):
                 left_text, left_color = (
                     task_rows[row]
                     if row < len(task_rows)
                     else ("", "")
                 )
                 right_text = (
-                    plan_rows[row]
-                    if row < len(plan_rows)
+                    detail_lines[row]
+                    if row < len(detail_lines)
                     else ""
                 )
                 print(
@@ -6757,6 +7009,21 @@ def _today_action_menu(
                 print()
                 print_wrapped(
                     f"⚠ {snapshot['warning']}",
+                    width,
+                    color=YELLOW,
+                )
+
+            if snapshot.get(
+                "curriculum_blocker"
+            ):
+                print()
+                print_wrapped(
+                    (
+                        "⚠ 新學習暫時無法啟動："
+                        + snapshot[
+                            "curriculum_blocker"
+                        ]
+                    ),
                     width,
                     color=YELLOW,
                 )
@@ -6776,9 +7043,15 @@ def _today_action_menu(
                     else "開始"
                 )
             )
+            direct = (
+                f" · 1–{len(options)} 直達"
+                if len(options) <= 9
+                else ""
+            )
             print(
                 f"{GRAY}"
                 f"↑↓ 選擇 · Enter {action}"
+                f"{direct}"
                 " · Esc / Q 返回控制中心"
                 f"{RESET}"
             )
@@ -6790,26 +7063,31 @@ def _today_action_menu(
         sys.stdout.flush()
 
         key = read_key()
+
         if key == "UP":
             selected = move_enabled(
                 options,
                 selected,
                 -1,
             )
+
         elif key == "DOWN":
             selected = move_enabled(
                 options,
                 selected,
                 1,
             )
+
         elif key == "ENTER":
             return selected
+
         elif key in {
             "ESC",
             "q",
             "Q",
         }:
             return None
+
         elif (
             key.isdigit()
             and len(options) <= 9
@@ -6823,6 +7101,7 @@ def _today_action_menu(
                 )
             ):
                 return index
+
 
 
 def today_view(current_filename: str | None):
@@ -6925,50 +7204,6 @@ def today_view(current_filename: str | None):
             "action": "調整",
         }
     )
-
-    if not [
-        option
-        for option in options
-        if option["kind"] != "capacity"
-    ]:
-        print()
-        rule()
-        print()
-
-        if (
-            route is not None
-            and route.route_complete
-        ):
-            print(
-                f"{GRAY}"
-                "目前沒有新的 Required Skill start action；"
-                "這不代表 RR/IR readiness 已通過。"
-                f"{RESET}"
-            )
-        elif (
-            route is not None
-            and route.blocked_skill
-            is not None
-        ):
-            print(
-                f"{GRAY}"
-                "先建立上列 prerequisite Evidence；"
-                "系統不會以 Skill Status 或單次 AC 強制解鎖。"
-                f"{RESET}"
-            )
-        else:
-            print(
-                f"{GRAY}"
-                "目前沒有可安全啟動的 Today action。"
-                f"{RESET}"
-            )
-
-        print()
-        print(
-            f"{GRAY}"
-            "仍可調整本日可用時間，系統會重新計算規劃。"
-            f"{RESET}"
-        )
 
     selected = _today_action_menu(
         snapshot,
