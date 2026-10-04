@@ -1394,7 +1394,7 @@ class C8LearnerUxTest(unittest.TestCase):
             rendered,
         )
         self.assertIn(
-            "題目側欄",
+            "題目資訊",
             rendered,
         )
         self.assertIn(
@@ -1546,11 +1546,12 @@ class C8LearnerUxTest(unittest.TestCase):
             control._problem_library_workbench(
                 mode="practice",
             )
+            final_focus = control.UI_STATE[
+                "library_focus"
+            ]
 
         self.assertEqual(
-            control.UI_STATE[
-                "library_focus"
-            ],
+            final_focus,
             1,
         )
 
@@ -2255,7 +2256,7 @@ class C8LearnerUxTest(unittest.TestCase):
             rendered,
         )
         self.assertIn(
-            "題目側欄",
+            "題目資訊",
             rendered,
         )
 
