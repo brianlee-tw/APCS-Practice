@@ -468,8 +468,35 @@ def _oj_url(
         and context.canonical_url
     ):
         return context.canonical_url
+
     if bundle is not None and bundle.canonical_url:
         return bundle.canonical_url
+
+    if context is not None:
+        source = str(
+            context.source or ""
+        ).strip().casefold()
+        problem_id = str(
+            context.problem_id or ""
+        ).strip().casefold()
+
+        if (
+            source in {
+                "zerojudge",
+                "zerojudge.tw",
+            }
+            and re.fullmatch(
+                r"(?:[a-z]\d+|\d+)",
+                problem_id,
+                flags=re.I,
+            )
+        ):
+            return (
+                "https://zerojudge.tw/"
+                "ShowProblem?problemid="
+                f"{problem_id}"
+            )
+
     return None
 
 
@@ -502,6 +529,38 @@ def _interactive_run(
             f"{RESET}"
         )
     return result.returncode
+
+
+def _compile_warning_count(
+    result: CompileResult,
+) -> int:
+    return sum(
+        1
+        for line in result.stderr.splitlines()
+        if "warning:" in line
+    )
+
+
+def _case_display_name(
+    result: CaseResult,
+    *,
+    index: int,
+    context: ProblemContext | None,
+    post_attempt: bool,
+) -> str:
+    case = result.case
+
+    if case.provenance == "OFFICIAL":
+        return case.name
+
+    if (
+        context is not None
+        and context.role == "Core Independent"
+        and not post_attempt
+    ):
+        return f"Local Case {index + 1}"
+
+    return case.name
 
 
 def _status_text(
@@ -548,6 +607,18 @@ def _case_detail_lines(
             )[:7]
         ],
     ]
+
+    if result.status == UNVERIFIED:
+        result_lines.extend(
+            [
+                "",
+                "Expected",
+                "  尚未驗證；不顯示 AI / candidate 猜測值",
+                "",
+                f"{GRAY}此測資不影響 PASS / FAIL。{RESET}",
+            ]
+        )
+        return result_lines
 
     if strict_pre_attempt and (
         case.provenance != "OFFICIAL"
@@ -629,6 +700,7 @@ def _case_detail_lines(
     return result_lines
 
 
+
 def _summary_badge(
     suite_result: SuiteResult,
 ) -> str:
@@ -655,8 +727,9 @@ def _test_center(
     filename: str,
     executable: Path,
     context: ProblemContext | None,
-    bundle: TestBundle,
+    bundle: TestBundle | None,
     initial: SuiteResult,
+    compile_result: CompileResult,
 ) -> int:
     results = initial
     selected = (
@@ -697,14 +770,41 @@ def _test_center(
         )
         print()
 
-        print(
-            _summary_badge(results)
-            + (
-                f"  {GRAY}· Full Suite{RESET}"
-                if full_mode
-                else f"  {GRAY}· Fast Suite{RESET}"
+        warning_count = (
+            _compile_warning_count(
+                compile_result
             )
         )
+        print(
+            status_badge(
+                "編譯成功",
+                status="ok",
+            )
+            + f"  {compile_result.duration_ms} ms"
+            + (
+                f"  {YELLOW}· {warning_count} warnings{RESET}"
+                if warning_count
+                else ""
+            )
+        )
+
+        if results.cases:
+            print(
+                _summary_badge(results)
+                + (
+                    f"  {GRAY}· Full Suite{RESET}"
+                    if full_mode
+                    else f"  {GRAY}· Fast Suite{RESET}"
+                )
+            )
+        else:
+            print(
+                status_badge(
+                    "尚無可執行的可信測資",
+                    status="neutral",
+                )
+                + f"  {GRAY}· Enter / I 手動執行{RESET}"
+            )
 
         inventory = TEST_ASSETS.inventory(
             bundle
@@ -719,8 +819,9 @@ def _test_center(
         )
         print(
             f"{GRAY}"
-            "比較規則  忽略最後換行與行尾空白；"
-            "不忽略 token / 行順序"
+            "來源檔案  "
+            f"{Path(filename).name}"
+            f" · 比較規則：忽略最後換行與行尾空白"
             f"{RESET}"
         )
         print()
@@ -738,6 +839,10 @@ def _test_center(
             f"{pad('測資', left)}"
             f"{RESET}"
         ]
+        post_attempt = _post_attempt(
+            filename
+        )
+
         for index, result in enumerate(
             results.cases
         ):
@@ -751,10 +856,16 @@ def _test_center(
                 if index == selected
                 else " "
             )
+            name = _case_display_name(
+                result,
+                index=index,
+                context=context,
+                post_attempt=post_attempt,
+            )
             label = (
                 f"{prefix} "
                 f"{result.case.case_id} "
-                f"{result.case.name}"
+                f"{name}"
             )
             status = (
                 f"{mark} "
@@ -794,7 +905,7 @@ def _test_center(
                     "Mock",
                 }
             )
-        ) and not _post_attempt(filename)
+        ) and not post_attempt
 
         if results.cases:
             detail_result = (
@@ -823,10 +934,25 @@ def _test_center(
         else:
             detail_lines = [
                 f"{CYAN}{BOLD}"
-                "選中測資"
+                "執行資訊"
                 f"{RESET}",
-                "沒有可顯示的測資。",
+                "目前沒有可直接判定結果的可信測資。",
+                "",
+                "你仍可：",
+                "  Enter / I 以標準輸入手動執行",
+                "  C 複製剛剛實際編譯的 source",
+                "  O 開啟正式 OJ（若有 canonical URL）",
             ]
+            if inventory["candidate"]:
+                detail_lines.extend(
+                    [
+                        "",
+                        f"{YELLOW}"
+                        f"另有 {inventory['candidate']} 組 Candidate；"
+                        "未驗證前不作 PASS / FAIL。"
+                        f"{RESET}",
+                    ]
+                )
 
         for line in render_columns(
             [
@@ -837,7 +963,7 @@ def _test_center(
             gap=3,
         )[: max(
             12,
-            terminal_height() - 13,
+            terminal_height() - 14,
         )]:
             print(line)
 
@@ -850,13 +976,30 @@ def _test_center(
             bundle,
         )
 
-        commands = [
-            ("↑↓", "選測資"),
-            ("R", "重跑"),
-            ("T", "完整測試"),
-            ("I", "手動輸入"),
-            ("C", "複製程式碼"),
-        ]
+        commands = []
+        if results.cases:
+            commands.extend(
+                [
+                    ("↑↓", "選測資"),
+                    ("R", "重跑"),
+                ]
+            )
+        else:
+            commands.append(
+                ("Enter", "手動執行")
+            )
+
+        if bundle is not None:
+            commands.append(
+                ("T", "完整測試")
+            )
+
+        commands.extend(
+            [
+                ("I", "手動輸入"),
+                ("C", "複製程式碼"),
+            ]
+        )
         if oj_url:
             commands.append(
                 ("O", "開啟 OJ")
@@ -903,7 +1046,10 @@ def _test_center(
             )
             continue
 
-        if key in {"t", "T"}:
+        if (
+            key in {"t", "T"}
+            and bundle is not None
+        ):
             cases = _visible_cases(
                 bundle,
                 context,
@@ -922,10 +1068,24 @@ def _test_center(
                 is not None
                 else 0
             )
-            message = ""
+            runnable = (
+                results.runnable_count
+            )
+            message = (
+                ""
+                if runnable
+                else (
+                    f"{YELLOW}"
+                    "完整測試目前也沒有可判定的 verified cases。"
+                    f"{RESET}"
+                )
+            )
             continue
 
-        if key in {"i", "I"}:
+        if (
+            key == "ENTER"
+            and not results.cases
+        ) or key in {"i", "I"}:
             _interactive_run(
                 executable
             )
@@ -954,10 +1114,16 @@ def _test_center(
             webbrowser.open(
                 oj_url
             )
+            local_state = (
+                "本地測試已通過；"
+                if results.all_passed
+                else "本地測試尚未全數通過；"
+            )
             message = (
-                f"{GREEN}"
+                f"{YELLOW if not results.all_passed else GREEN}"
                 "✓ 已開啟正式 OJ；"
-                "本地 PASS 不等於 AC"
+                f"{local_state}"
+                "OJ verdict 才是正式判定"
                 f"{RESET}"
             )
             continue
@@ -967,11 +1133,17 @@ def _test_center(
             "q",
             "Q",
         }:
+            # Closing the Test Center is a UI action, not a verdict. A failed
+            # local suite still returns non-zero so VS Code clearly preserves
+            # the failure state; no-test/manual-only sessions close cleanly.
+            if not results.cases:
+                return 0
             return (
                 0
                 if results.all_passed
                 else 1
             )
+
 
 
 def build_and_run(filename: str) -> int:
@@ -1005,9 +1177,15 @@ def build_and_run(filename: str) -> int:
     bundle = _test_bundle(
         context
     )
+
     if bundle is None:
-        return _interactive_run(
-            executable
+        return _test_center(
+            filename,
+            executable,
+            context,
+            None,
+            SuiteResult(()),
+            compile_result,
         )
 
     fast_cases = _visible_cases(
@@ -1016,17 +1194,6 @@ def build_and_run(filename: str) -> int:
         filename,
         suite=SUITE_FAST,
     )
-
-    runnable = [
-        case
-        for case in fast_cases
-        if case.runnable
-    ]
-
-    if not runnable:
-        return _interactive_run(
-            executable
-        )
 
     results = run_suite(
         executable,
@@ -1040,7 +1207,9 @@ def build_and_run(filename: str) -> int:
         context,
         bundle,
         results,
+        compile_result,
     )
+
 
 
 def today_view() -> int:
