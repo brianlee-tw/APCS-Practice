@@ -198,7 +198,7 @@ def run_case(
     timeout_seconds: float = 2.0,
     output_limit_bytes: int = 1_000_000,
 ) -> CaseResult:
-    if case.expected_output is None:
+    if not case.runnable:
         return CaseResult(
             case=case,
             status=UNVERIFIED,
