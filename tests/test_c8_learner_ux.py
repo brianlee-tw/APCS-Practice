@@ -2035,25 +2035,28 @@ class C8LearnerUxTest(unittest.TestCase):
                     mode="practice",
                 )
             )
+            snapshot = dict(
+                control.UI_STATE
+            )
 
         self.assertIs(
             result,
             control.MODE_TOGGLE,
         )
         self.assertEqual(
-            control.UI_STATE[
+            snapshot[
                 "library_focus"
             ],
             1,
         )
         self.assertEqual(
-            control.UI_STATE[
+            snapshot[
                 "library_query_practice"
             ],
             "a001",
         )
         self.assertEqual(
-            control.UI_STATE[
+            snapshot[
                 "library_filters_practice"
             ]["difficulty"],
             "D1",
