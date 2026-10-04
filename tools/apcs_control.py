@@ -8811,6 +8811,87 @@ def _problem_library_item_detail(
     )
 
 
+def _problem_test_inventory(item) -> dict[str, int]:
+    try:
+        bundle = TEST_ASSETS.load(
+            item.source or None,
+            item.external_id,
+            include_candidates=True,
+        )
+    except Exception:
+        bundle = None
+
+    return TEST_ASSETS.inventory(
+        bundle
+    )
+
+
+def _problem_library_inspector_lines(
+    item,
+    *,
+    mode: str,
+) -> list[str]:
+    strict = mode == "exam"
+    lines = [
+        f"{WHITE}{BOLD}{item.external_id}{RESET}",
+        fit(item.title, 34),
+        "",
+        f"來源      {_problem_library_source_label(item.source)}",
+        f"狀態      {'已做' if item.attempted else '未做'}",
+    ]
+
+    if strict:
+        inventory = _problem_test_inventory(
+            item
+        )
+        lines.extend(
+            [
+                "",
+                f"{YELLOW}{BOLD}考試 · 防劇透{RESET}",
+                "Skill / 難度 / 用途已隱藏",
+                "",
+                "測資",
+                f"官方      {inventory['official']}",
+                "延伸測資  作答後解鎖",
+            ]
+        )
+        return lines
+
+    lines.extend(
+        [
+            f"難度      {item.difficulty or '—'}",
+            f"用途      {dict(PROBLEM_LIBRARY_ROLES).get(item.role, item.role or '—')}",
+            f"Skill     {item.primary_skill or '—'}",
+        ]
+    )
+
+    inventory = _problem_test_inventory(
+        item
+    )
+    lines.extend(
+        [
+            "",
+            f"{CYAN}{BOLD}測資資產{RESET}",
+            f"官方      {inventory['official']}",
+            f"已驗證    {inventory['verified']}",
+            f"Candidate {inventory['candidate']}",
+            "",
+            f"{GRAY}Expected / Actual / Diff 於 Ctrl+Shift+B 測試中心顯示{RESET}",
+        ]
+    )
+
+    if item.has_l2:
+        lines.append(
+            f"{GREEN}教學資料  已建立{RESET}"
+        )
+    else:
+        lines.append(
+            f"{GRAY}教學資料  尚未建立{RESET}"
+        )
+
+    return lines
+
+
 def _problem_library_results_view(
     items,
     *,
@@ -8819,6 +8900,8 @@ def _problem_library_results_view(
     mode: str = "practice",
     select_only: bool = False,
 ):
+    items = list(items)
+
     if not items:
         clear()
         heading(title)
@@ -8839,50 +8922,264 @@ def _problem_library_results_view(
         )
         return None
 
-    while True:
-        options = [
-            {
-                "label": (
-                    f"{item.external_id} · "
-                    f"{item.title}"
-                ),
-                "detail": (
-                    _problem_library_safe_detail(
-                        item,
-                        mode,
-                    )
-                ),
-                "enabled": True,
-                "action": (
+    if (
+        select_only
+        or ui_width() < 86
+    ):
+        selected_index = min(
+            int(
+                UI_STATE.get(
+                    "library_result_index",
+                    0,
+                )
+            ),
+            len(items) - 1,
+        )
+
+        while True:
+            options = [
+                {
+                    "label": (
+                        f"{item.external_id} · "
+                        f"{item.title}"
+                    ),
+                    "detail": (
+                        _problem_library_safe_detail(
+                            item,
+                            mode,
+                        )
+                    ),
+                    "enabled": True,
+                    "action": (
+                        "選取"
+                        if select_only
+                        else "查看"
+                    ),
+                }
+                for item in items
+            ]
+
+            selected = choose_menu(
+                f"{title} · {len(items)} 題",
+                options,
+                footer_numbers=False,
+                back_text="返回題目庫",
+                enter_text=(
                     "選取"
                     if select_only
                     else "查看"
                 ),
-            }
-            for item in items
-        ]
+                selected_index=selected_index,
+            )
+            if selected is None:
+                return None
 
-        selected = choose_menu(
-            f"{title} · {len(items)} 題",
-            options,
-            footer_numbers=False,
-            back_text="返回題目庫",
-            enter_text=(
-                "選取"
-                if select_only
-                else "查看"
+            UI_STATE[
+                "library_result_index"
+            ] = selected
+            selected_index = selected
+
+            if select_only:
+                return items[selected]
+
+            _problem_library_item_detail(
+                items[selected],
+                mode=mode,
+            )
+
+    selected = min(
+        int(
+            UI_STATE.get(
+                "library_result_index",
+                0,
+            )
+        ),
+        len(items) - 1,
+    )
+
+    while True:
+        clear()
+        heading(
+            f"{title} · {len(items)} 題"
+        )
+        print_selection_mode_banner(
+            mode,
+            toggle_hint=False,
+        )
+        if context:
+            print(
+                f"{GRAY}"
+                f"{fit(context, ui_width())}"
+                f"{RESET}"
+            )
+        print()
+
+        width = ui_width()
+        gap = 4
+        left = 54
+        right = max(
+            30,
+            width - left - gap,
+        )
+
+        print(
+            f"{CYAN}{BOLD}"
+            f"{pad_display('題目', left)}"
+            f"{RESET}"
+            + " " * gap
+            + f"{CYAN}{BOLD}"
+            "題目側欄"
+            f"{RESET}"
+        )
+
+        visible_rows = max(
+            8,
+            min(
+                19,
+                ui_height() - 14,
             ),
         )
-        if selected is None:
+        start_index = max(
+            0,
+            min(
+                selected
+                - visible_rows // 2,
+                len(items)
+                - visible_rows,
+            ),
+        )
+        indexes = range(
+            start_index,
+            min(
+                len(items),
+                start_index + visible_rows,
+            ),
+        )
+
+        list_lines = []
+        for index in indexes:
+            item = items[index]
+            prefix = (
+                "›"
+                if index == selected
+                else " "
+            )
+            state = (
+                "已做"
+                if item.attempted
+                else "未做"
+            )
+            label = (
+                f"{prefix} "
+                f"{item.external_id} · "
+                f"{item.title}"
+            )
+            detail = (
+                f"{_problem_library_source_label(item.source)} · "
+                f"{state}"
+            )
+            color = (
+                CYAN + BOLD
+                if index == selected
+                else ""
+            )
+            list_lines.append(
+                (
+                    fit(label, left),
+                    color,
+                )
+            )
+            list_lines.append(
+                (
+                    fit(
+                        "    " + detail,
+                        left,
+                    ),
+                    GRAY,
+                )
+            )
+
+        inspector = (
+            _problem_library_inspector_lines(
+                items[selected],
+                mode=mode,
+            )
+        )
+
+        rows = max(
+            len(list_lines),
+            len(inspector),
+        )
+        for row in range(rows):
+            left_text, left_color = (
+                list_lines[row]
+                if row < len(list_lines)
+                else ("", "")
+            )
+            right_text = (
+                inspector[row]
+                if row < len(inspector)
+                else ""
+            )
+            print(
+                f"{left_color}"
+                f"{pad_display(left_text, left)}"
+                f"{RESET if left_color else ''}"
+                + " " * gap
+                + f"{fit(right_text, right)}"
+            )
+
+        print()
+        rule()
+        print(
+            f"{GRAY}"
+            "↑↓ 選題 · Enter 查看詳細 · O 開啟 OJ · Esc 返回"
+            f"{RESET}"
+        )
+
+        key = read_key()
+
+        if key == "UP":
+            selected = (
+                selected - 1
+            ) % len(items)
+            UI_STATE[
+                "library_result_index"
+            ] = selected
+            continue
+
+        if key == "DOWN":
+            selected = (
+                selected + 1
+            ) % len(items)
+            UI_STATE[
+                "library_result_index"
+            ] = selected
+            continue
+
+        if key == "ENTER":
+            _problem_library_item_detail(
+                items[selected],
+                mode=mode,
+            )
+            continue
+
+        if key in {"o", "O"}:
+            url = (
+                items[selected]
+                .canonical_url
+            )
+            if url:
+                webbrowser.open(url)
+            continue
+
+        if key in {
+            "ESC",
+            "q",
+            "Q",
+        }:
             return None
 
-        if select_only:
-            return items[selected]
-
-        _problem_library_item_detail(
-            items[selected],
-            mode=mode,
-        )
 
 
 def _recommended_problem_items(
