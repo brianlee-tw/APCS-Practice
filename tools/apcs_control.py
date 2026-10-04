@@ -2380,14 +2380,15 @@ def review_result_menu(
     problem,
     *,
     initial: str | None = None,
+    action: str = "review",
 ) -> str | None:
     options = [
-        ("AC", "通過", "答案正確，完整通過測試"),
-        ("WA", "答案錯誤", "程式可執行，但答案不正確"),
-        ("TLE", "執行逾時", "時間複雜度或實作速度不足"),
-        ("RE", "執行錯誤", "執行期間發生錯誤"),
-        ("MLE", "記憶體超限", "使用記憶體超過限制"),
-        ("CE", "編譯失敗", "本次程式無法成功編譯"),
+        ("AC", "通過", "正式 OJ 顯示 Accepted / AC"),
+        ("WA", "答案錯誤", "正式 OJ 顯示 Wrong Answer"),
+        ("TLE", "執行逾時", "正式 OJ 顯示 Time Limit Exceeded"),
+        ("RE", "執行錯誤", "正式 OJ 顯示 Runtime Error"),
+        ("MLE", "記憶體超限", "正式 OJ 顯示 Memory Limit Exceeded"),
+        ("CE", "編譯失敗", "正式 OJ 顯示 Compile Error"),
     ]
 
     selected = next(
@@ -2401,7 +2402,11 @@ def review_result_menu(
 
     while True:
         clear()
-        heading("複習結果")
+        heading(
+            "正式 OJ 結果"
+            if action == "finish"
+            else "複習結果"
+        )
         print()
 
         print_problem_context(problem)
@@ -2409,7 +2414,16 @@ def review_result_menu(
 
         rule()
         print()
-        print(f"{GRAY}這次重新解題的結果{RESET}")
+        print(
+            f"{GRAY}"
+            + (
+                "請依正式 OJ 畫面選擇 authoritative verdict；"
+                "本地測試結果不能代替 AC。"
+                if action == "finish"
+                else "這次重新解題的正式 OJ 結果"
+            )
+            + f"{RESET}"
+        )
         print()
 
         window = 5
@@ -2956,6 +2970,59 @@ def compact_support_menu(
     }
 
 
+def failure_bottleneck_menu(
+    problem,
+    *,
+    initial: str | None = None,
+) -> str | None:
+    """Failure path only: one coarse learner-selected bottleneck for immediate repair."""
+
+    values = [
+        ("Concept", "概念", "核心概念本身不清楚"),
+        ("Condition", "成立條件", "不知道方法何時成立／何時不能用"),
+        ("Representation", "題意建模", "無法把題意轉成可操作的 state / array / graph"),
+        ("Strategy", "方法選擇", "知道概念，但選錯或選不出方法"),
+        ("Complexity", "複雜度", "方法太慢、太耗記憶體或 feasibility 判斷錯"),
+        ("Implementation", "實作", "方法正確，但程式實作有錯"),
+        ("Syntax / API", "語法 / API", "C++ 語法、STL 或 API 使用錯"),
+        ("State / Index", "狀態 / 索引", "初始化、邊界、off-by-one 或 state 更新錯"),
+        ("Debugging", "除錯定位", "知道結果不對，但無法定位第一個 root cause"),
+        ("Exam Interface", "考試流程", "讀題、時間配置、提交或 stop-loss 決策出錯"),
+    ]
+
+    selected_index = next(
+        (
+            index
+            for index, (value, _, _)
+            in enumerate(values)
+            if value == initial
+        ),
+        None,
+    )
+
+    selected = choose_menu(
+        "主要卡點",
+        [
+            {
+                "label": f"{value} · {label}",
+                "detail": detail,
+                "enabled": True,
+            }
+            for value, label, detail in values
+        ],
+        problem=problem,
+        main=False,
+        footer_numbers=False,
+        back_text="返回 OJ 結果",
+        selected_index=selected_index,
+    )
+
+    if selected is None:
+        return None
+
+    return values[selected][0]
+
+
 def inferred_published_novelty(
     action: str,
     problem,
@@ -3339,6 +3406,7 @@ def attempt_envelope_for_record(
     finished_at: dt.datetime | None = None,
     track: str = "Implementation",
     evidence_outcome: str | None = None,
+    bottleneck: str | None = None,
 ):
     if action not in {"finish", "review"}:
         raise ValueError(
@@ -3371,7 +3439,11 @@ def attempt_envelope_for_record(
     )
 
     evidence = []
-    attempt_note = ""
+    attempt_note = (
+        f"Bottleneck: {bottleneck}"
+        if bottleneck
+        else ""
+    )
 
     if track not in {"Reading", "Implementation"}:
         raise ValueError(
@@ -3430,10 +3502,15 @@ def attempt_envelope_for_record(
         and placement is not None
         and placement.method_confirmation_required
     ):
-        attempt_note = (
+        method_note = (
             "Primary Skill evidence withheld: "
             "target method not confirmed for "
             f"{placement.primary_skill}"
+        )
+        attempt_note = (
+            f"{attempt_note} · {method_note}"
+            if attempt_note
+            else method_note
         )
 
     return build_envelope(
@@ -3842,6 +3919,7 @@ def record_problem(action: str, problem) -> None:
     score = None
     minutes = None
     evidence_context = None
+    bottleneck = None
     finish_complexity = None
     complexity_solution = None
 
@@ -3865,11 +3943,9 @@ def record_problem(action: str, problem) -> None:
             return
 
     if published_runtime:
-        step = (
-            "result"
-            if action == "review"
-            else "evidence"
-        )
+        # External OJ is verdict authority. Published Implementation Finish must
+        # never inherit local-test success as an implicit AC.
+        step = "result"
     else:
         step = (
             "result"
@@ -3883,6 +3959,7 @@ def record_problem(action: str, problem) -> None:
                 review_result_menu(
                     problem,
                     initial=result,
+                    action=action,
                 )
             )
 
@@ -3897,11 +3974,28 @@ def record_problem(action: str, problem) -> None:
             ):
                 score = None
 
-            step = (
-                "evidence"
-                if published_runtime
-                else "recall"
+            if published_runtime:
+                step = (
+                    "bottleneck"
+                    if result != "AC"
+                    else "evidence"
+                )
+            else:
+                step = "recall"
+            continue
+
+        if step == "bottleneck":
+            selected_bottleneck = (
+                failure_bottleneck_menu(
+                    problem,
+                    initial=bottleneck,
+                )
             )
+            if selected_bottleneck is None:
+                step = "result"
+                continue
+            bottleneck = selected_bottleneck
+            step = "evidence"
             continue
 
         if step == "recall":
@@ -3960,10 +4054,12 @@ def record_problem(action: str, problem) -> None:
 
             if selected_context is RECORD_BACK:
                 if published_runtime:
-                    if action == "review":
-                        step = "result"
-                        continue
-                    return
+                    step = (
+                        "bottleneck"
+                        if result != "AC"
+                        else "result"
+                    )
+                    continue
                 step = "minutes"
                 continue
 
@@ -4024,12 +4120,17 @@ def record_problem(action: str, problem) -> None:
         )
         print()
 
-        if action == "review":
+        if published_runtime or action == "review":
             color = GREEN if result == "AC" else YELLOW
             print(
-                f"結果    "
+                f"正式 OJ  "
                 f"{color}{result}{RESET}"
             )
+            if bottleneck is not None:
+                print(
+                    "主要卡點  "
+                    f"{CYAN}{bottleneck}{RESET}"
+                )
 
         if published_runtime:
             print(
@@ -4254,6 +4355,7 @@ def record_problem(action: str, problem) -> None:
                     method_confirmed=evidence_context.get(
                         "method_confirmed"
                     ),
+                    bottleneck=bottleneck,
                 )
             )
 
@@ -4377,6 +4479,25 @@ def record_problem(action: str, problem) -> None:
                 f"{GRAY}"
                 "不要重做 Finish / Review；"
                 "之後使用 reconciliation 修復 Evidence。"
+                f"{RESET}"
+            )
+
+        if result != "AC" and bottleneck is not None:
+            print()
+            print(
+                f"{CYAN}{BOLD}"
+                "下一步 · 最小修復"
+                f"{RESET}"
+            )
+            print_wrapped(
+                repair_instruction(bottleneck),
+                ui_width() - 2,
+            )
+            print(
+                f"{GRAY}"
+                "這次 FAIL 會保留為 Attempt / Evidence；"
+                "Today 可據此安排新的 Repair / Transfer，"
+                "不會把單次失敗升級成永久弱點。"
                 f"{RESET}"
             )
 
@@ -8356,7 +8477,7 @@ def git_center() -> None:
             {
                 "label": "Commit",
                 "detail": (
-                    f"{staged} 個已暫存"
+                    f"{staged} 個已暫存 · 提交時執行完整 Quality Gate"
                     if staged
                     else "尚未暫存"
                 ),
@@ -8445,7 +8566,7 @@ def git_center() -> None:
                 else RED
             )
             right_lines = [
-                f"{CYAN}{BOLD}品質與同步{RESET}",
+                f"{CYAN}{BOLD}預檢與同步{RESET}",
                 (
                     f"資料      {data_color}"
                     f"{'✓' if validation_code == 0 else '✕'} "
@@ -8464,6 +8585,10 @@ def git_center() -> None:
                 (
                     f"Branch    "
                     f"{sync['branch'] or '—'}"
+                ),
+                (
+                    f"Upstream  "
+                    f"{sync['upstream'] or '未設定'}"
                 ),
                 (
                     f"同步      ↑{sync['ahead']}"
