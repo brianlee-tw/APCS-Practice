@@ -6697,8 +6697,7 @@ def _today_option_detail_lines(
             None,
         )
         track = option.get(
-            "track",
-            "Implementation",
+            "track"
         )
 
         if skill is not None:
@@ -6706,9 +6705,10 @@ def _today_option_detail_lines(
                 f"Skill     {skill.uid}"
             )
 
-        lines.append(
-            f"Track     {track}"
-        )
+        if track:
+            lines.append(
+                f"Track     {track}"
+            )
 
         if placement is not None:
             lines.extend(
@@ -6737,8 +6737,12 @@ def _today_option_detail_lines(
                     "Lesson context → Formal response → 驗證 → 完成題目"
                     if track == "Reading"
                     else (
-                        "VS Code scratch → Ctrl+Shift+B → "
-                        "正式 OJ → 完成題目"
+                        (
+                            "VS Code scratch → Ctrl+Shift+B → "
+                            "正式 OJ → 完成題目"
+                        )
+                        if track == "Implementation"
+                        else "依目前 Track 啟動對應學習流程"
                     )
                 ),
             ]
