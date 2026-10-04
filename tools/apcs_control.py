@@ -1837,6 +1837,7 @@ def choose_menu(
     selected_index: int | None = None,
     enter_text: str | None = None,
     mode_toggle: bool = False,
+    context_lines: list[str] | None = None,
 ):
     if (
         selected_index is not None
@@ -1878,6 +1879,15 @@ def choose_menu(
 
             elif problem is not None:
                 print_problem_context(problem)
+                print()
+
+            if context_lines:
+                for line in context_lines:
+                    print_wrapped(
+                        line,
+                        ui_width(),
+                        color=GRAY,
+                    )
                 print()
 
             rule()
@@ -13486,34 +13496,29 @@ def exam_center() -> None:
             ]
         )
 
-        clear()
-        heading("考試模式")
-        print()
-        print(
-            f"時間      {elapsed}/{session['duration_minutes']} min"
-            f" · 剩餘約 {remaining} min"
-        )
-        print(
-            f"目前題目  {session['selected_problem_id'] or '掃題中'}"
-        )
-        print(
-            f"編譯 {summary['compile_count']} · "
-            f"提交 {summary['submit_count']} · "
-            f"切題 {summary['switch_count']}"
-        )
-        print()
-        print(
-            f"{GRAY}"
-            "Ctrl+Shift+B 編譯會自動留下考試時間點。"
-            f"{RESET}"
-        )
-        print()
+        context_lines = [
+            (
+                f"時間      {elapsed}/{session['duration_minutes']} min"
+                f" · 剩餘約 {remaining} min"
+            ),
+            (
+                "目前題目  "
+                f"{session['selected_problem_id'] or '掃題中'}"
+            ),
+            (
+                f"編譯 {summary['compile_count']} · "
+                f"提交 {summary['submit_count']} · "
+                f"切題 {summary['switch_count']}"
+            ),
+            "Ctrl+Shift+B 編譯會自動留下考試時間點。",
+        ]
 
         chosen = choose_menu(
             "模擬考 · 下一步",
             options,
             footer_numbers=True,
             back_text="返回控制中心（計時持續）",
+            context_lines=context_lines,
         )
         if chosen is None:
             return
