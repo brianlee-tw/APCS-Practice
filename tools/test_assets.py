@@ -66,7 +66,10 @@ class TestCase:
 
     @property
     def runnable(self) -> bool:
-        return self.expected_output is not None
+        return (
+            self.expected_output is not None
+            and self.verified
+        )
 
     @property
     def verified(self) -> bool:
