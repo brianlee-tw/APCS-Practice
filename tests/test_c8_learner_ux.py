@@ -1482,6 +1482,159 @@ class C8LearnerUxTest(unittest.TestCase):
                 1,
             )
 
+    def test_problem_library_right_arrow_moves_from_filters_to_results(self):
+        items = [
+            types.SimpleNamespace(
+                external_id="a001",
+                title="題目 a001",
+                source="custom",
+                difficulty="D1",
+                attempted=False,
+                role="Guided Drill",
+                has_l2=False,
+                primary_skill="S01_IO",
+                supporting_skills=(),
+                canonical_url="https://example.invalid/a001",
+            ),
+        ]
+        keys = iter(
+            [
+                "RIGHT",
+                "ESC",
+            ]
+        )
+        state = {
+            "library_result_index": 0,
+            "library_filter_kind": "results",
+            "library_focus": 0,
+            "library_filters_practice": None,
+            "library_filters_exam": None,
+            "library_query_practice": "",
+            "library_query_exam": "",
+        }
+
+        with (
+            patch.dict(
+                control.UI_STATE,
+                state,
+                clear=True,
+            ),
+            patch.object(
+                control,
+                "_problem_library_items",
+                return_value=items,
+            ),
+            patch.object(
+                control.TEST_ASSETS,
+                "load",
+                return_value=None,
+            ),
+            patch.object(
+                control,
+                "read_key",
+                side_effect=lambda: next(keys),
+            ),
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=100,
+                    lines=42,
+                ),
+            ),
+            redirect_stdout(io.StringIO()),
+        ):
+            control._problem_library_workbench(
+                mode="practice",
+            )
+
+        self.assertEqual(
+            control.UI_STATE[
+                "library_focus"
+            ],
+            1,
+        )
+
+    def test_problem_library_master_list_does_not_duplicate_inspector_metadata(self):
+        items = [
+            types.SimpleNamespace(
+                external_id=f"custom-{index}",
+                title=f"題目 {index}",
+                source="custom",
+                difficulty="D1",
+                attempted=False,
+                role="Guided Drill",
+                has_l2=False,
+                primary_skill="S01_IO",
+                supporting_skills=(),
+                canonical_url=f"https://example.invalid/{index}",
+            )
+            for index in range(5)
+        ]
+        output = io.StringIO()
+        state = {
+            "library_result_index": 0,
+            "library_filter_kind": "results",
+            "library_focus": 1,
+            "library_filters_practice": None,
+            "library_filters_exam": None,
+            "library_query_practice": "",
+            "library_query_exam": "",
+        }
+
+        with (
+            patch.dict(
+                control.UI_STATE,
+                state,
+                clear=True,
+            ),
+            patch.object(
+                control,
+                "_problem_library_items",
+                return_value=items,
+            ),
+            patch.object(
+                control.TEST_ASSETS,
+                "load",
+                return_value=None,
+            ),
+            patch.object(
+                control,
+                "read_key",
+                return_value="ESC",
+            ),
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=100,
+                    lines=42,
+                ),
+            ),
+            redirect_stdout(output),
+        ):
+            control._problem_library_workbench(
+                mode="practice",
+            )
+
+        rendered = output.getvalue()
+        self.assertIn(
+            "› 題目 · 5 題",
+            rendered,
+        )
+        self.assertIn(
+            "題目資訊",
+            rendered,
+        )
+        self.assertEqual(
+            rendered.count(
+                "來源      custom"
+            ),
+            1,
+        )
+        self.assertNotIn(
+            "custom · D1 · 未做",
+            rendered,
+        )
+
     def test_problem_library_filter_selection_persists_for_return_navigation(self):
         item = types.SimpleNamespace(
             external_id="a001",
