@@ -1040,6 +1040,97 @@ class C8LearnerUxTest(unittest.TestCase):
             3,
         )
 
+    def test_exam_center_exposes_abort_action(self):
+        session = {
+            "duration_minutes": 60,
+            "problem_ids": [
+                "a001",
+            ],
+            "selected_problem_id": None,
+        }
+        summary = {
+            "elapsed_minutes": 1,
+            "compile_count": 0,
+            "submit_count": 0,
+            "switch_count": 0,
+        }
+
+        with (
+            patch.object(
+                control.EXAM,
+                "active",
+                return_value=session,
+            ),
+            patch.object(
+                control.EXAM,
+                "summary",
+                return_value=summary,
+            ),
+            patch.object(
+                control,
+                "choose_menu",
+                return_value=None,
+            ) as menu,
+        ):
+            control.exam_center()
+
+        options = menu.call_args.args[1]
+        abort = next(
+            option
+            for option in options
+            if option.get("kind") == "abort"
+        )
+        self.assertEqual(
+            abort["label"],
+            "關閉本次考試",
+        )
+        self.assertIn(
+            "ABORTED",
+            abort["detail"],
+        )
+
+    def test_exam_abort_ui_closes_session_without_postmortem(self):
+        session = {
+            "duration_minutes": 60,
+        }
+        summary = {
+            "elapsed_minutes": 1,
+            "compile_count": 0,
+            "submit_count": 0,
+        }
+
+        with (
+            patch.object(
+                control.EXAM,
+                "summary",
+                return_value=summary,
+            ),
+            patch.object(
+                control,
+                "confirm",
+                return_value=True,
+            ),
+            patch.object(
+                control.EXAM,
+                "abort",
+            ) as abort,
+            patch.object(
+                control,
+                "pause",
+            ),
+            redirect_stdout(
+                io.StringIO()
+            ),
+        ):
+            closed = (
+                control._exam_abort_ui(
+                    session
+                )
+            )
+
+        self.assertTrue(closed)
+        abort.assert_called_once_with()
+
     def test_learning_status_uses_wide_summary_when_space_allows(self):
         snapshot = {
             "target": "3+3",
