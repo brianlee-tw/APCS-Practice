@@ -9192,11 +9192,23 @@ def _problem_library_testcase_lines(
         for case in bundle.cases
         if case.provenance == "OFFICIAL"
     ]
-    verified_generated = [
+    ai_verified = [
         case
         for case in bundle.cases
         if (
-            case.provenance != "OFFICIAL"
+            case.provenance == "AI_GENERATED"
+            and case.verified
+        )
+    ]
+    other_verified = [
+        case
+        for case in bundle.cases
+        if (
+            case.provenance
+            not in {
+                "OFFICIAL",
+                "AI_GENERATED",
+            }
             and case.verified
         )
     ]
@@ -9225,22 +9237,23 @@ def _problem_library_testcase_lines(
         )
         return lines
 
+    reveal_name = (
+        item.attempted
+        or item.role
+        not in {
+            "Core Independent",
+            "Transfer Challenge",
+            "Mock",
+        }
+    )
+
     lines.append(
-        f"  已驗證延伸 {len(verified_generated)}"
+        f"  AI 生成已驗證 {len(ai_verified)}"
     )
     for index, case in enumerate(
-        verified_generated[:3],
+        ai_verified[:3],
         start=1,
     ):
-        reveal_name = (
-            item.attempted
-            or item.role
-            not in {
-                "Core Independent",
-                "Transfer Challenge",
-                "Mock",
-            }
-        )
         label = (
             case.name
             if reveal_name
@@ -9250,10 +9263,31 @@ def _problem_library_testcase_lines(
             f"    {case.case_id} · "
             f"{fit(label, 20)}"
         )
-    if len(verified_generated) > 3:
+    if len(ai_verified) > 3:
         lines.append(
-            f"    …另有 {len(verified_generated) - 3} 組"
+            f"    …另有 {len(ai_verified) - 3} 組"
         )
+
+    if other_verified:
+        lines.append(
+            f"  其他已驗證 {len(other_verified)}"
+        )
+        for index, case in enumerate(
+            other_verified[:2],
+            start=1,
+        ):
+            label = (
+                case.name
+                if reveal_name
+                else (
+                    "Local Case "
+                    f"{len(ai_verified) + index}"
+                )
+            )
+            lines.append(
+                f"    {case.case_id} · "
+                f"{fit(label, 20)}"
+            )
 
     lines.append(
         f"  Candidate {len(candidates)}"
