@@ -147,9 +147,9 @@ def resolve_problem_context(
         )
     source_path = source_path.resolve()
 
-    if not source_path.is_file():
-        return None
-
+    # Published runtime identity is encoded in the scratch filename and must
+    # remain recoverable even in tests / recovery paths where the scratch file
+    # itself is temporarily absent.
     placement_match = PLACEMENT_RE.search(
         source_path.stem
     )
@@ -190,6 +190,9 @@ def resolve_problem_context(
                 pb_uid=placement.pb_uid or None,
                 identity_origin="published_placement",
             )
+
+    if not source_path.is_file():
+        return None
 
     relative = _relative_to_root(
         source_path,
