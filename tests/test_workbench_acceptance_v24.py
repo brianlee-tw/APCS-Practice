@@ -282,15 +282,45 @@ class WorkbenchAcceptanceV24Test(unittest.TestCase):
             ]
         )
         self.assertIn(
-            "時間      12/60 min · 剩餘約 48 min",
+            control.aligned_field(
+                "時間",
+                "12 / 60 min",
+            ),
             context_lines,
         )
         self.assertIn(
-            "目前題目  d050",
+            control.aligned_field(
+                "剩餘",
+                "約 48 min",
+            ),
             context_lines,
         )
         self.assertIn(
-            "編譯 3 · 提交 1 · 切題 2",
+            control.aligned_field(
+                "題目",
+                "d050",
+            ),
+            context_lines,
+        )
+        self.assertIn(
+            control.aligned_field(
+                "編譯",
+                "3 次",
+            ),
+            context_lines,
+        )
+        self.assertIn(
+            control.aligned_field(
+                "提交",
+                "1 次",
+            ),
+            context_lines,
+        )
+        self.assertIn(
+            control.aligned_field(
+                "切題",
+                "2 次",
+            ),
             context_lines,
         )
 
