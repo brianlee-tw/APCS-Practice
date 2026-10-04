@@ -10029,6 +10029,824 @@ def _problem_library_filter_choice(
 
 
 
+def _problem_library_filter_count(
+    all_items,
+    filters,
+    **overrides,
+) -> int:
+    candidate = dict(filters)
+    candidate.update(overrides)
+    return len(
+        _problem_library_filter_items(
+            all_items,
+            candidate,
+            limit=10000,
+        )
+    )
+
+
+def _problem_library_direct_choices(
+    kind: str,
+    filters,
+    all_items,
+    *,
+    skill_unit: str | None,
+):
+    if kind == "skill":
+        groups = (
+            _problem_library_skill_groups()
+        )
+
+        if skill_unit is None:
+            choices = [
+                {
+                    "label": "不限主題",
+                    "detail": (
+                        f"{_problem_library_filter_count(
+                            all_items,
+                            filters,
+                            skill_uids=(),
+                            skill_label=None,
+                        )} 題"
+                    ),
+                    "action": "skill_clear",
+                }
+            ]
+            for group in groups:
+                uids = tuple(
+                    item["uid"]
+                    for item in group["skills"]
+                )
+                choices.append(
+                    {
+                        "label": group["label"],
+                        "detail": (
+                            f"{len(group['skills'])} Skill"
+                            f" · {_problem_library_filter_count(
+                                all_items,
+                                filters,
+                                skill_uids=uids,
+                            )} 題"
+                        ),
+                        "action": "skill_unit",
+                        "unit": group["uid"],
+                    }
+                )
+            return choices
+
+        group = next(
+            (
+                item
+                for item in groups
+                if item["uid"] == skill_unit
+            ),
+            None,
+        )
+        if group is None:
+            return []
+
+        uids = tuple(
+            item["uid"]
+            for item in group["skills"]
+        )
+        choices = [
+            {
+                "label": "← 返回單元",
+                "detail": group["label"],
+                "action": "skill_back",
+            },
+            {
+                "label": (
+                    f"整個單元 · {group['label']}"
+                ),
+                "detail": (
+                    f"{_problem_library_filter_count(
+                        all_items,
+                        filters,
+                        skill_uids=uids,
+                    )} 題"
+                ),
+                "action": "skill_value",
+                "skill_uids": uids,
+                "skill_label": group["label"],
+            },
+        ]
+
+        for skill in group["skills"]:
+            uid = skill["uid"]
+            choices.append(
+                {
+                    "label": skill["name"],
+                    "detail": (
+                        f"{uid} · "
+                        f"{_problem_library_filter_count(
+                            all_items,
+                            filters,
+                            skill_uids=(uid,),
+                        )} 題"
+                    ),
+                    "action": "skill_value",
+                    "skill_uids": (uid,),
+                    "skill_label": skill["name"],
+                }
+            )
+
+        return choices
+
+    if kind == "difficulty":
+        values = [
+            (None, "不限"),
+            *PROBLEM_LIBRARY_DIFFICULTIES,
+        ]
+        return [
+            {
+                "label": label,
+                "detail": (
+                    f"{_problem_library_filter_count(
+                        all_items,
+                        filters,
+                        difficulty=value,
+                    )} 題"
+                ),
+                "action": "value",
+                "field": "difficulty",
+                "value": value,
+            }
+            for value, label in values
+        ]
+
+    if kind == "source":
+        sources = sorted(
+            {
+                item.source
+                for item in all_items
+                if item.source
+            },
+            key=lambda value: (
+                _problem_library_source_label(
+                    value
+                ).casefold()
+            ),
+        )
+        values = [
+            (None, "不限"),
+            *[
+                (
+                    source,
+                    _problem_library_source_label(
+                        source
+                    ),
+                )
+                for source in sources
+            ],
+        ]
+        return [
+            {
+                "label": label,
+                "detail": (
+                    f"{_problem_library_filter_count(
+                        all_items,
+                        filters,
+                        source=value,
+                    )} 題"
+                ),
+                "action": "value",
+                "field": "source",
+                "value": value,
+            }
+            for value, label in values
+        ]
+
+    if kind == "status":
+        values = [
+            (None, "不限"),
+            (False, "未做"),
+            (True, "已做"),
+        ]
+        return [
+            {
+                "label": label,
+                "detail": (
+                    f"{_problem_library_filter_count(
+                        all_items,
+                        filters,
+                        attempted=value,
+                    )} 題"
+                ),
+                "action": "value",
+                "field": "attempted",
+                "value": value,
+            }
+            for value, label in values
+        ]
+
+    if kind == "role":
+        values = [
+            (None, "不限"),
+            *PROBLEM_LIBRARY_ROLES,
+        ]
+        return [
+            {
+                "label": label,
+                "detail": (
+                    f"{_problem_library_filter_count(
+                        all_items,
+                        filters,
+                        role=value,
+                    )} 題"
+                ),
+                "action": "value",
+                "field": "role",
+                "value": value,
+            }
+            for value, label in values
+        ]
+
+    if kind == "teaching":
+        values = [
+            (None, "不限"),
+            (True, "有教學資料"),
+            (False, "無教學資料"),
+        ]
+        return [
+            {
+                "label": label,
+                "detail": (
+                    f"{_problem_library_filter_count(
+                        all_items,
+                        filters,
+                        require_l2=value,
+                    )} 題"
+                ),
+                "action": "value",
+                "field": "require_l2",
+                "value": value,
+            }
+            for value, label in values
+        ]
+
+    if kind == "clear":
+        return [
+            {
+                "label": "清除全部條件",
+                "detail": "恢復成完整題庫",
+                "action": "clear",
+            }
+        ]
+
+    return []
+
+
+def _problem_library_apply_direct_choice(
+    filters,
+    choice,
+    *,
+    skill_unit: str | None,
+):
+    action = choice.get("action")
+
+    if action == "skill_clear":
+        filters["skill_uids"] = ()
+        filters["skill_label"] = None
+        return None
+
+    if action == "skill_unit":
+        return choice["unit"]
+
+    if action == "skill_back":
+        return None
+
+    if action == "skill_value":
+        filters["skill_uids"] = tuple(
+            choice["skill_uids"]
+        )
+        filters["skill_label"] = (
+            choice["skill_label"]
+        )
+        return None
+
+    if action == "value":
+        filters[choice["field"]] = (
+            choice["value"]
+        )
+        return skill_unit
+
+    if action == "clear":
+        filters.update(
+            {
+                "skill_uids": (),
+                "skill_label": None,
+                "difficulty": None,
+                "source": None,
+                "attempted": None,
+                "role": None,
+                "require_l2": None,
+            }
+        )
+        return None
+
+    return skill_unit
+
+
+def _problem_library_filter_browser(
+    filters,
+    all_items,
+    *,
+    mode: str,
+):
+    focus = 0
+    filter_index = 0
+    choice_index = 0
+    result_index = min(
+        int(
+            UI_STATE.get(
+                "library_result_index",
+                0,
+            )
+        ),
+        max(0, len(all_items) - 1),
+    )
+    skill_unit = None
+
+    while True:
+        current = (
+            _problem_library_filter_items(
+                all_items,
+                filters,
+                limit=10000,
+            )
+        )
+
+        filter_options = [
+            option
+            for option in (
+                _problem_library_filter_options(
+                    filters,
+                    current,
+                    mode=mode,
+                )
+            )
+            if option["kind"] != "results"
+        ]
+        filter_index = min(
+            filter_index,
+            max(
+                0,
+                len(filter_options) - 1,
+            ),
+        )
+
+        kind = (
+            filter_options[
+                filter_index
+            ]["kind"]
+        )
+        if kind != "skill":
+            skill_unit = None
+
+        choices = (
+            _problem_library_direct_choices(
+                kind,
+                filters,
+                all_items,
+                skill_unit=skill_unit,
+            )
+        )
+        choice_index = min(
+            choice_index,
+            max(
+                0,
+                len(choices) - 1,
+            ),
+        )
+        result_index = min(
+            result_index,
+            max(
+                0,
+                len(current) - 1,
+            ),
+        )
+
+        clear()
+        heading("題目庫 · 分類找題")
+        print_selection_mode_banner(
+            mode,
+            toggle_hint=False,
+        )
+        print()
+
+        width = ui_width()
+        gap = 3
+        left = 29
+        middle = 29
+        right = max(
+            30,
+            width
+            - left
+            - middle
+            - gap * 2,
+        )
+
+        headers = [
+            "篩選條件",
+            "可選值",
+            f"目前 {len(current)} 題",
+        ]
+        header_cells = []
+        for index, label in enumerate(
+            headers
+        ):
+            color = (
+                CYAN + BOLD
+                if focus == index
+                else GRAY
+            )
+            pane_width = (
+                left
+                if index == 0
+                else (
+                    middle
+                    if index == 1
+                    else right
+                )
+            )
+            header_cells.append(
+                f"{color}"
+                f"{pad_display(label, pane_width)}"
+                f"{RESET}"
+            )
+        print(
+            (" " * gap).join(
+                header_cells
+            )
+        )
+
+        filter_lines = []
+        for index, option in enumerate(
+            filter_options
+        ):
+            prefix = (
+                "›"
+                if (
+                    focus == 0
+                    and index == filter_index
+                )
+                else " "
+            )
+            color = (
+                CYAN + BOLD
+                if (
+                    focus == 0
+                    and index == filter_index
+                )
+                else (
+                    GRAY
+                    if not option.get(
+                        "enabled",
+                        True,
+                    )
+                    else ""
+                )
+            )
+            text = (
+                f"{prefix} "
+                f"{option['label']}"
+            )
+            filter_lines.append(
+                (
+                    fit(
+                        text,
+                        left,
+                    ),
+                    color,
+                )
+            )
+            if option.get("detail"):
+                filter_lines.append(
+                    (
+                        fit(
+                            "    "
+                            + str(
+                                option["detail"]
+                            ),
+                            left,
+                        ),
+                        GRAY,
+                    )
+                )
+
+        choice_lines = []
+        for index, choice in enumerate(
+            choices
+        ):
+            prefix = (
+                "›"
+                if (
+                    focus == 1
+                    and index == choice_index
+                )
+                else " "
+            )
+            color = (
+                CYAN + BOLD
+                if (
+                    focus == 1
+                    and index == choice_index
+                )
+                else ""
+            )
+            choice_lines.append(
+                (
+                    fit(
+                        f"{prefix} "
+                        f"{choice['label']}",
+                        middle,
+                    ),
+                    color,
+                )
+            )
+            if choice.get("detail"):
+                choice_lines.append(
+                    (
+                        fit(
+                            "    "
+                            + str(
+                                choice["detail"]
+                            ),
+                            middle,
+                        ),
+                        GRAY,
+                    )
+                )
+
+        visible = max(
+            7,
+            min(
+                16,
+                ui_height() - 14,
+            ),
+        )
+        result_start = max(
+            0,
+            min(
+                result_index
+                - visible // 2,
+                len(current) - visible,
+            ),
+        )
+        result_lines = []
+        for index in range(
+            result_start,
+            min(
+                len(current),
+                result_start + visible,
+            ),
+        ):
+            item = current[index]
+            prefix = (
+                "›"
+                if (
+                    focus == 2
+                    and index == result_index
+                )
+                else " "
+            )
+            color = (
+                CYAN + BOLD
+                if (
+                    focus == 2
+                    and index == result_index
+                )
+                else ""
+            )
+            result_lines.append(
+                (
+                    fit(
+                        f"{prefix} "
+                        f"{item.external_id} · "
+                        f"{item.title}",
+                        right,
+                    ),
+                    color,
+                )
+            )
+            result_lines.append(
+                (
+                    fit(
+                        "    "
+                        + _problem_library_safe_detail(
+                            item,
+                            mode,
+                        ),
+                        right,
+                    ),
+                    GRAY,
+                )
+            )
+
+        if not current:
+            result_lines = [
+                (
+                    "沒有符合條件的題目",
+                    YELLOW,
+                )
+            ]
+
+        rows = max(
+            len(filter_lines),
+            len(choice_lines),
+            len(result_lines),
+        )
+        max_rows = max(
+            10,
+            ui_height() - 11,
+        )
+
+        for row in range(
+            min(rows, max_rows)
+        ):
+            cells = []
+            for lines, pane_width in (
+                (filter_lines, left),
+                (choice_lines, middle),
+                (result_lines, right),
+            ):
+                if row < len(lines):
+                    value, color = (
+                        lines[row]
+                    )
+                else:
+                    value, color = (
+                        "",
+                        "",
+                    )
+                cells.append(
+                    f"{color}"
+                    f"{pad_display(value, pane_width)}"
+                    f"{RESET if color else ''}"
+                )
+            print(
+                (" " * gap).join(
+                    cells
+                )
+            )
+
+        print()
+        rule()
+
+        if focus == 0:
+            action = (
+                "Enter 選擇此條件"
+            )
+        elif focus == 1:
+            action = (
+                "Enter 套用"
+            )
+        else:
+            action = (
+                "Enter 查看題目 · O 開啟 OJ"
+            )
+
+        print(
+            f"{GRAY}"
+            "Tab / Shift+Tab 切換區域"
+            f" · ↑↓ 選擇 · {action}"
+            " · Esc 返回"
+            f"{RESET}"
+        )
+
+        key = read_key()
+
+        if key == "TAB":
+            focus = (
+                focus + 1
+            ) % 3
+            continue
+
+        if key == "BACKTAB":
+            focus = (
+                focus - 1
+            ) % 3
+            continue
+
+        if key == "UP":
+            if focus == 0 and filter_options:
+                filter_index = (
+                    filter_index - 1
+                ) % len(filter_options)
+                choice_index = 0
+                skill_unit = None
+            elif focus == 1 and choices:
+                choice_index = (
+                    choice_index - 1
+                ) % len(choices)
+            elif focus == 2 and current:
+                result_index = (
+                    result_index - 1
+                ) % len(current)
+                UI_STATE[
+                    "library_result_index"
+                ] = result_index
+            continue
+
+        if key == "DOWN":
+            if focus == 0 and filter_options:
+                filter_index = (
+                    filter_index + 1
+                ) % len(filter_options)
+                choice_index = 0
+                skill_unit = None
+            elif focus == 1 and choices:
+                choice_index = (
+                    choice_index + 1
+                ) % len(choices)
+            elif focus == 2 and current:
+                result_index = (
+                    result_index + 1
+                ) % len(current)
+                UI_STATE[
+                    "library_result_index"
+                ] = result_index
+            continue
+
+        if key == "ENTER":
+            if focus == 0:
+                if (
+                    filter_options
+                    and filter_options[
+                        filter_index
+                    ]["kind"]
+                    == "clear"
+                ):
+                    filters.update(
+                        {
+                            "skill_uids": (),
+                            "skill_label": None,
+                            "difficulty": None,
+                            "source": None,
+                            "attempted": None,
+                            "role": None,
+                            "require_l2": None,
+                        }
+                    )
+                    choice_index = 0
+                else:
+                    focus = 1
+                continue
+
+            if focus == 1 and choices:
+                skill_unit = (
+                    _problem_library_apply_direct_choice(
+                        filters,
+                        choices[
+                            choice_index
+                        ],
+                        skill_unit=skill_unit,
+                    )
+                )
+                choice_index = 0
+                result_index = 0
+                UI_STATE[
+                    "library_result_index"
+                ] = 0
+                continue
+
+            if focus == 2 and current:
+                _problem_library_item_detail(
+                    current[
+                        result_index
+                    ],
+                    mode=mode,
+                )
+                continue
+
+        if (
+            focus == 2
+            and key in {"o", "O"}
+            and current
+        ):
+            url = current[
+                result_index
+            ].canonical_url
+            if url:
+                webbrowser.open(url)
+            continue
+
+        if key in {
+            "ESC",
+            "q",
+            "Q",
+        }:
+            if (
+                focus == 1
+                and skill_unit
+            ):
+                skill_unit = None
+                choice_index = 0
+                continue
+            return
+
+
 def _problem_library_filter_view(
     *,
     mode: str,
@@ -10045,6 +10863,13 @@ def _problem_library_filter_view(
     all_items = (
         _problem_library_items()
     )
+    if ui_width() >= 86:
+        return _problem_library_filter_browser(
+            filters,
+            all_items,
+            mode=mode,
+        )
+
 
     while True:
         current = (
