@@ -9273,7 +9273,7 @@ def _problem_library_inspector_lines(
 ) -> list[str]:
     strict = mode == "exam"
     lines = [
-        f"{WHITE}{BOLD}{item.external_id}{RESET}",
+        item.external_id,
         fit(item.title, 34),
         "",
         f"來源      {_problem_library_source_label(item.source)}",
@@ -9284,7 +9284,7 @@ def _problem_library_inspector_lines(
         lines.extend(
             [
                 "",
-                f"{YELLOW}{BOLD}考試 · 防劇透{RESET}",
+                "考試 · 防劇透",
                 "Skill / 難度 / 用途已隱藏",
                 "",
                 *_problem_library_testcase_lines(
@@ -9306,18 +9306,18 @@ def _problem_library_inspector_lines(
                 mode=mode,
             ),
             "",
-            f"{GRAY}Input / Expected / Actual / Diff{RESET}",
-            f"{GRAY}於 Ctrl+Shift+B 測試中心顯示{RESET}",
+            "Input / Expected / Actual / Diff",
+            "於 Ctrl+Shift+B 測試中心顯示",
         ]
     )
 
     if item.has_l2:
         lines.append(
-            f"{GREEN}教學資料  已建立{RESET}"
+            "教學資料  ✓ 已建立"
         )
     else:
         lines.append(
-            f"{GRAY}教學資料  尚未建立{RESET}"
+            "教學資料  — 尚未建立"
         )
 
     return lines
@@ -11703,9 +11703,7 @@ def _problem_library_workbench(
         else:
             selected_item = None
             inspector = [
-                f"{YELLOW}"
-                "目前沒有題目"
-                f"{RESET}",
+                "目前沒有題目",
                 "",
                 "調整左側篩選條件",
                 "或按 X 清除搜尋。",
@@ -11713,9 +11711,7 @@ def _problem_library_workbench(
 
         if focus == 2:
             inspector = [
-                f"{CYAN}{BOLD}"
-                "› 題目側欄"
-                f"{RESET}",
+                "› 題目側欄",
                 *inspector,
             ]
 
