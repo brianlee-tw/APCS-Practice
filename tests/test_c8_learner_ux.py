@@ -626,15 +626,19 @@ class C8LearnerUxTest(unittest.TestCase):
                 240,
             ],
         )
+        self.assertIn(
+            "目前",
+            options[3]["label"],
+        )
         self.assertEqual(
             options[3]["detail"],
-            "目前設定",
+            "",
         )
         self.assertEqual(
             menu.call_args.kwargs[
                 "wide_columns"
             ],
-            5,
+            3,
         )
 
     def test_filter_view_has_explicit_live_result_action(self):
@@ -746,6 +750,24 @@ class C8LearnerUxTest(unittest.TestCase):
         )
         self.assertIn(
             "今日容量",
+            rendered_wide,
+        )
+        self.assertIn(
+            control.aligned_field(
+                "可用",
+                "60 分",
+            ),
+            rendered_wide,
+        )
+        self.assertIn(
+            control.aligned_field(
+                "複習",
+                "0 / 18 分",
+            ),
+            rendered_wide,
+        )
+        self.assertNotIn(
+            "可用 60 分 · 複習",
             rendered_wide,
         )
 
@@ -1011,6 +1033,12 @@ class C8LearnerUxTest(unittest.TestCase):
                 180,
             ],
         )
+        self.assertEqual(
+            menu.call_args.kwargs[
+                "wide_columns"
+            ],
+            3,
+        )
 
     def test_learning_status_uses_wide_summary_when_space_allows(self):
         snapshot = {
@@ -1066,6 +1094,17 @@ class C8LearnerUxTest(unittest.TestCase):
         )
         self.assertIn(
             "LEARNER_READINESS = NOT ASSESSED",
+            rendered,
+        )
+        self.assertIn(
+            control.aligned_field(
+                "Evidence",
+                1,
+            ),
+            rendered,
+        )
+        self.assertNotIn(
+            "真實作答 2 · Evidence 1",
             rendered,
         )
 
