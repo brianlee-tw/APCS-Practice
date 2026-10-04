@@ -198,7 +198,7 @@ class C8LearnerUxTest(unittest.TestCase):
         self.assertNotIn("最低 R 優先", rendered)
 
 
-    def test_problem_library_entry_is_choice_first_not_query_first(self):
+    def test_problem_library_compact_entry_is_choice_first_not_query_first(self):
         with (
             patch.object(
                 control,
@@ -210,6 +210,13 @@ class C8LearnerUxTest(unittest.TestCase):
                 "prompt_text",
                 side_effect=AssertionError(
                     "entry must not force text search"
+                ),
+            ),
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=80,
+                    lines=30,
                 ),
             ),
         ):
@@ -225,6 +232,39 @@ class C8LearnerUxTest(unittest.TestCase):
                 "全部題目",
             ],
         )
+
+    def test_problem_library_wide_entry_opens_workbench_directly(self):
+        with (
+            patch.object(
+                control,
+                "_problem_library_workbench",
+                return_value=None,
+            ) as workbench,
+            patch.object(
+                control,
+                "choose_grid",
+            ) as menu,
+            patch.object(
+                control,
+                "prompt_text",
+                side_effect=AssertionError(
+                    "wide entry must not force text search"
+                ),
+            ),
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=100,
+                    lines=42,
+                ),
+            ),
+        ):
+            control.problem_library_view()
+
+        workbench.assert_called_once_with(
+            mode=control.selection_mode(),
+        )
+        menu.assert_not_called()
 
     def test_skill_navigation_groups_all_skills_by_unit(self):
         groups = (
@@ -1635,8 +1675,12 @@ class C8LearnerUxTest(unittest.TestCase):
             "Candidate 3",
             rendered,
         )
+        self.assertIn(
+            "詳情      Ctrl+Shift+B 測試中心",
+            rendered,
+        )
         self.assertNotIn(
-            "Expected",
+            "Input",
             rendered,
         )
 
