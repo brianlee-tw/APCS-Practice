@@ -11386,6 +11386,11 @@ def _problem_library_workbench(
             )
         )
 
+        max_rows = max(
+            12,
+            ui_height() - 10,
+        )
+
         left_lines = []
         if editing_kind is None:
             for index, option in enumerate(
@@ -11456,9 +11461,27 @@ def _problem_library_workbench(
                     CYAN + BOLD,
                 )
             )
-            for index, choice in enumerate(
-                choices
+            choice_rows = max(
+                4,
+                (max_rows - 2) // 2,
+            )
+            choice_start = max(
+                0,
+                min(
+                    choice_index
+                    - choice_rows // 2,
+                    len(choices)
+                    - choice_rows,
+                ),
+            )
+            for index in range(
+                choice_start,
+                min(
+                    len(choices),
+                    choice_start + choice_rows,
+                ),
             ):
+                choice = choices[index]
                 prefix = (
                     "›"
                     if index == choice_index
@@ -11494,10 +11517,10 @@ def _problem_library_workbench(
                     )
 
         visible = max(
-            8,
+            5,
             min(
-                16,
-                ui_height() - 13,
+                15,
+                max_rows // 2,
             ),
         )
         start_index = max(
@@ -11612,11 +11635,6 @@ def _problem_library_workbench(
             len(middle_lines),
             len(inspector_lines),
         )
-        max_rows = max(
-            12,
-            ui_height() - 10,
-        )
-
         for row in range(
             min(rows, max_rows)
         ):
