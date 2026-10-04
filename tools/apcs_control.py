@@ -310,6 +310,11 @@ def ui_width() -> int:
     return min(94, max(28, columns - 2))
 
 
+def ui_height() -> int:
+    lines = shutil.get_terminal_size((80, 24)).lines
+    return max(18, min(42, lines - 1))
+
+
 def rule() -> None:
     print("─" * ui_width())
 
@@ -872,6 +877,47 @@ def selection_mode_label(
         "練習"
         if mode == "practice"
         else "考試"
+    )
+
+
+def selection_mode_badge(
+    mode: str | None = None,
+) -> str:
+    mode = mode or selection_mode()
+    if mode == "exam":
+        return (
+            f"{YELLOW}{BOLD}"
+            "[ 考試 · 防劇透 ]"
+            f"{RESET}"
+        )
+    return (
+        f"{GREEN}{BOLD}"
+        "[ 練習 ]"
+        f"{RESET}"
+    )
+
+
+def print_selection_mode_banner(
+    mode: str | None = None,
+    *,
+    toggle_hint: bool = True,
+) -> None:
+    mode = mode or selection_mode()
+    explanation = (
+        "只顯示中性題目資訊"
+        if mode == "exam"
+        else "可依 Unit / Skill / 難度分類練習"
+    )
+    hint = (
+        f" {GRAY}· M 切換{RESET}"
+        if toggle_hint
+        else ""
+    )
+    print(
+        "選題模式  "
+        + selection_mode_badge(mode)
+        + f" {GRAY}{explanation}{RESET}"
+        + hint
     )
 
 
@@ -3598,6 +3644,14 @@ def record_reading_problem(
 
 
 def record_problem(action: str, problem) -> None:
+    published_runtime = bool(
+        problem
+        and problem.get(
+            "published_runtime",
+            False,
+        )
+    )
+
     if (
         problem is not None
         and problem.get("runtime_track") == "Reading"
@@ -3751,13 +3805,13 @@ def record_problem(action: str, problem) -> None:
 
         if step == "complexity":
             clear()
-            heading("完成題目 · Complexity")
+            heading("完成題目 · 複雜度")
             print()
             print_problem_context(problem)
             print()
             print(
                 f"{YELLOW}"
-                "此 solution 尚未記錄 Complexity。"
+                "此解法尚未記錄複雜度。"
                 f"{RESET}"
             )
             print(
@@ -3774,7 +3828,7 @@ def record_problem(action: str, problem) -> None:
             print()
 
             value = prompt_text(
-                "Complexity（必填）",
+                "複雜度（必填）",
                 current=finish_complexity,
                 required=True,
             )
@@ -3824,7 +3878,7 @@ def record_problem(action: str, problem) -> None:
 
         if complexity_solution is not None:
             print(
-                "Complexity  "
+                "複雜度      "
                 f"{CYAN}{finish_complexity}{RESET}"
             )
 
@@ -3943,13 +3997,6 @@ def record_problem(action: str, problem) -> None:
 
     print()
     print(f"{GRAY}正在更新學習紀錄…{RESET}")
-
-    published_runtime = bool(
-        problem.get(
-            "published_runtime",
-            False,
-        )
-    )
 
     try:
         if published_runtime:
@@ -4082,7 +4129,7 @@ def record_problem(action: str, problem) -> None:
         if complexity_solution is not None:
             print(
                 f"{GREEN}"
-                f"✓ Complexity 已寫入 Catalog："
+                f"✓ 複雜度已寫入題目資料："
                 f"{finish_complexity}"
                 f"{RESET}"
             )
