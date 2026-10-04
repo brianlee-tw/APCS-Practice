@@ -48,6 +48,7 @@ try:
         formal_response_ready,
     )
     from .problem_library import ProblemLibrary, LibraryItem
+    from .test_assets import TestAssetStore
     from .learner_model_v2 import (
         LearnerSignalStore,
         learner_model_snapshot,
@@ -92,6 +93,7 @@ except ImportError:
         formal_response_ready,
     )
     from problem_library import ProblemLibrary, LibraryItem
+    from test_assets import TestAssetStore
     from learner_model_v2 import (
         LearnerSignalStore,
         learner_model_snapshot,
@@ -123,6 +125,10 @@ PROBLEM_LIBRARY = ProblemLibrary(
     core.PROBLEM_INTELLIGENCE,
     core.PROBLEM_ENRICHMENT,
     OUTBOX,
+)
+TEST_ASSETS = TestAssetStore(
+    ROOT / "data" / "problem_enrichment",
+    RUNTIME_DIR,
 )
 COGNITIVE = CognitiveOrchestrator()
 LEARNER_SIGNALS = LearnerSignalStore(RUNTIME_DIR)
@@ -170,6 +176,13 @@ GRAY = "\033[90m"
 # None remains a valid field value (for example, skipped active minutes).
 RECORD_BACK = object()
 MODE_TOGGLE = object()
+
+# Ephemeral UI state: preserves focus/filter position within one Control Center
+# process without creating another durable source of truth.
+UI_STATE = {
+    "library_result_index": 0,
+    "library_filter_kind": "results",
+}
 
 
 # ============================================================
