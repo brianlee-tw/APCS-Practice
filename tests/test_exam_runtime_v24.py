@@ -147,6 +147,39 @@ class ExamRuntimeV24Test(unittest.TestCase):
         )
         self.assertIsNone(store.active())
 
+    def test_abort_closes_active_session_without_postmortem(self):
+        store = self.make_store()
+        started = store.start(
+            ["a001", "b130"],
+            duration_minutes=60,
+            started_at=self.t(0),
+        )
+        session = store.abort(
+            aborted_at=self.t(2),
+        )
+
+        self.assertEqual(
+            session["status"],
+            "ABORTED",
+        )
+        self.assertIsNone(
+            session["postmortem_reason"]
+        )
+        self.assertEqual(
+            session["events"][-1]["type"],
+            "ABORT",
+        )
+        self.assertIsNone(
+            store.active()
+        )
+        archived = (
+            store.sessions_dir
+            / f"{started['session_id']}.json"
+        )
+        self.assertTrue(
+            archived.is_file()
+        )
+
     def test_summary_separates_scan_compile_submit_switch(self):
         store = self.make_store()
         store.start(
