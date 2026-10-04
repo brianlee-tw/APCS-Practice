@@ -47,7 +47,7 @@ try:
         create_reading_scratch,
         formal_response_ready,
     )
-    from .problem_library import ProblemLibrary
+    from .problem_library import ProblemLibrary, LibraryItem
     from .learner_model_v2 import (
         LearnerSignalStore,
         learner_model_snapshot,
@@ -91,7 +91,7 @@ except ImportError:
         create_reading_scratch,
         formal_response_ready,
     )
-    from problem_library import ProblemLibrary
+    from problem_library import ProblemLibrary, LibraryItem
     from learner_model_v2 import (
         LearnerSignalStore,
         learner_model_snapshot,
@@ -6532,7 +6532,7 @@ def today_view(current_filename: str | None):
 def _attempted_problem_ids() -> set[str]:
     return {
         str(item.external_id).strip().lower()
-        for item in PROBLEM_LIBRARY.items()
+        for item in _problem_library_items()
         if item.attempted
     }
 
@@ -7646,6 +7646,93 @@ PROBLEM_LIBRARY_SOURCE_LABELS = {
 }
 
 
+def _problem_library_items() -> list[LibraryItem]:
+    """Learner-facing union of L0/L1 intelligence and Published placements.
+
+    Problem Intelligence remains the richer browse source. Published
+    Curriculum fills baseline coverage so an empty local intelligence cache
+    never turns the learner-facing library into a 0-item dead end.
+    No new identity or classification truth is created here.
+    """
+
+    indexed = list(
+        PROBLEM_LIBRARY.items()
+    )
+    by_key = {
+        (
+            item.source.casefold(),
+            item.external_id.casefold(),
+        ): item
+        for item in indexed
+    }
+
+    attempted = (
+        PROBLEM_LIBRARY.attempted_pb_uids()
+    )
+
+    try:
+        placements = (
+            CURRICULUM.all_placements()
+        )
+    except RuntimeCurriculumError:
+        placements = ()
+
+    for placement in placements:
+        source = (
+            placement.source_platform
+            or placement.judge_platform
+            or "published"
+        ).strip().casefold()
+        external_id = (
+            placement.problem_id
+            .strip()
+        )
+        key = (
+            source,
+            external_id.casefold(),
+        )
+        if key in by_key:
+            continue
+
+        by_key[key] = LibraryItem(
+            source=source,
+            external_id=external_id,
+            canonical_url=placement.url,
+            title=placement.title,
+            statement_summary="",
+            lifecycle="PUBLISHED",
+            classification_status="PUBLISHED",
+            difficulty=(
+                placement.difficulty
+                or None
+            ),
+            primary_skill=(
+                placement.primary_skill
+                or None
+            ),
+            supporting_skills=tuple(
+                placement.supporting_skills
+            ),
+            role=placement.role or None,
+            pb_uid=placement.pb_uid or None,
+            attempted=bool(
+                placement.pb_uid
+                and placement.pb_uid
+                in attempted
+            ),
+            has_l2=False,
+            trust_status=None,
+        )
+
+    return sorted(
+        by_key.values(),
+        key=lambda item: (
+            item.source,
+            item.external_id,
+        ),
+    )
+
+
 def _problem_library_skill_groups():
     """Return learner-facing Unit → Skill groups in curriculum order."""
 
@@ -8466,20 +8553,32 @@ def _recommended_problem_items(
     except Exception:
         skill_uid = None
 
+    items = _problem_library_items()
+
     if skill_uid:
         candidates = (
-            PROBLEM_LIBRARY.search(
-                skill=skill_uid,
-                attempted=False,
-                require_l2=True,
+            _problem_library_filter_items(
+                items,
+                {
+                    "skill_uids": (
+                        skill_uid,
+                    ),
+                    "attempted": False,
+                    "require_l2": True,
+                },
                 limit=100,
             )
         )
         if not candidates:
             candidates = (
-                PROBLEM_LIBRARY.search(
-                    skill=skill_uid,
-                    attempted=False,
+                _problem_library_filter_items(
+                    items,
+                    {
+                        "skill_uids": (
+                            skill_uid,
+                        ),
+                        "attempted": False,
+                    },
                     limit=100,
                 )
             )
@@ -8493,12 +8592,16 @@ def _recommended_problem_items(
             )
 
     return (
-        PROBLEM_LIBRARY.search(
-            attempted=False,
+        _problem_library_filter_items(
+            items,
+            {
+                "attempted": False,
+            },
             limit=limit,
         ),
         "練習模式 · 尚未做 · 題庫穩定排序",
     )
+
 
 
 def _exam_safe_problem_items(
@@ -8507,18 +8610,22 @@ def _exam_safe_problem_items(
 ):
     """Strict-spoiler candidate pool for exam-style selection."""
 
-    items = list(
-        PROBLEM_LIBRARY.search(
-            attempted=False,
+    all_items = (
+        _problem_library_items()
+    )
+    items = (
+        _problem_library_filter_items(
+            all_items,
+            {
+                "attempted": False,
+            },
             limit=limit,
         )
     )
     if items:
         return items
 
-    return list(
-        PROBLEM_LIBRARY.items()
-    )[:limit]
+    return all_items[:limit]
 
 
 def _problem_library_filter_options(
@@ -8890,8 +8997,8 @@ def _problem_library_filter_view(
         "role": None,
         "require_l2": None,
     }
-    all_items = list(
-        PROBLEM_LIBRARY.items()
+    all_items = (
+        _problem_library_items()
     )
 
     while True:
@@ -8985,13 +9092,17 @@ def _problem_library_text_search(
     if query is None:
         return
 
+    folded = str(
+        query or ""
+    ).strip().casefold()
+    all_items = (
+        _problem_library_items()
+    )
+
     if mode == "exam":
-        folded = str(
-            query or ""
-        ).strip().casefold()
         items = [
             item
-            for item in PROBLEM_LIBRARY.items()
+            for item in all_items
             if (
                 not folded
                 or folded
@@ -9002,12 +9113,25 @@ def _problem_library_text_search(
             )
         ][:100]
     else:
-        items = (
-            PROBLEM_LIBRARY.smart_search(
-                query or "",
-                limit=100,
+        items = [
+            item
+            for item in all_items
+            if (
+                not folded
+                or folded
+                in " ".join(
+                    [
+                        item.external_id,
+                        item.title,
+                        item.source,
+                        item.difficulty or "",
+                        item.role or "",
+                        item.primary_skill or "",
+                        *item.supporting_skills,
+                    ]
+                ).casefold()
             )
-        )
+        ][:100]
 
     _problem_library_results_view(
         items,
@@ -9158,7 +9282,7 @@ def problem_library_view() -> None:
             )
         elif kind == "all":
             _problem_library_results_view(
-                PROBLEM_LIBRARY.items(),
+                _problem_library_items(),
                 title="題目庫 · 全部",
                 mode=mode,
             )
