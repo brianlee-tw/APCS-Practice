@@ -3044,6 +3044,58 @@ def inferred_published_novelty(
     return None
 
 
+def inferred_published_result(
+    problem,
+) -> str | None:
+    """Reuse an explicit Exam Runtime OJ verdict; never infer from local tests."""
+
+    try:
+        session = EXAM.active()
+    except ExamRuntimeError:
+        return None
+
+    if session is None:
+        return None
+
+    problem_id = (
+        str(problem.get("id") or "")
+        .strip()
+        .casefold()
+    )
+    if not problem_id:
+        return None
+
+    for event in reversed(
+        session.get("events", [])
+    ):
+        if (
+            event.get("type") != "SUBMIT"
+            or str(
+                event.get("problem_id") or ""
+            ).strip().casefold()
+            != problem_id
+        ):
+            continue
+
+        result = str(
+            event.get("result") or ""
+        ).strip().upper()
+
+        if result in {
+            "AC",
+            "WA",
+            "TLE",
+            "RE",
+            "MLE",
+            "CE",
+        }:
+            return result
+
+        return None
+
+    return None
+
+
 def inferred_published_timed(problem) -> bool | None:
     try:
         session = EXAM.active()
@@ -3943,9 +3995,20 @@ def record_problem(action: str, problem) -> None:
             return
 
     if published_runtime:
-        # External OJ is verdict authority. Published Implementation Finish must
-        # never inherit local-test success as an implicit AC.
-        step = "result"
+        # External OJ is verdict authority. Reuse only an explicit Exam Runtime
+        # submit verdict; never inherit local-test success as an implicit AC.
+        known_result = inferred_published_result(
+            problem
+        )
+        if known_result is not None:
+            result = known_result
+            step = (
+                "bottleneck"
+                if result != "AC"
+                else "evidence"
+            )
+        else:
+            step = "result"
     else:
         step = (
             "result"
