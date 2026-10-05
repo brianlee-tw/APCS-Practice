@@ -103,6 +103,73 @@ class TestAssetStoreV24Test(unittest.TestCase):
             TRUST_DIFFERENTIAL_VERIFIED,
         )
 
+    def test_dedicated_bundle_identity_must_match_storage_path(self):
+        self.write_bundle()
+        path = (
+            self.data
+            / "zerojudge"
+            / "d050"
+            / "tests.json"
+        )
+        payload = json.loads(
+            path.read_text(
+                encoding="utf-8"
+            )
+        )
+        payload["identity"]["source"] = (
+            "codeforces"
+        )
+        path.write_text(
+            json.dumps(
+                payload,
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+
+        with self.assertRaisesRegex(
+            ValueError,
+            "identity.source",
+        ):
+            self.store.load(
+                "zerojudge",
+                "d050",
+            )
+
+    def test_source_discovery_fails_closed_when_external_id_is_ambiguous(self):
+        self.write_bundle()
+        other = (
+            self.data
+            / "codeforces"
+            / "d050"
+            / "tests.json"
+        )
+        other.parent.mkdir(
+            parents=True
+        )
+        other.write_text(
+            json.dumps(
+                {
+                    "schema_version": "apcs-test-bundle-v1",
+                    "identity": {
+                        "source": "codeforces",
+                        "external_id": "d050",
+                        "canonical_url": "https://example.invalid/codeforces/d050",
+                    },
+                    "cases": [],
+                },
+                ensure_ascii=False,
+            ),
+            encoding="utf-8",
+        )
+
+        self.assertIsNone(
+            self.store.load(
+                None,
+                "d050",
+            )
+        )
+
     def test_fast_suite_is_small_and_full_suite_includes_verified_edges(self):
         self.write_bundle()
         bundle = self.store.load(
