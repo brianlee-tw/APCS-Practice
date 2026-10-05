@@ -1,4 +1,5 @@
 import io
+import tempfile
 import types
 import unittest
 from contextlib import redirect_stdout
@@ -1097,6 +1098,143 @@ class WorkbenchAcceptanceV24Test(unittest.TestCase):
         self.assert_frame_width(
             rendered,
             100,
+        )
+
+    def test_test_center_refuses_copy_after_source_changes_since_build(self):
+        with tempfile.TemporaryDirectory() as temp:
+            source = Path(temp) / "d050.cpp"
+            source.write_text(
+                "int main(){return 0;}\n",
+                encoding="utf-8",
+            )
+            built_digest = (
+                vscode_task._source_digest(
+                    str(source)
+                )
+            )
+            source.write_text(
+                "int main(){return 1;}\n",
+                encoding="utf-8",
+            )
+
+            compiled = CompileResult(
+                success=True,
+                executable=Path(temp) / "a.out",
+                duration_ms=40,
+                stdout="",
+                stderr="",
+            )
+            output = io.StringIO()
+            keys = iter(
+                [
+                    "C",
+                    "ESC",
+                ]
+            )
+
+            with (
+                patch.object(
+                    control,
+                    "selection_mode",
+                    return_value="practice",
+                ),
+                patch.object(
+                    vscode_task,
+                    "_post_attempt",
+                    return_value=False,
+                ),
+                patch.object(
+                    control,
+                    "read_key",
+                    side_effect=lambda: next(keys),
+                ),
+                patch.object(
+                    vscode_task,
+                    "copy_current_code",
+                ) as copy_code,
+                patch.object(
+                    vscode_task,
+                    "terminal_width",
+                    return_value=80,
+                ),
+                patch.object(
+                    vscode_task,
+                    "terminal_height",
+                    return_value=30,
+                ),
+                redirect_stdout(output),
+            ):
+                code = vscode_task._test_center(
+                    str(source),
+                    Path(temp) / "a.out",
+                    None,
+                    None,
+                    SuiteResult(()),
+                    compiled,
+                    compiled_source_digest=built_digest,
+                )
+
+        self.assertEqual(
+            code,
+            0,
+        )
+        copy_code.assert_not_called()
+        self.assertIn(
+            "本次 build 後變更",
+            output.getvalue(),
+        )
+
+    def test_build_and_run_marks_copy_untrusted_if_source_changes_during_compile(self):
+        with tempfile.TemporaryDirectory() as temp:
+            source = Path(temp) / "d050.cpp"
+            source.write_text(
+                "int main(){return 0;}\n",
+                encoding="utf-8",
+            )
+            compiled = CompileResult(
+                success=True,
+                executable=Path(temp) / "a.out",
+                duration_ms=40,
+                stdout="",
+                stderr="",
+            )
+
+            def fake_compile(filename):
+                Path(filename).write_text(
+                    "int main(){return 1;}\n",
+                    encoding="utf-8",
+                )
+                return None, compiled
+
+            with (
+                patch.object(
+                    vscode_task,
+                    "compile_current",
+                    side_effect=fake_compile,
+                ),
+                patch.object(
+                    vscode_task,
+                    "_test_bundle",
+                    return_value=None,
+                ),
+                patch.object(
+                    vscode_task,
+                    "_test_center",
+                    return_value=0,
+                ) as center,
+            ):
+                code = vscode_task.build_and_run(
+                    str(source)
+                )
+
+        self.assertEqual(
+            code,
+            0,
+        )
+        self.assertIsNone(
+            center.call_args.kwargs[
+                "compiled_source_digest"
+            ]
         )
 
     def test_oj_followup_routes_exam_and_practice_without_auto_submit(self):
