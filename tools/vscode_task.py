@@ -14,7 +14,10 @@ try:
     from . import apcs as core
     from . import apcs_control as control
     from .catalog_store import CatalogStore
-    from .exam_runtime import ExamSessionStore
+    from .exam_runtime import (
+        ExamRuntimeError,
+        ExamSessionStore,
+    )
     from .local_test_runner import (
         OUTPUT_LIMIT,
         PASS,
@@ -68,7 +71,10 @@ except ImportError:
     import apcs as core
     import apcs_control as control
     from catalog_store import CatalogStore
-    from exam_runtime import ExamSessionStore
+    from exam_runtime import (
+        ExamRuntimeError,
+        ExamSessionStore,
+    )
     from local_test_runner import (
         OUTPUT_LIMIT,
         PASS,
@@ -209,7 +215,11 @@ def _mark_exam_compile(
             context.problem_id,
             success=success,
         )
-    except (ValueError, OSError):
+    except (
+        ExamRuntimeError,
+        ValueError,
+        OSError,
+    ):
         # Telemetry must never break ordinary coding.
         pass
 
@@ -516,7 +526,11 @@ def _oj_followup(
 
     try:
         session = EXAM.active()
-    except (ValueError, OSError):
+    except (
+        ExamRuntimeError,
+        ValueError,
+        OSError,
+    ):
         session = None
 
     if (
