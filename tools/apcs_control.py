@@ -6823,10 +6823,11 @@ def learning_status_view() -> None:
         clear()
         heading("學習狀態")
         print()
-        print(
-            f"{GRAY}"
-            "只顯示會影響下一步學習決策的摘要；不是 mastery / readiness 宣告。"
-            f"{RESET}"
+        print_wrapped(
+            "只顯示會影響下一步學習決策的摘要；"
+            "不是 mastery / readiness 宣告。",
+            ui_width(),
+            color=GRAY,
         )
         print()
 
