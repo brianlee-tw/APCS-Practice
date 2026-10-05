@@ -29,6 +29,10 @@ try:
         RuntimeCurriculum,
         RuntimeCurriculumError,
     )
+    from .lesson_routes import (
+        LessonRouteError,
+        LessonRouteStore,
+    )
     from .adaptive_memory import (
         next_due_on,
         retrievability,
@@ -80,6 +84,10 @@ except ImportError:
         RuntimeCurriculum,
         RuntimeCurriculumError,
     )
+    from lesson_routes import (
+        LessonRouteError,
+        LessonRouteStore,
+    )
     from adaptive_memory import (
         next_due_on,
         retrievability,
@@ -124,9 +132,11 @@ except ImportError:
 ROOT = Path(__file__).resolve().parents[1]
 RUNTIME_DIR = ROOT / ".apcs" / "runtime"
 PUBLISHED_CURRICULUM = ROOT / "curriculum" / "published.v23.json"
+LESSON_ROUTES_PATH = ROOT / "curriculum" / "lesson_routes.v24.json"
 
 OUTBOX = EvidenceOutbox(RUNTIME_DIR)
 CURRICULUM = RuntimeCurriculum(PUBLISHED_CURRICULUM)
+LESSON_ROUTES = LessonRouteStore(LESSON_ROUTES_PATH)
 MEMORY = SkillMemoryStore(
     RUNTIME_DIR / "skill_memory.json",
     policy=resolve_memory_policy(
@@ -1499,6 +1509,19 @@ def create_learning_scratch(
         }
     )
 
+    lesson_url = None
+    if not strict_spoiler:
+        try:
+            lesson_url = (
+                LESSON_ROUTES.resolve(
+                    placement.lesson_uid
+                )
+            )
+        except LessonRouteError:
+            # Routing convenience must never block Implementation.
+            # CI validates the projection; runtime still fails safe.
+            lesson_url = None
+
     lines = [
         "// APCS B4 new-learning scratch",
         (
@@ -1519,6 +1542,10 @@ def create_learning_scratch(
                 f"// Role: {placement.role}",
             ]
         )
+        if lesson_url:
+            lines.append(
+                f"// Lesson context: {lesson_url}"
+            )
 
     if placement.url:
         lines.append(
@@ -6339,6 +6366,82 @@ def _start_new_learning(
             "關鍵 observation 或完整 state list。"
             f"{RESET}"
         )
+        print()
+
+    strict_spoiler = (
+        placement.role
+        in {
+            "Transfer Challenge",
+            "Mock",
+        }
+    )
+
+    if (
+        track == "Reading"
+        and not strict_spoiler
+    ):
+        route_error = None
+        try:
+            lesson_url = (
+                LESSON_ROUTES.resolve(
+                    placement.lesson_uid
+                )
+            )
+        except LessonRouteError as exc:
+            lesson_url = None
+            route_error = str(exc)
+
+        if not lesson_url:
+            print(
+                f"{YELLOW}"
+                "⚠ 找不到可驗證的 canonical Notion Lesson link。"
+                f"{RESET}"
+            )
+            print(
+                f"Lesson UID  "
+                f"{placement.lesson_uid or '—'}"
+            )
+            if route_error:
+                print(
+                    f"{GRAY}"
+                    f"Routing projection：{route_error}"
+                    f"{RESET}"
+                )
+            print(
+                f"{GRAY}"
+                "未猜測 URL，也未建立替代教材；"
+                "Reading 已安全停止。"
+                "Implementation 仍可從 Today 繼續。"
+                f"{RESET}"
+            )
+            pause()
+            return current_filename
+
+        try:
+            lesson_opened = bool(
+                webbrowser.open(
+                    lesson_url
+                )
+            )
+        except Exception:
+            # Browser launch is convenience only; the reviewed URL remains
+            # authoritative and must not affect Evidence behavior.
+            lesson_opened = False
+
+        if lesson_opened:
+            print(
+                f"{GREEN}"
+                "✓ 已開啟 canonical Notion Lesson"
+                f"{RESET}"
+            )
+        else:
+            print(
+                f"{YELLOW}"
+                "⚠ 無法自動開啟瀏覽器；"
+                "請使用下列 canonical Lesson URL。"
+                f"{RESET}"
+            )
+            print(lesson_url)
         print()
 
     try:
