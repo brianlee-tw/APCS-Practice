@@ -325,6 +325,32 @@ class TestAssetStore:
                 f"{path}: identity 缺失"
             )
 
+        declared_source = str(
+            identity.get("source")
+            or ""
+        ).strip().casefold()
+        declared_external_id = str(
+            identity.get("external_id")
+            or ""
+        ).strip()
+
+        if (
+            declared_source
+            and declared_source
+            != source.casefold()
+        ):
+            raise TestAssetError(
+                f"{path}: identity.source 與路徑不一致"
+            )
+        if (
+            declared_external_id
+            and declared_external_id.casefold()
+            != external_id.casefold()
+        ):
+            raise TestAssetError(
+                f"{path}: identity.external_id 與路徑不一致"
+            )
+
         cases_payload = payload.get("cases")
         if not isinstance(cases_payload, list):
             raise TestAssetError(
@@ -566,13 +592,20 @@ class TestAssetStore:
         external_id = self._clean_identity(
             external_id
         )
-        sources = (
-            [source]
-            if source
-            else self._discover_sources(
+        if source:
+            sources = [
+                str(source)
+                .strip()
+                .casefold()
+            ]
+        else:
+            sources = self._discover_sources(
                 external_id
             )
-        )
+            if len(sources) != 1:
+                # external_id is not globally unique across judges; never let
+                # directory ordering invent source authority.
+                return None
 
         for candidate_source in sources:
             if not candidate_source:
