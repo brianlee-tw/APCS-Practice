@@ -826,6 +826,31 @@ class WorkbenchAcceptanceV24Test(unittest.TestCase):
             finish_text,
         )
 
+    def test_exam_telemetry_failure_does_not_break_ordinary_compile_hook(self):
+        context = ProblemContext(
+            problem_id="d050",
+            title="測試題",
+            source="zerojudge",
+            canonical_url="https://example.invalid/d050",
+            solution_path=Path("/tmp/d050.cpp"),
+            placement_uid="PL-TEST",
+            role="Guided Drill",
+            pb_uid="PB-TEST",
+            identity_origin="published_placement",
+        )
+
+        with patch.object(
+            vscode_task.EXAM,
+            "mark_compile",
+            side_effect=vscode_task.ExamRuntimeError(
+                "corrupt exam state"
+            ),
+        ):
+            vscode_task._mark_exam_compile(
+                context,
+                success=True,
+            )
+
     def test_commit_quality_gate_does_not_auto_push(self):
         changes = [
             {
