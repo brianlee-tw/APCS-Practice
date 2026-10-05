@@ -214,7 +214,13 @@ class ExamSessionStore:
         if session is None:
             return False
         pid = str(problem_id).strip().lower()
-        if pid not in session["problem_ids"]:
+        if (
+            pid not in session["problem_ids"]
+            or session["selected_problem_id"] != pid
+        ):
+            # Exam telemetry belongs only to the problem the learner
+            # explicitly selected in the active session. Ordinary coding on
+            # another member of the set must not contaminate exam timing.
             return False
         self._mutate(
             "COMPILE",
@@ -234,9 +240,20 @@ class ExamSessionStore:
         result = str(result or "N/A").strip().upper()
         if result not in VALID_RESULTS:
             raise ExamRuntimeError(f"不支援的 submit result：{result}")
+
+        session = self.active()
+        if session is None:
+            raise ExamRuntimeError("目前沒有進行中的考試 session")
+
+        pid = str(problem_id).strip().lower()
+        if session["selected_problem_id"] != pid:
+            raise ExamRuntimeError(
+                "只能記錄目前選中題目的 submit result"
+            )
+
         return self._mutate(
             "SUBMIT",
-            problem_id=problem_id,
+            problem_id=pid,
             at=at,
             result=result,
         )
