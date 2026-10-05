@@ -517,5 +517,252 @@ class WorkbenchAcceptanceV24Test(unittest.TestCase):
         )
 
 
+    def test_control_center_wide_frame_prioritizes_mode_next_action_problem_and_capacity(self):
+        plan = types.SimpleNamespace(
+            budget_minutes=18,
+            selected=(),
+            selected_minutes=0,
+            deferred=(),
+        )
+        route = types.SimpleNamespace(
+            skill=types.SimpleNamespace(
+                uid="S01_IO",
+            ),
+            placement=types.SimpleNamespace(
+                lesson_uid="L-FND-01",
+                problem_id="d050",
+            ),
+        )
+        snapshot = {
+            "capacity_minutes": 60,
+            "plan": plan,
+            "new_learning": route,
+            "cognitive_plan": types.SimpleNamespace(
+                selected=(),
+            ),
+            "curriculum_blocker": None,
+            "warning": None,
+        }
+        problem = {
+            "id": "r488",
+            "title": "APCS 彗星撞擊",
+            "path": Path("/tmp/r488.cpp"),
+            "state": None,
+            "due": None,
+            "source": "zerojudge",
+            "url": "https://zerojudge.tw/ShowProblem?problemid=r488",
+        }
+        options = [
+            {
+                "label": "今日學習",
+                "detail": "依 Evidence 與容量安排下一步",
+                "enabled": True,
+                "section": "主要",
+                "kind": "today",
+                "action": "開啟",
+            },
+            {
+                "label": "題目庫",
+                "detail": "選題",
+                "enabled": True,
+                "section": "主要",
+                "kind": "library",
+                "action": "開啟",
+            },
+            {
+                "label": "模擬考",
+                "detail": "計時",
+                "enabled": True,
+                "section": "主要",
+                "kind": "exam",
+                "action": "開啟",
+            },
+        ]
+        output = io.StringIO()
+
+        with (
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=100,
+                    lines=42,
+                ),
+            ),
+            patch.object(
+                control,
+                "adaptive_today_snapshot",
+                return_value=snapshot,
+            ),
+            patch.object(
+                control,
+                "selection_mode",
+                return_value="practice",
+            ),
+            patch.object(
+                control,
+                "current_catalog_solution",
+                return_value=None,
+            ),
+            patch.object(
+                control.TEST_ASSETS,
+                "load",
+                return_value=None,
+            ),
+            patch.object(
+                control,
+                "read_key",
+                return_value="ESC",
+            ),
+            redirect_stdout(output),
+        ):
+            selected = control.choose_grid(
+                "控制中心",
+                options,
+                problem=problem,
+                main=True,
+                mode_toggle=True,
+                back_text="關閉",
+            )
+
+        self.assertIsNone(selected)
+        rendered = output.getvalue()
+        self.assertIn(
+            "[ 練習 ]",
+            rendered,
+        )
+        self.assertIn(
+            "現在可做",
+            rendered,
+        )
+        self.assertIn(
+            "目前題目",
+            rendered,
+        )
+        self.assertIn(
+            "今日容量",
+            rendered,
+        )
+        self.assertIn(
+            "S01_IO",
+            rendered,
+        )
+        self.assertIn(
+            "r488",
+            rendered,
+        )
+        self.assertIn(
+            "Ctrl+Shift+B",
+            rendered,
+        )
+        self.assert_frame_width(
+            rendered,
+            96,
+        )
+
+        lines = rendered.splitlines()
+        footer_index = next(
+            index
+            for index, line in enumerate(lines)
+            if "M 切換選題模式" in line
+        )
+        self.assertGreaterEqual(
+            footer_index,
+            34,
+        )
+
+    def test_today_wide_frame_uses_88_column_boundary_without_overflow(self):
+        plan = types.SimpleNamespace(
+            budget_minutes=18,
+            selected=(),
+            selected_minutes=0,
+            deferred=(),
+        )
+        snapshot = {
+            "target": "3+3",
+            "capacity_minutes": 60,
+            "plan": plan,
+            "warning": None,
+            "curriculum_blocker": None,
+        }
+        options = [
+            {
+                "label": "新學習 · S01_IO × Reading",
+                "detail": "Guided Drill · L-FND-01 · d050",
+                "enabled": True,
+                "kind": "new",
+                "track": "Reading",
+                "route": types.SimpleNamespace(
+                    skill=types.SimpleNamespace(
+                        uid="S01_IO",
+                    ),
+                    placement=types.SimpleNamespace(
+                        problem_id="d050",
+                        title="妳那裡現在幾點了？",
+                        role="Guided Drill",
+                        lesson_uid="L-FND-01",
+                    ),
+                ),
+            },
+            {
+                "label": "調整今日可用時間 · 60 min",
+                "detail": "只影響今天",
+                "enabled": True,
+                "kind": "capacity",
+                "action": "調整",
+            },
+        ]
+        output = io.StringIO()
+
+        with (
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=88,
+                    lines=42,
+                ),
+            ),
+            patch.object(
+                control,
+                "read_key",
+                return_value="ESC",
+            ),
+            redirect_stdout(output),
+        ):
+            selected = control._today_action_menu(
+                snapshot,
+                options,
+            )
+
+        self.assertIsNone(selected)
+        rendered = output.getvalue()
+        self.assertIn(
+            "學習活動",
+            rendered,
+        )
+        self.assertIn(
+            "規劃與執行",
+            rendered,
+        )
+        self.assertIn(
+            "Lesson    L-FND-01",
+            rendered,
+        )
+        self.assert_frame_width(
+            rendered,
+            86,
+        )
+
+        lines = rendered.splitlines()
+        footer_index = next(
+            index
+            for index, line in enumerate(lines)
+            if "Esc / Q 返回控制中心" in line
+        )
+        self.assertGreaterEqual(
+            footer_index,
+            34,
+        )
+
+
 if __name__ == "__main__":
     unittest.main()
