@@ -500,6 +500,62 @@ def _oj_url(
     return None
 
 
+def _oj_followup(
+    filename: str,
+    context: ProblemContext | None,
+) -> str:
+    """Return the next learner action without treating browser-open as submit."""
+
+    problem_id = (
+        str(context.problem_id or "")
+        .strip()
+        .casefold()
+        if context is not None
+        else ""
+    )
+
+    try:
+        session = EXAM.active()
+    except (ValueError, OSError):
+        session = None
+
+    if (
+        session is not None
+        and problem_id
+        and str(
+            session.get(
+                "selected_problem_id"
+            )
+            or ""
+        ).strip().casefold()
+        == problem_id
+    ):
+        return (
+            "完成正式提交後回 Ctrl+Alt+A → 模擬考 → 記錄提交；"
+            "開啟 OJ 本身不代表已 Submit。"
+        )
+
+    problem = control.current_problem(
+        filename
+    )
+    action = (
+        problem.get("runtime_action")
+        if problem
+        else None
+    )
+
+    if action == "review":
+        return (
+            "取得正式 verdict 後回 Ctrl+Alt+A → 複習題目；"
+            "本地測試不會自動寫入 Evidence。"
+        )
+
+    return (
+        "取得正式 verdict 後回 Ctrl+Alt+A → 完成題目；"
+        "本地測試不會自動寫入 Evidence。"
+    )
+
+
 def _interactive_run(
     executable: Path,
 ) -> int:
@@ -1167,7 +1223,10 @@ def _test_center(
                 f"{YELLOW if not results.all_passed else GREEN}"
                 "✓ 已開啟正式 OJ；"
                 f"{local_state}"
-                "OJ verdict 才是正式判定"
+                "OJ verdict 才是正式判定。"
+                f"{RESET} "
+                f"{GRAY}"
+                f"{_oj_followup(filename, context)}"
                 f"{RESET}"
             )
             continue
