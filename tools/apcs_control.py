@@ -1325,29 +1325,6 @@ def learning_status_snapshot(
     }
 
 
-def skill_display_name(
-    skill_uid: str,
-) -> str:
-    try:
-        context = CURRICULUM.skill_context(
-            skill_uid
-        )
-    except RuntimeCurriculumError:
-        context = None
-
-    if (
-        context is None
-        or not context.name
-    ):
-        return skill_uid
-
-    return (
-        f"{skill_uid} · "
-        f"{context.name}"
-    )
-
-
-
 def attempted_problem_ids_for_skill(
     skill_uid: str,
     *,
