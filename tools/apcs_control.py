@@ -3243,6 +3243,21 @@ def inferred_published_result(
     if not problem_id:
         return None
 
+    selected_id = (
+        str(
+            session.get(
+                "selected_problem_id"
+            )
+            or ""
+        )
+        .strip()
+        .casefold()
+    )
+    if selected_id != problem_id:
+        # A prior submit for another/switch-away problem is Exam telemetry,
+        # not authoritative outcome for this current Finish attempt.
+        return None
+
     for event in reversed(
         session.get("events", [])
     ):
