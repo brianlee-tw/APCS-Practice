@@ -116,6 +116,7 @@ class C8LearnerUxTest(unittest.TestCase):
 
     def test_published_result_reuses_explicit_exam_submit_only(self):
         session = {
+            "selected_problem_id": "d050",
             "events": [
                 {
                     "type": "SUBMIT",
@@ -148,11 +149,40 @@ class C8LearnerUxTest(unittest.TestCase):
                 )
             )
 
+    def test_published_result_does_not_reuse_submit_after_exam_switch(self):
+        session = {
+            "selected_problem_id": "b130",
+            "events": [
+                {
+                    "type": "SUBMIT",
+                    "problem_id": "d050",
+                    "result": "AC",
+                },
+                {
+                    "type": "SWITCH",
+                    "problem_id": "b130",
+                    "from_problem_id": "d050",
+                },
+            ],
+        }
+
+        with patch.object(
+            control.EXAM,
+            "active",
+            return_value=session,
+        ):
+            self.assertIsNone(
+                control.inferred_published_result(
+                    problem()
+                )
+            )
+
     def test_published_result_does_not_infer_without_exam_submit(self):
         with patch.object(
             control.EXAM,
             "active",
             return_value={
+                "selected_problem_id": "d050",
                 "events": [
                     {
                         "type": "COMPILE",
