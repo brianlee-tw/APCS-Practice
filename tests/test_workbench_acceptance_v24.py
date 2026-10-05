@@ -764,5 +764,186 @@ class WorkbenchAcceptanceV24Test(unittest.TestCase):
         )
 
 
+    def test_oj_followup_routes_exam_and_practice_without_auto_submit(self):
+        context = ProblemContext(
+            problem_id="d050",
+            title="妳那裡現在幾點了？",
+            source="zerojudge",
+            canonical_url="https://example.invalid/d050",
+            solution_path=Path("/tmp/d050.cpp"),
+            placement_uid="PL-TEST",
+            role="Guided Drill",
+            pb_uid="PB-TEST",
+            identity_origin="published_placement",
+        )
+
+        with patch.object(
+            vscode_task.EXAM,
+            "active",
+            return_value={
+                "selected_problem_id": "d050",
+            },
+        ):
+            exam_text = vscode_task._oj_followup(
+                "/tmp/d050.cpp",
+                context,
+            )
+
+        self.assertIn(
+            "模擬考 → 記錄提交",
+            exam_text,
+        )
+        self.assertIn(
+            "不代表已 Submit",
+            exam_text,
+        )
+
+        with (
+            patch.object(
+                vscode_task.EXAM,
+                "active",
+                return_value=None,
+            ),
+            patch.object(
+                control,
+                "current_problem",
+                return_value={
+                    "runtime_action": "finish",
+                },
+            ),
+        ):
+            finish_text = vscode_task._oj_followup(
+                "/tmp/d050.cpp",
+                context,
+            )
+
+        self.assertIn(
+            "完成題目",
+            finish_text,
+        )
+        self.assertIn(
+            "不會自動寫入 Evidence",
+            finish_text,
+        )
+
+    def test_commit_quality_gate_does_not_auto_push(self):
+        changes = [
+            {
+                "code": "M ",
+                "path": "tools/apcs_control.py",
+                "paths": [
+                    "tools/apcs_control.py",
+                ],
+                "display": "tools/apcs_control.py",
+            },
+        ]
+
+        def fake_git(*args):
+            if args == (
+                "diff",
+                "--cached",
+                "--stat",
+            ):
+                return types.SimpleNamespace(
+                    returncode=0,
+                    stdout=(
+                        " tools/apcs_control.py | 2 +-\n"
+                        " 1 file changed, 1 insertion(+), 1 deletion(-)"
+                    ),
+                    stderr="",
+                )
+            if args[:2] == (
+                "commit",
+                "-m",
+            ):
+                return types.SimpleNamespace(
+                    returncode=0,
+                    stdout="[branch abc1234] test",
+                    stderr="",
+                )
+            if args == (
+                "rev-parse",
+                "--short",
+                "HEAD",
+            ):
+                return types.SimpleNamespace(
+                    returncode=0,
+                    stdout="abc1234\n",
+                    stderr="",
+                )
+            raise AssertionError(
+                f"unexpected git call: {args!r}"
+            )
+
+        with (
+            patch.object(
+                control,
+                "git_changes",
+                return_value=changes,
+            ),
+            patch.object(
+                control,
+                "staged_count",
+                return_value=1,
+            ),
+            patch.object(
+                control,
+                "whitespace_ok",
+                return_value=True,
+            ),
+            patch.object(
+                control,
+                "local_quality_gate",
+                return_value=types.SimpleNamespace(
+                    returncode=0,
+                    stdout="PASS",
+                    stderr="",
+                ),
+            ),
+            patch.object(
+                control,
+                "suggested_commit_message",
+                return_value="fix: close evidence workflow",
+            ),
+            patch.object(
+                control,
+                "run_git",
+                side_effect=fake_git,
+            ) as run_git,
+            patch(
+                "builtins.input",
+                return_value="",
+            ),
+            patch.object(
+                control,
+                "confirm",
+                return_value=True,
+            ),
+            patch.object(
+                control,
+                "push_commit",
+            ) as push,
+            patch.object(
+                control,
+                "pause",
+            ),
+            redirect_stdout(
+                io.StringIO()
+            ),
+        ):
+            control.create_commit()
+
+        self.assertTrue(
+            any(
+                call.args[:2] == (
+                    "commit",
+                    "-m",
+                )
+                for call in run_git.call_args_list
+            )
+        )
+        push.assert_not_called()
+
+
 if __name__ == "__main__":
     unittest.main()
