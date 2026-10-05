@@ -895,14 +895,39 @@ def _test_center(
                 )
             )
 
+        post_attempt = _post_attempt(
+            filename
+        )
+        strict = (
+            mode == "exam"
+            or (
+                context is not None
+                and context.role
+                in {
+                    "Transfer Challenge",
+                    "Mock",
+                }
+            )
+        ) and not post_attempt
+
         inventory = TEST_ASSETS.inventory(
             bundle
         )
+        inventory_text = (
+            (
+                "測資資產  防劇透 · "
+                f"目前可見 official {len(results.cases)}"
+            )
+            if strict
+            else (
+                "測資資產  "
+                f"官方 {inventory['official']}"
+                f" · 已驗證 {inventory['verified']}"
+                f" · Candidate {inventory['candidate']}"
+            )
+        )
         for line in wrap(
-            "測資資產  "
-            f"官方 {inventory['official']}"
-            f" · 已驗證 {inventory['verified']}"
-            f" · Candidate {inventory['candidate']}",
+            inventory_text,
             width,
         ):
             print(
@@ -934,9 +959,6 @@ def _test_center(
             f"{pad('測資', left)}"
             f"{RESET}"
         ]
-        post_attempt = _post_attempt(
-            filename
-        )
 
         for index, result in enumerate(
             results.cases
@@ -990,18 +1012,6 @@ def _test_center(
                     f"{RESET}"
                 )
 
-        strict = (
-            mode == "exam"
-            or (
-                context is not None
-                and context.role
-                in {
-                    "Transfer Challenge",
-                    "Mock",
-                }
-            )
-        ) and not post_attempt
-
         if results.cases:
             detail_result = (
                 results.cases[selected]
@@ -1038,7 +1048,10 @@ def _test_center(
                 "  C 複製剛剛實際編譯的 source",
                 "  O 開啟正式 OJ（若有 canonical URL）",
             ]
-            if inventory["candidate"]:
+            if (
+                inventory["candidate"]
+                and not strict
+            ):
                 detail_lines.extend(
                     [
                         "",
