@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import contextlib
+import hashlib
 import io
 import re
 import shutil
@@ -445,6 +446,21 @@ def _copy_text(
     )
 
 
+def _source_digest(
+    filename: str,
+) -> str | None:
+    try:
+        payload = Path(
+            filename
+        ).resolve().read_bytes()
+    except OSError:
+        return None
+
+    return hashlib.sha256(
+        payload
+    ).hexdigest()
+
+
 def copy_current_code(
     filename: str,
 ) -> tuple[bool, str]:
@@ -800,6 +816,8 @@ def _test_center(
     bundle: TestBundle | None,
     initial: SuiteResult,
     compile_result: CompileResult,
+    *,
+    compiled_source_digest: str | None = None,
 ) -> int:
     results = initial
     selected = (
@@ -1224,6 +1242,23 @@ def _test_center(
             continue
 
         if key in {"c", "C"}:
+            current_digest = _source_digest(
+                filename
+            )
+            if (
+                compiled_source_digest is None
+                or current_digest
+                != compiled_source_digest
+            ):
+                message = (
+                    f"{YELLOW}"
+                    "⚠ 程式碼已在本次 build 後變更，"
+                    "或無法驗證 build source；"
+                    "請先重新 Ctrl+Shift+B 再複製。"
+                    f"{RESET}"
+                )
+                continue
+
             ok, detail = copy_current_code(
                 filename
             )
@@ -1277,6 +1312,12 @@ def _test_center(
 
 
 def build_and_run(filename: str) -> int:
+    source_digest_before = (
+        _source_digest(
+            filename
+        )
+    )
+
     try:
         context, compile_result = (
             compile_current(
@@ -1285,6 +1326,22 @@ def build_and_run(filename: str) -> int:
         )
     except LocalTestError as exc:
         return fail(str(exc))
+
+    source_digest_after = (
+        _source_digest(
+            filename
+        )
+    )
+    compiled_source_digest = (
+        source_digest_after
+        if (
+            source_digest_before
+            is not None
+            and source_digest_before
+            == source_digest_after
+        )
+        else None
+    )
 
     if not compile_result.success:
         _compile_screen(
@@ -1316,6 +1373,9 @@ def build_and_run(filename: str) -> int:
             None,
             SuiteResult(()),
             compile_result,
+            compiled_source_digest=(
+                compiled_source_digest
+            ),
         )
 
     fast_cases = _visible_cases(
@@ -1338,6 +1398,9 @@ def build_and_run(filename: str) -> int:
         bundle,
         results,
         compile_result,
+        compiled_source_digest=(
+            compiled_source_digest
+        ),
     )
 
 
