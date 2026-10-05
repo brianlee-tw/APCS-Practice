@@ -67,25 +67,38 @@ class ExamRuntimeV24Test(unittest.TestCase):
             )
         )
 
-    def test_compile_hook_records_only_exam_problem(self):
+    def test_compile_hook_records_only_selected_exam_problem(self):
         store = self.make_store()
         store.start(
-            ["a001"],
+            ["a001", "b130"],
             duration_minutes=30,
             started_at=self.t(0),
         )
         self.assertFalse(
             store.mark_compile(
+                "a001",
+                success=True,
+                at=self.t(4),
+            )
+        )
+
+        store.select(
+            "a001",
+            at=self.t(5),
+        )
+
+        self.assertFalse(
+            store.mark_compile(
                 "b130",
                 success=True,
-                at=self.t(5),
+                at=self.t(6),
             )
         )
         self.assertTrue(
             store.mark_compile(
                 "a001",
                 success=False,
-                at=self.t(6),
+                at=self.t(7),
             )
         )
         active = store.active()
@@ -97,13 +110,39 @@ class ExamRuntimeV24Test(unittest.TestCase):
         self.assertEqual(len(compile_events), 1)
         self.assertFalse(compile_events[0]["success"])
 
-    def test_submit_is_one_explicit_event(self):
+    def test_submit_is_one_explicit_event_for_selected_problem(self):
         store = self.make_store()
         store.start(
-            ["a001"],
+            ["a001", "b130"],
             duration_minutes=30,
             started_at=self.t(0),
         )
+
+        with self.assertRaisesRegex(
+            ExamRuntimeError,
+            "目前選中",
+        ):
+            store.mark_submit(
+                "a001",
+                result="WA",
+                at=self.t(8),
+            )
+
+        store.select(
+            "a001",
+            at=self.t(9),
+        )
+
+        with self.assertRaisesRegex(
+            ExamRuntimeError,
+            "目前選中",
+        ):
+            store.mark_submit(
+                "b130",
+                result="WA",
+                at=self.t(9),
+            )
+
         session = store.mark_submit(
             "a001",
             result="WA",
