@@ -15,10 +15,14 @@ from tools.local_test_runner import (
     SuiteResult,
 )
 from tools.test_assets import (
+    PROVENANCE_AI,
     PROVENANCE_OFFICIAL,
     SUITE_FAST,
+    SUITE_FULL,
+    TRUST_CANDIDATE,
     TRUST_OFFICIAL,
     VISIBILITY_OFFICIAL,
+    VISIBILITY_PRACTICE,
     TestBundle,
     TestCase,
 )
@@ -763,6 +767,337 @@ class WorkbenchAcceptanceV24Test(unittest.TestCase):
             34,
         )
 
+
+    def test_learning_status_fits_exact_86_column_boundary(self):
+        snapshot = {
+            "target": "3+3",
+            "attempts": 12,
+            "evidence": 8,
+            "evidence_by_track": {
+                "Reading": 3,
+                "Implementation": 5,
+            },
+            "memory_states": 7,
+            "capacity_minutes": 60,
+            "review_selected_minutes": 18,
+            "review_budget_minutes": 18,
+            "review_selected": 2,
+            "review_deferred": 1,
+            "protected_new_learning_minutes": 42,
+            "remote_acknowledged": 6,
+            "remote_pending": 2,
+            "warnings": (),
+        }
+        output = io.StringIO()
+
+        with (
+            patch.object(
+                control,
+                "learning_status_snapshot",
+                return_value=snapshot,
+            ),
+            patch.object(
+                control,
+                "read_key",
+                return_value="ENTER",
+            ),
+            patch(
+                "tools.apcs_control.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=88,
+                    lines=42,
+                ),
+            ),
+            redirect_stdout(output),
+        ):
+            control.learning_status_view()
+
+        rendered = output.getvalue()
+        self.assertIn(
+            "LEARNER_READINESS = NOT ASSESSED",
+            rendered,
+        )
+        self.assertIn(
+            "目前進度",
+            rendered,
+        )
+        self.assertIn(
+            "今日容量",
+            rendered,
+        )
+        self.assert_frame_width(
+            rendered,
+            86,
+        )
+
+    def test_learning_status_narrow_summary_stays_inside_terminal(self):
+        snapshot = {
+            "target": "3+3",
+            "attempts": 12,
+            "evidence": 8,
+            "evidence_by_track": {
+                "Reading": 3,
+                "Implementation": 5,
+            },
+            "memory_states": 7,
+            "capacity_minutes": 60,
+            "review_selected_minutes": 18,
+            "review_budget_minutes": 18,
+            "review_selected": 2,
+            "review_deferred": 3,
+            "protected_new_learning_minutes": 42,
+            "remote_acknowledged": 6,
+            "remote_pending": 2,
+            "warnings": (),
+        }
+        output = io.StringIO()
+
+        with (
+            patch.object(
+                control,
+                "learning_status_snapshot",
+                return_value=snapshot,
+            ),
+            patch.object(
+                control,
+                "read_key",
+                return_value="ENTER",
+            ),
+            patch(
+                "tools.apcs_control.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=62,
+                    lines=30,
+                ),
+            ),
+            redirect_stdout(output),
+        ):
+            control.learning_status_view()
+
+        rendered = output.getvalue()
+        self.assertIn(
+            "安全延後",
+            rendered,
+        )
+        self.assert_frame_width(
+            rendered,
+            60,
+        )
+
+    def test_solution_data_fits_exact_86_column_boundary(self):
+        problem = {
+            "id": "d050",
+            "title": "妳那裡現在幾點了？",
+            "path": Path("/tmp/d050.cpp"),
+            "state": None,
+        }
+        solution = types.SimpleNamespace(
+            language="cpp",
+            path="solutions/d050.cpp",
+            complexity="O(1)",
+        )
+        output = io.StringIO()
+
+        with (
+            patch.object(
+                control,
+                "solutions_for_problem",
+                return_value=(solution,),
+            ),
+            patch.object(
+                control,
+                "read_key",
+                return_value="ESC",
+            ),
+            patch(
+                "tools.apcs_control.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=88,
+                    lines=42,
+                ),
+            ),
+            redirect_stdout(output),
+        ):
+            result = control.solution_center_ui(
+                problem,
+                "/tmp/d050.cpp",
+            )
+
+        self.assertEqual(
+            result,
+            "/tmp/d050.cpp",
+        )
+        rendered = output.getvalue()
+        self.assertIn(
+            "已登錄解法 · 1",
+            rendered,
+        )
+        self.assertIn(
+            "選中解法資訊",
+            rendered,
+        )
+        self.assertIn(
+            "C++",
+            rendered,
+        )
+        self.assert_frame_width(
+            rendered,
+            86,
+        )
+
+    def test_problem_library_narrow_width_uses_compact_fallback(self):
+        with (
+            patch.object(
+                control,
+                "selection_mode",
+                return_value="practice",
+            ),
+            patch.object(
+                control,
+                "choose_grid",
+                return_value=None,
+            ) as compact,
+            patch.object(
+                control,
+                "_problem_library_workbench",
+            ) as workbench,
+            patch(
+                "tools.apcs_control.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=80,
+                    lines=30,
+                ),
+            ),
+        ):
+            control.problem_library_view()
+
+        compact.assert_called_once()
+        workbench.assert_not_called()
+
+    def test_exam_test_center_hides_nonofficial_inventory_pre_attempt(self):
+        official = TestCase(
+            case_id="S1",
+            name="official sample",
+            input_text="1\n",
+            expected_output="1\n",
+            provenance=PROVENANCE_OFFICIAL,
+            trust=TRUST_OFFICIAL,
+            suite=SUITE_FAST,
+            visibility=VISIBILITY_OFFICIAL,
+        )
+        hidden_candidate = TestCase(
+            case_id="G1",
+            name="hidden candidate",
+            input_text="2\n",
+            expected_output=None,
+            provenance=PROVENANCE_AI,
+            trust=TRUST_CANDIDATE,
+            suite=SUITE_FULL,
+            visibility=VISIBILITY_PRACTICE,
+        )
+        bundle = TestBundle(
+            source="zerojudge",
+            external_id="d050",
+            canonical_url="https://example.invalid/d050",
+            cases=(
+                official,
+                hidden_candidate,
+            ),
+        )
+        result = CaseResult(
+            case=official,
+            status=PASS,
+            duration_ms=3,
+            actual_output="1\n",
+            stderr="",
+            returncode=0,
+        )
+        compiled = CompileResult(
+            success=True,
+            executable=Path("/tmp/a.out"),
+            duration_ms=40,
+            stdout="",
+            stderr="",
+        )
+        context = ProblemContext(
+            problem_id="d050",
+            title="妳那裡現在幾點了？",
+            source="zerojudge",
+            canonical_url="https://example.invalid/d050",
+            solution_path=Path("/tmp/d050.cpp"),
+            placement_uid="PL-TEST",
+            role="Guided Drill",
+            pb_uid="PB-TEST",
+            identity_origin="published_placement",
+        )
+        output = io.StringIO()
+
+        with (
+            patch.object(
+                control,
+                "selection_mode",
+                return_value="exam",
+            ),
+            patch.object(
+                vscode_task,
+                "_post_attempt",
+                return_value=False,
+            ),
+            patch.object(
+                control,
+                "read_key",
+                return_value="ESC",
+            ),
+            patch.object(
+                vscode_task,
+                "terminal_width",
+                return_value=100,
+            ),
+            patch.object(
+                vscode_task,
+                "terminal_height",
+                return_value=42,
+            ),
+            redirect_stdout(output),
+        ):
+            code = vscode_task._test_center(
+                "/tmp/d050.cpp",
+                Path("/tmp/a.out"),
+                context,
+                bundle,
+                SuiteResult((result,)),
+                compiled,
+            )
+
+        self.assertEqual(
+            code,
+            0,
+        )
+        rendered = output.getvalue()
+        self.assertIn(
+            "防劇透",
+            rendered,
+        )
+        self.assertIn(
+            "目前可見 official 1",
+            rendered,
+        )
+        self.assertNotIn(
+            "Candidate",
+            rendered,
+        )
+        self.assertNotIn(
+            "hidden candidate",
+            rendered,
+        )
+        self.assertNotIn(
+            "已驗證",
+            rendered,
+        )
+        self.assert_frame_width(
+            rendered,
+            100,
+        )
 
     def test_oj_followup_routes_exam_and_practice_without_auto_submit(self):
         context = ProblemContext(
