@@ -70,11 +70,25 @@ def _relative_to_root(
 def _intelligence_identity(
     intelligence_dir: Path,
     external_id: str,
+    *,
+    source_hint: str | None = None,
 ) -> tuple[str | None, str | None, str | None]:
     if not intelligence_dir.is_dir():
         return None, None, None
 
     external_folded = external_id.casefold()
+    source_folded = (
+        str(source_hint or "")
+        .strip()
+        .casefold()
+    )
+    matches: list[
+        tuple[
+            str | None,
+            str | None,
+            str | None,
+        ]
+    ] = []
 
     for path in sorted(
         intelligence_dir.rglob("*.json")
@@ -108,6 +122,13 @@ def _intelligence_identity(
             identity.get("source")
             or ""
         ).strip().casefold()
+        if (
+            source_folded
+            and source
+            != source_folded
+        ):
+            continue
+
         url = str(
             identity.get("canonical_url")
             or ""
@@ -122,13 +143,21 @@ def _intelligence_identity(
                 or ""
             ).strip()
 
-        return (
-            source or None,
-            url or None,
-            title or None,
+        matches.append(
+            (
+                source or None,
+                url or None,
+                title or None,
+            )
         )
 
-    return None, None, None
+    # External IDs are not globally unique across judges.  If source
+    # authority is unavailable and more than one identity matches, do not
+    # let filesystem ordering choose a canonical URL/title by accident.
+    if len(matches) != 1:
+        return None, None, None
+
+    return matches[0]
 
 
 def resolve_problem_context(
@@ -262,6 +291,7 @@ def resolve_problem_context(
                 _intelligence_identity(
                     intelligence_dir,
                     pid,
+                    source_hint=source,
                 )
             )
             return ProblemContext(
@@ -295,6 +325,14 @@ def resolve_problem_context(
         _intelligence_identity(
             intelligence_dir,
             pid,
+            source_hint=(
+                problem.source
+                if (
+                    problem is not None
+                    and problem.source.strip()
+                )
+                else None
+            ),
         )
     )
 
