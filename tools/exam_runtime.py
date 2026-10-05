@@ -214,7 +214,13 @@ class ExamSessionStore:
         if session is None:
             return False
         pid = str(problem_id).strip().lower()
-        if pid not in session["problem_ids"]:
+        if (
+            pid not in session["problem_ids"]
+            or session["selected_problem_id"] != pid
+        ):
+            # Exam telemetry belongs only to the problem the learner
+            # explicitly selected in the active session. Ordinary coding on
+            # another member of the set must not contaminate exam timing.
             return False
         self._mutate(
             "COMPILE",
@@ -234,9 +240,20 @@ class ExamSessionStore:
         result = str(result or "N/A").strip().upper()
         if result not in VALID_RESULTS:
             raise ExamRuntimeError(f"不支援的 submit result：{result}")
+
+        session = self.active()
+        if session is None:
+            raise ExamRuntimeError("目前沒有進行中的考試 session")
+
+        pid = str(problem_id).strip().lower()
+        if session["selected_problem_id"] != pid:
+            raise ExamRuntimeError(
+                "只能記錄目前選中題目的 submit result"
+            )
+
         return self._mutate(
             "SUBMIT",
-            problem_id=problem_id,
+            problem_id=pid,
             at=at,
             result=result,
         )
@@ -275,6 +292,50 @@ class ExamSessionStore:
         self.active_path.unlink(missing_ok=True)
         return session
 
+    def abort(
+        self,
+        *,
+        aborted_at: dt.datetime | None = None,
+    ) -> dict[str, Any]:
+        """Close an accidental/abandoned exam without postmortem Evidence."""
+
+        session = self._read(
+            self.active_path
+        )
+        self.validate(session)
+        when = _now(aborted_at)
+
+        if when < _parse(
+            session["started_at"]
+        ):
+            raise ExamRuntimeError(
+                "aborted_at 不能早於 started_at"
+            )
+
+        session["status"] = "ABORTED"
+        session["ended_at"] = _iso(when)
+        session["postmortem_reason"] = None
+        session["events"].append(
+            {
+                "type": "ABORT",
+                "at": _iso(when),
+            }
+        )
+        self.validate(session)
+
+        destination = (
+            self.sessions_dir
+            / f"{session['session_id']}.json"
+        )
+        self._write(
+            destination,
+            session,
+        )
+        self.active_path.unlink(
+            missing_ok=True
+        )
+        return session
+
     @staticmethod
     def validate(session: dict[str, Any]) -> None:
         expected = {
@@ -293,7 +354,11 @@ class ExamSessionStore:
             raise ExamRuntimeError("Exam session schema 不一致")
         if session["schema_version"] != SCHEMA_VERSION:
             raise ExamRuntimeError("Exam schema_version 不正確")
-        if session["status"] not in {"ACTIVE", "ENDED"}:
+        if session["status"] not in {
+            "ACTIVE",
+            "ENDED",
+            "ABORTED",
+        }:
             raise ExamRuntimeError("Exam status 不合法")
         _parse(session["started_at"])
 
@@ -329,15 +394,36 @@ class ExamSessionStore:
 
         if session["status"] == "ACTIVE":
             if session["ended_at"] is not None:
-                raise ExamRuntimeError("ACTIVE session 不得有 ended_at")
+                raise ExamRuntimeError(
+                    "ACTIVE session 不得有 ended_at"
+                )
             if session["postmortem_reason"] is not None:
-                raise ExamRuntimeError("ACTIVE session 不得有 postmortem")
+                raise ExamRuntimeError(
+                    "ACTIVE session 不得有 postmortem"
+                )
+        elif session["status"] == "ENDED":
+            if not session["ended_at"]:
+                raise ExamRuntimeError(
+                    "ENDED session 必須有 ended_at"
+                )
+            _parse(session["ended_at"])
+            if (
+                session["postmortem_reason"]
+                not in POSTMORTEM_REASONS
+            ):
+                raise ExamRuntimeError(
+                    "ENDED session 缺 postmortem reason"
+                )
         else:
             if not session["ended_at"]:
-                raise ExamRuntimeError("ENDED session 必須有 ended_at")
+                raise ExamRuntimeError(
+                    "ABORTED session 必須有 ended_at"
+                )
             _parse(session["ended_at"])
-            if session["postmortem_reason"] not in POSTMORTEM_REASONS:
-                raise ExamRuntimeError("ENDED session 缺 postmortem reason")
+            if session["postmortem_reason"] is not None:
+                raise ExamRuntimeError(
+                    "ABORTED session 不得有 postmortem"
+                )
 
     @staticmethod
     def summary(session: dict[str, Any]) -> dict[str, Any]:

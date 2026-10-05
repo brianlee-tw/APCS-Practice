@@ -29,6 +29,10 @@ try:
         RuntimeCurriculum,
         RuntimeCurriculumError,
     )
+    from .lesson_routes import (
+        LessonRouteError,
+        LessonRouteStore,
+    )
     from .adaptive_memory import (
         next_due_on,
         retrievability,
@@ -48,6 +52,13 @@ try:
         formal_response_ready,
     )
     from .problem_library import ProblemLibrary, LibraryItem
+    from .test_assets import TestAssetStore
+    from .workbench_context import resolve_problem_context
+    from .workbench_tui import (
+        terminal_width as workbench_width,
+        terminal_height as workbench_height,
+        pane_widths as workbench_pane_widths,
+    )
     from .learner_model_v2 import (
         LearnerSignalStore,
         learner_model_snapshot,
@@ -73,6 +84,10 @@ except ImportError:
         RuntimeCurriculum,
         RuntimeCurriculumError,
     )
+    from lesson_routes import (
+        LessonRouteError,
+        LessonRouteStore,
+    )
     from adaptive_memory import (
         next_due_on,
         retrievability,
@@ -92,6 +107,13 @@ except ImportError:
         formal_response_ready,
     )
     from problem_library import ProblemLibrary, LibraryItem
+    from test_assets import TestAssetStore
+    from workbench_context import resolve_problem_context
+    from workbench_tui import (
+        terminal_width as workbench_width,
+        terminal_height as workbench_height,
+        pane_widths as workbench_pane_widths,
+    )
     from learner_model_v2 import (
         LearnerSignalStore,
         learner_model_snapshot,
@@ -110,9 +132,11 @@ except ImportError:
 ROOT = Path(__file__).resolve().parents[1]
 RUNTIME_DIR = ROOT / ".apcs" / "runtime"
 PUBLISHED_CURRICULUM = ROOT / "curriculum" / "published.v23.json"
+LESSON_ROUTES_PATH = ROOT / "curriculum" / "lesson_routes.v24.json"
 
 OUTBOX = EvidenceOutbox(RUNTIME_DIR)
 CURRICULUM = RuntimeCurriculum(PUBLISHED_CURRICULUM)
+LESSON_ROUTES = LessonRouteStore(LESSON_ROUTES_PATH)
 MEMORY = SkillMemoryStore(
     RUNTIME_DIR / "skill_memory.json",
     policy=resolve_memory_policy(
@@ -123,6 +147,10 @@ PROBLEM_LIBRARY = ProblemLibrary(
     core.PROBLEM_INTELLIGENCE,
     core.PROBLEM_ENRICHMENT,
     OUTBOX,
+)
+TEST_ASSETS = TestAssetStore(
+    ROOT / "data" / "problem_enrichment",
+    RUNTIME_DIR,
 )
 COGNITIVE = CognitiveOrchestrator()
 LEARNER_SIGNALS = LearnerSignalStore(RUNTIME_DIR)
@@ -159,6 +187,10 @@ ID_RE = re.compile(r"^([A-Za-z]\d+|\d+)(?:_|$)")
 RESET = "\033[0m"
 BOLD = "\033[1m"
 
+ANSI_RE = re.compile(
+    r"\x1b\[[0-?]*[ -/]*[@-~]"
+)
+
 CYAN = "\033[96m"
 GREEN = "\033[92m"
 YELLOW = "\033[93m"
@@ -170,6 +202,18 @@ GRAY = "\033[90m"
 # None remains a valid field value (for example, skipped active minutes).
 RECORD_BACK = object()
 MODE_TOGGLE = object()
+
+# Ephemeral UI state: preserves focus/filter position within one Control Center
+# process without creating another durable source of truth.
+UI_STATE = {
+    "library_result_index": 0,
+    "library_filter_kind": "results",
+    "library_focus": 0,
+    "library_filters_practice": None,
+    "library_filters_exam": None,
+    "library_query_practice": "",
+    "library_query_exam": "",
+}
 
 
 # ============================================================
@@ -183,31 +227,58 @@ def char_width(ch: str) -> int:
 
 
 def display_width(text: str) -> int:
-    return sum(char_width(ch) for ch in text)
+    visible = ANSI_RE.sub(
+        "",
+        str(text),
+    )
+    return sum(
+        char_width(ch)
+        for ch in visible
+    )
 
 
 def fit(text: str, width: int) -> str:
-    """Single-line fallback for compact status fields.
+    """Single-line ANSI-safe fallback for compact status fields.
 
     Learner-facing prose should prefer wrap_display() so information is not
     silently lost behind an ellipsis.
     """
+    width = max(1, int(width))
     text = str(text)
 
     if display_width(text) <= width:
         return text
 
-    out = ""
+    out = []
     used = 0
+    index = 0
 
-    for ch in text:
+    while index < len(text):
+        match = ANSI_RE.match(
+            text,
+            index,
+        )
+        if match is not None:
+            out.append(
+                match.group(0)
+            )
+            index = match.end()
+            continue
+
+        ch = text[index]
         w = char_width(ch)
         if used + w + 1 > width:
             break
-        out += ch
-        used += w
 
-    return out + "…"
+        out.append(ch)
+        used += w
+        index += 1
+
+    out.append("…")
+    if "\033[" in text:
+        out.append(RESET)
+
+    return "".join(out)
 
 
 def pad_display(
@@ -228,6 +299,20 @@ def pad_display(
                 clipped
             ),
         )
+    )
+
+
+def aligned_field(
+    label: str,
+    value,
+    *,
+    label_width: int = 10,
+) -> str:
+    """Render one learner-facing key/value row with stable visual alignment."""
+
+    return (
+        f"{pad_display(label, label_width)}"
+        f"{value}"
     )
 
 
@@ -305,14 +390,35 @@ def print_wrapped(
 
 
 def ui_width() -> int:
-    columns = shutil.get_terminal_size((80, 24)).columns
-    # Keep the command center compact even when the terminal is very wide.
-    return min(94, max(28, columns - 2))
+    return workbench_width()
 
 
 def ui_height() -> int:
-    lines = shutil.get_terminal_size((80, 24)).lines
-    return max(18, min(42, lines - 1))
+    return workbench_height()
+
+
+def pad_frame_before_footer(
+    buffer: io.StringIO,
+    *,
+    footer_rows: int = 3,
+    bottom_margin: int = 1,
+) -> None:
+    """Use otherwise-empty vertical space without forcing terminal scroll."""
+
+    used_rows = (
+        buffer.getvalue().count("\n")
+    )
+    available = (
+        ui_height()
+        - used_rows
+        - max(0, footer_rows)
+        - max(0, bottom_margin)
+    )
+
+    for _ in range(
+        max(0, available)
+    ):
+        print()
 
 
 def rule() -> None:
@@ -338,6 +444,9 @@ def read_key() -> str:
 
         if ch in {b"\r", b"\n"}:
             return "ENTER"
+
+        if ch == b"\t":
+            return "TAB"
 
         if ch == b"\x1b":
             ready, _, _ = select.select([fd], [], [], 0.04)
@@ -365,6 +474,8 @@ def read_key() -> str:
                 return "RIGHT"
             if third == b"D":
                 return "LEFT"
+            if third == b"Z":
+                return "BACKTAB"
 
             return "ESC"
 
@@ -461,114 +572,111 @@ def current_problem(filename: str | None):
     if not filename:
         return None
 
-    path = Path(filename)
-    candidate = (
-        path
-        if path.is_absolute()
-        else ROOT / path
-    )
-    resolved = candidate.resolve()
+    try:
+        context = resolve_problem_context(
+            filename,
+            root=ROOT,
+            store=core.CATALOG,
+            curriculum=CURRICULUM,
+            intelligence_dir=(
+                ROOT
+                / "data"
+                / "problem_intelligence"
+            ),
+        )
+    except (
+        OSError,
+        CatalogError,
+        RuntimeCurriculumError,
+    ):
+        context = None
 
-    placement_match = re.search(
-        r"__([A-Za-z0-9_.:-]+)$",
-        path.stem,
-    )
-    placement_uid = (
-        placement_match.group(1)
-        if placement_match
-        else None
-    )
-
-    # v2.3 runtime scratch identity is the Published Placement, not the
-    # legacy local-catalog filename convention.  This allows CF / CSES /
-    # LeetCode / APCS canonical Problem IDs to participate in B4 without
-    # inventing a second local Problem identity.
-    if placement_uid:
-        try:
-            placement = (
-                CURRICULUM
-                .placement_by_uid(
-                    placement_uid
-                )
-            )
-        except RuntimeCurriculumError:
-            placement = None
-
-        if placement is not None:
-            return {
-                "id": (
-                    placement.problem_id
-                    .strip()
-                    .lower()
-                ),
-                "title": placement.title,
-                "path": path,
-                "state": None,
-                "due": None,
-                "placement_uid": (
-                    placement_uid
-                ),
-                "pb_uid": placement.pb_uid,
-                "published_runtime": True,
-                "url": placement.url,
-                "runtime_track": (
-                    runtime_scratch_context(path)[0]
-                ),
-                "runtime_action": (
-                    runtime_scratch_context(path)[1]
-                ),
-            }
-
-    match = ID_RE.match(
-        path.stem
-    )
-
-    if not match:
+    if context is None:
         return None
 
-    pid = match.group(1).lower()
+    pid = context.problem_id
+    resolved = (
+        context.solution_path
+        .resolve()
+    )
+
+    legacy_placement_match = re.search(
+        r"__([A-Za-z0-9_.:-]+)$",
+        Path(filename).stem,
+    )
+    placement_uid = (
+        context.placement_uid
+        or (
+            legacy_placement_match.group(1)
+            if legacy_placement_match
+            else None
+        )
+    )
+
+    state = None
+    due = None
+    matched_path = (
+        context.solution_path
+    )
 
     for row in all_rows():
-        if row[0] == pid:
-            matched_path = next(
-                (
-                    solution.path
-                    for solution in row[1]
-                    if solution.path.resolve()
-                    == resolved
-                ),
-                resolved,
-            )
+        if row[0] != pid:
+            continue
 
-            return {
-                "id": pid,
-                "title": clean_title(
-                    pid,
-                    row[2].title,
-                ),
-                "path": matched_path,
-                "state": row[3],
-                "due": row[5],
-                "placement_uid": (
-                    placement_uid
-                ),
-                "published_runtime": False,
-            }
+        state = row[3]
+        due = row[5]
+
+        exact = next(
+            (
+                solution.path
+                for solution in row[1]
+                if solution.path.resolve()
+                == resolved
+            ),
+            None,
+        )
+        if exact is not None:
+            matched_path = exact
+        break
+
+    published_runtime = (
+        context.identity_origin
+        == "published_placement"
+    )
+    track, action = (
+        runtime_scratch_context(
+            context.solution_path
+        )
+        if published_runtime
+        else (None, None)
+    )
 
     return {
         "id": pid,
         "title": clean_title(
             pid,
-            path.stem,
+            context.title,
         ),
-        "path": path,
-        "state": None,
-        "due": None,
+        "path": matched_path,
+        "state": state,
+        "due": due,
         "placement_uid": (
             placement_uid
         ),
-        "published_runtime": False,
+        "pb_uid": context.pb_uid,
+        "published_runtime": (
+            published_runtime
+        ),
+        "url": context.canonical_url,
+        "source": context.source,
+        "role": context.role,
+        "runtime_track": track,
+        "runtime_action": action,
+        "identity_origin": (
+            context.identity_origin
+        ),
     }
+
 
 
 def problem_line(problem) -> str:
@@ -762,12 +870,15 @@ def today_capacity_menu(
 ) -> int | None:
     options = [
         {
-            "label": f"{minutes} 分",
-            "detail": (
-                "目前設定"
-                if minutes == current_minutes
-                else ""
+            "label": (
+                f"{minutes} 分"
+                + (
+                    " · 目前"
+                    if minutes == current_minutes
+                    else ""
+                )
             ),
+            "detail": "",
             "enabled": True,
             "action": "套用",
         }
@@ -791,7 +902,7 @@ def today_capacity_menu(
         back_text="返回今日學習",
         selected_index=selected_index,
         enter_text="套用",
-        wide_columns=5,
+        wide_columns=3,
         compact_columns=2,
     )
 
@@ -1214,29 +1325,6 @@ def learning_status_snapshot(
     }
 
 
-def skill_display_name(
-    skill_uid: str,
-) -> str:
-    try:
-        context = CURRICULUM.skill_context(
-            skill_uid
-        )
-    except RuntimeCurriculumError:
-        context = None
-
-    if (
-        context is None
-        or not context.name
-    ):
-        return skill_uid
-
-    return (
-        f"{skill_uid} · "
-        f"{context.name}"
-    )
-
-
-
 def attempted_problem_ids_for_skill(
     skill_uid: str,
     *,
@@ -1398,6 +1486,19 @@ def create_learning_scratch(
         }
     )
 
+    lesson_url = None
+    if not strict_spoiler:
+        try:
+            lesson_url = (
+                LESSON_ROUTES.resolve(
+                    placement.lesson_uid
+                )
+            )
+        except LessonRouteError:
+            # Routing convenience must never block Implementation.
+            # CI validates the projection; runtime still fails safe.
+            lesson_url = None
+
     lines = [
         "// APCS B4 new-learning scratch",
         (
@@ -1418,6 +1519,10 @@ def create_learning_scratch(
                 f"// Role: {placement.role}",
             ]
         )
+        if lesson_url:
+            lines.append(
+                f"// Lesson context: {lesson_url}"
+            )
 
     if placement.url:
         lines.append(
@@ -1477,9 +1582,93 @@ def _control_dashboard_lines(
     snapshot,
 ):
     problem_lines = [
-        problem_line(problem),
-        problem_status(problem),
+        aligned_field(
+            "題目",
+            problem_line(problem),
+        ),
+        aligned_field(
+            "狀態",
+            problem_status(problem),
+        ),
     ]
+
+    if problem is not None:
+        try:
+            solution = current_catalog_solution(
+                problem
+            )
+        except Exception:
+            solution = None
+
+        if solution is not None:
+            language = (
+                "C++"
+                if solution.language == "cpp"
+                else (
+                    "Python"
+                    if solution.language == "python"
+                    else solution.language
+                )
+            )
+            problem_lines.extend(
+                [
+                    aligned_field(
+                        "語言",
+                        language,
+                    ),
+                    aligned_field(
+                        "複雜度",
+                        solution.complexity
+                        or "未記錄",
+                    ),
+                ]
+            )
+
+        try:
+            bundle = TEST_ASSETS.load(
+                problem.get("source"),
+                problem["id"],
+                include_candidates=True,
+            )
+            inventory = TEST_ASSETS.inventory(
+                bundle
+            )
+        except Exception:
+            inventory = {
+                "official": 0,
+                "verified": 0,
+                "candidate": 0,
+                "total": 0,
+            }
+
+        if inventory["total"]:
+            problem_lines.append(
+                aligned_field(
+                    "測資",
+                    (
+                        f"官方 {inventory['official']}"
+                        f" / 已驗證 {inventory['verified']}"
+                    ),
+                )
+            )
+
+        if problem.get("url"):
+            problem_lines.append(
+                aligned_field(
+                    "OJ",
+                    "已連結",
+                )
+            )
+
+        if str(
+            problem.get("path") or ""
+        ).casefold().endswith(".cpp"):
+            problem_lines.append(
+                aligned_field(
+                    "測試",
+                    "Ctrl+Shift+B",
+                )
+            )
 
     plan = snapshot["plan"]
     protected = max(
@@ -1488,126 +1677,244 @@ def _control_dashboard_lines(
         - plan.budget_minutes,
     )
     today_lines = [
-        (
-            f"{snapshot['capacity_minutes']} min"
-            f" · 複習 {plan.selected_minutes}/"
-            f"{plan.budget_minutes} min"
+        aligned_field(
+            "可用",
+            f"{snapshot['capacity_minutes']} 分",
         ),
-        (
-            f"新學習 ≥ {protected} min"
-            + (
-                f" · {snapshot['new_learning'].skill.uid}"
-                if (
-                    snapshot["new_learning"] is not None
-                    and snapshot["new_learning"].skill is not None
-                )
-                else ""
-            )
+        aligned_field(
+            "複習",
+            (
+                f"{plan.selected_minutes}"
+                f" / {plan.budget_minutes} 分"
+            ),
+        ),
+        aligned_field(
+            "新學習",
+            f"≥ {protected} 分",
+        ),
+        aligned_field(
+            "到期",
+            (
+                f"{len(plan.selected)} 項"
+                if plan.selected
+                else "今天無到期複習"
+            ),
         ),
     ]
 
-    if plan.selected:
-        today_lines.append(
-            f"到期複習 {len(plan.selected)} 項"
+    cognitive_plan = snapshot.get(
+        "cognitive_plan"
+    )
+    cognitive_selected = tuple(
+        getattr(
+            cognitive_plan,
+            "selected",
+            (),
         )
-    else:
+        or ()
+    )
+    if cognitive_selected:
         today_lines.append(
-            "今天沒有到期複習"
+            aligned_field(
+                "修復",
+                f"{len(cognitive_selected)} 項",
+            )
         )
 
-    return problem_lines, today_lines
+    next_lines = []
+    route = snapshot.get(
+        "new_learning"
+    )
+    if (
+        route is not None
+        and getattr(
+            route,
+            "skill",
+            None,
+        ) is not None
+        and getattr(
+            route,
+            "placement",
+            None,
+        ) is not None
+    ):
+        next_lines.extend(
+            [
+                aligned_field(
+                    "活動",
+                    "新學習",
+                ),
+                aligned_field(
+                    "Skill",
+                    route.skill.uid,
+                ),
+                aligned_field(
+                    "題目",
+                    (
+                        f"{route.placement.lesson_uid or '—'}"
+                        f" · {route.placement.problem_id}"
+                    ),
+                ),
+            ]
+        )
+    elif plan.selected:
+        candidate = plan.selected[0]
+        next_lines.extend(
+            [
+                aligned_field(
+                    "活動",
+                    "優先複習",
+                ),
+                aligned_field(
+                    "Skill",
+                    candidate.skill_uid,
+                ),
+                aligned_field(
+                    "軌道",
+                    candidate.track,
+                ),
+                aligned_field(
+                    "回憶率",
+                    f"R≈{candidate.retrievability:.0%}",
+                ),
+            ]
+        )
+    elif cognitive_selected:
+        task = cognitive_selected[0]
+        next_lines.extend(
+            [
+                aligned_field(
+                    "活動",
+                    "認知修復",
+                ),
+                aligned_field(
+                    "Skill",
+                    (
+                        ", ".join(
+                            task.skill_uids
+                        )
+                        if getattr(
+                            task,
+                            "skill_uids",
+                            None,
+                        )
+                        else task.kind
+                    ),
+                ),
+            ]
+        )
+    else:
+        next_lines.extend(
+            [
+                aligned_field(
+                    "活動",
+                    "自由練習",
+                ),
+                aligned_field(
+                    "下一步",
+                    "可從題目庫選題",
+                ),
+            ]
+        )
+
+    return (
+        next_lines,
+        problem_lines,
+        today_lines,
+    )
 
 
 def print_control_dashboard(
     problem,
     snapshot,
 ) -> None:
-    problem_lines, today_lines = (
-        _control_dashboard_lines(
-            problem,
-            snapshot,
-        )
+    (
+        next_lines,
+        problem_lines,
+        today_lines,
+    ) = _control_dashboard_lines(
+        problem,
+        snapshot,
     )
     width = ui_width()
 
-    if width >= 88:
+    if width >= 86:
         gap = 3
-        left_width = (
-            width - gap
-        ) // 2
-        right_width = (
-            width - gap - left_width
+        widths = workbench_pane_widths(
+            width,
+            (31, 39, 30),
+            gap=gap,
+            min_width=20,
+        )
+        titles = (
+            "現在可做",
+            "目前題目",
+            "今日容量",
+        )
+        columns = (
+            next_lines,
+            problem_lines,
+            today_lines,
         )
 
         print(
-            f"{CYAN}{BOLD}"
-            f"{pad_display('目前題目', left_width)}"
-            f"{RESET}"
-            " │ "
-            f"{CYAN}{BOLD}"
-            f"{pad_display('今日規劃', right_width)}"
-            f"{RESET}"
+            (" " * gap).join(
+                f"{CYAN}{BOLD}"
+                f"{pad_display(title, pane_width)}"
+                f"{RESET}"
+                for title, pane_width
+                in zip(
+                    titles,
+                    widths,
+                )
+            )
         )
+        print()
 
         rows = max(
-            len(problem_lines),
-            len(today_lines),
+            len(column)
+            for column in columns
         )
-        for index in range(rows):
-            left = (
-                problem_lines[index]
-                if index < len(problem_lines)
-                else ""
-            )
-            right = (
-                today_lines[index]
-                if index < len(today_lines)
-                else ""
-            )
+        for row in range(rows):
+            cells = []
+            for column, pane_width in zip(
+                columns,
+                widths,
+            ):
+                value = (
+                    column[row]
+                    if row < len(column)
+                    else ""
+                )
+                cells.append(
+                    pad_display(
+                        value,
+                        pane_width,
+                    )
+                )
             print(
-                f"{pad_display(left, left_width)}"
-                " │ "
-                f"{fit(right, right_width)}"
+                (" " * gap).join(
+                    cells
+                )
             )
     else:
-        print(
-            f"{CYAN}{BOLD}"
-            "目前題目"
-            f"{RESET}"
-        )
-        for line in problem_lines:
-            print_wrapped(
-                line,
-                width,
-                color=(
-                    WHITE
-                    if line == problem_lines[0]
-                    else GRAY
-                ),
-            )
-
-        print()
-        print(
-            f"{CYAN}{BOLD}"
-            "今日規劃"
-            f"{RESET}"
-        )
-        for index, line in enumerate(
-            today_lines
+        for title, lines in (
+            ("現在可做", next_lines),
+            ("目前題目", problem_lines),
+            ("今日容量", today_lines),
         ):
-            color = (
-                GREEN
-                if (
-                    index == 2
-                    and not snapshot["plan"].selected
+            print(
+                f"{CYAN}{BOLD}"
+                f"{title}"
+                f"{RESET}"
+            )
+            for line in lines:
+                print_wrapped(
+                    line,
+                    width,
+                    color=GRAY,
                 )
-                else GRAY
-            )
-            print_wrapped(
-                line,
-                width,
-                color=color,
-            )
+            print()
 
     if snapshot["curriculum_blocker"]:
         print_wrapped(
@@ -1625,6 +1932,7 @@ def print_control_dashboard(
         )
 
 
+
 def choose_menu(
     title: str,
     options,
@@ -1636,6 +1944,7 @@ def choose_menu(
     selected_index: int | None = None,
     enter_text: str | None = None,
     mode_toggle: bool = False,
+    context_lines: list[str] | None = None,
 ):
     if (
         selected_index is not None
@@ -1662,13 +1971,13 @@ def choose_menu(
             print()
 
             if main and snapshot is not None:
+                if mode_toggle:
+                    print_selection_mode_banner()
+                    print()
                 print_control_dashboard(
                     problem,
                     snapshot,
                 )
-                if mode_toggle:
-                    print()
-                    print_selection_mode_banner()
                 print()
 
             elif mode_toggle:
@@ -1677,6 +1986,15 @@ def choose_menu(
 
             elif problem is not None:
                 print_problem_context(problem)
+                print()
+
+            if context_lines:
+                for line in context_lines:
+                    print_wrapped(
+                        line,
+                        ui_width(),
+                        color=GRAY,
+                    )
                 print()
 
             rule()
@@ -1759,6 +2077,10 @@ def choose_menu(
                 )
                 print()
 
+            pad_frame_before_footer(
+                output,
+                footer_rows=3,
+            )
             rule()
 
             selected_action = (
@@ -2029,13 +2351,13 @@ def choose_grid(
             print()
 
             if main and snapshot is not None:
+                if mode_toggle:
+                    print_selection_mode_banner()
+                    print()
                 print_control_dashboard(
                     problem,
                     snapshot,
                 )
-                if mode_toggle:
-                    print()
-                    print_selection_mode_banner()
                 print()
             elif mode_toggle:
                 print_selection_mode_banner()
@@ -2126,7 +2448,10 @@ def choose_grid(
                     color=GRAY,
                 )
 
-            print()
+            pad_frame_before_footer(
+                output,
+                footer_rows=3,
+            )
             rule()
             footer = (
                 "←→ 選擇 · ↑↓ 換列"
@@ -2210,14 +2535,15 @@ def review_result_menu(
     problem,
     *,
     initial: str | None = None,
+    action: str = "review",
 ) -> str | None:
     options = [
-        ("AC", "通過", "答案正確，完整通過測試"),
-        ("WA", "答案錯誤", "程式可執行，但答案不正確"),
-        ("TLE", "執行逾時", "時間複雜度或實作速度不足"),
-        ("RE", "執行錯誤", "執行期間發生錯誤"),
-        ("MLE", "記憶體超限", "使用記憶體超過限制"),
-        ("CE", "編譯失敗", "本次程式無法成功編譯"),
+        ("AC", "通過", "正式 OJ 顯示 Accepted / AC"),
+        ("WA", "答案錯誤", "正式 OJ 顯示 Wrong Answer"),
+        ("TLE", "執行逾時", "正式 OJ 顯示 Time Limit Exceeded"),
+        ("RE", "執行錯誤", "正式 OJ 顯示 Runtime Error"),
+        ("MLE", "記憶體超限", "正式 OJ 顯示 Memory Limit Exceeded"),
+        ("CE", "編譯失敗", "正式 OJ 顯示 Compile Error"),
     ]
 
     selected = next(
@@ -2231,7 +2557,11 @@ def review_result_menu(
 
     while True:
         clear()
-        heading("複習結果")
+        heading(
+            "正式 OJ 結果"
+            if action == "finish"
+            else "複習結果"
+        )
         print()
 
         print_problem_context(problem)
@@ -2239,7 +2569,16 @@ def review_result_menu(
 
         rule()
         print()
-        print(f"{GRAY}這次重新解題的結果{RESET}")
+        print(
+            f"{GRAY}"
+            + (
+                "請依正式 OJ 畫面選擇 authoritative verdict；"
+                "本地測試結果不能代替 AC。"
+                if action == "finish"
+                else "這次重新解題的正式 OJ 結果"
+            )
+            + f"{RESET}"
+        )
         print()
 
         window = 5
@@ -2786,6 +3125,59 @@ def compact_support_menu(
     }
 
 
+def failure_bottleneck_menu(
+    problem,
+    *,
+    initial: str | None = None,
+) -> str | None:
+    """Failure path only: one coarse learner-selected bottleneck for immediate repair."""
+
+    values = [
+        ("Concept", "概念", "核心概念本身不清楚"),
+        ("Condition", "成立條件", "不知道方法何時成立／何時不能用"),
+        ("Representation", "題意建模", "無法把題意轉成可操作的 state / array / graph"),
+        ("Strategy", "方法選擇", "知道概念，但選錯或選不出方法"),
+        ("Complexity", "複雜度", "方法太慢、太耗記憶體或 feasibility 判斷錯"),
+        ("Implementation", "實作", "方法正確，但程式實作有錯"),
+        ("Syntax / API", "語法 / API", "C++ 語法、STL 或 API 使用錯"),
+        ("State / Index", "狀態 / 索引", "初始化、邊界、off-by-one 或 state 更新錯"),
+        ("Debugging", "除錯定位", "知道結果不對，但無法定位第一個 root cause"),
+        ("Exam Interface", "考試流程", "讀題、時間配置、提交或 stop-loss 決策出錯"),
+    ]
+
+    selected_index = next(
+        (
+            index
+            for index, (value, _, _)
+            in enumerate(values)
+            if value == initial
+        ),
+        None,
+    )
+
+    selected = choose_menu(
+        "主要卡點",
+        [
+            {
+                "label": f"{value} · {label}",
+                "detail": detail,
+                "enabled": True,
+            }
+            for value, label, detail in values
+        ],
+        problem=problem,
+        main=False,
+        footer_numbers=False,
+        back_text="返回 OJ 結果",
+        selected_index=selected_index,
+    )
+
+    if selected is None:
+        return None
+
+    return values[selected][0]
+
+
 def inferred_published_novelty(
     action: str,
     problem,
@@ -2803,6 +3195,73 @@ def inferred_published_novelty(
             if placement.role == "Mock":
                 return "mixed"
         return "new"
+
+    return None
+
+
+def inferred_published_result(
+    problem,
+) -> str | None:
+    """Reuse an explicit Exam Runtime OJ verdict; never infer from local tests."""
+
+    try:
+        session = EXAM.active()
+    except ExamRuntimeError:
+        return None
+
+    if session is None:
+        return None
+
+    problem_id = (
+        str(problem.get("id") or "")
+        .strip()
+        .casefold()
+    )
+    if not problem_id:
+        return None
+
+    selected_id = (
+        str(
+            session.get(
+                "selected_problem_id"
+            )
+            or ""
+        )
+        .strip()
+        .casefold()
+    )
+    if selected_id != problem_id:
+        # A prior submit for another/switch-away problem is Exam telemetry,
+        # not authoritative outcome for this current Finish attempt.
+        return None
+
+    for event in reversed(
+        session.get("events", [])
+    ):
+        if (
+            event.get("type") != "SUBMIT"
+            or str(
+                event.get("problem_id") or ""
+            ).strip().casefold()
+            != problem_id
+        ):
+            continue
+
+        result = str(
+            event.get("result") or ""
+        ).strip().upper()
+
+        if result in {
+            "AC",
+            "WA",
+            "TLE",
+            "RE",
+            "MLE",
+            "CE",
+        }:
+            return result
+
+        return None
 
     return None
 
@@ -3169,6 +3628,7 @@ def attempt_envelope_for_record(
     finished_at: dt.datetime | None = None,
     track: str = "Implementation",
     evidence_outcome: str | None = None,
+    bottleneck: str | None = None,
 ):
     if action not in {"finish", "review"}:
         raise ValueError(
@@ -3201,7 +3661,11 @@ def attempt_envelope_for_record(
     )
 
     evidence = []
-    attempt_note = ""
+    attempt_note = (
+        f"Bottleneck: {bottleneck}"
+        if bottleneck
+        else ""
+    )
 
     if track not in {"Reading", "Implementation"}:
         raise ValueError(
@@ -3260,10 +3724,15 @@ def attempt_envelope_for_record(
         and placement is not None
         and placement.method_confirmation_required
     ):
-        attempt_note = (
+        method_note = (
             "Primary Skill evidence withheld: "
             "target method not confirmed for "
             f"{placement.primary_skill}"
+        )
+        attempt_note = (
+            f"{attempt_note} · {method_note}"
+            if attempt_note
+            else method_note
         )
 
     return build_envelope(
@@ -3672,6 +4141,7 @@ def record_problem(action: str, problem) -> None:
     score = None
     minutes = None
     evidence_context = None
+    bottleneck = None
     finish_complexity = None
     complexity_solution = None
 
@@ -3695,11 +4165,20 @@ def record_problem(action: str, problem) -> None:
             return
 
     if published_runtime:
-        step = (
-            "result"
-            if action == "review"
-            else "evidence"
+        # External OJ is verdict authority. Reuse only an explicit Exam Runtime
+        # submit verdict; never inherit local-test success as an implicit AC.
+        known_result = inferred_published_result(
+            problem
         )
+        if known_result is not None:
+            result = known_result
+            step = (
+                "bottleneck"
+                if result != "AC"
+                else "evidence"
+            )
+        else:
+            step = "result"
     else:
         step = (
             "result"
@@ -3713,6 +4192,7 @@ def record_problem(action: str, problem) -> None:
                 review_result_menu(
                     problem,
                     initial=result,
+                    action=action,
                 )
             )
 
@@ -3727,11 +4207,28 @@ def record_problem(action: str, problem) -> None:
             ):
                 score = None
 
-            step = (
-                "evidence"
-                if published_runtime
-                else "recall"
+            if published_runtime:
+                step = (
+                    "bottleneck"
+                    if result != "AC"
+                    else "evidence"
+                )
+            else:
+                step = "recall"
+            continue
+
+        if step == "bottleneck":
+            selected_bottleneck = (
+                failure_bottleneck_menu(
+                    problem,
+                    initial=bottleneck,
+                )
             )
+            if selected_bottleneck is None:
+                step = "result"
+                continue
+            bottleneck = selected_bottleneck
+            step = "evidence"
             continue
 
         if step == "recall":
@@ -3790,10 +4287,12 @@ def record_problem(action: str, problem) -> None:
 
             if selected_context is RECORD_BACK:
                 if published_runtime:
-                    if action == "review":
-                        step = "result"
-                        continue
-                    return
+                    step = (
+                        "bottleneck"
+                        if result != "AC"
+                        else "result"
+                    )
+                    continue
                 step = "minutes"
                 continue
 
@@ -3854,12 +4353,17 @@ def record_problem(action: str, problem) -> None:
         )
         print()
 
-        if action == "review":
+        if published_runtime or action == "review":
             color = GREEN if result == "AC" else YELLOW
             print(
-                f"結果    "
+                f"正式 OJ  "
                 f"{color}{result}{RESET}"
             )
+            if bottleneck is not None:
+                print(
+                    "主要卡點  "
+                    f"{CYAN}{bottleneck}{RESET}"
+                )
 
         if published_runtime:
             print(
@@ -4084,6 +4588,7 @@ def record_problem(action: str, problem) -> None:
                     method_confirmed=evidence_context.get(
                         "method_confirmed"
                     ),
+                    bottleneck=bottleneck,
                 )
             )
 
@@ -4207,6 +4712,25 @@ def record_problem(action: str, problem) -> None:
                 f"{GRAY}"
                 "不要重做 Finish / Review；"
                 "之後使用 reconciliation 修復 Evidence。"
+                f"{RESET}"
+            )
+
+        if result != "AC" and bottleneck is not None:
+            print()
+            print(
+                f"{CYAN}{BOLD}"
+                "下一步 · 最小修復"
+                f"{RESET}"
+            )
+            print_wrapped(
+                repair_instruction(bottleneck),
+                ui_width() - 2,
+            )
+            print(
+                f"{GRAY}"
+                "這次 FAIL 會保留為 Attempt / Evidence；"
+                "Today 可據此安排新的 Repair / Transfer，"
+                "不會把單次失敗升級成永久弱點。"
                 f"{RESET}"
             )
 
@@ -5836,6 +6360,82 @@ def _start_new_learning(
         )
         print()
 
+    strict_spoiler = (
+        placement.role
+        in {
+            "Transfer Challenge",
+            "Mock",
+        }
+    )
+
+    if (
+        track == "Reading"
+        and not strict_spoiler
+    ):
+        route_error = None
+        try:
+            lesson_url = (
+                LESSON_ROUTES.resolve(
+                    placement.lesson_uid
+                )
+            )
+        except LessonRouteError as exc:
+            lesson_url = None
+            route_error = str(exc)
+
+        if not lesson_url:
+            print(
+                f"{YELLOW}"
+                "⚠ 找不到可驗證的 canonical Notion Lesson link。"
+                f"{RESET}"
+            )
+            print(
+                f"Lesson UID  "
+                f"{placement.lesson_uid or '—'}"
+            )
+            if route_error:
+                print(
+                    f"{GRAY}"
+                    f"Routing projection：{route_error}"
+                    f"{RESET}"
+                )
+            print(
+                f"{GRAY}"
+                "未猜測 URL，也未建立替代教材；"
+                "Reading 已安全停止。"
+                "Implementation 仍可從 Today 繼續。"
+                f"{RESET}"
+            )
+            pause()
+            return current_filename
+
+        try:
+            lesson_opened = bool(
+                webbrowser.open(
+                    lesson_url
+                )
+            )
+        except Exception:
+            # Browser launch is convenience only; the reviewed URL remains
+            # authoritative and must not affect Evidence behavior.
+            lesson_opened = False
+
+        if lesson_opened:
+            print(
+                f"{GREEN}"
+                "✓ 已開啟 canonical Notion Lesson"
+                f"{RESET}"
+            )
+        else:
+            print(
+                f"{YELLOW}"
+                "⚠ 無法自動開啟瀏覽器；"
+                "請使用下列 canonical Lesson URL。"
+                f"{RESET}"
+            )
+            print(lesson_url)
+        print()
+
     try:
         scratch = (
             create_reading_scratch(
@@ -6200,10 +6800,11 @@ def learning_status_view() -> None:
         clear()
         heading("學習狀態")
         print()
-        print(
-            f"{GRAY}"
-            "只顯示會影響下一步學習決策的摘要；不是 mastery / readiness 宣告。"
-            f"{RESET}"
+        print_wrapped(
+            "只顯示會影響下一步學習決策的摘要；"
+            "不是 mastery / readiness 宣告。",
+            ui_width(),
+            color=GRAY,
         )
         print()
 
@@ -6218,40 +6819,69 @@ def learning_status_view() -> None:
             )
 
             progress = [
-                (
-                    f"真實作答 {snapshot['attempts']}"
-                    f" · Evidence {snapshot['evidence']}"
+                aligned_field(
+                    "作答",
+                    snapshot["attempts"],
                 ),
-                (
-                    "Reading "
-                    f"{snapshot['evidence_by_track'].get('Reading', 0)}"
-                    " · Implementation "
-                    f"{snapshot['evidence_by_track'].get('Implementation', 0)}"
+                aligned_field(
+                    "Evidence",
+                    snapshot["evidence"],
                 ),
-                (
-                    f"記憶狀態 {snapshot['memory_states']} 個 Skill × Track"
+                aligned_field(
+                    "Reading",
+                    snapshot[
+                        "evidence_by_track"
+                    ].get("Reading", 0),
+                ),
+                aligned_field(
+                    "實作",
+                    snapshot[
+                        "evidence_by_track"
+                    ].get(
+                        "Implementation",
+                        0,
+                    ),
+                ),
+                aligned_field(
+                    "記憶",
+                    (
+                        f"{snapshot['memory_states']}"
+                        " 個 Skill × Track"
+                    ),
                 ),
             ]
             capacity = [
-                (
-                    f"總容量 {snapshot['capacity_minutes']} min"
+                aligned_field(
+                    "總容量",
+                    f"{snapshot['capacity_minutes']} min",
                 ),
-                (
-                    f"複習 {snapshot['review_selected_minutes']}/"
-                    f"{snapshot['review_budget_minutes']} min"
-                    f" · {snapshot['review_selected']} 項"
+                aligned_field(
+                    "複習",
+                    (
+                        f"{snapshot['review_selected_minutes']}"
+                        f" / {snapshot['review_budget_minutes']} min"
+                    ),
                 ),
-                (
-                    f"新學習 ≥ "
-                    f"{snapshot['protected_new_learning_minutes']} min"
+                aligned_field(
+                    "項目",
+                    f"{snapshot['review_selected']} 項",
+                ),
+                aligned_field(
+                    "新學習",
+                    (
+                        "≥ "
+                        f"{snapshot['protected_new_learning_minutes']} min"
+                    ),
                 ),
             ]
             if snapshot[
                 "review_deferred"
             ]:
                 capacity.append(
-                    f"安全延後 "
-                    f"{snapshot['review_deferred']} 項"
+                    aligned_field(
+                        "延後",
+                        f"{snapshot['review_deferred']} 項",
+                    )
                 )
 
             print(
@@ -6263,6 +6893,7 @@ def learning_status_view() -> None:
                 f"{pad_display('今日容量', right)}"
                 f"{RESET}"
             )
+            print()
             for index in range(
                 max(
                     len(progress),
@@ -6286,10 +6917,12 @@ def learning_status_view() -> None:
                 )
 
             print()
+            print()
             rule()
             print()
+            print()
             sync = (
-                f"同步：已確認 "
+                f"同步狀態：已確認 "
                 f"{snapshot['remote_acknowledged']}"
                 f" · 待同步 {snapshot['remote_pending']}"
             )
@@ -6404,6 +7037,259 @@ def learning_status_view() -> None:
 
 
 
+def _today_option_section(
+    option,
+) -> str:
+    kind = option.get("kind")
+    return {
+        "new": "新學習",
+        "review": "到期複習",
+        "cognitive": "修復 / 遷移",
+        "capacity": "今日設定",
+    }.get(
+        kind,
+        "其他",
+    )
+
+
+def _today_empty_state_lines(
+    snapshot,
+    options,
+) -> list[str]:
+    actionable = [
+        option
+        for option in options
+        if option.get("kind")
+        != "capacity"
+    ]
+    if actionable:
+        return []
+
+    route = snapshot.get(
+        "new_learning"
+    )
+    if (
+        route is not None
+        and getattr(
+            route,
+            "route_complete",
+            False,
+        )
+    ):
+        return [
+            "目前沒有新的 Required Skill start action。",
+            "這不代表 RR / IR readiness 已通過。",
+        ]
+
+    if (
+        route is not None
+        and getattr(
+            route,
+            "blocked_skill",
+            None,
+        ) is not None
+    ):
+        return [
+            "目前新學習被 prerequisite Evidence 擋住。",
+            "系統不會用 Skill Status 或單次 AC 強制解鎖。",
+        ]
+
+    return [
+        "目前沒有可安全啟動的 Today action。",
+        "仍可調整今日可用時間或從題目庫 deliberate practice。",
+    ]
+
+
+def _today_option_detail_lines(
+    snapshot,
+    option,
+) -> list[str]:
+    plan = snapshot["plan"]
+    protected = max(
+        0,
+        snapshot["capacity_minutes"]
+        - plan.budget_minutes,
+    )
+    lines = [
+        "今日規劃",
+        f"目標      {snapshot['target']}",
+        (
+            f"可用時間  "
+            f"{snapshot['capacity_minutes']} 分"
+        ),
+        (
+            f"複習      "
+            f"{plan.selected_minutes}/"
+            f"{plan.budget_minutes} 分"
+            f" · {len(plan.selected)} 項"
+        ),
+        f"新學習    ≥ {protected} 分",
+    ]
+
+    if plan.deferred:
+        lines.append(
+            f"安全延後  {len(plan.deferred)} 項"
+        )
+    elif not plan.selected:
+        lines.append(
+            "複習狀態  今天沒有到期複習"
+        )
+
+    lines.extend(
+        [
+            "",
+            "目前選中",
+            option["label"],
+        ]
+    )
+
+    kind = option.get("kind")
+
+    if kind == "new":
+        route = option.get(
+            "route"
+        )
+        placement = getattr(
+            route,
+            "placement",
+            None,
+        )
+        skill = getattr(
+            route,
+            "skill",
+            None,
+        )
+        track = option.get(
+            "track"
+        )
+
+        if skill is not None:
+            lines.append(
+                f"Skill     {skill.uid}"
+            )
+
+        if track:
+            lines.append(
+                f"Track     {track}"
+            )
+
+        if placement is not None:
+            lines.extend(
+                [
+                    (
+                        f"題目      "
+                        f"{placement.problem_id} · "
+                        f"{placement.title}"
+                    ),
+                    (
+                        f"用途      "
+                        f"{placement.role}"
+                    ),
+                    (
+                        f"Lesson    "
+                        f"{placement.lesson_uid or '—'}"
+                    ),
+                ]
+            )
+
+        lines.extend(
+            [
+                "",
+                "執行流程",
+                (
+                    "Lesson context → Formal response → 驗證 → 完成題目"
+                    if track == "Reading"
+                    else (
+                        (
+                            "VS Code scratch → Ctrl+Shift+B → "
+                            "正式 OJ → 完成題目"
+                        )
+                        if track == "Implementation"
+                        else "依目前 Track 啟動對應學習流程"
+                    )
+                ),
+            ]
+        )
+
+    elif kind == "review":
+        candidate = option.get(
+            "candidate"
+        )
+        if candidate is not None:
+            lines.extend(
+                [
+                    (
+                        f"Skill     "
+                        f"{candidate.skill_uid}"
+                    ),
+                    (
+                        f"Track     "
+                        f"{candidate.track}"
+                    ),
+                    (
+                        f"R         "
+                        f"≈ {candidate.retrievability:.0%}"
+                    ),
+                    (
+                        f"到期      "
+                        f"{candidate.due_on:%Y-%m-%d}"
+                    ),
+                    (
+                        f"預估      "
+                        f"{candidate.estimated_minutes} 分"
+                    ),
+                    "",
+                    (
+                        "執行流程  retrieval scratch → "
+                        "Judge / verification → 完成複習"
+                    ),
+                ]
+            )
+
+    elif kind == "cognitive":
+        task = option.get(
+            "task"
+        )
+        if task is not None:
+            lines.extend(
+                [
+                    (
+                        f"類型      "
+                        f"{task.kind}"
+                    ),
+                    (
+                        "Skill     "
+                        + ", ".join(
+                            task.skill_uids
+                        )
+                    ),
+                    (
+                        f"預估      "
+                        f"{task.estimated_minutes} 分"
+                    ),
+                    (
+                        f"原因      "
+                        f"{task.reason}"
+                    ),
+                ]
+            )
+
+    elif kind == "capacity":
+        lines.extend(
+            [
+                "",
+                "可選時間",
+                (
+                    "15 / 30 / 45 / 60 / 75 / 90 / "
+                    "120 / 150 / 180 / 240 分"
+                ),
+                "只影響今天；不改長期 curriculum / memory policy。",
+            ]
+        )
+
+    return lines
+
+
 def _today_action_menu(
     snapshot,
     options,
@@ -6419,7 +7305,6 @@ def _today_action_menu(
     selected = first_enabled(
         options
     )
-    plan = snapshot["plan"]
 
     while True:
         output = io.StringIO()
@@ -6430,44 +7315,78 @@ def _today_action_menu(
             print()
 
             width = ui_width()
-            gap = 4
-            left = 56
-            right = max(
-                30,
-                width - left - gap,
+            gap = 3
+            left, right = (
+                workbench_pane_widths(
+                    width,
+                    (46, 54),
+                    gap=gap,
+                    min_width=28,
+                )
             )
 
             print(
                 f"{CYAN}{BOLD}"
-                f"{pad_display('下一步', left)}"
+                f"{pad_display('學習活動', left)}"
                 f"{RESET}"
                 + " " * gap
                 + f"{CYAN}{BOLD}"
-                "今日規劃"
+                f"{pad_display('規劃與執行', right)}"
                 f"{RESET}"
             )
+            print()
 
-            window = min(
-                8,
-                len(options),
+            max_rows = max(
+                12,
+                ui_height() - 10,
             )
-            start = max(
-                0,
+            window = max(
+                4,
                 min(
-                    selected - 3,
-                    len(options) - window,
+                    9,
+                    max_rows // 2,
                 ),
             )
-            visible = list(
-                range(
-                    start,
-                    start + window,
-                )
+            start_index = max(
+                0,
+                min(
+                    selected
+                    - window // 2,
+                    len(options)
+                    - window,
+                ),
+            )
+            visible = range(
+                start_index,
+                min(
+                    len(options),
+                    start_index + window,
+                ),
             )
 
             task_rows = []
+            previous_section = None
+
             for index in visible:
                 option = options[index]
+                section = (
+                    _today_option_section(
+                        option
+                    )
+                )
+
+                if (
+                    section
+                    != previous_section
+                ):
+                    task_rows.append(
+                        (
+                            section,
+                            GRAY,
+                        )
+                    )
+                    previous_section = section
+
                 prefix = (
                     "›"
                     if index == selected
@@ -6488,6 +7407,7 @@ def _today_action_menu(
                         color,
                     )
                 )
+
                 detail = (
                     option.get("detail")
                     or ""
@@ -6503,76 +7423,46 @@ def _today_action_menu(
                         )
                     )
 
-            protected = max(
-                0,
-                snapshot["capacity_minutes"]
-                - plan.budget_minutes,
+            detail_lines = (
+                _today_option_detail_lines(
+                    snapshot,
+                    options[selected],
+                )
             )
-            plan_rows = [
-                (
-                    f"目標      "
-                    f"{snapshot['target']}"
-                ),
-                (
-                    f"可用時間  "
-                    f"{snapshot['capacity_minutes']} 分"
-                ),
-                (
-                    f"複習      "
-                    f"{plan.selected_minutes}/"
-                    f"{plan.budget_minutes} 分"
-                    f" · {len(plan.selected)} 項"
-                ),
-                (
-                    f"新學習    ≥ "
-                    f"{protected} 分"
-                ),
-            ]
 
-            if plan.deferred:
-                plan_rows.append(
-                    f"安全延後  "
-                    f"{len(plan.deferred)} 項"
+            empty_lines = (
+                _today_empty_state_lines(
+                    snapshot,
+                    options,
                 )
-            elif not plan.selected:
-                plan_rows.append(
-                    "複習狀態  今天沒有到期複習"
-                )
-
-            plan_rows.extend(
-                [
-                    "",
-                    "目前選中",
-                    options[selected]["label"],
-                ]
             )
-            detail = (
-                options[selected].get(
-                    "detail"
-                )
-                or ""
-            )
-            if detail:
-                plan_rows.extend(
-                    wrap_display(
-                        detail,
-                        right,
-                    )
+            if empty_lines:
+                detail_lines.extend(
+                    [
+                        "",
+                        "目前狀態",
+                        *empty_lines,
+                    ]
                 )
 
             rows = max(
                 len(task_rows),
-                len(plan_rows),
+                len(detail_lines),
             )
-            for row in range(rows):
+            for row in range(
+                min(
+                    rows,
+                    max_rows,
+                )
+            ):
                 left_text, left_color = (
                     task_rows[row]
                     if row < len(task_rows)
                     else ("", "")
                 )
                 right_text = (
-                    plan_rows[row]
-                    if row < len(plan_rows)
+                    detail_lines[row]
+                    if row < len(detail_lines)
                     else ""
                 )
                 print(
@@ -6591,7 +7481,25 @@ def _today_action_menu(
                     color=YELLOW,
                 )
 
-            print()
+            if snapshot.get(
+                "curriculum_blocker"
+            ):
+                print()
+                print_wrapped(
+                    (
+                        "⚠ 新學習暫時無法啟動："
+                        + snapshot[
+                            "curriculum_blocker"
+                        ]
+                    ),
+                    width,
+                    color=YELLOW,
+                )
+
+            pad_frame_before_footer(
+                output,
+                footer_rows=3,
+            )
             rule()
             action = (
                 options[selected].get(
@@ -6606,9 +7514,15 @@ def _today_action_menu(
                     else "開始"
                 )
             )
+            direct = (
+                f" · 1–{len(options)} 直達"
+                if len(options) <= 9
+                else ""
+            )
             print(
                 f"{GRAY}"
                 f"↑↓ 選擇 · Enter {action}"
+                f"{direct}"
                 " · Esc / Q 返回控制中心"
                 f"{RESET}"
             )
@@ -6620,26 +7534,31 @@ def _today_action_menu(
         sys.stdout.flush()
 
         key = read_key()
+
         if key == "UP":
             selected = move_enabled(
                 options,
                 selected,
                 -1,
             )
+
         elif key == "DOWN":
             selected = move_enabled(
                 options,
                 selected,
                 1,
             )
+
         elif key == "ENTER":
             return selected
+
         elif key in {
             "ESC",
             "q",
             "Q",
         }:
             return None
+
         elif (
             key.isdigit()
             and len(options) <= 9
@@ -6655,11 +7574,15 @@ def _today_action_menu(
                 return index
 
 
+
 def today_view(current_filename: str | None):
     snapshot = adaptive_today_snapshot()
     plan = snapshot["plan"]
     route = snapshot[
         "new_learning"
+    ]
+    cognitive_plan = snapshot[
+        "cognitive_plan"
     ]
 
     options = []
@@ -6752,50 +7675,6 @@ def today_view(current_filename: str | None):
             "action": "調整",
         }
     )
-
-    if not [
-        option
-        for option in options
-        if option["kind"] != "capacity"
-    ]:
-        print()
-        rule()
-        print()
-
-        if (
-            route is not None
-            and route.route_complete
-        ):
-            print(
-                f"{GRAY}"
-                "目前沒有新的 Required Skill start action；"
-                "這不代表 RR/IR readiness 已通過。"
-                f"{RESET}"
-            )
-        elif (
-            route is not None
-            and route.blocked_skill
-            is not None
-        ):
-            print(
-                f"{GRAY}"
-                "先建立上列 prerequisite Evidence；"
-                "系統不會以 Skill Status 或單次 AC 強制解鎖。"
-                f"{RESET}"
-            )
-        else:
-            print(
-                f"{GRAY}"
-                "目前沒有可安全啟動的 Today action。"
-                f"{RESET}"
-            )
-
-        print()
-        print(
-            f"{GRAY}"
-            "仍可調整本日可用時間，系統會重新計算規劃。"
-            f"{RESET}"
-        )
 
     selected = _today_action_menu(
         snapshot,
@@ -7590,6 +8469,99 @@ def push_commit(skip_confirm=False) -> bool:
     return False
 
 
+def suggested_commit_message() -> str:
+    changes = git_changes()
+    staged_paths = []
+
+    for change in changes:
+        code = change["code"]
+        if (
+            code != "??"
+            and code[0] != " "
+        ):
+            staged_paths.extend(
+                change["paths"]
+            )
+
+    if not staged_paths:
+        return "chore: update APCS learning system"
+
+    try:
+        problems = core.CATALOG.load_problems()
+        solutions = core.CATALOG.load_solutions()
+    except CatalogError:
+        problems = {}
+        solutions = []
+
+    path_to_problem = {
+        item.path: item.problem_id
+        for item in solutions
+    }
+    problem_ids = {
+        path_to_problem[path]
+        for path in staged_paths
+        if path in path_to_problem
+    }
+
+    test_problem_ids = set()
+    for path in staged_paths:
+        parts = Path(path).parts
+        if (
+            len(parts) >= 4
+            and parts[0] == "data"
+            and parts[1] == "problem_enrichment"
+        ):
+            test_problem_ids.add(
+                parts[3]
+            )
+
+    if (
+        len(test_problem_ids) == 1
+        and not problem_ids
+    ):
+        pid = next(
+            iter(test_problem_ids)
+        )
+        return (
+            f"test: add verified cases for {pid}"
+        )
+
+    if len(problem_ids) == 1:
+        pid = next(
+            iter(problem_ids)
+        )
+        title = (
+            problems[pid].title
+            if pid in problems
+            else ""
+        )
+        return (
+            f"solve: {pid}"
+            + (
+                f" {title}"
+                if title
+                else ""
+            )
+        )
+
+    if all(
+        path.startswith("docs/")
+        for path in staged_paths
+    ):
+        return "docs: update APCS learning system"
+
+    if any(
+        (
+            path.startswith("tools/")
+            or path.startswith("tests/")
+        )
+        for path in staged_paths
+    ):
+        return "feat: refine APCS learning runtime"
+
+    return "chore: update APCS learning system"
+
+
 def create_commit() -> None:
     changes = git_changes()
     staged = staged_count(changes)
@@ -7599,13 +8571,21 @@ def create_commit() -> None:
     print()
 
     if staged == 0:
-        print(f"{YELLOW}尚未有 staged changes。{RESET}")
+        print(
+            f"{YELLOW}"
+            "尚未有已暫存變更。"
+            f"{RESET}"
+        )
         print("請先使用「加入暫存區」。")
         pause()
         return
 
     if not whitespace_ok():
-        print(f"{RED}✕ Git whitespace 檢查未通過{RESET}")
+        print(
+            f"{RED}"
+            "✕ Git whitespace 檢查未通過"
+            f"{RESET}"
+        )
         print("請先修正後再 Commit。")
         pause()
         return
@@ -7633,7 +8613,6 @@ def create_commit() -> None:
 
         if output:
             print()
-
             for line in output.splitlines()[-12:]:
                 print(
                     fit(
@@ -7658,39 +8637,77 @@ def create_commit() -> None:
         "--stat",
     ).stdout.strip()
 
-    print(f"已暫存  {staged} 個變更")
-    print()
-
+    print(
+        f"已暫存  {staged} 個變更"
+    )
     if stat:
         for line in stat.splitlines()[-5:]:
-            print(fit(line, ui_width()))
+            print(
+                fit(
+                    line,
+                    ui_width(),
+                )
+            )
 
+    suggestion = (
+        suggested_commit_message()
+    )
     print()
-    print(f"{GRAY}Commit message{RESET}")
-    print(f"{GRAY}留空直接 Enter 可取消{RESET}")
+    print(
+        f"{CYAN}{BOLD}"
+        "建議 Commit message"
+        f"{RESET}"
+    )
+    print(
+        f"{WHITE}{suggestion}{RESET}"
+    )
+    print(
+        f"{GRAY}"
+        "直接 Enter 採用 · 輸入文字可改寫 · Q 取消"
+        f"{RESET}"
+    )
     print()
 
     try:
-        message = input("> ").strip()
-    except (EOFError, KeyboardInterrupt):
+        raw = input("> ").strip()
+    except (
+        EOFError,
+        KeyboardInterrupt,
+    ):
         return
 
-    if not message:
+    if raw.casefold() == "q":
         return
+
+    message = raw or suggestion
 
     clear()
     heading("確認 Commit")
     print()
 
-    print(f"{GRAY}Message{RESET}")
-    print(fit(message, ui_width()))
+    print(
+        f"{GRAY}Message{RESET}"
+    )
+    print(
+        fit(
+            message,
+            ui_width(),
+        )
+    )
     print()
 
     if stat:
         for line in stat.splitlines()[-5:]:
-            print(fit(line, ui_width()))
+            print(
+                fit(
+                    line,
+                    ui_width(),
+                )
+            )
 
-    if not confirm("建立這個 Commit？"):
+    if not confirm(
+        "建立這個 Commit？"
+    ):
         return
 
     result = run_git(
@@ -7704,7 +8721,11 @@ def create_commit() -> None:
     print()
 
     if result.returncode != 0:
-        print(f"{RED}✕ Commit 失敗{RESET}")
+        print(
+            f"{RED}"
+            "✕ Commit 失敗"
+            f"{RESET}"
+        )
 
         error = (
             result.stderr.strip()
@@ -7714,7 +8735,12 @@ def create_commit() -> None:
         if error:
             print()
             for line in error.splitlines()[-6:]:
-                print(fit(line, ui_width()))
+                print(
+                    fit(
+                        line,
+                        ui_width(),
+                    )
+                )
 
         pause()
         return
@@ -7725,19 +8751,31 @@ def create_commit() -> None:
         "HEAD",
     ).stdout.strip()
 
-    print(f"{GREEN}✓ Commit 已建立{RESET}")
-    print(f"SHA  {sha}")
+    print(
+        f"{GREEN}"
+        "✓ Commit 已建立"
+        f"{RESET}"
+    )
+    print(
+        f"SHA  {sha}"
+    )
     print()
-
-    if confirm("現在 Push 到 GitHub？"):
-        push_commit(skip_confirm=True)
+    print(
+        f"{GRAY}"
+        "建議在一個穩定工作段結束後再 Push；"
+        "不要求每題立即 Push。"
+        f"{RESET}"
+    )
+    pause()
 
 
 def git_center() -> None:
     selected = 0
 
     while True:
-        validation_code, errors, warnings = validate_summary()
+        validation_code, errors, warnings = (
+            validate_summary()
+        )
         changes = git_changes()
         staged = staged_count(changes)
         unstaged = unstaged_count(changes)
@@ -7767,176 +8805,283 @@ def git_center() -> None:
 
         options = [
             {
-                "label": "查看變更",
+                "label": "查看差異",
                 "detail": (
-                    f"{len(changes)} 個變更 · "
-                    f"{staged} 已暫存"
+                    f"{len(changes)} 個變更"
                 ),
                 "enabled": True,
             },
             {
-                "label": "加入暫存區",
+                "label": "加入暫存",
                 "detail": (
-                    f"{unstaged} 個未暫存變更"
+                    f"{unstaged} 個未暫存"
                     if unstaged
-                    else "目前沒有未暫存變更"
+                    else "無未暫存變更"
                 ),
                 "enabled": unstaged > 0,
             },
             {
-                "label": "建立 Commit",
+                "label": "Commit",
                 "detail": (
-                    f"{staged} 個 staged changes"
+                    f"{staged} 個已暫存 · 提交時執行完整 Quality Gate"
                     if staged
-                    else "請先加入暫存區"
+                    else "尚未暫存"
                 ),
-                "enabled": staged > 0 and format_ok,
+                "enabled": (
+                    staged > 0
+                    and format_ok
+                ),
             },
             {
-                "label": "Push 到 GitHub",
+                "label": "Push",
                 "detail": (
-                    f"ahead {sync['ahead']} · "
-                    f"behind {sync['behind']}"
+                    f"↑{sync['ahead']} · "
+                    f"↓{sync['behind']}"
                     if sync["upstream"]
-                    else "尚未設定 upstream"
+                    else "建立 upstream"
                 ),
                 "enabled": push_enabled,
             },
         ]
 
-        # 狀態更新後，若目前選項失效才重新找可用項目。
         if (
             selected >= len(options)
-            or not options[selected]["enabled"]
+            or not options[selected][
+                "enabled"
+            ]
         ):
-            selected = first_enabled(options)
-
-        clear()
-        heading("檢查與提交")
-        print()
-
-        data_color = GREEN if validation_code == 0 else RED
-        data_mark = "✓" if validation_code == 0 else "✕"
-
-        print(
-            f"資料  "
-            f"{data_color}"
-            f"{data_mark} "
-            f"{fit(validation_text, ui_width() - 7)}"
-            f"{RESET}"
-        )
-
-        print(
-            f"格式  "
-            f"{GREEN if format_ok else RED}"
-            f"{'✓ 通過' if format_ok else '✕ 有問題'}"
-            f"{RESET}"
-        )
-
-        print(
-            f"Git   {len(changes)} 變更 · "
-            f"{staged} staged"
-        )
-
-        if sync["upstream"]:
-            sync_color = (
-                YELLOW
-                if sync["behind"] > 0
-                else GRAY
+            selected = first_enabled(
+                options
             )
 
-            print(
-                f"{sync_color}"
-                f"同步  ↑{sync['ahead']} · ↓{sync['behind']}"
-                f"{RESET}"
+        if ui_width() < 86:
+            chosen = choose_menu(
+                "檢查與提交",
+                options,
+                footer_numbers=True,
+                back_text="返回控制中心",
             )
-
-        print()
-        rule()
-        print()
-
-        for index, option in enumerate(options):
-            enabled = option["enabled"]
-            prefix = "›" if index == selected else " "
-
-            if not enabled:
-                label_color = GRAY
-            elif index == selected:
-                label_color = CYAN + BOLD
-            else:
-                label_color = ""
-
-            print(
-                f"{label_color}"
-                f"{prefix} {index + 1}  {option['label']}"
-                f"{RESET}"
-            )
-
-            detail_color = GRAY
-
-            print(
-                f"     {detail_color}"
-                f"{fit(option['detail'], ui_width() - 5)}"
-                f"{RESET}"
-            )
+            if chosen is None:
+                return
+        else:
+            clear()
+            heading("檢查與提交")
             print()
 
-        rule()
-        print(f"{GRAY}↑↓ 選擇 · Enter 執行{RESET}")
-        print(f"{GRAY}1–4 直達 · Esc / Q 返回控制中心{RESET}")
-
-        key = read_key()
-
-        if key == "UP":
-            selected = move_enabled(
-                options,
-                selected,
-                -1,
+            width = ui_width()
+            gap = 4
+            left, right = (
+                workbench_pane_widths(
+                    width,
+                    (58, 42),
+                    gap=gap,
+                    min_width=26,
+                )
             )
-            continue
 
-        if key == "DOWN":
-            selected = move_enabled(
-                options,
-                selected,
-                1,
+            left_lines = [
+                f"{CYAN}{BOLD}變更{RESET}",
+            ]
+            visible_changes = max(
+                6,
+                min(
+                    14,
+                    ui_height() - 18,
+                ),
             )
-            continue
+            for change in changes[
+                :visible_changes
+            ]:
+                left_lines.append(
+                    f"{status_color(change['code'])}"
+                    f"{change['code']}"
+                    f"{RESET} "
+                    f"{fit(change['display'], left - 4)}"
+                )
+            if not changes:
+                left_lines.append(
+                    f"{GREEN}✓ 工作區乾淨{RESET}"
+                )
+            elif len(changes) > visible_changes:
+                left_lines.append(
+                    f"{GRAY}"
+                    f"…另有 {len(changes) - visible_changes} 個變更"
+                    f"{RESET}"
+                )
 
-        if key in {"ESC", "q", "Q"}:
-            return
+            data_color = (
+                GREEN
+                if validation_code == 0
+                else RED
+            )
+            right_lines = [
+                f"{CYAN}{BOLD}預檢與同步{RESET}",
+                (
+                    f"資料      {data_color}"
+                    f"{'✓' if validation_code == 0 else '✕'} "
+                    f"{validation_text}{RESET}"
+                ),
+                (
+                    f"格式      "
+                    f"{GREEN if format_ok else RED}"
+                    f"{'✓ 通過' if format_ok else '✕ 有問題'}"
+                    f"{RESET}"
+                ),
+                (
+                    f"已暫存    {staged}"
+                    f" · 未暫存 {unstaged}"
+                ),
+                (
+                    f"Branch    "
+                    f"{sync['branch'] or '—'}"
+                ),
+                (
+                    f"Upstream  "
+                    f"{sync['upstream'] or '未設定'}"
+                ),
+                (
+                    f"同步      ↑{sync['ahead']}"
+                    f" · ↓{sync['behind']}"
+                ),
+                "",
+                f"{CYAN}{BOLD}建議 Commit{RESET}",
+                fit(
+                    suggested_commit_message(),
+                    right,
+                ),
+            ]
 
-        chosen = None
+            rows = max(
+                len(left_lines),
+                len(right_lines),
+            )
+            for row in range(rows):
+                a = (
+                    left_lines[row]
+                    if row < len(left_lines)
+                    else ""
+                )
+                b = (
+                    right_lines[row]
+                    if row < len(right_lines)
+                    else ""
+                )
+                print(
+                    f"{pad_display(a, left)}"
+                    + " " * gap
+                    + f"{fit(b, right)}"
+                )
 
-        if key == "ENTER":
-            if options[selected]["enabled"]:
-                chosen = selected
+            print()
+            print(
+                f"{GRAY}操作{RESET}"
+            )
+            cell_gap = 3
+            cell_width = (
+                width
+                - cell_gap * 3
+            ) // 4
+            cells = []
+            for index, option in enumerate(
+                options
+            ):
+                label = (
+                    f"{index + 1} "
+                    f"{option['label']}"
+                )
+                if not option["enabled"]:
+                    cells.append(
+                        f"{GRAY}"
+                        f"{pad_display(label, cell_width)}"
+                        f"{RESET}"
+                    )
+                elif index == selected:
+                    cells.append(
+                        f"{CYAN}{BOLD}"
+                        f"› "
+                        f"{pad_display(label, max(1, cell_width - 2))}"
+                        f"{RESET}"
+                    )
+                else:
+                    cells.append(
+                        pad_display(
+                            label,
+                            cell_width,
+                        )
+                    )
+            print(
+                (" " * cell_gap).join(
+                    cells
+                )
+            )
+            print()
+            print_wrapped(
+                options[selected]["detail"],
+                width,
+                color=GRAY,
+            )
 
-        elif key in {"1", "2", "3", "4"}:
-            index = int(key) - 1
+            print()
+            rule()
+            print(
+                f"{GRAY}"
+                "←→ 選操作 · Enter 執行"
+                " · 1–4 直達 · Esc 返回控制中心"
+                f"{RESET}"
+            )
 
-            if options[index]["enabled"]:
-                selected = index
-                chosen = index
+            key = read_key()
+            if key == "LEFT":
+                selected = move_enabled(
+                    options,
+                    selected,
+                    -1,
+                )
+                continue
+            if key == "RIGHT":
+                selected = move_enabled(
+                    options,
+                    selected,
+                    1,
+                )
+                continue
+            if key in {
+                "ESC",
+                "q",
+                "Q",
+            }:
+                return
 
-        if chosen is None:
-            continue
+            chosen = None
+            if key == "ENTER":
+                if options[selected][
+                    "enabled"
+                ]:
+                    chosen = selected
+            elif key in {
+                "1",
+                "2",
+                "3",
+                "4",
+            }:
+                index = int(key) - 1
+                if options[index][
+                    "enabled"
+                ]:
+                    selected = index
+                    chosen = index
+
+            if chosen is None:
+                continue
 
         if chosen == 0:
             review_changes()
-
         elif chosen == 1:
             stage_changes()
-
         elif chosen == 2:
             create_commit()
-
         elif chosen == 3:
             push_commit()
-
-        # Action 執行後回到這一層重新讀取 Git state。
-        # selected 會保留；只有該項因狀態改變而 disabled
-        # 才會在下一輪自動移到可用項目。
 
 
 # ============================================================
@@ -8798,6 +9943,216 @@ def _problem_library_item_detail(
     )
 
 
+def _problem_test_inventory(item) -> dict[str, int]:
+    try:
+        bundle = TEST_ASSETS.load(
+            item.source or None,
+            item.external_id,
+            include_candidates=True,
+        )
+    except Exception:
+        bundle = None
+
+    return TEST_ASSETS.inventory(
+        bundle
+    )
+
+
+def _problem_library_testcase_lines(
+    item,
+    *,
+    mode: str,
+) -> list[str]:
+    try:
+        bundle = TEST_ASSETS.load(
+            item.source or None,
+            item.external_id,
+            include_candidates=True,
+        )
+    except Exception:
+        bundle = None
+
+    if bundle is None:
+        return [
+            "測資",
+            "  尚未建立本地測資資產",
+        ]
+
+    strict = mode == "exam"
+    pre_attempt = not item.attempted
+    lines = ["測資"]
+
+    official = [
+        case
+        for case in bundle.cases
+        if case.provenance == "OFFICIAL"
+    ]
+    ai_verified = [
+        case
+        for case in bundle.cases
+        if (
+            case.provenance == "AI_GENERATED"
+            and case.verified
+        )
+    ]
+    other_verified = [
+        case
+        for case in bundle.cases
+        if (
+            case.provenance
+            not in {
+                "OFFICIAL",
+                "AI_GENERATED",
+            }
+            and case.verified
+        )
+    ]
+    candidates = [
+        case
+        for case in bundle.cases
+        if not case.verified
+    ]
+
+    lines.append(
+        f"  官方 {len(official)}"
+    )
+    for case in official[:3]:
+        lines.append(
+            f"    {case.case_id} · "
+            f"{fit(case.name, 20)}"
+        )
+    if len(official) > 3:
+        lines.append(
+            f"    …另有 {len(official) - 3} 組"
+        )
+
+    if strict and pre_attempt:
+        lines.append(
+            "  延伸測資  作答後解鎖"
+        )
+        return lines
+
+    reveal_name = (
+        item.attempted
+        or item.role
+        not in {
+            "Core Independent",
+            "Transfer Challenge",
+            "Mock",
+        }
+    )
+
+    lines.append(
+        f"  AI 生成已驗證 {len(ai_verified)}"
+    )
+    for index, case in enumerate(
+        ai_verified[:3],
+        start=1,
+    ):
+        label = (
+            case.name
+            if reveal_name
+            else f"Local Case {index}"
+        )
+        lines.append(
+            f"    {case.case_id} · "
+            f"{fit(label, 20)}"
+        )
+    if len(ai_verified) > 3:
+        lines.append(
+            f"    …另有 {len(ai_verified) - 3} 組"
+        )
+
+    if other_verified:
+        lines.append(
+            f"  其他已驗證 {len(other_verified)}"
+        )
+        for index, case in enumerate(
+            other_verified[:2],
+            start=1,
+        ):
+            label = (
+                case.name
+                if reveal_name
+                else (
+                    "Local Case "
+                    f"{len(ai_verified) + index}"
+                )
+            )
+            lines.append(
+                f"    {case.case_id} · "
+                f"{fit(label, 20)}"
+            )
+
+    lines.append(
+        f"  Candidate {len(candidates)}"
+    )
+    if candidates:
+        lines.append(
+            "    未驗證，不影響 PASS / FAIL"
+        )
+
+    return lines
+
+
+def _problem_library_inspector_lines(
+    item,
+    *,
+    mode: str,
+) -> list[str]:
+    strict = mode == "exam"
+    lines = [
+        item.external_id,
+        fit(item.title, 34),
+        "",
+        f"來源      {_problem_library_source_label(item.source)}",
+        f"狀態      {'已做' if item.attempted else '未做'}",
+    ]
+
+    if strict:
+        lines.extend(
+            [
+                "",
+                "考試 · 防劇透",
+                "Skill / 難度 / 用途已隱藏",
+                "",
+                *_problem_library_testcase_lines(
+                    item,
+                    mode=mode,
+                ),
+            ]
+        )
+        return lines
+
+    lines.extend(
+        [
+            f"難度      {item.difficulty or '—'}",
+            f"用途      {dict(PROBLEM_LIBRARY_ROLES).get(item.role, item.role or '—')}",
+            f"Skill     {item.primary_skill or '—'}",
+            "",
+            *_problem_library_testcase_lines(
+                item,
+                mode=mode,
+            ),
+            "",
+            "Input / Expected / Actual / Diff",
+            "於 Ctrl+Shift+B 測試中心顯示",
+        ]
+    )
+
+    if item.has_l2:
+        lines.append(
+            "教學資料  ✓ 已建立"
+        )
+    else:
+        lines.append(
+            "教學資料  — 尚未建立"
+        )
+
+    return lines
+
+
+
 def _problem_library_results_view(
     items,
     *,
@@ -8806,6 +10161,8 @@ def _problem_library_results_view(
     mode: str = "practice",
     select_only: bool = False,
 ):
+    items = list(items)
+
     if not items:
         clear()
         heading(title)
@@ -8826,50 +10183,264 @@ def _problem_library_results_view(
         )
         return None
 
-    while True:
-        options = [
-            {
-                "label": (
-                    f"{item.external_id} · "
-                    f"{item.title}"
-                ),
-                "detail": (
-                    _problem_library_safe_detail(
-                        item,
-                        mode,
-                    )
-                ),
-                "enabled": True,
-                "action": (
+    if (
+        select_only
+        or ui_width() < 86
+    ):
+        selected_index = min(
+            int(
+                UI_STATE.get(
+                    "library_result_index",
+                    0,
+                )
+            ),
+            len(items) - 1,
+        )
+
+        while True:
+            options = [
+                {
+                    "label": (
+                        f"{item.external_id} · "
+                        f"{item.title}"
+                    ),
+                    "detail": (
+                        _problem_library_safe_detail(
+                            item,
+                            mode,
+                        )
+                    ),
+                    "enabled": True,
+                    "action": (
+                        "選取"
+                        if select_only
+                        else "查看"
+                    ),
+                }
+                for item in items
+            ]
+
+            selected = choose_menu(
+                f"{title} · {len(items)} 題",
+                options,
+                footer_numbers=False,
+                back_text="返回題目庫",
+                enter_text=(
                     "選取"
                     if select_only
                     else "查看"
                 ),
-            }
-            for item in items
-        ]
+                selected_index=selected_index,
+            )
+            if selected is None:
+                return None
 
-        selected = choose_menu(
-            f"{title} · {len(items)} 題",
-            options,
-            footer_numbers=False,
-            back_text="返回題目庫",
-            enter_text=(
-                "選取"
-                if select_only
-                else "查看"
+            UI_STATE[
+                "library_result_index"
+            ] = selected
+            selected_index = selected
+
+            if select_only:
+                return items[selected]
+
+            _problem_library_item_detail(
+                items[selected],
+                mode=mode,
+            )
+
+    selected = min(
+        int(
+            UI_STATE.get(
+                "library_result_index",
+                0,
+            )
+        ),
+        len(items) - 1,
+    )
+
+    while True:
+        clear()
+        heading(
+            f"{title} · {len(items)} 題"
+        )
+        print_selection_mode_banner(
+            mode,
+            toggle_hint=False,
+        )
+        if context:
+            print(
+                f"{GRAY}"
+                f"{fit(context, ui_width())}"
+                f"{RESET}"
+            )
+        print()
+
+        width = ui_width()
+        gap = 4
+        left = 54
+        right = max(
+            30,
+            width - left - gap,
+        )
+
+        print(
+            f"{CYAN}{BOLD}"
+            f"{pad_display('題目', left)}"
+            f"{RESET}"
+            + " " * gap
+            + f"{CYAN}{BOLD}"
+            "題目側欄"
+            f"{RESET}"
+        )
+
+        visible_rows = max(
+            8,
+            min(
+                19,
+                ui_height() - 14,
             ),
         )
-        if selected is None:
+        start_index = max(
+            0,
+            min(
+                selected
+                - visible_rows // 2,
+                len(items)
+                - visible_rows,
+            ),
+        )
+        indexes = range(
+            start_index,
+            min(
+                len(items),
+                start_index + visible_rows,
+            ),
+        )
+
+        list_lines = []
+        for index in indexes:
+            item = items[index]
+            prefix = (
+                "›"
+                if index == selected
+                else " "
+            )
+            state = (
+                "已做"
+                if item.attempted
+                else "未做"
+            )
+            label = (
+                f"{prefix} "
+                f"{item.external_id} · "
+                f"{item.title}"
+            )
+            detail = (
+                f"{_problem_library_source_label(item.source)} · "
+                f"{state}"
+            )
+            color = (
+                CYAN + BOLD
+                if index == selected
+                else ""
+            )
+            list_lines.append(
+                (
+                    fit(label, left),
+                    color,
+                )
+            )
+            list_lines.append(
+                (
+                    fit(
+                        "    " + detail,
+                        left,
+                    ),
+                    GRAY,
+                )
+            )
+
+        inspector = (
+            _problem_library_inspector_lines(
+                items[selected],
+                mode=mode,
+            )
+        )
+
+        rows = max(
+            len(list_lines),
+            len(inspector),
+        )
+        for row in range(rows):
+            left_text, left_color = (
+                list_lines[row]
+                if row < len(list_lines)
+                else ("", "")
+            )
+            right_text = (
+                inspector[row]
+                if row < len(inspector)
+                else ""
+            )
+            print(
+                f"{left_color}"
+                f"{pad_display(left_text, left)}"
+                f"{RESET if left_color else ''}"
+                + " " * gap
+                + f"{fit(right_text, right)}"
+            )
+
+        print()
+        rule()
+        print(
+            f"{GRAY}"
+            "↑↓ 選題 · Enter 查看詳細 · O 開啟 OJ · Esc 返回"
+            f"{RESET}"
+        )
+
+        key = read_key()
+
+        if key == "UP":
+            selected = (
+                selected - 1
+            ) % len(items)
+            UI_STATE[
+                "library_result_index"
+            ] = selected
+            continue
+
+        if key == "DOWN":
+            selected = (
+                selected + 1
+            ) % len(items)
+            UI_STATE[
+                "library_result_index"
+            ] = selected
+            continue
+
+        if key == "ENTER":
+            _problem_library_item_detail(
+                items[selected],
+                mode=mode,
+            )
+            continue
+
+        if key in {"o", "O"}:
+            url = (
+                items[selected]
+                .canonical_url
+            )
+            if url:
+                webbrowser.open(url)
+            continue
+
+        if key in {
+            "ESC",
+            "q",
+            "Q",
+        }:
             return None
 
-        if select_only:
-            return items[selected]
-
-        _problem_library_item_detail(
-            items[selected],
-            mode=mode,
-        )
 
 
 def _recommended_problem_items(
@@ -9464,6 +11035,1877 @@ def _problem_library_filter_choice(
 
 
 
+def _problem_library_filter_count(
+    all_items,
+    filters,
+    **overrides,
+) -> int:
+    candidate = dict(filters)
+    candidate.update(overrides)
+    return len(
+        _problem_library_filter_items(
+            all_items,
+            candidate,
+            limit=10000,
+        )
+    )
+
+
+def _problem_library_direct_choices(
+    kind: str,
+    filters,
+    all_items,
+    *,
+    skill_unit: str | None,
+):
+    if kind == "skill":
+        groups = (
+            _problem_library_skill_groups()
+        )
+
+        if skill_unit is None:
+            choices = [
+                {
+                    "label": "不限主題",
+                    "detail": (
+                        f"{_problem_library_filter_count(
+                            all_items,
+                            filters,
+                            skill_uids=(),
+                            skill_label=None,
+                        )} 題"
+                    ),
+                    "action": "skill_clear",
+                }
+            ]
+            for group in groups:
+                uids = tuple(
+                    item["uid"]
+                    for item in group["skills"]
+                )
+                choices.append(
+                    {
+                        "label": group["label"],
+                        "detail": (
+                            f"{len(group['skills'])} Skill"
+                            f" · {_problem_library_filter_count(
+                                all_items,
+                                filters,
+                                skill_uids=uids,
+                            )} 題"
+                        ),
+                        "action": "skill_unit",
+                        "unit": group["uid"],
+                    }
+                )
+            return choices
+
+        group = next(
+            (
+                item
+                for item in groups
+                if item["uid"] == skill_unit
+            ),
+            None,
+        )
+        if group is None:
+            return []
+
+        uids = tuple(
+            item["uid"]
+            for item in group["skills"]
+        )
+        choices = [
+            {
+                "label": "← 返回單元",
+                "detail": group["label"],
+                "action": "skill_back",
+            },
+            {
+                "label": (
+                    f"整個單元 · {group['label']}"
+                ),
+                "detail": (
+                    f"{_problem_library_filter_count(
+                        all_items,
+                        filters,
+                        skill_uids=uids,
+                    )} 題"
+                ),
+                "action": "skill_value",
+                "skill_uids": uids,
+                "skill_label": group["label"],
+            },
+        ]
+
+        for skill in group["skills"]:
+            uid = skill["uid"]
+            choices.append(
+                {
+                    "label": skill["name"],
+                    "detail": (
+                        f"{uid} · "
+                        f"{_problem_library_filter_count(
+                            all_items,
+                            filters,
+                            skill_uids=(uid,),
+                        )} 題"
+                    ),
+                    "action": "skill_value",
+                    "skill_uids": (uid,),
+                    "skill_label": skill["name"],
+                }
+            )
+
+        return choices
+
+    if kind == "difficulty":
+        values = [
+            (None, "不限"),
+            *PROBLEM_LIBRARY_DIFFICULTIES,
+        ]
+        return [
+            {
+                "label": label,
+                "detail": (
+                    f"{_problem_library_filter_count(
+                        all_items,
+                        filters,
+                        difficulty=value,
+                    )} 題"
+                ),
+                "action": "value",
+                "field": "difficulty",
+                "value": value,
+            }
+            for value, label in values
+        ]
+
+    if kind == "source":
+        sources = sorted(
+            {
+                item.source
+                for item in all_items
+                if item.source
+            },
+            key=lambda value: (
+                _problem_library_source_label(
+                    value
+                ).casefold()
+            ),
+        )
+        values = [
+            (None, "不限"),
+            *[
+                (
+                    source,
+                    _problem_library_source_label(
+                        source
+                    ),
+                )
+                for source in sources
+            ],
+        ]
+        return [
+            {
+                "label": label,
+                "detail": (
+                    f"{_problem_library_filter_count(
+                        all_items,
+                        filters,
+                        source=value,
+                    )} 題"
+                ),
+                "action": "value",
+                "field": "source",
+                "value": value,
+            }
+            for value, label in values
+        ]
+
+    if kind == "status":
+        values = [
+            (None, "不限"),
+            (False, "未做"),
+            (True, "已做"),
+        ]
+        return [
+            {
+                "label": label,
+                "detail": (
+                    f"{_problem_library_filter_count(
+                        all_items,
+                        filters,
+                        attempted=value,
+                    )} 題"
+                ),
+                "action": "value",
+                "field": "attempted",
+                "value": value,
+            }
+            for value, label in values
+        ]
+
+    if kind == "role":
+        values = [
+            (None, "不限"),
+            *PROBLEM_LIBRARY_ROLES,
+        ]
+        return [
+            {
+                "label": label,
+                "detail": (
+                    f"{_problem_library_filter_count(
+                        all_items,
+                        filters,
+                        role=value,
+                    )} 題"
+                ),
+                "action": "value",
+                "field": "role",
+                "value": value,
+            }
+            for value, label in values
+        ]
+
+    if kind == "teaching":
+        values = [
+            (None, "不限"),
+            (True, "有教學資料"),
+            (False, "無教學資料"),
+        ]
+        return [
+            {
+                "label": label,
+                "detail": (
+                    f"{_problem_library_filter_count(
+                        all_items,
+                        filters,
+                        require_l2=value,
+                    )} 題"
+                ),
+                "action": "value",
+                "field": "require_l2",
+                "value": value,
+            }
+            for value, label in values
+        ]
+
+    if kind == "clear":
+        return [
+            {
+                "label": "清除全部條件",
+                "detail": "恢復成完整題庫",
+                "action": "clear",
+            }
+        ]
+
+    return []
+
+
+def _problem_library_apply_direct_choice(
+    filters,
+    choice,
+    *,
+    skill_unit: str | None,
+):
+    action = choice.get("action")
+
+    if action == "skill_clear":
+        filters["skill_uids"] = ()
+        filters["skill_label"] = None
+        return None
+
+    if action == "skill_unit":
+        return choice["unit"]
+
+    if action == "skill_back":
+        return None
+
+    if action == "skill_value":
+        filters["skill_uids"] = tuple(
+            choice["skill_uids"]
+        )
+        filters["skill_label"] = (
+            choice["skill_label"]
+        )
+        return None
+
+    if action == "value":
+        filters[choice["field"]] = (
+            choice["value"]
+        )
+        return skill_unit
+
+    if action == "clear":
+        filters.update(
+            {
+                "skill_uids": (),
+                "skill_label": None,
+                "difficulty": None,
+                "source": None,
+                "attempted": None,
+                "role": None,
+                "require_l2": None,
+            }
+        )
+        return None
+
+    return skill_unit
+
+
+def _problem_library_filter_browser(
+    filters,
+    all_items,
+    *,
+    mode: str,
+):
+    focus = 0
+    filter_index = 0
+    choice_index = 0
+    result_index = min(
+        int(
+            UI_STATE.get(
+                "library_result_index",
+                0,
+            )
+        ),
+        max(0, len(all_items) - 1),
+    )
+    skill_unit = None
+
+    while True:
+        current = (
+            _problem_library_filter_items(
+                all_items,
+                filters,
+                limit=10000,
+            )
+        )
+
+        filter_options = [
+            option
+            for option in (
+                _problem_library_filter_options(
+                    filters,
+                    current,
+                    mode=mode,
+                )
+            )
+            if option["kind"] != "results"
+        ]
+        filter_index = min(
+            filter_index,
+            max(
+                0,
+                len(filter_options) - 1,
+            ),
+        )
+
+        kind = (
+            filter_options[
+                filter_index
+            ]["kind"]
+        )
+        if kind != "skill":
+            skill_unit = None
+
+        choices = (
+            _problem_library_direct_choices(
+                kind,
+                filters,
+                all_items,
+                skill_unit=skill_unit,
+            )
+        )
+        choice_index = min(
+            choice_index,
+            max(
+                0,
+                len(choices) - 1,
+            ),
+        )
+        result_index = min(
+            result_index,
+            max(
+                0,
+                len(current) - 1,
+            ),
+        )
+
+        clear()
+        heading("題目庫 · 分類找題")
+        print_selection_mode_banner(
+            mode,
+            toggle_hint=False,
+        )
+        print()
+
+        width = ui_width()
+        gap = 3
+        left = 29
+        middle = 29
+        right = max(
+            30,
+            width
+            - left
+            - middle
+            - gap * 2,
+        )
+
+        headers = [
+            "篩選條件",
+            "可選值",
+            f"目前 {len(current)} 題",
+        ]
+        header_cells = []
+        for index, label in enumerate(
+            headers
+        ):
+            color = (
+                CYAN + BOLD
+                if focus == index
+                else GRAY
+            )
+            pane_width = (
+                left
+                if index == 0
+                else (
+                    middle
+                    if index == 1
+                    else right
+                )
+            )
+            header_cells.append(
+                f"{color}"
+                f"{pad_display(label, pane_width)}"
+                f"{RESET}"
+            )
+        print(
+            (" " * gap).join(
+                header_cells
+            )
+        )
+
+        filter_lines = []
+        for index, option in enumerate(
+            filter_options
+        ):
+            prefix = (
+                "›"
+                if (
+                    focus == 0
+                    and index == filter_index
+                )
+                else " "
+            )
+            color = (
+                CYAN + BOLD
+                if (
+                    focus == 0
+                    and index == filter_index
+                )
+                else (
+                    GRAY
+                    if not option.get(
+                        "enabled",
+                        True,
+                    )
+                    else ""
+                )
+            )
+            text = (
+                f"{prefix} "
+                f"{option['label']}"
+            )
+            filter_lines.append(
+                (
+                    fit(
+                        text,
+                        left,
+                    ),
+                    color,
+                )
+            )
+            if option.get("detail"):
+                filter_lines.append(
+                    (
+                        fit(
+                            "    "
+                            + str(
+                                option["detail"]
+                            ),
+                            left,
+                        ),
+                        GRAY,
+                    )
+                )
+
+        choice_lines = []
+        for index, choice in enumerate(
+            choices
+        ):
+            prefix = (
+                "›"
+                if (
+                    focus == 1
+                    and index == choice_index
+                )
+                else " "
+            )
+            color = (
+                CYAN + BOLD
+                if (
+                    focus == 1
+                    and index == choice_index
+                )
+                else ""
+            )
+            choice_lines.append(
+                (
+                    fit(
+                        f"{prefix} "
+                        f"{choice['label']}",
+                        middle,
+                    ),
+                    color,
+                )
+            )
+            if choice.get("detail"):
+                choice_lines.append(
+                    (
+                        fit(
+                            "    "
+                            + str(
+                                choice["detail"]
+                            ),
+                            middle,
+                        ),
+                        GRAY,
+                    )
+                )
+
+        visible = max(
+            7,
+            min(
+                16,
+                ui_height() - 14,
+            ),
+        )
+        result_start = max(
+            0,
+            min(
+                result_index
+                - visible // 2,
+                len(current) - visible,
+            ),
+        )
+        result_lines = []
+        for index in range(
+            result_start,
+            min(
+                len(current),
+                result_start + visible,
+            ),
+        ):
+            item = current[index]
+            prefix = (
+                "›"
+                if (
+                    focus == 2
+                    and index == result_index
+                )
+                else " "
+            )
+            color = (
+                CYAN + BOLD
+                if (
+                    focus == 2
+                    and index == result_index
+                )
+                else ""
+            )
+            result_lines.append(
+                (
+                    fit(
+                        f"{prefix} "
+                        f"{item.external_id} · "
+                        f"{item.title}",
+                        right,
+                    ),
+                    color,
+                )
+            )
+            result_lines.append(
+                (
+                    fit(
+                        "    "
+                        + _problem_library_safe_detail(
+                            item,
+                            mode,
+                        ),
+                        right,
+                    ),
+                    GRAY,
+                )
+            )
+
+        if not current:
+            result_lines = [
+                (
+                    "沒有符合條件的題目",
+                    YELLOW,
+                )
+            ]
+
+        rows = max(
+            len(filter_lines),
+            len(choice_lines),
+            len(result_lines),
+        )
+        max_rows = max(
+            10,
+            ui_height() - 11,
+        )
+
+        for row in range(
+            min(rows, max_rows)
+        ):
+            cells = []
+            for lines, pane_width in (
+                (filter_lines, left),
+                (choice_lines, middle),
+                (result_lines, right),
+            ):
+                if row < len(lines):
+                    value, color = (
+                        lines[row]
+                    )
+                else:
+                    value, color = (
+                        "",
+                        "",
+                    )
+                cells.append(
+                    f"{color}"
+                    f"{pad_display(value, pane_width)}"
+                    f"{RESET if color else ''}"
+                )
+            print(
+                (" " * gap).join(
+                    cells
+                )
+            )
+
+        print()
+        rule()
+
+        if focus == 0:
+            action = (
+                "Enter 選擇此條件"
+            )
+        elif focus == 1:
+            action = (
+                "Enter 套用"
+            )
+        else:
+            action = (
+                "Enter 查看題目 · O 開啟 OJ"
+            )
+
+        print(
+            f"{GRAY}"
+            "Tab / Shift+Tab 切換區域"
+            f" · ↑↓ 選擇 · {action}"
+            " · Esc 返回"
+            f"{RESET}"
+        )
+
+        key = read_key()
+
+        if key == "TAB":
+            focus = (
+                focus + 1
+            ) % 3
+            continue
+
+        if key == "BACKTAB":
+            focus = (
+                focus - 1
+            ) % 3
+            continue
+
+        if key == "UP":
+            if focus == 0 and filter_options:
+                filter_index = (
+                    filter_index - 1
+                ) % len(filter_options)
+                choice_index = 0
+                skill_unit = None
+            elif focus == 1 and choices:
+                choice_index = (
+                    choice_index - 1
+                ) % len(choices)
+            elif focus == 2 and current:
+                result_index = (
+                    result_index - 1
+                ) % len(current)
+                UI_STATE[
+                    "library_result_index"
+                ] = result_index
+            continue
+
+        if key == "DOWN":
+            if focus == 0 and filter_options:
+                filter_index = (
+                    filter_index + 1
+                ) % len(filter_options)
+                choice_index = 0
+                skill_unit = None
+            elif focus == 1 and choices:
+                choice_index = (
+                    choice_index + 1
+                ) % len(choices)
+            elif focus == 2 and current:
+                result_index = (
+                    result_index + 1
+                ) % len(current)
+                UI_STATE[
+                    "library_result_index"
+                ] = result_index
+            continue
+
+        if key == "ENTER":
+            if focus == 0:
+                if (
+                    filter_options
+                    and filter_options[
+                        filter_index
+                    ]["kind"]
+                    == "clear"
+                ):
+                    filters.update(
+                        {
+                            "skill_uids": (),
+                            "skill_label": None,
+                            "difficulty": None,
+                            "source": None,
+                            "attempted": None,
+                            "role": None,
+                            "require_l2": None,
+                        }
+                    )
+                    choice_index = 0
+                else:
+                    focus = 1
+                continue
+
+            if focus == 1 and choices:
+                skill_unit = (
+                    _problem_library_apply_direct_choice(
+                        filters,
+                        choices[
+                            choice_index
+                        ],
+                        skill_unit=skill_unit,
+                    )
+                )
+                choice_index = 0
+                result_index = 0
+                UI_STATE[
+                    "library_result_index"
+                ] = 0
+                continue
+
+            if focus == 2 and current:
+                _problem_library_item_detail(
+                    current[
+                        result_index
+                    ],
+                    mode=mode,
+                )
+                continue
+
+        if (
+            focus == 2
+            and key in {"o", "O"}
+            and current
+        ):
+            url = current[
+                result_index
+            ].canonical_url
+            if url:
+                webbrowser.open(url)
+            continue
+
+        if key in {
+            "ESC",
+            "q",
+            "Q",
+        }:
+            if (
+                focus == 1
+                and skill_unit
+            ):
+                skill_unit = None
+                choice_index = 0
+                continue
+            return
+
+
+
+def _problem_library_empty_filters():
+    return {
+        "skill_uids": (),
+        "skill_label": None,
+        "difficulty": None,
+        "source": None,
+        "attempted": None,
+        "role": None,
+        "require_l2": None,
+    }
+
+
+def _problem_library_saved_filters(
+    mode: str,
+):
+    key = (
+        "library_filters_exam"
+        if mode == "exam"
+        else "library_filters_practice"
+    )
+    saved = UI_STATE.get(key)
+    filters = (
+        dict(saved)
+        if isinstance(saved, dict)
+        else _problem_library_empty_filters()
+    )
+
+    # Exam selection must never inherit hidden classification filters.
+    if mode == "exam":
+        filters.update(
+            {
+                "skill_uids": (),
+                "skill_label": None,
+                "difficulty": None,
+                "role": None,
+                "require_l2": None,
+            }
+        )
+
+    return filters
+
+
+def _problem_library_save_filters(
+    mode: str,
+    filters,
+) -> None:
+    key = (
+        "library_filters_exam"
+        if mode == "exam"
+        else "library_filters_practice"
+    )
+    UI_STATE[key] = dict(filters)
+
+
+def _problem_library_saved_query(
+    mode: str,
+) -> str:
+    key = (
+        "library_query_exam"
+        if mode == "exam"
+        else "library_query_practice"
+    )
+    return str(
+        UI_STATE.get(key)
+        or ""
+    )
+
+
+def _problem_library_save_query(
+    mode: str,
+    query: str,
+) -> None:
+    key = (
+        "library_query_exam"
+        if mode == "exam"
+        else "library_query_practice"
+    )
+    UI_STATE[key] = str(
+        query or ""
+    ).strip()
+
+
+def _problem_library_query_filter(
+    items,
+    query: str,
+    *,
+    mode: str,
+):
+    folded = str(
+        query or ""
+    ).strip().casefold()
+
+    if not folded:
+        return list(items)
+
+    if mode == "exam":
+        return [
+            item
+            for item in items
+            if folded
+            in (
+                f"{item.external_id} "
+                f"{item.title}"
+            ).casefold()
+        ]
+
+    return [
+        item
+        for item in items
+        if folded
+        in " ".join(
+            [
+                item.external_id,
+                item.title,
+                item.source,
+                item.difficulty or "",
+                item.role or "",
+                item.primary_skill or "",
+                *item.supporting_skills,
+            ]
+        ).casefold()
+    ]
+
+
+def _problem_library_workbench_filter_options(
+    filters,
+    *,
+    mode: str,
+):
+    if mode == "exam":
+        return [
+            {
+                "label": "安全選題",
+                "detail": "優先未做題 · strict spoiler",
+                "kind": "safe",
+                "enabled": True,
+            },
+            {
+                "label": "來源",
+                "detail": (
+                    _problem_library_source_label(
+                        filters["source"]
+                    )
+                    if filters.get("source")
+                    else "不限"
+                ),
+                "kind": "source",
+                "enabled": True,
+            },
+            {
+                "label": "作答狀態",
+                "detail": (
+                    "未做"
+                    if filters.get("attempted") is False
+                    else (
+                        "已做"
+                        if filters.get("attempted") is True
+                        else "不限"
+                    )
+                ),
+                "kind": "status",
+                "enabled": True,
+            },
+            {
+                "label": "清除全部條件",
+                "detail": "回到完整 strict-spoiler 題庫",
+                "kind": "clear",
+                "enabled": True,
+            },
+        ]
+
+    return [
+        {
+            "label": "推薦給我",
+            "detail": "依 Today 路徑找尚未做題",
+            "kind": "recommend",
+            "enabled": True,
+        },
+        {
+            "label": "學習主題",
+            "detail": (
+                filters.get("skill_label")
+                or "不限 · Unit → Skill"
+            ),
+            "kind": "skill",
+            "enabled": True,
+        },
+        {
+            "label": "難度",
+            "detail": (
+                filters.get("difficulty")
+                or "不限 · D1–D5"
+            ),
+            "kind": "difficulty",
+            "enabled": True,
+        },
+        {
+            "label": "來源",
+            "detail": (
+                _problem_library_source_label(
+                    filters["source"]
+                )
+                if filters.get("source")
+                else "不限"
+            ),
+            "kind": "source",
+            "enabled": True,
+        },
+        {
+            "label": "作答狀態",
+            "detail": (
+                "未做"
+                if filters.get("attempted") is False
+                else (
+                    "已做"
+                    if filters.get("attempted") is True
+                    else "不限"
+                )
+            ),
+            "kind": "status",
+            "enabled": True,
+        },
+        {
+            "label": "練習用途",
+            "detail": dict(
+                PROBLEM_LIBRARY_ROLES
+            ).get(
+                filters.get("role"),
+                "不限",
+            ),
+            "kind": "role",
+            "enabled": True,
+        },
+        {
+            "label": "教學資料",
+            "detail": (
+                "有教學資料"
+                if filters.get("require_l2") is True
+                else (
+                    "無教學資料"
+                    if filters.get("require_l2") is False
+                    else "不限"
+                )
+            ),
+            "kind": "teaching",
+            "enabled": True,
+        },
+        {
+            "label": "清除全部條件",
+            "detail": "恢復完整練習題庫",
+            "kind": "clear",
+            "enabled": True,
+        },
+    ]
+
+
+def _problem_library_apply_preset(
+    mode: str,
+    filters,
+):
+    if mode == "exam":
+        filters.update(
+            _problem_library_empty_filters()
+        )
+        filters["attempted"] = False
+        return "優先未做 · strict spoiler"
+
+    items, reason = _recommended_problem_items(
+        limit=10000,
+    )
+    ids = {
+        (
+            item.source.casefold(),
+            item.external_id.casefold(),
+        )
+        for item in items
+    }
+    return (
+        reason,
+        ids,
+    )
+
+
+def _problem_library_workbench(
+    *,
+    mode: str,
+):
+    all_items = (
+        _problem_library_items()
+    )
+    filters = (
+        _problem_library_saved_filters(
+            mode
+        )
+    )
+    query = (
+        _problem_library_saved_query(
+            mode
+        )
+    )
+
+    focus = int(
+        UI_STATE.get(
+            "library_focus",
+            0,
+        )
+    )
+    focus = max(
+        0,
+        min(2, focus),
+    )
+    filter_index = 0
+    choice_index = 0
+    result_index = min(
+        int(
+            UI_STATE.get(
+                "library_result_index",
+                0,
+            )
+        ),
+        max(0, len(all_items) - 1),
+    )
+    editing_kind = None
+    skill_unit = None
+    preset_ids = None
+    preset_note = ""
+
+    while True:
+        current = (
+            _problem_library_filter_items(
+                all_items,
+                filters,
+                limit=10000,
+            )
+        )
+        current = (
+            _problem_library_query_filter(
+                current,
+                query,
+                mode=mode,
+            )
+        )
+        if preset_ids is not None:
+            current = [
+                item
+                for item in current
+                if (
+                    item.source.casefold(),
+                    item.external_id.casefold(),
+                )
+                in preset_ids
+            ]
+
+        result_index = min(
+            result_index,
+            max(0, len(current) - 1),
+        )
+
+        filter_options = (
+            _problem_library_workbench_filter_options(
+                filters,
+                mode=mode,
+            )
+        )
+        filter_index = min(
+            filter_index,
+            len(filter_options) - 1,
+        )
+
+        choices = []
+        if editing_kind is not None:
+            choice_base_items = (
+                _problem_library_query_filter(
+                    all_items,
+                    query,
+                    mode=mode,
+                )
+            )
+            choices = (
+                _problem_library_direct_choices(
+                    editing_kind,
+                    filters,
+                    choice_base_items,
+                    skill_unit=skill_unit,
+                )
+            )
+            choice_index = min(
+                choice_index,
+                max(0, len(choices) - 1),
+            )
+
+        clear()
+        heading("題目庫")
+        print_selection_mode_banner(
+            mode,
+            toggle_hint=True,
+        )
+        if query:
+            print(
+                f"{GRAY}"
+                f"搜尋：{query}"
+                " · / 修改 · X 清除"
+                f"{RESET}"
+            )
+        elif preset_note:
+            print(
+                f"{GRAY}"
+                f"目前：{preset_note}"
+                f"{RESET}"
+            )
+        print()
+
+        width = ui_width()
+        gap = 3
+        left, middle, right = (
+            workbench_pane_widths(
+                width,
+                (30, 37, 33),
+                gap=gap,
+                min_width=20,
+            )
+        )
+
+        headers = [
+            "篩選",
+            f"題目 · {len(current)} 題",
+            "題目資訊",
+        ]
+        header_cells = []
+        for index, label in enumerate(
+            headers
+        ):
+            pane_width = (
+                left
+                if index == 0
+                else (
+                    middle
+                    if index == 1
+                    else right
+                )
+            )
+            active = focus == index
+            color = (
+                CYAN + BOLD
+                if active
+                else GRAY
+            )
+            visible_label = (
+                f"› {label}"
+                if active
+                else label
+            )
+            header_cells.append(
+                f"{color}"
+                f"{pad_display(visible_label, pane_width)}"
+                f"{RESET}"
+            )
+        print(
+            (" " * gap).join(
+                header_cells
+            )
+        )
+        print()
+
+        max_rows = max(
+            12,
+            ui_height() - 10,
+        )
+
+        left_lines = []
+        if editing_kind is None:
+            for index, option in enumerate(
+                filter_options
+            ):
+                prefix = (
+                    "›"
+                    if (
+                        focus == 0
+                        and index == filter_index
+                    )
+                    else " "
+                )
+                color = (
+                    CYAN + BOLD
+                    if (
+                        focus == 0
+                        and index == filter_index
+                    )
+                    else ""
+                )
+                detail = str(
+                    option.get(
+                        "detail"
+                    )
+                    or ""
+                )
+                summary = (
+                    f"{option['label']} · {detail}"
+                    if detail
+                    else option["label"]
+                )
+                left_lines.append(
+                    (
+                        fit(
+                            f"{prefix} {summary}",
+                            left,
+                        ),
+                        color,
+                    )
+                )
+        else:
+            left_lines.append(
+                (
+                    fit(
+                        "← 返回篩選條件",
+                        left,
+                    ),
+                    GRAY,
+                )
+            )
+            selected_filter = (
+                filter_options[
+                    filter_index
+                ]["label"]
+            )
+            left_lines.append(
+                (
+                    fit(
+                        f"{selected_filter} · 選項",
+                        left,
+                    ),
+                    CYAN + BOLD,
+                )
+            )
+            choice_rows = max(
+                4,
+                (max_rows - 2) // 2,
+            )
+            choice_start = max(
+                0,
+                min(
+                    choice_index
+                    - choice_rows // 2,
+                    len(choices)
+                    - choice_rows,
+                ),
+            )
+            for index in range(
+                choice_start,
+                min(
+                    len(choices),
+                    choice_start + choice_rows,
+                ),
+            ):
+                choice = choices[index]
+                prefix = (
+                    "›"
+                    if index == choice_index
+                    else " "
+                )
+                color = (
+                    CYAN + BOLD
+                    if index == choice_index
+                    else ""
+                )
+                left_lines.append(
+                    (
+                        fit(
+                            f"{prefix} "
+                            f"{choice['label']}",
+                            left,
+                        ),
+                        color,
+                    )
+                )
+                if choice.get("detail"):
+                    left_lines.append(
+                        (
+                            fit(
+                                "    "
+                                + str(
+                                    choice["detail"]
+                                ),
+                                left,
+                            ),
+                            GRAY,
+                        )
+                    )
+
+        visible = max(
+            5,
+            min(
+                15,
+                max_rows // 2,
+            ),
+        )
+        start_index = max(
+            0,
+            min(
+                result_index
+                - visible // 2,
+                len(current) - visible,
+            ),
+        )
+
+        middle_lines = []
+        for index in range(
+            start_index,
+            min(
+                len(current),
+                start_index + visible,
+            ),
+        ):
+            item = current[index]
+            prefix = (
+                "›"
+                if (
+                    focus == 1
+                    and index == result_index
+                )
+                else " "
+            )
+            color = (
+                CYAN + BOLD
+                if (
+                    focus == 1
+                    and index == result_index
+                )
+                else ""
+            )
+            middle_lines.append(
+                (
+                    fit(
+                        f"{prefix} "
+                        f"{item.external_id} · "
+                        f"{item.title}",
+                        middle,
+                    ),
+                    color,
+                )
+            )
+
+        if not current:
+            middle_lines = [
+                (
+                    "沒有符合條件的題目",
+                    YELLOW,
+                )
+            ]
+
+        if current:
+            selected_item = current[
+                result_index
+            ]
+            inspector = (
+                _problem_library_inspector_lines(
+                    selected_item,
+                    mode=mode,
+                )
+            )
+        else:
+            selected_item = None
+            inspector = [
+                "目前沒有題目",
+                "",
+                "調整左側篩選條件",
+                "或按 X 清除搜尋。",
+            ]
+
+        if focus == 2:
+            inspector = [
+                "› 題目資訊",
+                *inspector,
+            ]
+
+        inspector_lines = [
+            (
+                fit(
+                    line,
+                    right,
+                ),
+                "",
+            )
+            for line in inspector
+        ]
+
+        rows = max(
+            len(left_lines),
+            len(middle_lines),
+            len(inspector_lines),
+        )
+        for row in range(
+            min(rows, max_rows)
+        ):
+            cells = []
+            for lines, pane_width in (
+                (left_lines, left),
+                (middle_lines, middle),
+                (inspector_lines, right),
+            ):
+                if row < len(lines):
+                    value, color = (
+                        lines[row]
+                    )
+                else:
+                    value, color = (
+                        "",
+                        "",
+                    )
+                cells.append(
+                    f"{color}"
+                    f"{pad_display(value, pane_width)}"
+                    f"{RESET if color else ''}"
+                )
+            print(
+                (" " * gap).join(
+                    cells
+                )
+            )
+
+        footer_gap = max(
+            1,
+            ui_height()
+            - min(rows, max_rows)
+            - 13,
+        )
+        for _ in range(
+            footer_gap
+        ):
+            print()
+        rule()
+
+        if focus == 0:
+            if editing_kind is None:
+                action = "Enter 選擇條件"
+            else:
+                action = "Enter 套用 · Esc 返回條件"
+        elif focus == 1:
+            action = "Enter 開啟 OJ"
+        else:
+            action = "Enter 開啟 OJ · D 詳細資料"
+
+        print(
+            f"{GRAY}"
+            "Tab / → 下一區 · Shift+Tab / ← 上一區"
+            " · ↑↓ 選擇"
+            f"{RESET}"
+        )
+        print(
+            f"{GRAY}"
+            f"{action}"
+            " · / 搜尋 · M 切換模式 · Esc 返回"
+            f"{RESET}"
+        )
+
+        key = read_key()
+
+        if key in {"m", "M"}:
+            _problem_library_save_filters(
+                mode,
+                filters,
+            )
+            _problem_library_save_query(
+                mode,
+                query,
+            )
+            UI_STATE[
+                "library_focus"
+            ] = focus
+            return MODE_TOGGLE
+
+        if key in {"TAB", "RIGHT"}:
+            focus = (
+                focus + 1
+            ) % 3
+            UI_STATE[
+                "library_focus"
+            ] = focus
+            continue
+
+        if key in {"BACKTAB", "LEFT"}:
+            focus = (
+                focus - 1
+            ) % 3
+            UI_STATE[
+                "library_focus"
+            ] = focus
+            continue
+
+        if key == "UP":
+            if focus == 0:
+                if editing_kind is None:
+                    filter_index = (
+                        filter_index - 1
+                    ) % len(filter_options)
+                elif choices:
+                    choice_index = (
+                        choice_index - 1
+                    ) % len(choices)
+            elif focus == 1 and current:
+                result_index = (
+                    result_index - 1
+                ) % len(current)
+                UI_STATE[
+                    "library_result_index"
+                ] = result_index
+            continue
+
+        if key == "DOWN":
+            if focus == 0:
+                if editing_kind is None:
+                    filter_index = (
+                        filter_index + 1
+                    ) % len(filter_options)
+                elif choices:
+                    choice_index = (
+                        choice_index + 1
+                    ) % len(choices)
+            elif focus == 1 and current:
+                result_index = (
+                    result_index + 1
+                ) % len(current)
+                UI_STATE[
+                    "library_result_index"
+                ] = result_index
+            continue
+
+        if key == "/" :
+            raw = prompt_text(
+                (
+                    "題號／題名"
+                    if mode == "exam"
+                    else "題號／題名／Skill"
+                ),
+                current=query,
+            )
+            if raw is not None:
+                query = raw.strip()
+                preset_ids = None
+                preset_note = ""
+                _problem_library_save_query(
+                    mode,
+                    query,
+                )
+                result_index = 0
+                UI_STATE[
+                    "library_result_index"
+                ] = 0
+            continue
+
+        if key in {"x", "X"}:
+            query = ""
+            preset_ids = None
+            preset_note = ""
+            _problem_library_save_query(
+                mode,
+                "",
+            )
+            result_index = 0
+            UI_STATE[
+                "library_result_index"
+            ] = 0
+            continue
+
+        if key == "ENTER":
+            if focus == 0:
+                if editing_kind is None:
+                    option = (
+                        filter_options[
+                            filter_index
+                        ]
+                    )
+                    kind = option["kind"]
+
+                    if kind == "recommend":
+                        filters = (
+                            _problem_library_empty_filters()
+                        )
+                        recommendation = (
+                            _problem_library_apply_preset(
+                                mode,
+                                filters,
+                            )
+                        )
+                        preset_note, preset_ids = (
+                            recommendation
+                        )
+                        query = ""
+                        _problem_library_save_filters(
+                            mode,
+                            filters,
+                        )
+                        _problem_library_save_query(
+                            mode,
+                            "",
+                        )
+                        result_index = 0
+                        UI_STATE[
+                            "library_result_index"
+                        ] = 0
+                        continue
+
+                    if kind == "safe":
+                        preset_note = (
+                            _problem_library_apply_preset(
+                                mode,
+                                filters,
+                            )
+                        )
+                        preset_ids = None
+                        query = ""
+                        _problem_library_save_query(
+                            mode,
+                            "",
+                        )
+                        _problem_library_save_filters(
+                            mode,
+                            filters,
+                        )
+                        result_index = 0
+                        continue
+
+                    if kind == "clear":
+                        filters = (
+                            _problem_library_empty_filters()
+                        )
+                        preset_ids = None
+                        preset_note = ""
+                        query = ""
+                        skill_unit = None
+                        _problem_library_save_filters(
+                            mode,
+                            filters,
+                        )
+                        _problem_library_save_query(
+                            mode,
+                            "",
+                        )
+                        result_index = 0
+                        continue
+
+                    editing_kind = kind
+                    choice_index = 0
+                    skill_unit = None
+                    continue
+
+                if choices:
+                    choice = choices[
+                        choice_index
+                    ]
+                    action = choice.get(
+                        "action"
+                    )
+
+                    if action == "skill_unit":
+                        skill_unit = (
+                            choice["unit"]
+                        )
+                        choice_index = 0
+                        continue
+
+                    if action == "skill_back":
+                        skill_unit = None
+                        choice_index = 0
+                        continue
+
+                    skill_unit = (
+                        _problem_library_apply_direct_choice(
+                            filters,
+                            choice,
+                            skill_unit=skill_unit,
+                        )
+                    )
+                    preset_ids = None
+                    preset_note = ""
+                    editing_kind = None
+                    choice_index = 0
+                    result_index = 0
+                    _problem_library_save_filters(
+                        mode,
+                        filters,
+                    )
+                    UI_STATE[
+                        "library_result_index"
+                    ] = 0
+                    continue
+
+            elif (
+                selected_item is not None
+                and focus in {1, 2}
+            ):
+                if selected_item.canonical_url:
+                    webbrowser.open(
+                        selected_item.canonical_url
+                    )
+                continue
+
+        if (
+            key in {"o", "O"}
+            and selected_item is not None
+        ):
+            if selected_item.canonical_url:
+                webbrowser.open(
+                    selected_item.canonical_url
+                )
+            continue
+
+        if (
+            key in {"d", "D"}
+            and focus == 2
+            and selected_item is not None
+        ):
+            _problem_library_item_detail(
+                selected_item,
+                mode=mode,
+            )
+            continue
+
+        if key in {
+            "ESC",
+            "q",
+            "Q",
+        }:
+            if (
+                focus == 0
+                and editing_kind is not None
+            ):
+                if (
+                    editing_kind == "skill"
+                    and skill_unit is not None
+                ):
+                    skill_unit = None
+                    choice_index = 0
+                    continue
+                editing_kind = None
+                choice_index = 0
+                continue
+
+            _problem_library_save_filters(
+                mode,
+                filters,
+            )
+            _problem_library_save_query(
+                mode,
+                query,
+            )
+            UI_STATE[
+                "library_focus"
+            ] = focus
+            return None
+
+
 def _problem_library_filter_view(
     *,
     mode: str,
@@ -9480,6 +12922,13 @@ def _problem_library_filter_view(
     all_items = (
         _problem_library_items()
     )
+    if ui_width() >= 86:
+        return _problem_library_filter_browser(
+            filters,
+            all_items,
+            mode=mode,
+        )
+
 
     while True:
         current = (
@@ -9628,6 +13077,31 @@ def _problem_library_text_search(
 def problem_library_view() -> None:
     while True:
         mode = selection_mode()
+
+        if ui_width() >= 86:
+            result = (
+                _problem_library_workbench(
+                    mode=mode,
+                )
+            )
+            if result is MODE_TOGGLE:
+                try:
+                    toggle_selection_mode()
+                except (
+                    OSError,
+                    ValueError,
+                ) as exc:
+                    clear()
+                    heading("題目庫")
+                    print()
+                    print(
+                        f"{RED}"
+                        f"✕ 無法切換選題模式：{exc}"
+                        f"{RESET}"
+                    )
+                    pause()
+                continue
+            return
 
         if mode == "practice":
             options = [
@@ -9803,7 +13277,7 @@ def _exam_duration_menu(
         selected_index=selected_index,
         enter_text="套用",
         back_text="返回",
-        wide_columns=5,
+        wide_columns=3,
         compact_columns=2,
     )
     if selected is None:
@@ -9833,7 +13307,7 @@ def _exam_question_count_menu() -> int | None:
         selected_index=1,
         enter_text="選擇",
         back_text="返回",
-        wide_columns=4,
+        wide_columns=2,
         compact_columns=2,
     )
     if selected is None:
@@ -10193,6 +13667,90 @@ def _exam_end_ui() -> None:
     pause()
 
 
+def _exam_abort_ui(
+    session,
+) -> bool:
+    summary = EXAM.summary(
+        session
+    )
+    untouched = (
+        summary["compile_count"] == 0
+        and summary["submit_count"] == 0
+    )
+
+    clear()
+    heading(
+        "關閉誤開考試"
+        if untouched
+        else "放棄本次模擬考"
+    )
+    print()
+    print(
+        aligned_field(
+            "時間",
+            (
+                f"{summary['elapsed_minutes']}"
+                f" / {session['duration_minutes']} min"
+            ),
+        )
+    )
+    print(
+        aligned_field(
+            "編譯",
+            f"{summary['compile_count']} 次",
+        )
+    )
+    print(
+        aligned_field(
+            "提交",
+            f"{summary['submit_count']} 次",
+        )
+    )
+    print()
+    print(
+        f"{YELLOW}"
+        "這會關閉目前 Exam Runtime；本次不進入考後檢討。"
+        f"{RESET}"
+    )
+    print(
+        f"{GRAY}"
+        "會保留 ABORTED telemetry；不建立 learner Evidence。"
+        f"{RESET}"
+    )
+
+    if not confirm(
+        "確定關閉本次考試？"
+    ):
+        return False
+
+    try:
+        EXAM.abort()
+    except ExamRuntimeError as exc:
+        print(
+            f"{RED}✕ {exc}{RESET}"
+        )
+        pause()
+        return False
+
+    clear()
+    heading("模擬考已關閉")
+    print()
+    print(
+        f"{GREEN}"
+        "✓ 已解除進行中的考試 session"
+        f"{RESET}"
+    )
+    print(
+        f"{GRAY}"
+        "本次記為 ABORTED；不進 postmortem，也不產生 Evidence。"
+        f"{RESET}"
+    )
+    pause(
+        "Enter / Esc 返回控制中心"
+    )
+    return True
+
+
 def exam_center() -> None:
     while True:
         try:
@@ -10252,45 +13810,67 @@ def exam_center() -> None:
                         else "請先選題"
                     ),
                     "enabled": bool(session["selected_problem_id"]),
+                    "section": "考試操作",
                     "kind": "submit",
                 },
                 {
                     "label": "結束並檢討",
-                    "detail": "只問一個主要失分原因",
+                    "detail": "正式完成本次模擬考；只問一個主要失分原因",
                     "enabled": True,
+                    "section": "考試操作",
                     "kind": "end",
+                },
+                {
+                    "label": "關閉本次考試",
+                    "detail": (
+                        "誤開／放棄時使用；再次確認後標記 ABORTED，"
+                        "不進檢討、不產生 Evidence"
+                    ),
+                    "enabled": True,
+                    "section": "考試控制",
+                    "kind": "abort",
                 },
             ]
         )
 
-        clear()
-        heading("考試模式")
-        print()
-        print(
-            f"時間      {elapsed}/{session['duration_minutes']} min"
-            f" · 剩餘約 {remaining} min"
-        )
-        print(
-            f"目前題目  {session['selected_problem_id'] or '掃題中'}"
-        )
-        print(
-            f"編譯 {summary['compile_count']} · "
-            f"提交 {summary['submit_count']} · "
-            f"切題 {summary['switch_count']}"
-        )
-        print()
-        print(
-            f"{GRAY}"
-            "Ctrl+Shift+B 編譯會自動留下考試時間點。"
-            f"{RESET}"
-        )
-        print()
+        context_lines = [
+            aligned_field(
+                "時間",
+                (
+                    f"{elapsed}"
+                    f" / {session['duration_minutes']} min"
+                ),
+            ),
+            aligned_field(
+                "剩餘",
+                f"約 {remaining} min",
+            ),
+            aligned_field(
+                "題目",
+                session["selected_problem_id"]
+                or "掃題中",
+            ),
+            aligned_field(
+                "編譯",
+                f"{summary['compile_count']} 次",
+            ),
+            aligned_field(
+                "提交",
+                f"{summary['submit_count']} 次",
+            ),
+            aligned_field(
+                "切題",
+                f"{summary['switch_count']} 次",
+            ),
+            "Ctrl+Shift+B 編譯會自動留下考試時間點。",
+        ]
 
         chosen = choose_menu(
             "模擬考 · 下一步",
             options,
             footer_numbers=True,
             back_text="返回控制中心（計時持續）",
+            context_lines=context_lines,
         )
         if chosen is None:
             return
@@ -10304,8 +13884,13 @@ def exam_center() -> None:
                 pause()
         elif option["kind"] == "submit":
             _exam_submit_ui(session)
-        else:
+        elif option["kind"] == "end":
             _exam_end_ui()
+        else:
+            if _exam_abort_ui(
+                session
+            ):
+                return
 
 
 # ============================================================
@@ -10317,7 +13902,7 @@ def closed_screen() -> None:
     heading("控制中心已關閉")
     print()
     print(f"{CYAN}Ctrl+Alt+A{RESET}    重新開啟")
-    print(f"{CYAN}Ctrl+Shift+B{RESET}  編譯並執行")
+    print(f"{CYAN}Ctrl+Shift+B{RESET}  編譯並開啟測試中心")
     print()
 
 

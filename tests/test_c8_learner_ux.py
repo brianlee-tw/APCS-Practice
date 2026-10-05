@@ -114,6 +114,90 @@ class C8LearnerUxTest(unittest.TestCase):
             "delayed_retest",
         )
 
+    def test_published_result_reuses_explicit_exam_submit_only(self):
+        session = {
+            "selected_problem_id": "d050",
+            "events": [
+                {
+                    "type": "SUBMIT",
+                    "problem_id": "d050",
+                    "result": "WA",
+                },
+            ],
+        }
+        with patch.object(
+            control.EXAM,
+            "active",
+            return_value=session,
+        ):
+            self.assertEqual(
+                control.inferred_published_result(
+                    problem()
+                ),
+                "WA",
+            )
+
+        session["events"][0]["result"] = "N/A"
+        with patch.object(
+            control.EXAM,
+            "active",
+            return_value=session,
+        ):
+            self.assertIsNone(
+                control.inferred_published_result(
+                    problem()
+                )
+            )
+
+    def test_published_result_does_not_reuse_submit_after_exam_switch(self):
+        session = {
+            "selected_problem_id": "b130",
+            "events": [
+                {
+                    "type": "SUBMIT",
+                    "problem_id": "d050",
+                    "result": "AC",
+                },
+                {
+                    "type": "SWITCH",
+                    "problem_id": "b130",
+                    "from_problem_id": "d050",
+                },
+            ],
+        }
+
+        with patch.object(
+            control.EXAM,
+            "active",
+            return_value=session,
+        ):
+            self.assertIsNone(
+                control.inferred_published_result(
+                    problem()
+                )
+            )
+
+    def test_published_result_does_not_infer_without_exam_submit(self):
+        with patch.object(
+            control.EXAM,
+            "active",
+            return_value={
+                "selected_problem_id": "d050",
+                "events": [
+                    {
+                        "type": "COMPILE",
+                        "problem_id": "d050",
+                        "success": True,
+                    },
+                ],
+            },
+        ):
+            self.assertIsNone(
+                control.inferred_published_result(
+                    problem()
+                )
+            )
+
     def test_published_context_skips_novelty_and_timed_prompts_when_known(self):
         with (
             patch.object(
@@ -152,6 +236,72 @@ class C8LearnerUxTest(unittest.TestCase):
         self.assertFalse(value["timed"])
         novelty.assert_not_called()
         timed.assert_not_called()
+
+    def test_published_finish_requires_authoritative_oj_result_before_evidence(self):
+        with (
+            patch.object(
+                control,
+                "review_result_menu",
+                return_value=None,
+            ) as result_menu,
+            patch.object(
+                control,
+                "published_evidence_context_menu",
+            ) as evidence_menu,
+        ):
+            control.record_problem(
+                "finish",
+                problem(action="finish"),
+            )
+
+        result_menu.assert_called_once()
+        self.assertEqual(
+            result_menu.call_args.kwargs["action"],
+            "finish",
+        )
+        evidence_menu.assert_not_called()
+
+    def test_failure_bottleneck_menu_is_one_explicit_learner_choice(self):
+        with patch.object(
+            control,
+            "choose_menu",
+            return_value=7,
+        ):
+            value = control.failure_bottleneck_menu(
+                problem()
+            )
+
+        self.assertEqual(
+            value,
+            "State / Index",
+        )
+
+    def test_attempt_note_can_keep_failure_bottleneck_without_promoting_it(self):
+        envelope = control.attempt_envelope_for_record(
+            action="finish",
+            problem=problem(),
+            result="WA",
+            minutes=None,
+            assistance=0,
+            independent=True,
+            novelty="new",
+            timed=False,
+            placement=placement(),
+            bottleneck="Debugging",
+        )
+
+        self.assertEqual(
+            envelope.attempt.judge_result,
+            "WA",
+        )
+        self.assertIn(
+            "Bottleneck: Debugging",
+            envelope.attempt.note,
+        )
+        self.assertEqual(
+            envelope.evidence[0].outcome,
+            "FAIL",
+        )
 
     def test_learning_status_defaults_to_decision_summary(self):
         snapshot = {
@@ -198,7 +348,7 @@ class C8LearnerUxTest(unittest.TestCase):
         self.assertNotIn("最低 R 優先", rendered)
 
 
-    def test_problem_library_entry_is_choice_first_not_query_first(self):
+    def test_problem_library_compact_entry_is_choice_first_not_query_first(self):
         with (
             patch.object(
                 control,
@@ -210,6 +360,13 @@ class C8LearnerUxTest(unittest.TestCase):
                 "prompt_text",
                 side_effect=AssertionError(
                     "entry must not force text search"
+                ),
+            ),
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=80,
+                    lines=30,
                 ),
             ),
         ):
@@ -225,6 +382,39 @@ class C8LearnerUxTest(unittest.TestCase):
                 "全部題目",
             ],
         )
+
+    def test_problem_library_wide_entry_opens_workbench_directly(self):
+        with (
+            patch.object(
+                control,
+                "_problem_library_workbench",
+                return_value=None,
+            ) as workbench,
+            patch.object(
+                control,
+                "choose_grid",
+            ) as menu,
+            patch.object(
+                control,
+                "prompt_text",
+                side_effect=AssertionError(
+                    "wide entry must not force text search"
+                ),
+            ),
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=100,
+                    lines=42,
+                ),
+            ),
+        ):
+            control.problem_library_view()
+
+        workbench.assert_called_once_with(
+            mode=control.selection_mode(),
+        )
+        menu.assert_not_called()
 
     def test_skill_navigation_groups_all_skills_by_unit(self):
         groups = (
@@ -466,15 +656,19 @@ class C8LearnerUxTest(unittest.TestCase):
                 240,
             ],
         )
+        self.assertIn(
+            "目前",
+            options[3]["label"],
+        )
         self.assertEqual(
             options[3]["detail"],
-            "目前設定",
+            "",
         )
         self.assertEqual(
             menu.call_args.kwargs[
                 "wide_columns"
             ],
-            5,
+            3,
         )
 
     def test_filter_view_has_explicit_live_result_action(self):
@@ -519,7 +713,8 @@ class C8LearnerUxTest(unittest.TestCase):
             patch(
                 "tools.apcs_control.shutil.get_terminal_size",
                 return_value=types.SimpleNamespace(
-                    columns=80
+                    columns=80,
+                    lines=42,
                 ),
             ),
         ):
@@ -565,7 +760,8 @@ class C8LearnerUxTest(unittest.TestCase):
             patch(
                 "tools.apcs_control.shutil.get_terminal_size",
                 return_value=types.SimpleNamespace(
-                    columns=100
+                    columns=100,
+                    lines=42,
                 ),
             ),
             redirect_stdout(wide),
@@ -575,9 +771,36 @@ class C8LearnerUxTest(unittest.TestCase):
                 snapshot,
             )
 
+        rendered_wide = wide.getvalue()
         self.assertIn(
-            "│",
-            wide.getvalue(),
+            "現在可做",
+            rendered_wide,
+        )
+        self.assertIn(
+            "目前題目",
+            rendered_wide,
+        )
+        self.assertIn(
+            "今日容量",
+            rendered_wide,
+        )
+        self.assertIn(
+            control.aligned_field(
+                "可用",
+                "60 分",
+            ),
+            rendered_wide,
+        )
+        self.assertIn(
+            control.aligned_field(
+                "複習",
+                "0 / 18 分",
+            ),
+            rendered_wide,
+        )
+        self.assertNotIn(
+            "可用 60 分 · 複習",
+            rendered_wide,
         )
 
         narrow = io.StringIO()
@@ -585,7 +808,8 @@ class C8LearnerUxTest(unittest.TestCase):
             patch(
                 "tools.apcs_control.shutil.get_terminal_size",
                 return_value=types.SimpleNamespace(
-                    columns=50
+                    columns=50,
+                    lines=42,
                 ),
             ),
             redirect_stdout(narrow),
@@ -595,13 +819,18 @@ class C8LearnerUxTest(unittest.TestCase):
                 snapshot,
             )
 
-        self.assertNotIn(
-            "│",
-            narrow.getvalue(),
+        rendered_narrow = narrow.getvalue()
+        self.assertIn(
+            "現在可做",
+            rendered_narrow,
         )
         self.assertIn(
-            "今日規劃",
-            narrow.getvalue(),
+            "目前題目",
+            rendered_narrow,
+        )
+        self.assertIn(
+            "今日容量",
+            rendered_narrow,
         )
 
 
@@ -648,7 +877,8 @@ class C8LearnerUxTest(unittest.TestCase):
             patch(
                 "tools.apcs_control.shutil.get_terminal_size",
                 return_value=types.SimpleNamespace(
-                    columns=100
+                    columns=100,
+                    lines=42,
                 ),
             ),
             redirect_stdout(io.StringIO()),
@@ -837,6 +1067,103 @@ class C8LearnerUxTest(unittest.TestCase):
                 180,
             ],
         )
+        self.assertEqual(
+            menu.call_args.kwargs[
+                "wide_columns"
+            ],
+            3,
+        )
+
+    def test_exam_center_exposes_abort_action(self):
+        session = {
+            "duration_minutes": 60,
+            "problem_ids": [
+                "a001",
+            ],
+            "selected_problem_id": None,
+        }
+        summary = {
+            "elapsed_minutes": 1,
+            "compile_count": 0,
+            "submit_count": 0,
+            "switch_count": 0,
+        }
+
+        with (
+            patch.object(
+                control.EXAM,
+                "active",
+                return_value=session,
+            ),
+            patch.object(
+                control.EXAM,
+                "summary",
+                return_value=summary,
+            ),
+            patch.object(
+                control,
+                "choose_menu",
+                return_value=None,
+            ) as menu,
+        ):
+            control.exam_center()
+
+        options = menu.call_args.args[1]
+        abort = next(
+            option
+            for option in options
+            if option.get("kind") == "abort"
+        )
+        self.assertEqual(
+            abort["label"],
+            "關閉本次考試",
+        )
+        self.assertIn(
+            "ABORTED",
+            abort["detail"],
+        )
+
+    def test_exam_abort_ui_closes_session_without_postmortem(self):
+        session = {
+            "duration_minutes": 60,
+        }
+        summary = {
+            "elapsed_minutes": 1,
+            "compile_count": 0,
+            "submit_count": 0,
+        }
+
+        with (
+            patch.object(
+                control.EXAM,
+                "summary",
+                return_value=summary,
+            ),
+            patch.object(
+                control,
+                "confirm",
+                return_value=True,
+            ),
+            patch.object(
+                control.EXAM,
+                "abort",
+            ) as abort,
+            patch.object(
+                control,
+                "pause",
+            ),
+            redirect_stdout(
+                io.StringIO()
+            ),
+        ):
+            closed = (
+                control._exam_abort_ui(
+                    session
+                )
+            )
+
+        self.assertTrue(closed)
+        abort.assert_called_once_with()
 
     def test_learning_status_uses_wide_summary_when_space_allows(self):
         snapshot = {
@@ -874,7 +1201,8 @@ class C8LearnerUxTest(unittest.TestCase):
             patch(
                 "tools.apcs_control.shutil.get_terminal_size",
                 return_value=types.SimpleNamespace(
-                    columns=100
+                    columns=100,
+                    lines=42,
                 ),
             ),
             redirect_stdout(output),
@@ -892,6 +1220,17 @@ class C8LearnerUxTest(unittest.TestCase):
         )
         self.assertIn(
             "LEARNER_READINESS = NOT ASSESSED",
+            rendered,
+        )
+        self.assertIn(
+            control.aligned_field(
+                "Evidence",
+                1,
+            ),
+            rendered,
+        )
+        self.assertNotIn(
+            "真實作答 2 · Evidence 1",
             rendered,
         )
 
@@ -1131,7 +1470,11 @@ class C8LearnerUxTest(unittest.TestCase):
         self.assertIsNone(result)
         rendered = output.getvalue()
         self.assertIn(
-            "下一步",
+            "學習活動",
+            rendered,
+        )
+        self.assertIn(
+            "規劃與執行",
             rendered,
         )
         self.assertIn(
@@ -1141,6 +1484,1154 @@ class C8LearnerUxTest(unittest.TestCase):
         self.assertIn(
             "可用時間  60 分",
             rendered,
+        )
+
+
+    def test_problem_library_workbench_renders_filter_results_and_sidebar_together(self):
+        item = types.SimpleNamespace(
+            external_id="a001",
+            title="測試題目",
+            source="zerojudge",
+            difficulty="D2",
+            attempted=False,
+            role="Guided Drill",
+            has_l2=False,
+            primary_skill="S01_IO",
+            supporting_skills=(),
+            canonical_url="https://example.invalid/a001",
+        )
+        output = io.StringIO()
+
+        state = {
+            "library_result_index": 0,
+            "library_filter_kind": "results",
+            "library_focus": 0,
+            "library_filters_practice": None,
+            "library_filters_exam": None,
+            "library_query_practice": "",
+            "library_query_exam": "",
+        }
+
+        with (
+            patch.dict(
+                control.UI_STATE,
+                state,
+                clear=True,
+            ),
+            patch.object(
+                control,
+                "_problem_library_items",
+                return_value=[item],
+            ),
+            patch.object(
+                control.TEST_ASSETS,
+                "load",
+                return_value=None,
+            ),
+            patch.object(
+                control,
+                "read_key",
+                return_value="ESC",
+            ),
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=100,
+                    lines=42,
+                ),
+            ),
+            redirect_stdout(output),
+        ):
+            result = (
+                control._problem_library_workbench(
+                    mode="practice",
+                )
+            )
+
+        self.assertIsNone(result)
+        rendered = output.getvalue()
+        self.assertIn(
+            "篩選",
+            rendered,
+        )
+        self.assertIn(
+            "題目 · 1 題",
+            rendered,
+        )
+        self.assertIn(
+            "題目資訊",
+            rendered,
+        )
+        self.assertIn(
+            "測資",
+            rendered,
+        )
+
+    def test_problem_library_tab_navigation_preserves_result_focus(self):
+        items = [
+            types.SimpleNamespace(
+                external_id=pid,
+                title=f"題目 {pid}",
+                source="zerojudge",
+                difficulty="D1",
+                attempted=False,
+                role="Guided Drill",
+                has_l2=False,
+                primary_skill="S01_IO",
+                supporting_skills=(),
+                canonical_url=f"https://example.invalid/{pid}",
+            )
+            for pid in ("a001", "a002")
+        ]
+        keys = iter(
+            [
+                "TAB",
+                "DOWN",
+                "ESC",
+            ]
+        )
+        state = {
+            "library_result_index": 0,
+            "library_filter_kind": "results",
+            "library_focus": 0,
+            "library_filters_practice": None,
+            "library_filters_exam": None,
+            "library_query_practice": "",
+            "library_query_exam": "",
+        }
+
+        with (
+            patch.dict(
+                control.UI_STATE,
+                state,
+                clear=True,
+            ),
+            patch.object(
+                control,
+                "_problem_library_items",
+                return_value=items,
+            ),
+            patch.object(
+                control.TEST_ASSETS,
+                "load",
+                return_value=None,
+            ),
+            patch.object(
+                control,
+                "read_key",
+                side_effect=lambda: next(keys),
+            ),
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=100,
+                    lines=42,
+                ),
+            ),
+            redirect_stdout(io.StringIO()),
+        ):
+            control._problem_library_workbench(
+                mode="practice",
+            )
+
+            self.assertEqual(
+                control.UI_STATE[
+                    "library_result_index"
+                ],
+                1,
+            )
+            self.assertEqual(
+                control.UI_STATE[
+                    "library_focus"
+                ],
+                1,
+            )
+
+    def test_problem_library_right_arrow_moves_from_filters_to_results(self):
+        items = [
+            types.SimpleNamespace(
+                external_id="a001",
+                title="題目 a001",
+                source="custom",
+                difficulty="D1",
+                attempted=False,
+                role="Guided Drill",
+                has_l2=False,
+                primary_skill="S01_IO",
+                supporting_skills=(),
+                canonical_url="https://example.invalid/a001",
+            ),
+        ]
+        keys = iter(
+            [
+                "RIGHT",
+                "ESC",
+            ]
+        )
+        state = {
+            "library_result_index": 0,
+            "library_filter_kind": "results",
+            "library_focus": 0,
+            "library_filters_practice": None,
+            "library_filters_exam": None,
+            "library_query_practice": "",
+            "library_query_exam": "",
+        }
+
+        with (
+            patch.dict(
+                control.UI_STATE,
+                state,
+                clear=True,
+            ),
+            patch.object(
+                control,
+                "_problem_library_items",
+                return_value=items,
+            ),
+            patch.object(
+                control.TEST_ASSETS,
+                "load",
+                return_value=None,
+            ),
+            patch.object(
+                control,
+                "read_key",
+                side_effect=lambda: next(keys),
+            ),
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=100,
+                    lines=42,
+                ),
+            ),
+            redirect_stdout(io.StringIO()),
+        ):
+            control._problem_library_workbench(
+                mode="practice",
+            )
+            final_focus = control.UI_STATE[
+                "library_focus"
+            ]
+
+        self.assertEqual(
+            final_focus,
+            1,
+        )
+
+    def test_problem_library_master_list_does_not_duplicate_inspector_metadata(self):
+        items = [
+            types.SimpleNamespace(
+                external_id=f"custom-{index}",
+                title=f"題目 {index}",
+                source="custom",
+                difficulty="D1",
+                attempted=False,
+                role="Guided Drill",
+                has_l2=False,
+                primary_skill="S01_IO",
+                supporting_skills=(),
+                canonical_url=f"https://example.invalid/{index}",
+            )
+            for index in range(5)
+        ]
+        output = io.StringIO()
+        state = {
+            "library_result_index": 0,
+            "library_filter_kind": "results",
+            "library_focus": 1,
+            "library_filters_practice": None,
+            "library_filters_exam": None,
+            "library_query_practice": "",
+            "library_query_exam": "",
+        }
+
+        with (
+            patch.dict(
+                control.UI_STATE,
+                state,
+                clear=True,
+            ),
+            patch.object(
+                control,
+                "_problem_library_items",
+                return_value=items,
+            ),
+            patch.object(
+                control.TEST_ASSETS,
+                "load",
+                return_value=None,
+            ),
+            patch.object(
+                control,
+                "read_key",
+                return_value="ESC",
+            ),
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=100,
+                    lines=42,
+                ),
+            ),
+            redirect_stdout(output),
+        ):
+            control._problem_library_workbench(
+                mode="practice",
+            )
+
+        rendered = output.getvalue()
+        self.assertIn(
+            "› 題目 · 5 題",
+            rendered,
+        )
+        self.assertIn(
+            "題目資訊",
+            rendered,
+        )
+        self.assertEqual(
+            rendered.count(
+                "來源      custom"
+            ),
+            1,
+        )
+        self.assertNotIn(
+            "custom · D1 · 未做",
+            rendered,
+        )
+
+    def test_problem_library_filter_selection_persists_for_return_navigation(self):
+        item = types.SimpleNamespace(
+            external_id="a001",
+            title="測試題",
+            source="zerojudge",
+            difficulty="D1",
+            attempted=False,
+            role="Guided Drill",
+            has_l2=False,
+            primary_skill="S01_IO",
+            supporting_skills=(),
+            canonical_url="https://example.invalid/a001",
+        )
+        keys = iter(
+            [
+                "DOWN",
+                "DOWN",
+                "ENTER",
+                "DOWN",
+                "DOWN",
+                "ENTER",
+                "ESC",
+            ]
+        )
+        state = {
+            "library_result_index": 0,
+            "library_filter_kind": "results",
+            "library_focus": 0,
+            "library_filters_practice": None,
+            "library_filters_exam": None,
+            "library_query_practice": "",
+            "library_query_exam": "",
+        }
+
+        with (
+            patch.dict(
+                control.UI_STATE,
+                state,
+                clear=True,
+            ),
+            patch.object(
+                control,
+                "_problem_library_items",
+                return_value=[item],
+            ),
+            patch.object(
+                control.TEST_ASSETS,
+                "load",
+                return_value=None,
+            ),
+            patch.object(
+                control,
+                "read_key",
+                side_effect=lambda: next(keys),
+            ),
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=100,
+                    lines=42,
+                ),
+            ),
+            redirect_stdout(io.StringIO()),
+        ):
+            control._problem_library_workbench(
+                mode="practice",
+            )
+
+            saved = control.UI_STATE[
+                "library_filters_practice"
+            ]
+            self.assertEqual(
+                saved["difficulty"],
+                "D2",
+            )
+
+    def test_problem_library_recommendation_is_clean_preset_not_old_filter_intersection(self):
+        item = types.SimpleNamespace(
+            external_id="a001",
+            title="測試題",
+            source="zerojudge",
+            difficulty="D1",
+            attempted=False,
+            role="Guided Drill",
+            has_l2=False,
+            primary_skill="S01_IO",
+            supporting_skills=(),
+            canonical_url="https://example.invalid/a001",
+        )
+        keys = iter(
+            [
+                "ENTER",
+                "ESC",
+            ]
+        )
+        state = {
+            "library_result_index": 0,
+            "library_filter_kind": "results",
+            "library_focus": 0,
+            "library_filters_practice": {
+                "skill_uids": (),
+                "skill_label": None,
+                "difficulty": "D5",
+                "source": None,
+                "attempted": None,
+                "role": None,
+                "require_l2": None,
+            },
+            "library_filters_exam": None,
+            "library_query_practice": "old query",
+            "library_query_exam": "",
+        }
+
+        with (
+            patch.dict(
+                control.UI_STATE,
+                state,
+                clear=True,
+            ),
+            patch.object(
+                control,
+                "_problem_library_items",
+                return_value=[item],
+            ),
+            patch.object(
+                control,
+                "_recommended_problem_items",
+                return_value=(
+                    [item],
+                    "依 Today 路徑",
+                ),
+            ),
+            patch.object(
+                control.TEST_ASSETS,
+                "load",
+                return_value=None,
+            ),
+            patch.object(
+                control,
+                "read_key",
+                side_effect=lambda: next(keys),
+            ),
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=100,
+                    lines=42,
+                ),
+            ),
+            redirect_stdout(io.StringIO()),
+        ):
+            control._problem_library_workbench(
+                mode="practice",
+            )
+
+            saved = control.UI_STATE[
+                "library_filters_practice"
+            ]
+            self.assertIsNone(
+                saved["difficulty"]
+            )
+            self.assertEqual(
+                control.UI_STATE[
+                    "library_query_practice"
+                ],
+                "",
+            )
+
+    def test_problem_library_exam_workbench_never_renders_hidden_classification_values(self):
+        item = types.SimpleNamespace(
+            external_id="a001",
+            title="一般題名",
+            source="zerojudge",
+            difficulty="D5",
+            attempted=False,
+            role="Transfer Challenge",
+            has_l2=True,
+            primary_skill="S18_DFS",
+            supporting_skills=(
+                "S30_COMPLEXITY",
+            ),
+            canonical_url="https://example.invalid/a001",
+        )
+        output = io.StringIO()
+        state = {
+            "library_result_index": 0,
+            "library_filter_kind": "results",
+            "library_focus": 0,
+            "library_filters_practice": None,
+            "library_filters_exam": None,
+            "library_query_practice": "",
+            "library_query_exam": "",
+        }
+
+        with (
+            patch.dict(
+                control.UI_STATE,
+                state,
+                clear=True,
+            ),
+            patch.object(
+                control,
+                "_problem_library_items",
+                return_value=[item],
+            ),
+            patch.object(
+                control.TEST_ASSETS,
+                "load",
+                return_value=None,
+            ),
+            patch.object(
+                control,
+                "read_key",
+                return_value="ESC",
+            ),
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=100,
+                    lines=42,
+                ),
+            ),
+            redirect_stdout(output),
+        ):
+            control._problem_library_workbench(
+                mode="exam",
+            )
+
+        rendered = output.getvalue()
+        self.assertIn(
+            "[ 考試 · 防劇透 ]",
+            rendered,
+        )
+        self.assertNotIn(
+            "S18_DFS",
+            rendered,
+        )
+        self.assertNotIn(
+            "S30_COMPLEXITY",
+            rendered,
+        )
+        self.assertNotIn(
+            "Transfer Challenge",
+            rendered,
+        )
+        self.assertNotIn(
+            "D5",
+            rendered,
+        )
+
+    def test_problem_library_exam_query_only_matches_public_id_or_title(self):
+        item = types.SimpleNamespace(
+            external_id="a001",
+            title="一般題名",
+            source="zerojudge",
+            difficulty="D2",
+            attempted=False,
+            role="Transfer Challenge",
+            has_l2=True,
+            primary_skill="S18_DFS",
+            supporting_skills=(),
+        )
+
+        self.assertEqual(
+            control._problem_library_query_filter(
+                [item],
+                "DFS",
+                mode="exam",
+            ),
+            [],
+        )
+        self.assertEqual(
+            control._problem_library_query_filter(
+                [item],
+                "a001",
+                mode="exam",
+            ),
+            [item],
+        )
+
+    def test_problem_library_sidebar_groups_test_assets_without_input_output(self):
+        item = types.SimpleNamespace(
+            external_id="a001",
+            title="測試題",
+            source="zerojudge",
+            difficulty="D1",
+            attempted=False,
+            role="Guided Drill",
+            has_l2=False,
+            primary_skill="S01_IO",
+            supporting_skills=(),
+            canonical_url="https://example.invalid/a001",
+        )
+        bundle = types.SimpleNamespace(
+            cases=(
+                types.SimpleNamespace(
+                    case_id="S1",
+                    name="官方範例 1",
+                    provenance="OFFICIAL",
+                    verified=True,
+                ),
+                types.SimpleNamespace(
+                    case_id="E1",
+                    name="最小邊界",
+                    provenance="AI_GENERATED",
+                    verified=True,
+                ),
+                types.SimpleNamespace(
+                    case_id="G1",
+                    name="AI candidate",
+                    provenance="AI_GENERATED",
+                    verified=False,
+                ),
+            )
+        )
+
+        with patch.object(
+            control.TEST_ASSETS,
+            "load",
+            return_value=bundle,
+        ):
+            lines = (
+                control._problem_library_inspector_lines(
+                    item,
+                    mode="practice",
+                )
+            )
+
+        rendered = "\n".join(lines)
+        self.assertIn(
+            "官方 1",
+            rendered,
+        )
+        self.assertIn(
+            "S1 · 官方範例 1",
+            rendered,
+        )
+        self.assertIn(
+            "AI 生成已驗證 1",
+            rendered,
+        )
+        self.assertIn(
+            "E1 · 最小邊界",
+            rendered,
+        )
+        self.assertIn(
+            "Candidate 1",
+            rendered,
+        )
+        self.assertIn(
+            "未驗證，不影響 PASS / FAIL",
+            rendered,
+        )
+        self.assertIn(
+            "Ctrl+Shift+B 測試中心",
+            rendered,
+        )
+        self.assertIn(
+            "Input / Expected / Actual / Diff",
+            rendered,
+        )
+        self.assertNotIn(
+            "7 -3",
+            rendered,
+        )
+        self.assertNotIn(
+            "999",
+            rendered,
+        )
+
+    def test_problem_library_sidebar_anonymizes_edge_case_names_for_unattempted_independent_work(self):
+        item = types.SimpleNamespace(
+            external_id="a001",
+            title="獨立題",
+            source="zerojudge",
+            difficulty="D2",
+            attempted=False,
+            role="Core Independent",
+            has_l2=False,
+            primary_skill="S01_IO",
+            supporting_skills=(),
+            canonical_url="https://example.invalid/a001",
+        )
+        bundle = types.SimpleNamespace(
+            cases=(
+                types.SimpleNamespace(
+                    case_id="E1",
+                    name="Overflow Trap",
+                    provenance="AI_GENERATED",
+                    verified=True,
+                ),
+            )
+        )
+
+        with patch.object(
+            control.TEST_ASSETS,
+            "load",
+            return_value=bundle,
+        ):
+            rendered = "\n".join(
+                control._problem_library_inspector_lines(
+                    item,
+                    mode="practice",
+                )
+            )
+
+        self.assertIn(
+            "E1 · Local Case 1",
+            rendered,
+        )
+        self.assertNotIn(
+            "Overflow Trap",
+            rendered,
+        )
+
+    def test_problem_library_exam_sidebar_hides_generated_test_inventory_before_attempt(self):
+        item = types.SimpleNamespace(
+            external_id="a001",
+            title="考試題",
+            source="zerojudge",
+            difficulty="D5",
+            attempted=False,
+            role="Mock",
+            has_l2=True,
+            primary_skill="S18_DFS",
+            supporting_skills=(),
+            canonical_url="https://example.invalid/a001",
+        )
+        bundle = types.SimpleNamespace(
+            cases=(
+                types.SimpleNamespace(
+                    case_id="S1",
+                    name="官方範例 1",
+                    provenance="OFFICIAL",
+                    verified=True,
+                ),
+                types.SimpleNamespace(
+                    case_id="E1",
+                    name="DFS Trap",
+                    provenance="AI_GENERATED",
+                    verified=True,
+                ),
+                types.SimpleNamespace(
+                    case_id="G1",
+                    name="candidate",
+                    provenance="AI_GENERATED",
+                    verified=False,
+                ),
+            )
+        )
+
+        with patch.object(
+            control.TEST_ASSETS,
+            "load",
+            return_value=bundle,
+        ):
+            rendered = "\n".join(
+                control._problem_library_inspector_lines(
+                    item,
+                    mode="exam",
+                )
+            )
+
+        self.assertIn(
+            "官方 1",
+            rendered,
+        )
+        self.assertIn(
+            "延伸測資  作答後解鎖",
+            rendered,
+        )
+        self.assertNotIn(
+            "DFS Trap",
+            rendered,
+        )
+        self.assertNotIn(
+            "Candidate 1",
+            rendered,
+        )
+        self.assertNotIn(
+            "S18_DFS",
+            rendered,
+        )
+        self.assertNotIn(
+            "D5",
+            rendered,
+        )
+
+
+    def test_problem_library_saved_filters_are_isolated_between_practice_and_exam(self):
+        state = {
+            "library_filters_practice": {
+                "skill_uids": ("S18_DFS",),
+                "skill_label": "DFS",
+                "difficulty": "D4",
+                "source": "zerojudge",
+                "attempted": False,
+                "role": "Core Independent",
+                "require_l2": True,
+            },
+            "library_filters_exam": {
+                "skill_uids": ("SHOULD_NOT_SURVIVE",),
+                "skill_label": "hidden",
+                "difficulty": "D5",
+                "source": "zerojudge",
+                "attempted": False,
+                "role": "Mock",
+                "require_l2": True,
+            },
+        }
+
+        with patch.dict(
+            control.UI_STATE,
+            state,
+            clear=False,
+        ):
+            practice = (
+                control._problem_library_saved_filters(
+                    "practice"
+                )
+            )
+            exam = (
+                control._problem_library_saved_filters(
+                    "exam"
+                )
+            )
+
+        self.assertEqual(
+            practice["skill_uids"],
+            ("S18_DFS",),
+        )
+        self.assertEqual(
+            practice["difficulty"],
+            "D4",
+        )
+        self.assertEqual(
+            exam["skill_uids"],
+            (),
+        )
+        self.assertIsNone(
+            exam["difficulty"],
+        )
+        self.assertIsNone(
+            exam["role"],
+        )
+        self.assertIsNone(
+            exam["require_l2"],
+        )
+        self.assertEqual(
+            exam["source"],
+            "zerojudge",
+        )
+        self.assertFalse(
+            exam["attempted"],
+        )
+
+    def test_problem_library_workbench_fits_compact_wide_width_without_fixed_96_column_overflow(self):
+        item = types.SimpleNamespace(
+            external_id="a001",
+            title="測試題",
+            source="zerojudge",
+            difficulty="D1",
+            attempted=False,
+            role="Guided Drill",
+            has_l2=False,
+            primary_skill="S01_IO",
+            supporting_skills=(),
+            canonical_url="https://example.invalid/a001",
+        )
+        output = io.StringIO()
+        state = {
+            "library_result_index": 0,
+            "library_filter_kind": "results",
+            "library_focus": 0,
+            "library_filters_practice": None,
+            "library_filters_exam": None,
+            "library_query_practice": "",
+            "library_query_exam": "",
+        }
+
+        with (
+            patch.dict(
+                control.UI_STATE,
+                state,
+                clear=True,
+            ),
+            patch.object(
+                control,
+                "_problem_library_items",
+                return_value=[item],
+            ),
+            patch.object(
+                control.TEST_ASSETS,
+                "load",
+                return_value=None,
+            ),
+            patch.object(
+                control,
+                "read_key",
+                return_value="ESC",
+            ),
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=88,
+                    lines=42,
+                ),
+            ),
+            redirect_stdout(output),
+        ):
+            control._problem_library_workbench(
+                mode="practice",
+            )
+
+        rendered = output.getvalue()
+        self.assertIn(
+            "題目 · 1 題",
+            rendered,
+        )
+        self.assertIn(
+            "題目資訊",
+            rendered,
+        )
+
+
+    def test_problem_library_workbench_mode_toggle_returns_sentinel_and_preserves_state(self):
+        item = types.SimpleNamespace(
+            external_id="a001",
+            title="測試題",
+            source="zerojudge",
+            difficulty="D1",
+            attempted=False,
+            role="Guided Drill",
+            has_l2=False,
+            primary_skill="S01_IO",
+            supporting_skills=(),
+            canonical_url="https://example.invalid/a001",
+        )
+        state = {
+            "library_result_index": 0,
+            "library_filter_kind": "results",
+            "library_focus": 1,
+            "library_filters_practice": {
+                "skill_uids": (),
+                "skill_label": None,
+                "difficulty": "D1",
+                "source": None,
+                "attempted": None,
+                "role": None,
+                "require_l2": None,
+            },
+            "library_filters_exam": None,
+            "library_query_practice": "a001",
+            "library_query_exam": "",
+        }
+
+        with (
+            patch.dict(
+                control.UI_STATE,
+                state,
+                clear=True,
+            ),
+            patch.object(
+                control,
+                "_problem_library_items",
+                return_value=[item],
+            ),
+            patch.object(
+                control.TEST_ASSETS,
+                "load",
+                return_value=None,
+            ),
+            patch.object(
+                control,
+                "read_key",
+                return_value="M",
+            ),
+            patch(
+                "tools.workbench_tui.shutil.get_terminal_size",
+                return_value=types.SimpleNamespace(
+                    columns=100,
+                    lines=42,
+                ),
+            ),
+            redirect_stdout(io.StringIO()),
+        ):
+            result = (
+                control._problem_library_workbench(
+                    mode="practice",
+                )
+            )
+            snapshot = dict(
+                control.UI_STATE
+            )
+
+        self.assertIs(
+            result,
+            control.MODE_TOGGLE,
+        )
+        self.assertEqual(
+            snapshot[
+                "library_focus"
+            ],
+            1,
+        )
+        self.assertEqual(
+            snapshot[
+                "library_query_practice"
+            ],
+            "a001",
+        )
+        self.assertEqual(
+            snapshot[
+                "library_filters_practice"
+            ]["difficulty"],
+            "D1",
+        )
+
+
+    def test_today_reading_detail_routes_to_lesson_context_without_claiming_implementation_flow(self):
+        route = types.SimpleNamespace(
+            skill=types.SimpleNamespace(
+                uid="S01_IO",
+            ),
+            placement=types.SimpleNamespace(
+                problem_id="d050",
+                title="妳那裡現在幾點了？",
+                role="Guided Drill",
+                lesson_uid="L-FND-01",
+            ),
+        )
+        plan = types.SimpleNamespace(
+            budget_minutes=18,
+            selected=(),
+            selected_minutes=0,
+            deferred=(),
+        )
+        snapshot = {
+            "target": "3+3",
+            "capacity_minutes": 60,
+            "plan": plan,
+        }
+        option = {
+            "label": "新學習 · S01_IO × Reading",
+            "kind": "new",
+            "track": "Reading",
+            "route": route,
+        }
+
+        rendered = "\n".join(
+            control._today_option_detail_lines(
+                snapshot,
+                option,
+            )
+        )
+
+        self.assertIn(
+            "Track     Reading",
+            rendered,
+        )
+        self.assertIn(
+            "Lesson    L-FND-01",
+            rendered,
+        )
+        self.assertIn(
+            "Lesson context → Formal response",
+            rendered,
+        )
+        self.assertNotIn(
+            "Ctrl+Shift+B",
+            rendered,
+        )
+
+    def test_today_implementation_detail_routes_to_test_center_then_oj(self):
+        route = types.SimpleNamespace(
+            skill=types.SimpleNamespace(
+                uid="S01_IO",
+            ),
+            placement=types.SimpleNamespace(
+                problem_id="d050",
+                title="妳那裡現在幾點了？",
+                role="Guided Drill",
+                lesson_uid="L-FND-01",
+            ),
+        )
+        plan = types.SimpleNamespace(
+            budget_minutes=18,
+            selected=(),
+            selected_minutes=0,
+            deferred=(),
+        )
+        snapshot = {
+            "target": "3+3",
+            "capacity_minutes": 60,
+            "plan": plan,
+        }
+        option = {
+            "label": "新學習 · S01_IO × Implementation",
+            "kind": "new",
+            "track": "Implementation",
+            "route": route,
+        }
+
+        rendered = "\n".join(
+            control._today_option_detail_lines(
+                snapshot,
+                option,
+            )
+        )
+
+        self.assertIn(
+            "Track     Implementation",
+            rendered,
+        )
+        self.assertIn(
+            "VS Code scratch → Ctrl+Shift+B → 正式 OJ → 完成題目",
+            rendered,
+        )
+
+    def test_closed_screen_names_test_center_for_ctrl_shift_b(self):
+        output = io.StringIO()
+        with redirect_stdout(output):
+            control.closed_screen()
+
+        self.assertIn(
+            "Ctrl+Shift+B",
+            output.getvalue(),
+        )
+        self.assertIn(
+            "測試中心",
+            output.getvalue(),
         )
 
 

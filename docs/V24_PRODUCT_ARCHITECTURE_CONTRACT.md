@@ -126,6 +126,31 @@ v2.4 的總目標定義為：
 - Evidence capture；
 - Exam mode。
 
+### Workbench / Test Center boundary
+
+Workbench 是 VS Code Control Center 的 learner-facing 操作層，不建立新的 curriculum、Problem Bank、Evidence 或 mastery authority。
+
+Problem identity 必須依既有 authority fail-safe 解析：
+
+```text
+Published Placement
+→ registered Catalog solution
+→ legacy filename fallback
+```
+
+若跨 judge 的 external ID 無法唯一解析，不得依檔案排序、測資路徑或 AI metadata 猜 canonical source / URL。
+
+Test Center 的本地測資只提供快速回饋與 debugging：
+
+- `OFFICIAL` / verified case 才能形成本地 PASS / FAIL；
+- `CANDIDATE` 不得影響 PASS / FAIL；
+- Transfer / Mock / Exam pre-attempt 只可暴露 official cases，且不得洩漏 hidden testcase inventory；
+- Local PASS 不得轉成 OJ AC、Attempt PASS、Evidence、mastery 或 readiness；
+- external OJ 仍是 submission / verdict authority；
+- `C` copy 必須對應本次實際 build 的 saved source；source 已變更時 fail-safe 要求重新 build。
+
+Notion Lesson routing 只保存 reviewed `Lesson UID → canonical Notion URL` projection；Notion 仍是 Lesson content authority，missing route 不得猜 URL。
+
 ### ChatGPT
 
 角色：
