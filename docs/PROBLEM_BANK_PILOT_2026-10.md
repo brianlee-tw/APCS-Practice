@@ -51,6 +51,26 @@ This is a source-snapshot coverage inventory. Some existing published problem tr
 6. Run actual compiler, differential checks, unit regression, catalog validation; inspect visible Test Center cases in both Practice and Exam pre-attempt.
 7. Check whether real learner practice is improved before scaling to any other source or building large unattended AI pipelines.
 
+## Stage B partial: four source-reviewed official sample bundles
+
+Based on publicly retrievable ZeroJudge problem-page snapshots checked on 2026-10-18, official sample I/O (only) has been curated for:
+
+| PB UID | ZJ ID | Official sample cases | Status |
+| --- | --- | ---: | --- |
+| PB-27 | [d732](https://zerojudge.tw/ShowProblem?problemid=d732) | 1 | Official page snapshot reviewed |
+| PB-183 | [d097](https://zerojudge.tw/ShowProblem?problemid=d097) | 1 | Official page snapshot reviewed |
+| PB-9 | [j606](https://zerojudge.tw/ShowProblem?problemid=j606) | 2 | Official page snapshot reviewed |
+| PB-182 | [d067](https://zerojudge.tw/ShowProblem?problemid=d067) | 4 | Official page snapshot reviewed |
+
+Assets reside in `data/problem_enrichment/zerojudge/<id>/tests.json`, total **8 official sample cases**.
+
+- All testcases are `provenance=OFFICIAL`, `trust=OFFICIAL`, `suite=fast`, `visibility=official`, and can be used by Test Center after local refresh.
+- These are source-page samples, **not hidden Judge cases**, an accepted learner solution, an AI-generated oracle, an L1/L2 enrichment package, or proof of OJ correctness.
+- The currently retrieved public pages for q182 and a233 did not expose a reliable full problem statement/sample; they remain `NOT_CHECKED_THIS_PILOT`.
+- No generated expected outputs or non-official verified edge cases have been promoted.
+- Full real-platform / local Test Center UX acceptance remains pending under C8.
+- `tools/pilot_coverage.py` verifies status receipts are consistent with official-only committed assets; automated checks cannot establish that public pages will never change.
+
 ## Release / C8 safety
 
 - Do not merge this pilot branch without passing CI and confirming data authority.
