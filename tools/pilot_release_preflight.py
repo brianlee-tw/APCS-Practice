@@ -34,6 +34,10 @@ try:
         MANIFEST as CUSTOM_CONTRACTS,
         validate as validate_custom_contracts,
     )
+    from .pilot_final_four_source import (
+        MANIFEST as FINAL_FOUR,
+        verify as verify_final_four,
+    )
     from .problem_intelligence import ProblemIntelligenceStore
     from .test_assets import TestAssetStore
 except ImportError:
@@ -57,6 +61,10 @@ except ImportError:
     from pilot_custom_contracts import (
         MANIFEST as CUSTOM_CONTRACTS,
         validate as validate_custom_contracts,
+    )
+    from pilot_final_four_source import (
+        MANIFEST as FINAL_FOUR,
+        verify as verify_final_four,
     )
     from problem_intelligence import ProblemIntelligenceStore
     from test_assets import TestAssetStore
@@ -137,6 +145,8 @@ def preflight(root: Path = ROOT) -> dict[str, Any]:
     errors.extend(verify_batch(staged_source_batch, seed, published))
     staged_custom = load_json(CUSTOM_CONTRACTS)
     errors.extend(validate_custom_contracts(staged_custom, seed, published))
+    staged_last_four = load_json(FINAL_FOUR)
+    errors.extend(verify_final_four(staged_last_four, seed, published))
 
     by_uid = {p["pb_uid"]: p for p in published["placements"]}
     problems = {p["pb_uid"]: p for p in published["problems"]}
@@ -299,6 +309,17 @@ def preflight(root: Path = ROOT) -> dict[str, Any]:
             "custom_gate_candidates_conditional": sum(
                 row["gate_candidate"]
                 for row in staged_custom["entries"]
+            ),
+            "final_four_reviewed_official": sum(
+                row["official_statement_verified"]
+                for row in staged_last_four["records"]
+            ),
+            "final_four_pending_official": sum(
+                not row["official_statement_verified"]
+                for row in staged_last_four["records"]
+            ),
+            "final_four_official_samples_staged": sum(
+                len(row["samples"]) for row in staged_last_four["records"]
             ),
         },
         "errors": errors,
