@@ -23,6 +23,7 @@ from tools.ai_candidate_pipeline import (
     evaluate,
     generate,
     load_json,
+    convert_chatgpt_proposals,
 )
 from tools.problem_intelligence import ProblemIntelligenceStore
 
@@ -209,6 +210,114 @@ class CandidatePipelineTest(unittest.TestCase):
             self.assertIn("--confirm-api-cost", run.stdout)
             self.assertNotIn("SENSITIVE-DO-NOT-SHOW", run.stdout + run.stderr)
             self.assertFalse(output.exists())
+
+    def test_four_real_chatgpt_candidates_use_existing_job_fingerprints(self):
+        proposals = load_json(
+            ROOT / "data" / "problem_pilot" / "chatgpt_proposals.v1.json"
+        )
+        generated = convert_chatgpt_proposals(self.jobs, proposals)
+        self.assertEqual(
+            generated["model"], "chatgpt-gpt-6-conversation"
+        )
+        self.assertEqual(len(generated["responses"]), 4)
+        by_uid = {
+            job["pb_uid"]: job for job in self.jobs["jobs"]
+        }
+        for row in generated["responses"]:
+            self.assertEqual(
+                row["source_sha256"],
+                by_uid[row["pb_uid"]]["source_sha256"],
+            )
+            self.assertEqual(row["provider_response_id"], "")
+            self.assertNotIn("approved_for_publish", row)
+
+        report = evaluate(
+            self.jobs, generated, self.pub,
+            ProblemIntelligenceStore(PROFILE_DIR),
+        )
+        self.assertEqual(report["summary"], {
+            "prepared": 4,
+            "generated": 4,
+            "candidate_unreviewed": 3,
+            "needs_qa": 1,
+            "not_generated": 0,
+        })
+        rows = {row["pb_uid"]: row for row in report["rows"]}
+        self.assertEqual(rows["PB-9"]["review_status"], "NEEDS_QA")
+        self.assertTrue(
+            any("ambiguity" in note for note in rows["PB-9"]["qa_reasons"])
+        )
+        for uid in ("PB-27", "PB-183", "PB-182"):
+            self.assertEqual(
+                rows[uid]["review_status"], "CANDIDATE_UNREVIEWED"
+            )
+        self.assertTrue(
+            all(not row["runtime_eligible"] and
+                not row["approved_for_publish"] for row in report["rows"])
+        )
+
+    def test_chatgpt_schema_rejects_fake_api_receipt_or_duplicate_uid(self):
+        proposals = load_json(
+            ROOT / "data" / "problem_pilot" / "chatgpt_proposals.v1.json"
+        )
+        forged = copy.deepcopy(proposals)
+        forged["proposals"][0]["source_sha256"] = "fake"
+        with self.assertRaisesRegex(CandidateError, "only pb_uid"):
+            convert_chatgpt_proposals(self.jobs, forged)
+
+        dup = copy.deepcopy(proposals)
+        dup["proposals"][1]["pb_uid"] = dup["proposals"][0]["pb_uid"]
+        with self.assertRaisesRegex(CandidateError, "duplicate"):
+            convert_chatgpt_proposals(self.jobs, dup)
+
+        forged_model = copy.deepcopy(proposals)
+        forged_model["model"] = "provider-api-response"
+        with self.assertRaisesRegex(CandidateError, "model/date"):
+            convert_chatgpt_proposals(self.jobs, forged_model)
+
+    def test_chatgpt_unknown_prerequisite_does_not_pass_taxonomy(self):
+        proposals = load_json(
+            ROOT / "data" / "problem_pilot" / "chatgpt_proposals.v1.json"
+        )
+        bad = copy.deepcopy(proposals)
+        bad["proposals"][0]["candidate"]["prerequisite_candidates"] = [
+            "S999_FORGED"
+        ]
+        with self.assertRaisesRegex(CandidateError, "unknown skill"):
+            evaluate(
+                self.jobs,
+                convert_chatgpt_proposals(self.jobs, bad),
+                self.pub,
+                ProblemIntelligenceStore(PROFILE_DIR),
+            )
+
+    def test_chatgpt_review_cli_requires_no_api_credentials_or_cost_flags(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            path = Path(tmp) / "qa.json"
+            source = ROOT / "data" / "problem_pilot" / "chatgpt_proposals.v1.json"
+            env = os.environ.copy()
+            env.pop("OPENAI_API_KEY", None)
+            run = subprocess.run(
+                [
+                    sys.executable,
+                    str(ROOT / "tools" / "ai_candidate_pipeline.py"),
+                    "review-chatgpt",
+                    "--proposals", str(source),
+                    "--output", str(path),
+                ],
+                cwd=ROOT,
+                env=env,
+                text=True,
+                capture_output=True,
+                timeout=15,
+                check=False,
+            )
+            self.assertEqual(run.returncode, 0, run.stdout + run.stderr)
+            report = load_json(path)
+            self.assertEqual(report["summary"]["needs_qa"], 1)
+            self.assertEqual(report["summary"]["candidate_unreviewed"], 3)
+            self.assertFalse(report["reviewed"])
+            self.assertEqual(report["model"], "chatgpt-gpt-6-conversation")
 
     def test_api_payload_fixed_endpoint_and_store_disabled(self):
         class FakeHTTP:
