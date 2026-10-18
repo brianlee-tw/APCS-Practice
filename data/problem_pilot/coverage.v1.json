@@ -1,0 +1,304 @@
+{
+  "schema_version": "apcs-published-coverage-v1",
+  "as_of": "2026-10-18",
+  "snapshot": {
+    "path": "curriculum/published.v23.json",
+    "main_sha": "c0362c19457f7bb230c615b218f2c310ea602cf5"
+  },
+  "scope_note": "Counts are published allocation references, not tested OJ correctness, learner attempts, source-statement QA, or actual mastery.",
+  "counts": {
+    "published_skills": 39,
+    "published_problems": 127,
+    "published_placements": 127,
+    "zero_primary_skill_placements": 4,
+    "thin_primary_skill_placements": 12
+  },
+  "source_distribution": {
+    "APCS": 14,
+    "Codeforces": 15,
+    "CSES": 35,
+    "Custom": 17,
+    "LeetCode": 21,
+    "ZeroJudge": 25
+  },
+  "difficulty_distribution": {
+    "D1": 20,
+    "D2": 56,
+    "D3": 30,
+    "D4": 18,
+    "D5": 3
+  },
+  "role_distribution": {
+    "Core Independent": 46,
+    "Guided Drill": 43,
+    "Transfer Challenge": 20,
+    "Worked Example": 18
+  },
+  "primary_skill_coverage": [
+    {
+      "skill_uid": "S01_IO",
+      "name": "I/O、型別與運算式",
+      "published_placements": 7,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S02_Conditionals",
+      "name": "條件判斷",
+      "published_placements": 2,
+      "coverage_band": "THIN"
+    },
+    {
+      "skill_uid": "S03_Loops",
+      "name": "迴圈",
+      "published_placements": 2,
+      "coverage_band": "THIN"
+    },
+    {
+      "skill_uid": "S04_Functions",
+      "name": "函式、作用域與傳值／參考",
+      "published_placements": 4,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S05_Array",
+      "name": "Array",
+      "published_placements": 3,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S06_Vector",
+      "name": "Vector",
+      "published_placements": 1,
+      "coverage_band": "THIN"
+    },
+    {
+      "skill_uid": "S07_String",
+      "name": "String",
+      "published_placements": 3,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S34_Matrix_2D",
+      "name": "Matrix / 2D Data",
+      "published_placements": 3,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S23_Simulation",
+      "name": "Simulation",
+      "published_placements": 4,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S12_Brute_Force",
+      "name": "Brute Force / Baseline",
+      "published_placements": 3,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S30_Complexity",
+      "name": "Complexity Analysis",
+      "published_placements": 4,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S14_Math",
+      "name": "Math Modeling",
+      "published_placements": 3,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S15_Number_Theory",
+      "name": "Number Theory 基礎",
+      "published_placements": 1,
+      "coverage_band": "THIN"
+    },
+    {
+      "skill_uid": "S39_Code_Reasoning",
+      "name": "Program Tracing / Debugging / Testing",
+      "published_placements": 6,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S08_Struct",
+      "name": "Struct / Pair 建模",
+      "published_placements": 2,
+      "coverage_band": "THIN"
+    },
+    {
+      "skill_uid": "S09_Sorting",
+      "name": "Sorting",
+      "published_placements": 2,
+      "coverage_band": "THIN"
+    },
+    {
+      "skill_uid": "S24_Map_Set",
+      "name": "Map / Set",
+      "published_placements": 3,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S22_Prefix_Sum",
+      "name": "Prefix Sum",
+      "published_placements": 7,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S31_Difference",
+      "name": "Difference Array",
+      "published_placements": 3,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S13_Two_Pointers",
+      "name": "Two Pointers / Sliding Window",
+      "published_placements": 7,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S10_Binary_Search",
+      "name": "Binary Search",
+      "published_placements": 8,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S16_Recursion",
+      "name": "Recursion / Divide & Conquer",
+      "published_placements": 3,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S32_Backtracking",
+      "name": "Backtracking",
+      "published_placements": 3,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S29_Bitmask",
+      "name": "Bitmask / Bitwise State",
+      "published_placements": 2,
+      "coverage_band": "THIN"
+    },
+    {
+      "skill_uid": "S38_Parsing",
+      "name": "Expression Parsing / Recursive Descent",
+      "published_placements": 2,
+      "coverage_band": "THIN"
+    },
+    {
+      "skill_uid": "S17_Stack_Queue",
+      "name": "Stack / Queue / Deque",
+      "published_placements": 5,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S33_Priority_Queue",
+      "name": "Priority Queue",
+      "published_placements": 1,
+      "coverage_band": "THIN"
+    },
+    {
+      "skill_uid": "S21_Graph_Tree",
+      "name": "Graph / Tree Modeling",
+      "published_placements": 4,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S18_DFS",
+      "name": "DFS",
+      "published_placements": 2,
+      "coverage_band": "THIN"
+    },
+    {
+      "skill_uid": "S19_BFS",
+      "name": "BFS",
+      "published_placements": 4,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S11_Greedy",
+      "name": "Greedy",
+      "published_placements": 9,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S20_DP",
+      "name": "Dynamic Programming",
+      "published_placements": 8,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S35_LIS",
+      "name": "Longest Increasing Subsequence",
+      "published_placements": 3,
+      "coverage_band": "PRESENT"
+    },
+    {
+      "skill_uid": "S37_Offline_Order",
+      "name": "Offline Counting / Coordinate Compression",
+      "published_placements": 2,
+      "coverage_band": "THIN"
+    },
+    {
+      "skill_uid": "S36_Range_Tree",
+      "name": "Fenwick Tree / Segment Tree 基礎",
+      "published_placements": 1,
+      "coverage_band": "THIN"
+    },
+    {
+      "skill_uid": "S25_Dijkstra",
+      "name": "Dijkstra",
+      "published_placements": 0,
+      "coverage_band": "ZERO"
+    },
+    {
+      "skill_uid": "S26_Topo",
+      "name": "Topological Sort",
+      "published_placements": 0,
+      "coverage_band": "ZERO"
+    },
+    {
+      "skill_uid": "S27_DSU",
+      "name": "DSU",
+      "published_placements": 0,
+      "coverage_band": "ZERO"
+    },
+    {
+      "skill_uid": "S28_MST",
+      "name": "Minimum Spanning Tree",
+      "published_placements": 0,
+      "coverage_band": "ZERO"
+    }
+  ],
+  "pilot_selection": {
+    "size": 18,
+    "by_primary_skill": {
+      "S01_IO": 1,
+      "S02_Conditionals": 1,
+      "S03_Loops": 1,
+      "S05_Array": 1,
+      "S07_String": 3,
+      "S08_Struct": 1,
+      "S09_Sorting": 2,
+      "S10_Binary_Search": 2,
+      "S23_Simulation": 1,
+      "S30_Complexity": 2,
+      "S34_Matrix_2D": 1,
+      "S39_Code_Reasoning": 2
+    },
+    "by_source": {
+      "APCS": 1,
+      "Codeforces": 3,
+      "CSES": 3,
+      "Custom": 5,
+      "ZeroJudge": 6
+    },
+    "by_role": {
+      "Core Independent": 11,
+      "Guided Drill": 6,
+      "Worked Example": 1
+    },
+    "external_oj_count": 13,
+    "custom_count": 5
+  }
+}
