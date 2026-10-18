@@ -1,0 +1,20 @@
+{
+  "schema_version": "apcs-test-bundle-v1",
+  "identity": {
+    "source": "zerojudge",
+    "external_id": "d732",
+    "canonical_url": "https://zerojudge.tw/ShowProblem?problemid=d732"
+  },
+  "cases": [
+    {
+      "id": "S1",
+      "name": "官方範例 1",
+      "input": "5 5\n1 3 4 7 9\n3 1 9 7 -2\n",
+      "expected_output": "2\n1\n5\n4\n0\n",
+      "provenance": "OFFICIAL",
+      "trust": "OFFICIAL",
+      "suite": "fast",
+      "visibility": "official"
+    }
+  ]
+}
