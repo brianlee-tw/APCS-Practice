@@ -79,6 +79,41 @@ Assets reside in `data/problem_enrichment/zerojudge/<id>/tests.json`, total **8 
 - High-confidence agreement is only a candidate, not official classification approval. No L1 adoption or L2 content has occurred.
 - The default operator path is documented in `docs/AI_CLASSIFICATION_PILOT_RUNBOOK.md`, with no API key or API billing.
 - Next content task is reviewer decision on j606 and independent verified edge-case Candidates for these problems; never label ChatGPT-inferred expected output `OFFICIAL`.
+## Stage D: ChatGPT edge cases with independent differential evidence
+
+Source constraints were rechecked against the four ZeroJudge official problem pages on 2026-10-18:
+
+- d067: positive-year Gregorian leap logic, including 100/400 divisibility
+- d097: n < 3000, adjacent absolute differences, multiple input lines
+- d732: strictly increasing input, 1-based search results, missing = 0, 32-bit query values
+- j606: `P_i` maps old position `i` to new position `P_i`; sequential permutation states, output transposed R×Q
+
+**17 ChatGPT-designed edge cases** added to the existing dedicated Test Center bundles. The existing **8 OFFICIAL source examples** remain unchanged and retain OFFICIAL provenance/trust.
+
+| ZeroJudge | Official Fast | Added Full edges | Independent reference checks |
+| --- | ---: | ---: | --- |
+| d067 | 4 | 6 | Modulo leap predicate vs Gregorian elapsed-day count |
+| d097 | 1 | 4 | Difference-value set vs sorted difference sequence |
+| d732 | 1 | 3 | Dictionary index lookup vs `bisect_left` |
+| j606 | 2 | 4 | Forward scatter vs inverse permutation gather |
+| **Total** | **8** | **17** | **4 independent pairs** |
+
+Trust controls for **all added** cases:
+
+```text
+provenance = AI_GENERATED
+trust = DIFFERENTIAL_VERIFIED
+suite = full
+visibility = practice
+```
+
+Visible case names use neutral `加強測資 N` labels rather than exposing the target bug/algorithm. `FAST` runs official source samples only. `FULL` in ordinary Practice can exercise verified edges; Transfer/Mock/Exam **before attempt** still show only official cases. After attempt, additional Full tests may be opened for repair.
+
+Reproducibility proof: `tests/test_pilot_edge_cases.py` checks that both independent Python reference methods agree with every stored expected output (including 8 official source examples) and agrees on **880 additional deterministic randomly generated valid inputs** (220/problem, fixed seed `20261018`). It also asserts source identity, counts, `DIFFERENTIAL_VERIFIED` provenance/suite/visibility, and strict spoiler policies through real `TestAssetStore`.
+
+APCS Validate **#284 PASS** at commit `17cb1fad914623b12e8b951bc9d40f522d59dd35`, including metadata, changed-solutions, and the new differential regression. A prior CI failure exposed an audit bookkeeping bug counting verified generated cases as official; `tools/pilot_coverage.py` was corrected to check only `provenance=OFFICIAL` against official sample receipts. No OFFICIAL output was fabricated.
+
+**Important limits:** Differential Verified means consistent with these two reference implementations over tested inputs; it is not proof of correctness on all hidden tests, not official OJ AC, not manual learner acceptance, not L2 teaching readiness, and never creates Evidence or readiness. Genuine learner C8 remains open.
 ## Release / C8 safety
 
 - Do not merge this pilot branch without passing CI and confirming data authority.
