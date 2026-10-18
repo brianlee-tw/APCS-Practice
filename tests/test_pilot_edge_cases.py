@@ -223,6 +223,42 @@ class PilotEdgeCaseVerificationTest(unittest.TestCase):
                         oracle_independent(problem, source),
                     )
 
+    def test_source_constraint_maximum_sizes_with_independent_references(self):
+        # Large valid inputs are synthesized at test time to avoid checking
+        # megabytes of deterministic fixtures into Git.
+        n, k = 100000, 100000
+        values = list(range(-50000, 50000))
+        queries = list(range(-50001, 49999))
+        search_input = (
+            f"{n} {k}\n"
+            + " ".join(map(str, values)) + "\n"
+            + " ".join(map(str, queries)) + "\n"
+        )
+        self.assertEqual(
+            oracle_direct("d732", search_input),
+            oracle_independent("d732", search_input),
+        )
+
+        nums = list(range(2999))
+        jolly = "2999 " + " ".join(map(str, nums)) + "\n"
+        self.assertEqual(
+            oracle_direct("d097", jolly),
+            oracle_independent("d097", jolly),
+        )
+        self.assertEqual(oracle_direct("d097", jolly), "Not jolly\n")
+
+        permutation = list(range(20, 0, -1))
+        matrix_input = (
+            "20 20 20\n"
+            + "abcdefghijklmnopqrst\n"
+            + (" ".join(map(str, permutation)) + "\n") * 20
+        )
+        self.assertEqual(
+            oracle_direct("j606", matrix_input),
+            oracle_independent("j606", matrix_input),
+        )
+        self.assertEqual(len(oracle_direct("j606", matrix_input).splitlines()), 20)
+
     def test_fast_full_and_strict_spoiler_visibility(self):
         self.assertEqual(self.store.validate_all(), [])
         for problem in IDS:
