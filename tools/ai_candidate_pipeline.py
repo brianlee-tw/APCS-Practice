@@ -272,7 +272,7 @@ def generate(
     if bundle.get("schema_version") != JOB_SCHEMA:
         raise CandidateError("jobs schema mismatch")
     jobs = bundle.get("jobs")
-    if not isinstance(jobs, list) or len(jobs) > 4 or limit < 1 or limit > 4:
+    if not isinstance(jobs, list) or not 1 <= len(jobs) <= 4 or limit < 1 or limit > 4:
         raise CandidateError("pilot API batch must have 1–4 jobs")
     responses = []
     for job in jobs[:limit]:
@@ -316,9 +316,16 @@ def evaluate(
     pl_by_uid = {p["pb_uid"]: p for p in published["placements"]}
     skill_uids = {x["uid"] for x in published["skills"]}
     prepared = {x["pb_uid"]: x for x in bundle["jobs"]}
+    if len(prepared) != len(bundle["jobs"]):
+        raise CandidateError("duplicate job PB UID")
+    outputs = generated.get("responses")
+    if not isinstance(outputs, list):
+        raise CandidateError("model responses must be array")
+    if len(outputs) > len(prepared):
+        raise CandidateError("more model responses than prepared jobs")
     seen = set()
     rows = []
-    for output in generated.get("responses", []):
+    for output in outputs:
         if not isinstance(output, dict) or set(output) != {
             "pb_uid", "source", "external_id", "source_sha256",
             "provider_response_id", "candidate",
@@ -465,6 +472,10 @@ def main(argv: list[str] | None = None) -> int:
             p.add_argument("--responses", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
+        # Avoid charging for a paid API request when the target cannot be
+        # written because an earlier attempt already produced an output file.
+        if args.output.exists():
+            raise CandidateError(f"output already exists: {args.output}")
         if args.action == "prepare":
             result = build_jobs(
                 load_json(PUBLISHED), load_json(SEED),
