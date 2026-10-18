@@ -26,6 +26,10 @@ try:
         AUDIT,
         validate_pilot,
     )
+    from .pilot_source_review import (
+        SOURCE_REVIEWS,
+        verify_batch,
+    )
     from .problem_intelligence import ProblemIntelligenceStore
     from .test_assets import TestAssetStore
 except ImportError:
@@ -41,6 +45,10 @@ except ImportError:
     from pilot_coverage import (
         AUDIT,
         validate_pilot,
+    )
+    from pilot_source_review import (
+        SOURCE_REVIEWS,
+        verify_batch,
     )
     from problem_intelligence import ProblemIntelligenceStore
     from test_assets import TestAssetStore
@@ -117,6 +125,8 @@ def preflight(root: Path = ROOT) -> dict[str, Any]:
     if authority.get("current_work", {}).get("gate") != "C8":
         errors.append("active gate must remain C8")
     errors.extend(validate_pilot(published, audit, seed))
+    staged_source_batch = load_json(SOURCE_REVIEWS)
+    errors.extend(verify_batch(staged_source_batch, seed, published))
 
     by_uid = {p["pb_uid"]: p for p in published["placements"]}
     problems = {p["pb_uid"]: p for p in published["problems"]}
@@ -262,6 +272,15 @@ def preflight(root: Path = ROOT) -> dict[str, Any]:
             "ai_needs_qa": qa["summary"]["needs_qa"],
             "official_samples": total_official,
             "differential_edge_tests": total_edge,
+            "source_review_staged": len(staged_source_batch["entries"]),
+            "source_review_exact_output": sum(
+                row["judge_mode"] == "EXACT_OUTPUT"
+                for row in staged_source_batch["entries"]
+            ),
+            "source_review_special_checker_required": sum(
+                row["judge_mode"] == "VALIDATE_ANY_CORRECT_X"
+                for row in staged_source_batch["entries"]
+            ),
         },
         "errors": errors,
         "ci_claim": "NOT_CHECKED_BY_THIS_LOCAL_PREFLIGHT",
