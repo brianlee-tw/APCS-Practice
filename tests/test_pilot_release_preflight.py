@@ -32,6 +32,9 @@ class PilotReleasePreflightTest(unittest.TestCase):
             "source_review_staged": 5,
             "source_review_exact_output": 4,
             "source_review_special_checker_required": 1,
+            "custom_lesson_contracts_reviewed": 5,
+            "custom_task_packets_verified": 0,
+            "custom_gate_candidates_conditional": 4,
         })
 
     def test_staged_multisource_review_cannot_enable_exact_checker_for_977c(self):
@@ -47,6 +50,21 @@ class PilotReleasePreflightTest(unittest.TestCase):
         self.assertEqual(report["engineering_checks"], "FAIL")
         self.assertEqual(report["release_gate"], "BLOCKED_MANUAL")
         self.assertTrue(any("PB-109" in e for e in report["errors"]))
+
+    def test_custom_gate_cannot_override_learner_evidence_or_task_verification(self):
+        with tempfile.TemporaryDirectory() as td:
+            local = Path(td) / "custom-contracts.json"
+            forged = copy.deepcopy(gate.load_json(gate.CUSTOM_CONTRACTS))
+            forged["entries"][0]["learner_evidence_written"] = True
+            forged["entries"][0]["task_statement_retrieved"] = True
+            local.write_text(json.dumps(forged), encoding="utf-8")
+            with patch.object(gate, "CUSTOM_CONTRACTS", local):
+                report = gate.preflight()
+        self.assertEqual(report["engineering_checks"], "FAIL")
+        self.assertEqual(report["release_gate"], "BLOCKED_MANUAL")
+        self.assertFalse(report["auto_merge_permitted"])
+        self.assertTrue(any("learner_evidence_written" in e for e in report["errors"]))
+        self.assertTrue(any("task_statement_retrieved" in e for e in report["errors"]))
 
     def test_publication_claim_or_authority_override_fails(self):
         original = gate.load_json(gate.POLICY)
