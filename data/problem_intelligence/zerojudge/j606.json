@@ -1,0 +1,39 @@
+{
+  "schema_version": "apcs-problem-intelligence-v1",
+  "identity": {
+    "source": "zerojudge",
+    "external_id": "j606",
+    "canonical_url": "https://zerojudge.tw/ShowProblem?problemid=j606"
+  },
+  "lifecycle": "L0_INDEXED",
+  "source_metadata": {
+    "title": "2. 造字程式",
+    "statement_summary": "重複使用排列重排字串，最後依每次修改後的字串位置輸出前 R 行。",
+    "constraints": [
+      "1 <= K <= 20",
+      "1 <= Q <= 20",
+      "1 <= R <= K",
+      "初始字串由小寫英文字母組成"
+    ],
+    "metadata_source": "SOURCE_PAGE"
+  },
+  "classification": {
+    "status": "UNCLASSIFIED",
+    "confidence": null,
+    "primary_skill_candidate": null,
+    "supporting_skill_candidates": [],
+    "difficulty_candidate": null,
+    "prerequisite_candidates": [],
+    "expected_complexity_candidate": null,
+    "role_candidate": null,
+    "alternate_solution_risk_candidate": null,
+    "evidence_suitability_candidate": null,
+    "rationale": "",
+    "qa_reasons": [],
+    "classification_source": null
+  },
+  "integration": {
+    "pb_uid": "PB-9",
+    "runtime_eligible": false
+  }
+}
