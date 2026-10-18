@@ -1,0 +1,62 @@
+{
+  "schema_version": "apcs-problem-pilot-policy-review-v1",
+  "as_of": "2026-10-18",
+  "review_type": "CHATGPT_SOURCE_RECONCILIATION",
+  "approval_scope": "POLICY_CONSISTENCY_ONLY_NOT_CLASSIFICATION_APPROVAL",
+  "canonical_published_blob_sha": "d8d3d3f9643ee551c0df0738f57af5d4881f1c56",
+  "canonical_authority_blob_sha": "a0029bf79be0440d57325a75496a87e829425ee5",
+  "decisions": [
+    {
+      "pb_uid": "PB-9",
+      "source_problem": "https://zerojudge.tw/ShowProblem?problemid=j606",
+      "lesson_uid": "L-DAT-03",
+      "canonical_lesson": "https://app.notion.com/p/3c743be958cd811189fcd92a60c2a758",
+      "coach_contract": "https://app.notion.com/p/3c943be958cd813fad27c905cde26caf",
+      "decision": "KEEP_PUBLISHED_PLACEMENT_UNCHANGED",
+      "published_primary_skill": "S34_Matrix_2D",
+      "supporting_skills": [
+        "S07_String",
+        "S23_Simulation"
+      ],
+      "role": "Core Independent",
+      "evidence_level_cap": 3,
+      "method_confirmation_required": false,
+      "why": "L-DAT-03 explicitly assigns PB-9 as S34 Core Independent and requires real old->new coordinate mapping, state across steps and R-by-Q result organization; supporting String and Simulation are compatible.",
+      "evidence_rule": "A0 independent needs learner to demonstrate source/destination mapping and 2D organization; A2+ support cannot be independent evidence.",
+      "ai_classification_status": "NEEDS_QA",
+      "reviewer_approval": "PENDING",
+      "action": "No auto-clear of AI ambiguity and no Notion/Published mutation"
+    },
+    {
+      "pb_uid": "PB-27",
+      "source_problem": "https://zerojudge.tw/ShowProblem?problemid=d732",
+      "lesson_uid": "L-BIN-01",
+      "canonical_lesson": "https://app.notion.com/p/3c743be958cd81a9af82fdcf7ce5f004",
+      "coach_contract": null,
+      "decision": "KEEP_PUBLISHED_PLACEMENT_UNCHANGED",
+      "published_primary_skill": "S10_Binary_Search",
+      "supporting_skills": [
+        "S30_Complexity"
+      ],
+      "role": "Guided Drill",
+      "evidence_level_cap": 2,
+      "method_confirmation_required": false,
+      "why": "L-BIN-01 explicitly says PB-27 Guided Drill is Learning-only, while PB-24 is Core Independent Gate candidate; OJ AC in PB-27 alone is not S10 mastery.",
+      "evidence_rule": "Do not count PB-27 AC as S10 gate mastery. Actual binary-search invariant demonstrated by learner is required for later Gate-grade evidence on suitable tasks.",
+      "ai_classification_status": "CANDIDATE_UNREVIEWED",
+      "reviewer_approval": "PENDING",
+      "action": "No new method-confirmation requirement on this Learning-only placement"
+    }
+  ],
+  "release_boundaries": {
+    "can_change_published_curriculum": false,
+    "can_change_notion_formal_content": false,
+    "can_autoadopt_l1": false,
+    "can_count_oj_or_local_as_mastery": false,
+    "genuine_learner_acceptance": "PENDING",
+    "allow_merge_without_explicit_user_approval": false,
+    "ai_candidate_approval": "PENDING",
+    "c8_status": "OPEN",
+    "learner_readiness": "NOT_ASSESSED"
+  }
+}
