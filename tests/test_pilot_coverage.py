@@ -44,22 +44,59 @@ class APCSProblemPilotAuditTest(unittest.TestCase):
         )
 
     def test_no_new_runtime_published_claims(self):
+        curated = []
         for entry in self.seed["entries"]:
             self.assertFalse(
                 entry["runtime_published_by_pilot"]
             )
             self.assertEqual(
-                entry["source_verification"],
-                "NOT_CHECKED_THIS_PILOT",
-            )
-            self.assertEqual(
-                entry["testcases"],
-                "NOT_CURATED",
-            )
-            self.assertEqual(
                 entry["enrichment"],
                 "NOT_CURATED",
             )
+            if entry["testcases"] == "OFFICIAL_SAMPLE_CURATED":
+                curated.append(entry)
+            else:
+                self.assertEqual(
+                    entry["source_verification"],
+                    "NOT_CHECKED_THIS_PILOT",
+                )
+                self.assertEqual(
+                    entry["testcases"],
+                    "NOT_CURATED",
+                )
+        self.assertEqual(len(curated), 4)
+        self.assertEqual(
+            sum(x["source_receipt"]["sample_count"] for x in curated),
+            8,
+        )
+
+    def test_official_sample_receipt_cannot_be_faked(self):
+        seed = copy.deepcopy(self.seed)
+        curated = next(
+            x for x in seed["entries"]
+            if x["testcases"] == "OFFICIAL_SAMPLE_CURATED"
+        )
+        curated["source_receipt"]["sample_count"] = 999
+        errors = validate_pilot(
+            self.published, self.audit, seed
+        )
+        self.assertTrue(
+            any("sample asset/receipt mismatch" in x for x in errors)
+        )
+
+    def test_official_case_sources_are_official_only(self):
+        for entry in self.seed["entries"]:
+            if entry["testcases"] != "OFFICIAL_SAMPLE_CURATED":
+                continue
+            asset = load_json(ROOT / entry["source_receipt"]["asset_path"])
+            self.assertEqual(
+                len(asset["cases"]),
+                entry["source_receipt"]["sample_count"],
+            )
+            for case in asset["cases"]:
+                self.assertEqual(case["provenance"], "OFFICIAL")
+                self.assertEqual(case["trust"], "OFFICIAL")
+                self.assertEqual(case["visibility"], "official")
 
     def test_selected_problem_metadata_cannot_be_silently_changed(self):
         seed = copy.deepcopy(self.seed)
