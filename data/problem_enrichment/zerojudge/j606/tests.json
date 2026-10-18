@@ -25,6 +25,46 @@
       "trust": "OFFICIAL",
       "suite": "fast",
       "visibility": "official"
+    },
+    {
+      "id": "E1",
+      "name": "加強測資 1",
+      "input": "1 1 1\na\n1\n",
+      "expected_output": "a\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
+    },
+    {
+      "id": "E2",
+      "name": "加強測資 2",
+      "input": "2 3 2\nab\n2 1\n2 1\n1 2\n",
+      "expected_output": "baa\nabb\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
+    },
+    {
+      "id": "E3",
+      "name": "加強測資 3",
+      "input": "3 2 1\nabc\n2 3 1\n1 2 3\n",
+      "expected_output": "cc\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
+    },
+    {
+      "id": "E4",
+      "name": "加強測資 4",
+      "input": "4 3 4\nabca\n4 3 2 1\n2 1 4 3\n3 4 1 2\n",
+      "expected_output": "aca\ncab\nbac\naba\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
     }
   ]
 }
