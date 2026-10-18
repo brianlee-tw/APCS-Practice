@@ -209,23 +209,34 @@ def validate_pilot(
                     asset = load_json(asset_file)
                     cases = asset.get("cases", [])
                     identity = asset.get("identity", {})
+                    if not isinstance(cases, list):
+                        errors.append(f"{uid}: testcases array missing")
+                        cases = []
+                    # The receipt attests only to the source OFFICIAL cases.
+                    # AI edge tests may coexist in the same bundle without
+                    # being relabeled or counted as official examples.
+                    official = [
+                        case for case in cases
+                        if isinstance(case, dict)
+                        and case.get("provenance") == "OFFICIAL"
+                    ]
                     if (
                         asset.get("schema_version") != "apcs-test-bundle-v1"
                         or identity.get("source") != "zerojudge"
                         or identity.get("external_id")
                         != str(p["url"]).rsplit("problemid=", 1)[-1]
                         or identity.get("canonical_url") != p["url"]
-                        or len(cases) != receipt.get("sample_count")
-                        or not cases
+                        or len(official) != receipt.get("sample_count")
+                        or not official
                         or any(
-                            case.get("provenance") != "OFFICIAL"
-                            or case.get("trust") != "OFFICIAL"
+                            case.get("trust") != "OFFICIAL"
                             or case.get("suite") != "fast"
                             or case.get("visibility") != "official"
                             or not isinstance(case.get("input"), str)
                             or not isinstance(case.get("expected_output"), str)
-                            for case in cases
+                            for case in official
                         )
+                        or any(not isinstance(case, dict) for case in cases)
                     ):
                         errors.append(f"{uid}: official sample asset/receipt mismatch")
                 except (OSError, ValueError, TypeError) as exc:
