@@ -30,6 +30,10 @@ try:
         SOURCE_REVIEWS,
         verify_batch,
     )
+    from .pilot_custom_contracts import (
+        MANIFEST as CUSTOM_CONTRACTS,
+        validate as validate_custom_contracts,
+    )
     from .problem_intelligence import ProblemIntelligenceStore
     from .test_assets import TestAssetStore
 except ImportError:
@@ -49,6 +53,10 @@ except ImportError:
     from pilot_source_review import (
         SOURCE_REVIEWS,
         verify_batch,
+    )
+    from pilot_custom_contracts import (
+        MANIFEST as CUSTOM_CONTRACTS,
+        validate as validate_custom_contracts,
     )
     from problem_intelligence import ProblemIntelligenceStore
     from test_assets import TestAssetStore
@@ -127,6 +135,8 @@ def preflight(root: Path = ROOT) -> dict[str, Any]:
     errors.extend(validate_pilot(published, audit, seed))
     staged_source_batch = load_json(SOURCE_REVIEWS)
     errors.extend(verify_batch(staged_source_batch, seed, published))
+    staged_custom = load_json(CUSTOM_CONTRACTS)
+    errors.extend(validate_custom_contracts(staged_custom, seed, published))
 
     by_uid = {p["pb_uid"]: p for p in published["placements"]}
     problems = {p["pb_uid"]: p for p in published["problems"]}
@@ -280,6 +290,15 @@ def preflight(root: Path = ROOT) -> dict[str, Any]:
             "source_review_special_checker_required": sum(
                 row["judge_mode"] == "VALIDATE_ANY_CORRECT_X"
                 for row in staged_source_batch["entries"]
+            ),
+            "custom_lesson_contracts_reviewed": len(staged_custom["entries"]),
+            "custom_task_packets_verified": sum(
+                row["task_statement_retrieved"]
+                for row in staged_custom["entries"]
+            ),
+            "custom_gate_candidates_conditional": sum(
+                row["gate_candidate"]
+                for row in staged_custom["entries"]
             ),
         },
         "errors": errors,
