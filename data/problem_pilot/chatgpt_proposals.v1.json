@@ -1,0 +1,100 @@
+{
+  "schema_version": "apcs-chatgpt-classification-proposals-v1",
+  "prompt_version": "apcs-l1-candidate-v1",
+  "authored_on": "2026-10-18",
+  "model": "chatgpt-gpt-6-conversation",
+  "proposal_source": "CHATGPT_CONVERSATION",
+  "proposals": [
+    {
+      "pb_uid": "PB-27",
+      "candidate": {
+        "confidence": 0.96,
+        "primary_skill_candidate": "S10_Binary_Search",
+        "supporting_skill_candidates": [
+          "S30_Complexity"
+        ],
+        "difficulty_candidate": "D2",
+        "prerequisite_candidates": [
+          "S05_Array",
+          "S03_Loops"
+        ],
+        "expected_complexity_candidate": "Time O(N + K log N); space O(N) for stored sorted array",
+        "role_candidate": "Guided Drill",
+        "alternate_solution_risk_candidate": "Low",
+        "evidence_suitability_candidate": "Both",
+        "rationale": "Official d732 gives strictly increasing A (N<=100000), K<=100000 membership queries with 1-based index output. Given sorted input, individual binary searches avoid O(NK) scanning; repeated queries make the logarithmic constraint signal explicit. Consistent with Published Skill/Role/D2, without claiming OJ correctness.",
+        "ambiguity_notes": [],
+        "classification_source": "AI_CANDIDATE"
+      }
+    },
+    {
+      "pb_uid": "PB-183",
+      "candidate": {
+        "confidence": 0.91,
+        "primary_skill_candidate": "S05_Array",
+        "supporting_skill_candidates": [
+          "S23_Simulation"
+        ],
+        "difficulty_candidate": "D2",
+        "prerequisite_candidates": [
+          "S03_Loops",
+          "S02_Conditionals"
+        ],
+        "expected_complexity_candidate": "Time O(N) per input sequence; extra space O(N) for differences/seen flags",
+        "role_candidate": "Core Independent",
+        "alternate_solution_risk_candidate": "Medium",
+        "evidence_suitability_candidate": "Both",
+        "rationale": "Official d097 defines a jolly sequence through adjacent absolute differences exactly 1..N-1, with multiple test cases until EOF and N<3000. An indexed seen array or equivalent representation checks completeness/uniqueness; boundary N=1 and repeated/out-of-range differences merit tests. Published Primary S05_Array/D2/Core is reasonable.",
+        "ambiguity_notes": [],
+        "classification_source": "AI_CANDIDATE"
+      }
+    },
+    {
+      "pb_uid": "PB-9",
+      "candidate": {
+        "confidence": 0.77,
+        "primary_skill_candidate": "S34_Matrix_2D",
+        "supporting_skill_candidates": [
+          "S07_String",
+          "S23_Simulation"
+        ],
+        "difficulty_candidate": "D3",
+        "prerequisite_candidates": [
+          "S05_Array",
+          "S07_String",
+          "S03_Loops"
+        ],
+        "expected_complexity_candidate": "Time O(KQ + RQ); space O(K + RQ) for current strings and retained requested output, or O(K+QK) if all states are kept",
+        "role_candidate": "Core Independent",
+        "alternate_solution_risk_candidate": "Low",
+        "evidence_suitability_candidate": "Both",
+        "rationale": "Official j606 defines Q permutations of a length-K string (old position i moves to new P_i), followed by transposed output of R positions across Q resulting strings. Matrix/2D indexing matches the row-by-column output model; maintaining state across permutations also makes String/Simulation central. K,Q<=20 and R<=K.",
+        "ambiguity_notes": [
+          "Primary Skill may be String/Simulation rather than Matrix/2D Data: confirm which representation is the intended independent skill target for this Published placement."
+        ],
+        "classification_source": "AI_CANDIDATE"
+      }
+    },
+    {
+      "pb_uid": "PB-182",
+      "candidate": {
+        "confidence": 0.97,
+        "primary_skill_candidate": "S02_Conditionals",
+        "supporting_skill_candidates": [
+          "S01_IO"
+        ],
+        "difficulty_candidate": "D2",
+        "prerequisite_candidates": [
+          "S01_IO"
+        ],
+        "expected_complexity_candidate": "Time O(1); extra space O(1)",
+        "role_candidate": "Core Independent",
+        "alternate_solution_risk_candidate": "Low",
+        "evidence_suitability_candidate": "Both",
+        "rationale": "Official d067 requests Gregorian leap-year classification from one positive integer y, including century and 400-year exceptions; nested or compound conditions distinguish common edge cases. Published Conditionals/D2/Core is consistent.",
+        "ambiguity_notes": [],
+        "classification_source": "AI_CANDIDATE"
+      }
+    }
+  ]
+}
