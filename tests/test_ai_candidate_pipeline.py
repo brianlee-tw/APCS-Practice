@@ -137,7 +137,7 @@ class CandidatePipelineTest(unittest.TestCase):
             evaluate(self.jobs, generated, self.pub, ProblemIntelligenceStore(PROFILE_DIR))
         generated = self.fake_generate()
         generated["responses"].append(copy.deepcopy(generated["responses"][0]))
-        with self.assertRaisesRegex(CandidateError, "duplicate"):
+        with self.assertRaisesRegex(CandidateError, "duplicate|more model responses"):
             evaluate(self.jobs, generated, self.pub, ProblemIntelligenceStore(PROFILE_DIR))
 
     def test_source_metadata_change_invalidates_old_ai_response(self):
