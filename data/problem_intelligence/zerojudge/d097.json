@@ -1,0 +1,37 @@
+{
+  "schema_version": "apcs-problem-intelligence-v1",
+  "identity": {
+    "source": "zerojudge",
+    "external_id": "d097",
+    "canonical_url": "https://zerojudge.tw/ShowProblem?problemid=d097"
+  },
+  "lifecycle": "L0_INDEXED",
+  "source_metadata": {
+    "title": "10038 - Jolly Jumpers",
+    "statement_summary": "對每行一組的整數序列判斷相鄰差值的絕對值是否恰好包含 1 到 n-1。",
+    "constraints": [
+      "n 為正整數且 n < 3000",
+      "輸入可含多組資料，每組一行"
+    ],
+    "metadata_source": "SOURCE_PAGE"
+  },
+  "classification": {
+    "status": "UNCLASSIFIED",
+    "confidence": null,
+    "primary_skill_candidate": null,
+    "supporting_skill_candidates": [],
+    "difficulty_candidate": null,
+    "prerequisite_candidates": [],
+    "expected_complexity_candidate": null,
+    "role_candidate": null,
+    "alternate_solution_risk_candidate": null,
+    "evidence_suitability_candidate": null,
+    "rationale": "",
+    "qa_reasons": [],
+    "classification_source": null
+  },
+  "integration": {
+    "pb_uid": "PB-183",
+    "runtime_eligible": false
+  }
+}
