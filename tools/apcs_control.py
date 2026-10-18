@@ -601,7 +601,7 @@ def current_problem(filename: str | None):
     )
 
     legacy_placement_match = re.search(
-        r"__([A-Za-z0-9_.:-]+)$",
+        r"__([A-Za-z0-9_.:-]+(?:-[A-Za-z0-9_.:-]+)*)$",
         Path(filename).stem,
     )
     placement_uid = (
