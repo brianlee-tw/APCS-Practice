@@ -35,6 +35,9 @@ class PilotReleasePreflightTest(unittest.TestCase):
             "custom_lesson_contracts_reviewed": 5,
             "custom_task_packets_verified": 0,
             "custom_gate_candidates_conditional": 4,
+            "final_four_reviewed_official": 3,
+            "final_four_pending_official": 1,
+            "final_four_official_samples_staged": 4,
         })
 
     def test_staged_multisource_review_cannot_enable_exact_checker_for_977c(self):
@@ -65,6 +68,20 @@ class PilotReleasePreflightTest(unittest.TestCase):
         self.assertFalse(report["auto_merge_permitted"])
         self.assertTrue(any("learner_evidence_written" in e for e in report["errors"]))
         self.assertTrue(any("task_statement_retrieved" in e for e in report["errors"]))
+
+    def test_last_four_q182_cannot_claim_unverified_official_samples(self):
+        with tempfile.TemporaryDirectory() as td:
+            local = Path(td) / "last-four.json"
+            tampered = copy.deepcopy(gate.load_json(gate.FINAL_FOUR))
+            pending = next(x for x in tampered["records"] if x["pb_uid"] == "PB-10")
+            pending["official_samples_verified"] = True
+            pending["samples"] = [{"input": "fake", "output": "fake"}]
+            local.write_text(json.dumps(tampered), encoding="utf-8")
+            with patch.object(gate, "FINAL_FOUR", local):
+                report = gate.preflight()
+        self.assertEqual(report["engineering_checks"], "FAIL")
+        self.assertEqual(report["release_gate"], "BLOCKED_MANUAL")
+        self.assertTrue(any("PB-10" in x for x in report["errors"]))
 
     def test_publication_claim_or_authority_override_fails(self):
         original = gate.load_json(gate.POLICY)
