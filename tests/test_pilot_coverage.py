@@ -91,14 +91,22 @@ class APCSProblemPilotAuditTest(unittest.TestCase):
             if entry["testcases"] != "OFFICIAL_SAMPLE_CURATED":
                 continue
             asset = load_json(ROOT / entry["source_receipt"]["asset_path"])
+            official = [
+                c for c in asset["cases"]
+                if c["provenance"] == "OFFICIAL"
+            ]
             self.assertEqual(
-                len(asset["cases"]),
+                len(official),
                 entry["source_receipt"]["sample_count"],
             )
-            for case in asset["cases"]:
-                self.assertEqual(case["provenance"], "OFFICIAL")
+            for case in official:
                 self.assertEqual(case["trust"], "OFFICIAL")
                 self.assertEqual(case["visibility"], "official")
+            for case in asset["cases"]:
+                if case["provenance"] != "OFFICIAL":
+                    self.assertEqual(case["provenance"], "AI_GENERATED")
+                    self.assertEqual(case["trust"], "DIFFERENTIAL_VERIFIED")
+                    self.assertEqual(case["suite"], "full")
 
     def test_official_samples_are_visible_in_practice_and_strict_exam(self):
         store = TestAssetStore(
