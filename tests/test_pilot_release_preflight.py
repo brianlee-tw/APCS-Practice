@@ -29,7 +29,24 @@ class PilotReleasePreflightTest(unittest.TestCase):
             "ai_needs_qa": 1,
             "official_samples": 8,
             "differential_edge_tests": 17,
+            "source_review_staged": 5,
+            "source_review_exact_output": 4,
+            "source_review_special_checker_required": 1,
         })
+
+    def test_staged_multisource_review_cannot_enable_exact_checker_for_977c(self):
+        batch = gate.load_json(gate.SOURCE_REVIEWS)
+        with tempfile.TemporaryDirectory() as td:
+            local = Path(td) / "batch.json"
+            wrong = copy.deepcopy(batch)
+            row = next(x for x in wrong["entries"] if x["pb_uid"] == "PB-109")
+            row["judge_mode"] = "EXACT_OUTPUT"
+            local.write_text(json.dumps(wrong), encoding="utf-8")
+            with patch.object(gate, "SOURCE_REVIEWS", local):
+                report = gate.preflight()
+        self.assertEqual(report["engineering_checks"], "FAIL")
+        self.assertEqual(report["release_gate"], "BLOCKED_MANUAL")
+        self.assertTrue(any("PB-109" in e for e in report["errors"]))
 
     def test_publication_claim_or_authority_override_fails(self):
         original = gate.load_json(gate.POLICY)
