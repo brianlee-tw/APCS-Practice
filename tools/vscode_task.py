@@ -36,6 +36,10 @@ try:
         unified_diff,
     )
     from .runtime_curriculum import RuntimeCurriculum
+    from .problem_intelligence import (
+        normalize_problem_url,
+        ProblemIntelligenceError,
+    )
     from .test_assets import (
         SUITE_FAST,
         SUITE_FULL,
@@ -93,6 +97,10 @@ except ImportError:
         unified_diff,
     )
     from runtime_curriculum import RuntimeCurriculum
+    from problem_intelligence import (
+        normalize_problem_url,
+        ProblemIntelligenceError,
+    )
     from test_assets import (
         SUITE_FAST,
         SUITE_FULL,
@@ -353,11 +361,40 @@ def _test_bundle(
     if context is None:
         return None
 
-    return TEST_ASSETS.load(
-        context.source,
-        context.problem_id,
+    # Published problem IDs are globally namespaced (ZJ-d732), but
+    # TestAssetStore uses the judge's exact external ID (zerojudge/d732).
+    # Never strip a prefix without reconciling the canonical source URL.
+    source = str(context.source or "").strip().casefold()
+    problem_id = str(context.problem_id or "").strip().casefold()
+    if source == "zerojudge":
+        if context.canonical_url:
+            try:
+                identity = normalize_problem_url(context.canonical_url)
+            except ProblemIntelligenceError:
+                return None
+            if problem_id not in {
+                identity.external_id,
+                f"zj-{identity.external_id}",
+            }:
+                return None
+            problem_id = identity.external_id
+        elif problem_id.startswith("zj-"):
+            # A namespaced Published ID without a canonical URL has
+            # insufficient authority to derive a judge-local identity.
+            return None
+    bundle = TEST_ASSETS.load(
+        source or None,
+        problem_id,
         include_candidates=True,
     )
+    if (
+        bundle is not None
+        and source == "zerojudge"
+        and context.canonical_url
+        and bundle.canonical_url != identity.canonical_url
+    ):
+        return None
+    return bundle
 
 
 def _visible_cases(
