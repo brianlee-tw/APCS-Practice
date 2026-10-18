@@ -382,7 +382,11 @@ def evaluate(
             raise CandidateError(f"{uid}: rationale invalid")
         # Hard fail on fabricated/unknown catalog identities. Model confidence
         # cannot override source or the published Skill taxonomy.
-        all_skills = [c["primary_skill_candidate"], *c["supporting_skill_candidates"]]
+        all_skills = [
+            c["primary_skill_candidate"],
+            *c["supporting_skill_candidates"],
+            *c["prerequisite_candidates"],
+        ]
         if any(x is not None and x not in skill_uids for x in all_skills):
             raise CandidateError(f"{uid}: unknown skill UID")
         if c["difficulty_candidate"] not in VALID_DIFFICULTY | {None}:
