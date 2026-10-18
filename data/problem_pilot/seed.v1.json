@@ -220,10 +220,18 @@
       "suitability_3p3": "Required-core",
       "assessment_only": false,
       "priority_reason": "Array/index 與反例",
-      "source_verification": "NOT_CHECKED_THIS_PILOT",
-      "testcases": "NOT_CURATED",
+      "source_verification": "OFFICIAL_PAGE_SNAPSHOT_REVIEWED",
+      "testcases": "OFFICIAL_SAMPLE_CURATED",
       "enrichment": "NOT_CURATED",
-      "runtime_published_by_pilot": false
+      "runtime_published_by_pilot": false,
+      "source_receipt": {
+        "url": "https://zerojudge.tw/ShowProblem?problemid=d097",
+        "reviewed_on": "2026-10-18",
+        "source": "public-indexed-official-page",
+        "sample_count": 1,
+        "asset_path": "data/problem_enrichment/zerojudge/d097/tests.json",
+        "caveat": "Public source page snapshot, not live platform submission or proof of hidden-test correctness"
+      }
     },
     {
       "rank": 13,
@@ -274,10 +282,18 @@
       "suitability_3p3": "Supporting",
       "assessment_only": false,
       "priority_reason": "Binary Search 基礎",
-      "source_verification": "NOT_CHECKED_THIS_PILOT",
-      "testcases": "NOT_CURATED",
+      "source_verification": "OFFICIAL_PAGE_SNAPSHOT_REVIEWED",
+      "testcases": "OFFICIAL_SAMPLE_CURATED",
       "enrichment": "NOT_CURATED",
-      "runtime_published_by_pilot": false
+      "runtime_published_by_pilot": false,
+      "source_receipt": {
+        "url": "https://zerojudge.tw/ShowProblem?problemid=d732",
+        "reviewed_on": "2026-10-18",
+        "source": "public-indexed-official-page",
+        "sample_count": 1,
+        "asset_path": "data/problem_enrichment/zerojudge/d732/tests.json",
+        "caveat": "Public source page snapshot, not live platform submission or proof of hidden-test correctness"
+      }
     },
     {
       "rank": 16,
@@ -310,10 +326,18 @@
       "suitability_3p3": "Required-core",
       "assessment_only": false,
       "priority_reason": "二維資料與索引",
-      "source_verification": "NOT_CHECKED_THIS_PILOT",
-      "testcases": "NOT_CURATED",
+      "source_verification": "OFFICIAL_PAGE_SNAPSHOT_REVIEWED",
+      "testcases": "OFFICIAL_SAMPLE_CURATED",
       "enrichment": "NOT_CURATED",
-      "runtime_published_by_pilot": false
+      "runtime_published_by_pilot": false,
+      "source_receipt": {
+        "url": "https://zerojudge.tw/ShowProblem?problemid=j606",
+        "reviewed_on": "2026-10-18",
+        "source": "public-indexed-official-page",
+        "sample_count": 2,
+        "asset_path": "data/problem_enrichment/zerojudge/j606/tests.json",
+        "caveat": "Public source page snapshot, not live platform submission or proof of hidden-test correctness"
+      }
     },
     {
       "rank": 18,
@@ -328,10 +352,18 @@
       "suitability_3p3": "Required-core",
       "assessment_only": false,
       "priority_reason": "條件邊界判斷",
-      "source_verification": "NOT_CHECKED_THIS_PILOT",
-      "testcases": "NOT_CURATED",
+      "source_verification": "OFFICIAL_PAGE_SNAPSHOT_REVIEWED",
+      "testcases": "OFFICIAL_SAMPLE_CURATED",
       "enrichment": "NOT_CURATED",
-      "runtime_published_by_pilot": false
+      "runtime_published_by_pilot": false,
+      "source_receipt": {
+        "url": "https://zerojudge.tw/ShowProblem?problemid=d067",
+        "reviewed_on": "2026-10-18",
+        "source": "public-indexed-official-page",
+        "sample_count": 4,
+        "asset_path": "data/problem_enrichment/zerojudge/d067/tests.json",
+        "caveat": "Public source page snapshot, not live platform submission or proof of hidden-test correctness"
+      }
     }
   ]
 }
