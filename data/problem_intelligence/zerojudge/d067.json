@@ -1,0 +1,37 @@
+{
+  "schema_version": "apcs-problem-intelligence-v1",
+  "identity": {
+    "source": "zerojudge",
+    "external_id": "d067",
+    "canonical_url": "https://zerojudge.tw/ShowProblem?problemid=d067"
+  },
+  "lifecycle": "L0_INDEXED",
+  "source_metadata": {
+    "title": "格瑞哥里的煩惱 (1 行版)",
+    "statement_summary": "判定輸入的正整數西元年份在格瑞哥里曆中是否為閏年。",
+    "constraints": [
+      "輸入 y 是正整數",
+      "單筆年份輸入"
+    ],
+    "metadata_source": "SOURCE_PAGE"
+  },
+  "classification": {
+    "status": "UNCLASSIFIED",
+    "confidence": null,
+    "primary_skill_candidate": null,
+    "supporting_skill_candidates": [],
+    "difficulty_candidate": null,
+    "prerequisite_candidates": [],
+    "expected_complexity_candidate": null,
+    "role_candidate": null,
+    "alternate_solution_risk_candidate": null,
+    "evidence_suitability_candidate": null,
+    "rationale": "",
+    "qa_reasons": [],
+    "classification_source": null
+  },
+  "integration": {
+    "pb_uid": "PB-182",
+    "runtime_eligible": false
+  }
+}
