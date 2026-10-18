@@ -31,7 +31,7 @@ except ImportError:
 
 
 PLACEMENT_RE = re.compile(
-    r"__([A-Za-z0-9_.:-]+)$"
+    r"__([A-Za-z0-9_.:-]+(?:-[A-Za-z0-9_.:-]+)*)$"
 )
 LEGACY_ID_RE = re.compile(
     r"^([A-Za-z]\d+|\d+)(?:_|$)"
