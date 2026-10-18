@@ -4,6 +4,8 @@ import sys
 import unittest
 from pathlib import Path
 
+from tools.test_assets import TestAssetStore, SUITE_FAST, SUITE_FULL
+
 from tools.pilot_coverage import (
     AUDIT,
     PUBLISHED,
@@ -97,6 +99,42 @@ class APCSProblemPilotAuditTest(unittest.TestCase):
                 self.assertEqual(case["provenance"], "OFFICIAL")
                 self.assertEqual(case["trust"], "OFFICIAL")
                 self.assertEqual(case["visibility"], "official")
+
+    def test_official_samples_are_visible_in_practice_and_strict_exam(self):
+        store = TestAssetStore(
+            ROOT / "data" / "problem_enrichment",
+            ROOT / ".apcs" / "runtime",
+        )
+        for entry in self.seed["entries"]:
+            if entry["testcases"] != "OFFICIAL_SAMPLE_CURATED":
+                continue
+            source_id = entry["canonical_url"].split("problemid=", 1)[1]
+            bundle = store.load(
+                "zerojudge",
+                source_id,
+                include_candidates=False,
+            )
+            self.assertIsNotNone(bundle)
+            assert bundle is not None
+            self.assertEqual(
+                bundle.official_count,
+                entry["source_receipt"]["sample_count"],
+            )
+            for mode, suite in (
+                ("practice", SUITE_FAST),
+                ("exam", SUITE_FULL),
+            ):
+                visible = store.visible_cases(
+                    bundle,
+                    mode=mode,
+                    activity="Core Independent",
+                    post_attempt=False,
+                    suite=suite,
+                )
+                self.assertEqual(
+                    len(visible),
+                    bundle.official_count,
+                )
 
     def test_selected_problem_metadata_cannot_be_silently_changed(self):
         seed = copy.deepcopy(self.seed)
