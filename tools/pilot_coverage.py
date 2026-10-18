@@ -167,14 +167,69 @@ def validate_pilot(
             "difficulty": p["difficulty"],
             "suitability_3p3": p.get("suitability", {}).get("3+3", ""),
             "assessment_only": p.get("assessment_only") is True,
-            "source_verification": "NOT_CHECKED_THIS_PILOT",
-            "testcases": "NOT_CURATED",
             "enrichment": "NOT_CURATED",
             "runtime_published_by_pilot": False,
         }
         for field, actual in expected.items():
             if row.get(field) != actual:
                 errors.append(f"{uid}: {field} does not match safe baseline")
+        receipt = row.get("source_receipt")
+        if receipt is None:
+            if (
+                row.get("source_verification") != "NOT_CHECKED_THIS_PILOT"
+                or row.get("testcases") != "NOT_CURATED"
+            ):
+                errors.append(f"{uid}: no source receipt for curated claim")
+        else:
+            if (
+                row.get("source_verification")
+                != "OFFICIAL_PAGE_SNAPSHOT_REVIEWED"
+                or row.get("testcases") != "OFFICIAL_SAMPLE_CURATED"
+            ):
+                errors.append(f"{uid}: receipt/status mismatch")
+            if not isinstance(receipt, dict):
+                errors.append(f"{uid}: source receipt must be object")
+                continue
+            expected_asset_path = (
+                "data/problem_enrichment/zerojudge/"
+                + str(p["url"]).rsplit("problemid=", 1)[-1]
+                + "/tests.json"
+            )
+            if (
+                p["source_platform"] != "ZeroJudge"
+                or receipt.get("asset_path") != expected_asset_path
+                or receipt.get("url") != p["url"]
+                or not receipt.get("reviewed_on")
+                or receipt.get("source") != "public-indexed-official-page"
+            ):
+                errors.append(f"{uid}: source receipt identity is not verified")
+            else:
+                asset_file = ROOT / expected_asset_path
+                try:
+                    asset = load_json(asset_file)
+                    cases = asset.get("cases", [])
+                    identity = asset.get("identity", {})
+                    if (
+                        asset.get("schema_version") != "apcs-test-bundle-v1"
+                        or identity.get("source") != "zerojudge"
+                        or identity.get("external_id")
+                        != str(p["url"]).rsplit("problemid=", 1)[-1]
+                        or identity.get("canonical_url") != p["url"]
+                        or len(cases) != receipt.get("sample_count")
+                        or not cases
+                        or any(
+                            case.get("provenance") != "OFFICIAL"
+                            or case.get("trust") != "OFFICIAL"
+                            or case.get("suite") != "fast"
+                            or case.get("visibility") != "official"
+                            or not isinstance(case.get("input"), str)
+                            or not isinstance(case.get("expected_output"), str)
+                            for case in cases
+                        )
+                    ):
+                        errors.append(f"{uid}: official sample asset/receipt mismatch")
+                except (OSError, ValueError, TypeError) as exc:
+                    errors.append(f"{uid}: official sample asset invalid: {exc}")
         if placement["primary_skill"] not in known_skills:
             errors.append(f"{uid}: unknown primary skill")
         if not str(row.get("priority_reason") or "").strip():
