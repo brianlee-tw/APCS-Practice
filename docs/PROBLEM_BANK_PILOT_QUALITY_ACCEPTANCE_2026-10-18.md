@@ -59,3 +59,44 @@ ZeroJudge 官方標籤同時有 **二維陣列**與**字串**。題意包含：�
 **尚未完成：** 使用者本機 VS Code 鍵盤操作、實際 `Ctrl+Shift+B` 端到端 UI、真實 learner 寫程式 → OJ → Evidence 完整路徑、j606 curator final decision、d732 method_confirmation policy decision、其他 14 題的 source QA。
 
 不可將這份工程紀錄解讀為 `C8` 完成或 `LEARNER_READINESS` 評為 PASS。PR #89 保持 Draft、不 merge。
+
+
+## 5. Follow-up policy reconciliation (2026-10-18 evening)
+
+Following the earlier report's open questions, re-read the **canonical Notion Lessons** (read-only, no Notion writes) and resolved the **existing Published policy choice**, while retaining AI candidate QA.
+
+| PB UID | Lesson authority | Source-backed interpretation | Decision |
+| --- | --- | --- | --- |
+| PB-9 / j606 | [Notion L-DAT-03](https://app.notion.com/p/3c743be958cd811189fcd92a60c2a758), [AI Coach](https://app.notion.com/p/3c943be958cd813fad27c905cde26caf) | Lesson deliberately tests **S34_Matrix_2D** via source→destination mapping, multi-step state and R×Q output; String/Simulation remain supporting. Core Independent, A1 only diagnostic; A2+ cannot claim independent evidence. | **Keep Published unchanged.** ChatGPT classification **NEEDS_QA** and formal human L1 adoption still pending. |
+| PB-27 / d732 | [Notion L-BIN-01](https://app.notion.com/p/3c743be958cd81a9af82fdcf7ce5f004) | Explicit **Guided Drill / Learning-only**, not S10 gate; actual independent core gate candidate in lesson is **PB-24**. Published evidence cap 2, method_confirmation_required=false already reflect learning-only. | **Keep Published unchanged.** No extra method-confirmation rule needed for this learning-only exercise; OJ AC alone never upgrades S10 mastery. |
+
+These decisions resolve earlier *policy doubts* without pretending that an AI classification proposal has been approved or that any learner mastered these methods.
+
+A machine-readable `data/problem_pilot/policy_review.v1.json` records the Notion source URLs, Published placement invariants, decisions and **PENDING** reviewer/learner gates.
+
+## 6. Automated release preflight
+
+Added read-only `tools/pilot_release_preflight.py`, covered by `tests/test_pilot_release_preflight.py`.
+
+It verifies:
+- Git-blob hash pins for `curriculum/published.v23.json` and `docs/CURRENT_AUTHORITY.json` from known main; drift fails instead of silently accepting a new curriculum;
+- 18-item Pilot seed and four source receipts, four ChatGPT proposals/QA statuses, and the policy's exact two Published Placements;
+- eight `OFFICIAL` cases, 17 `AI_GENERATED / DIFFERENTIAL_VERIFIED` cases, Full-only exposure and strict Exam pre-attempt official-only restriction;
+- no implicit Notion/Published mutations, AI L1 approval, learner Evidence, C8 closure, readiness promotion, or merge permission.
+
+The output is intentionally:
+```text
+PILOT PREFLIGHT PASS / RELEASE BLOCKED_MANUAL | 8 official / 17 edges
+```
+
+**PASS** is only the reproducible engineering preflight, **BLOCKED_MANUAL** is the actual release state. The checker does not query current GitHub CI itself, which is verified separately.
+
+Operator check on the PR branch:
+```bash
+python3 tools/pilot_release_preflight.py
+python3 -m unittest tests.test_pilot_release_preflight -v
+```
+
+CI `APCS Validate #294` passed at `12d56286cf325d542826f0c9601370f658d36284`. This earlier report's open issues for j606/d732 are now **policy-reconciled**; the remaining gates are genuine learner VS Code acceptance, human authorization to merge, and separate human approval before any L1 candidate adoption.
+
+**Still not executed:** a real learner Test Center session, external OJ submission, Evidence writeback, or any Notion/Published change. C8 remains OPEN; LEARNER_READINESS remains NOT_ASSESSED.
