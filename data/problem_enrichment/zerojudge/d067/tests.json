@@ -1,0 +1,50 @@
+{
+  "schema_version": "apcs-test-bundle-v1",
+  "identity": {
+    "source": "zerojudge",
+    "external_id": "d067",
+    "canonical_url": "https://zerojudge.tw/ShowProblem?problemid=d067"
+  },
+  "cases": [
+    {
+      "id": "S1",
+      "name": "官方範例 1",
+      "input": "1992\n",
+      "expected_output": "a leap year\n",
+      "provenance": "OFFICIAL",
+      "trust": "OFFICIAL",
+      "suite": "fast",
+      "visibility": "official"
+    },
+    {
+      "id": "S2",
+      "name": "官方範例 2",
+      "input": "2100\n",
+      "expected_output": "a normal year\n",
+      "provenance": "OFFICIAL",
+      "trust": "OFFICIAL",
+      "suite": "fast",
+      "visibility": "official"
+    },
+    {
+      "id": "S3",
+      "name": "官方範例 3",
+      "input": "2021\n",
+      "expected_output": "a normal year\n",
+      "provenance": "OFFICIAL",
+      "trust": "OFFICIAL",
+      "suite": "fast",
+      "visibility": "official"
+    },
+    {
+      "id": "S4",
+      "name": "官方範例 4",
+      "input": "2000\n",
+      "expected_output": "a leap year\n",
+      "provenance": "OFFICIAL",
+      "trust": "OFFICIAL",
+      "suite": "fast",
+      "visibility": "official"
+    }
+  ]
+}
