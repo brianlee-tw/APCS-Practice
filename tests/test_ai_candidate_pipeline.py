@@ -100,7 +100,10 @@ class CandidatePipelineTest(unittest.TestCase):
         report = evaluate(
             self.jobs, generated, self.pub, ProblemIntelligenceStore(PROFILE_DIR)
         )
-        flagged = report["rows"][0]
+        modified_uid = generated["responses"][0]["pb_uid"]
+        flagged = next(
+            row for row in report["rows"] if row["pb_uid"] == modified_uid
+        )
         self.assertEqual(flagged["review_status"], "NEEDS_QA")
         self.assertTrue(
             any("Published difficulty" in s for s in flagged["qa_reasons"])
