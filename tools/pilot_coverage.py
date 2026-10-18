@@ -230,6 +230,31 @@ def validate_pilot(
                         errors.append(f"{uid}: official sample asset/receipt mismatch")
                 except (OSError, ValueError, TypeError) as exc:
                     errors.append(f"{uid}: official sample asset invalid: {exc}")
+
+                profile_file = (
+                    ROOT / "data" / "problem_intelligence"
+                    / "zerojudge"
+                    / (str(p["url"]).rsplit("problemid=", 1)[-1] + ".json")
+                )
+                try:
+                    profile = load_json(profile_file)
+                    metadata = profile.get("source_metadata", {})
+                    if (
+                        profile.get("schema_version")
+                        != "apcs-problem-intelligence-v1"
+                        or profile.get("lifecycle") != "L0_INDEXED"
+                        or profile.get("classification", {}).get("status")
+                        != "UNCLASSIFIED"
+                        or profile.get("integration", {}).get("pb_uid") != uid
+                        or profile.get("integration", {}).get("runtime_eligible")
+                        is not False
+                        or profile.get("identity", {}).get("source") != "zerojudge"
+                        or profile.get("identity", {}).get("canonical_url") != p["url"]
+                        or metadata.get("metadata_source") != "SOURCE_PAGE"
+                    ):
+                        errors.append(f"{uid}: L0 source profile authority mismatch")
+                except (OSError, ValueError, TypeError) as exc:
+                    errors.append(f"{uid}: L0 source profile invalid: {exc}")
         if placement["primary_skill"] not in known_skills:
             errors.append(f"{uid}: unknown primary skill")
         if not str(row.get("priority_reason") or "").strip():
