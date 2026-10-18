@@ -456,13 +456,85 @@ def evaluate(
     }
 
 
+CHATGPT_SCHEMA = "apcs-chatgpt-classification-proposals-v1"
+
+
+def convert_chatgpt_proposals(
+    bundle: dict[str, Any],
+    proposals: dict[str, Any],
+) -> dict[str, Any]:
+    """Attach trusted prepared-job identity to a conversational AI proposal.
+
+    The proposer supplies PB UID + candidate only. It cannot self-assert a
+    source fingerprint, canonical URL, provider receipt or review status.
+    """
+    if bundle.get("schema_version") != JOB_SCHEMA:
+        raise CandidateError("jobs schema mismatch")
+    if not isinstance(proposals, dict) or set(proposals) != {
+        "schema_version", "prompt_version", "authored_on", "model",
+        "proposal_source", "proposals",
+    }:
+        raise CandidateError("ChatGPT proposal envelope schema mismatch")
+    if (
+        proposals["schema_version"] != CHATGPT_SCHEMA
+        or proposals["prompt_version"] != bundle["prompt_version"]
+        or proposals["proposal_source"] != "CHATGPT_CONVERSATION"
+    ):
+        raise CandidateError("ChatGPT proposal provenance/version mismatch")
+    if (
+        not isinstance(proposals["model"], str)
+        or not proposals["model"].startswith("chatgpt-")
+        or not isinstance(proposals["authored_on"], str)
+    ):
+        raise CandidateError("ChatGPT proposal model/date invalid")
+    try:
+        dt.date.fromisoformat(proposals["authored_on"])
+    except ValueError as exc:
+        raise CandidateError("ChatGPT proposal authored_on must be ISO date") from exc
+    items = proposals["proposals"]
+    prepared = {job["pb_uid"]: job for job in bundle["jobs"]}
+    if (
+        len(prepared) != len(bundle["jobs"])
+        or not isinstance(items, list)
+        or not 1 <= len(items) <= min(4, len(prepared))
+    ):
+        raise CandidateError("ChatGPT proposal size or prepared job identity invalid")
+    seen = set()
+    responses = []
+    for item in items:
+        if not isinstance(item, dict) or set(item) != {"pb_uid", "candidate"}:
+            raise CandidateError("ChatGPT item must include only pb_uid + candidate")
+        uid = item["pb_uid"]
+        if not isinstance(uid, str) or uid not in prepared or uid in seen:
+            raise CandidateError("ChatGPT proposal PB UID unknown or duplicate")
+        seen.add(uid)
+        job = prepared[uid]
+        responses.append({
+            "pb_uid": uid,
+            "source": job["source"],
+            "external_id": job["external_id"],
+            "source_sha256": job["source_sha256"],
+            # No API provider was invoked; do not fabricate a provider receipt.
+            "provider_response_id": "",
+            "candidate": item["candidate"],
+        })
+    return {
+        "schema_version": RESPONSE_SCHEMA,
+        "prompt_version": bundle["prompt_version"],
+        "model": proposals["model"],
+        # Timestamp of local conversion, not a fabricated ChatGPT API event.
+        "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(),
+        "responses": responses,
+    }
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="APCS small AI candidate lane (no publication)")
     sub = parser.add_subparsers(dest="action", required=True)
-    for name in ("prepare", "generate", "evaluate"):
+    for name in ("prepare", "generate", "evaluate", "review-chatgpt"):
         p = sub.add_parser(name)
         p.add_argument("--output", type=Path, required=True)
-        if name != "prepare":
+        if name in {"generate", "evaluate"}:
             p.add_argument("--jobs", type=Path, required=True)
         if name == "generate":
             p.add_argument("--model", required=True)
@@ -470,6 +542,8 @@ def main(argv: list[str] | None = None) -> int:
             p.add_argument("--confirm-api-cost", action="store_true")
         if name == "evaluate":
             p.add_argument("--responses", type=Path, required=True)
+        if name == "review-chatgpt":
+            p.add_argument("--proposals", type=Path, required=True)
     args = parser.parse_args(argv)
     try:
         # Avoid charging for a paid API request when the target cannot be
@@ -491,6 +565,14 @@ def main(argv: list[str] | None = None) -> int:
                 load_json(args.jobs), model=args.model, api_key=key,
                 limit=args.limit,
             )
+        elif args.action == "review-chatgpt":
+            published = load_json(PUBLISHED)
+            profiles = ProblemIntelligenceStore(PROFILE_DIR)
+            jobs = build_jobs(published, load_json(SEED), profiles)
+            responses = convert_chatgpt_proposals(
+                jobs, load_json(args.proposals)
+            )
+            result = evaluate(jobs, responses, published, profiles)
         else:
             result = evaluate(
                 load_json(args.jobs), load_json(args.responses),
