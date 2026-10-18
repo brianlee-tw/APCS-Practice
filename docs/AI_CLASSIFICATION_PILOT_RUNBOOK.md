@@ -1,80 +1,68 @@
-# AI Candidate Classification Lane — 4-item controlled pilot
+# ChatGPT 對話式分類｜題庫 Pilot Runbook
 
-**Status:** implemented candidate generation/QA tooling, NOT a learner-facing feature, not Published, and not automatically connected to a paid model. PR #89 remains Draft.
+**Current policy (2026-10-18): ChatGPT chat is the AI worker. No API key, API billing, model call or provider receipt is required.**
 
-## What this implements
+## Authority and scope
 
-\`tools/ai_candidate_pipeline.py\` provides three bounded subcommands.
+- Work branch: `feat/problem-bank-pilot-20261018`; PR #89 remains Draft and must not be automatically merged.
+- Canonical Published snapshot and Notion Problem Bank are unchanged.
+- Exactly four official-page-reviewed ZeroJudge L0 source profiles are in scope: d097, d732, j606, d067.
+- `data/problem_pilot/chatgpt_proposals.v1.json` holds **ChatGPT-authored AI Candidate classifications**. They are not human-approved.
+- Prompts/AI outputs are not learner Evidence, official testcase output, verified algorithms, hidden OJ AC, or permission to publish.
 
-\`\`\`text
-Reviewed ZeroJudge L0 metadata (4 items)
-  │
-  ├─ prepare → deterministic jobs with SHA-256 source fingerprints
-  │              + published 39-Skill vocabulary (not answer labels)
-  │
-  ├─ generate → OPTIONAL explicit OpenAI Responses API
-  │              + structured JSON Schema
-  │              + 4 items maximum, no background execution
-  │              + results recorded as AI_CANDIDATE only
-  │
-  └─ evaluate → deterministic identity, fingerprint, taxonomy and
-                 Published Skill/Difficulty/Role disagreement checks
-                 → CANDIDATE_UNREVIEWED / NEEDS_QA / NOT_GENERATED
-                 → QA JSON report only; never modifies L0/L1 / Notion
-\`\`\`
+## Workflow: ChatGPT → Candidate JSON → offline QA
 
-The default is to **not** spend money or send anything to an external model. \`prepare\` and \`evaluate\` are offline. \`generate\` requires the operator to supply a model, local \`OPENAI_API_KEY\`, and \`--confirm-api-cost\`.
+```text
+Read official problem page + compare Published baseline
+  → ChatGPT drafts PB UID + candidate JSON (no source-fingerprint claim)
+  → commit/edit data/problem_pilot/chatgpt_proposals.v1.json on the PR branch
+  → tools/ai_candidate_pipeline.py review-chatgpt
+  → code attaches trusted job identity + SHA256 source fingerprint
+  → validate Skill IDs, requirements, Published disagreements and ambiguity
+  → output QA receipt locally, without modifying Published/Notion/L0/L1
+```
 
-## Safe operator commands (WSL / Linux)
+The ChatGPT input format has an envelope with `schema_version=apcs-chatgpt-classification-proposals-v1`, `prompt_version=apcs-l1-candidate-v1`, `proposal_source=CHATGPT_CONVERSATION`, `authored_on` (ISO date), `model` (chatgpt-prefixed), and `proposals` (one to four `{pb_uid,candidate}` records). The model does not self-assign a source hash or approval.
 
-Run in repository root on PR branch (after \`git fetch\`); do not apply to \`main\` implicitly.
+## Run only on the PR branch (WSL/Linux)
 
-\`\`\`bash
-mkdir -p .apcs/runtime/ai_classification
+First check `git status --short --branch`; preserve any unrelated local learner modifications. After safely obtaining the PR branch:
 
-python3 tools/ai_candidate_pipeline.py prepare \
-  --output .apcs/runtime/ai_classification/jobs.json
-\`\`\`
+```bash
+python3 tools/ai_candidate_pipeline.py review-chatgpt \
+  --proposals data/problem_pilot/chatgpt_proposals.v1.json \
+  --output .apcs/runtime/ai_classification/chatgpt-qa-01.json
+```
 
-To use an external paid API, separately authorize billing. ChatGPT subscription access is **not** the same thing as API credentials/billing.
+**No `OPENAI_API_KEY`, `--model` or `--confirm-api-cost` are used here.** Do not commit `.apcs/runtime/` or rerun using an existing output path (the tool refuses overwrite).
 
-\`\`\`bash
-read -rs -p 'OpenAI API key: ' OPENAI_API_KEY
-echo
-export OPENAI_API_KEY
+Expected first-batch deterministic QA from the four proposals:
 
-python3 tools/ai_candidate_pipeline.py generate \
-  --jobs .apcs/runtime/ai_classification/jobs.json \
-  --output .apcs/runtime/ai_classification/responses.json \
-  --model gpt-4.1-mini \
-  --confirm-api-cost
+| Problem | Proposed Primary Skill | Proposed D / Role | Expected QA |
+| --- | --- | --- | --- |
+| d732 / PB-27 | S10_Binary_Search | D2 / Guided Drill | `CANDIDATE_UNREVIEWED` |
+| d097 / PB-183 | S05_Array | D2 / Core Independent | `CANDIDATE_UNREVIEWED` |
+| j606 / PB-9 | S34_Matrix_2D | D3 / Core Independent | `NEEDS_QA` (string/simulation/matrix representation ambiguity and confidence below 0.80) |
+| d067 / PB-182 | S02_Conditionals | D2 / Core Independent | `CANDIDATE_UNREVIEWED` |
 
-unset OPENAI_API_KEY
-\`\`\`
+`CANDIDATE_UNREVIEWED` means **no hard inconsistency was detected**, not human approval or teaching readiness. QA never sets runtime eligibility or verifies a reference implementation.
 
-Then perform deterministic, offline QA:
+## How to add more ChatGPT work without API
 
-\`\`\`bash
-python3 tools/ai_candidate_pipeline.py evaluate \
-  --jobs .apcs/runtime/ai_classification/jobs.json \
-  --responses .apcs/runtime/ai_classification/responses.json \
-  --output .apcs/runtime/ai_classification/qa.json
-\`\`\`
+1. Select a target already in Published and check official source URL, constraints and samples. Do not accept guessed data or bulk-reproduce copyrighted statements.
+2. Add only source-reviewed L0 inputs with stable problem identity. Never invent a source SHA; the offline converter calculates it from the actual local L0 profile.
+3. In this conversation, have ChatGPT propose a classification. Keep it in structured `AI_CANDIDATE` form with honest confidence and explicit ambiguities.
+4. Run `review-chatgpt`, inspect `NEEDS_QA` flags, then separately request human review of problematic mappings.
+5. Only after review consider explicit adoption into L1 or generation of candidate edge tests. AI-produced expected output **never** counts as an OFFICIAL testcase or VERIFIED correctness.
 
-Outputs are **local runtime candidates**; they do not enter Notion, Published Curriculum, \`data/problem_intelligence\`, \`data/problem_enrichment\`, Test Center trust, or Evidence. To regenerate without overwriting an earlier receipt, use distinct output filenames. No credentials or personal learner data should be committed.
+## Legacy provider option
 
-## Model and QA guardrails
+The earlier optional `generate` command remains in the source for compatibility but **is not part of this user's workflow**. This stage did not call a paid model API and no API key is necessary. Do not use this path unless the user explicitly reverses the no-API decision.
 
-The provider path uses \`POST https://api.openai.com/v1/responses\`, fixed HTTPS host, \`store:false\`, strict Structured Outputs, and no executable model-supplied code. Only public source-derived metadata and allowed Skill/role vocabularies are sent (no learner attempts, credentials, local files or full copyrighted statements).
+## Regression and release
 
-The model must not invent missing constraints. Candidate data must match the prepared source identity and SHA-256. \`evaluate\` rejects duplicates, unknown Skill UIDs, unsupported role/difficulty, unexpected JSON fields (including a forged \`published\` property), changed source metadata, and wrong source ID.
-
-An otherwise well-formed model proposal goes to \`NEEDS_QA\` if confidence is below 0.80, essential fields are empty, method ambiguity is reported, or its Skill/Difficulty/Role disagrees with the existing Published record. Agreement and high confidence produce only \`CANDIDATE_UNREVIEWED\`, **never Verified or Published**.
-
-**Limitation:** these four L0 records store short extracted source summaries, not entire source statements. Model output is a starting hypothesis, not authoritative proof of problem interpretation, exact constraints, reference correctness, or APCS suitability. A reviewer must check the official original problem before any further L1 adoption or L2/testcase enrichment.
-
-## Current completion and next gate
-
-- Completed: source-backed 4-item work queue, optional model adapter, schema-bound response, provenance & deterministic QA, synthetic API mocks, and regression guards.
-- Not done: running a paid API on behalf of the learner (requires explicit operator credentials/cost consent), accepting/classifying any L1 entry from AI, generating official cases from AI, or publishing any new placement.
-- Next: inspect first actual 4 AI replies with the learner, correct systematic classification mistakes, then decide whether to add an explicit review-controlled L1 adoption command. Do not turn this into an unattended large-scale ingestion service before real QA.
+- `python3 -m unittest tests.test_ai_candidate_pipeline -v`
+- `python3 -m unittest discover -s tests -v`
+- `python3 tools/pilot_coverage.py`
+- C8 remains OPEN; learner readiness remains NOT_ASSESSED.
+- The Draft PR must not be merged on the basis of CI alone.
