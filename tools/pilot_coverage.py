@@ -179,7 +179,7 @@ def validate_pilot(
                 row.get("source_verification") != "NOT_CHECKED_THIS_PILOT"
                 or row.get("testcases") != "NOT_CURATED"
             ):
-                errors.append(f"{uid}: no source receipt for curated claim")
+                errors.append(f"{uid}: testcases/source curated claim has no source receipt")
         else:
             if (
                 row.get("source_verification")
