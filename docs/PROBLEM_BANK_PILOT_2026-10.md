@@ -71,6 +71,14 @@ Assets reside in `data/problem_enrichment/zerojudge/<id>/tests.json`, total **8 
 - Full real-platform / local Test Center UX acceptance remains pending under C8.
 - `tools/pilot_coverage.py` verifies status receipts are consistent with official-only committed assets; automated checks cannot establish that public pages will never change.
 
+## Stage C: ChatGPT conversation classification, no API
+
+- 2026-10-18: ChatGPT read all four official ZeroJudge statements/constraints and authored structured candidates in `data/problem_pilot/chatgpt_proposals.v1.json`.
+- `tools/ai_candidate_pipeline.py review-chatgpt` now binds candidates to the verified L0 SHA-256 and runs the existing deterministic Published/Skill/ambiguity QA. It does **not** call any AI API.
+- Regression tests assert **3 `CANDIDATE_UNREVIEWED`** (d732, d097, d067) and **1 `NEEDS_QA`** (j606, lower confidence plus Matrix/String/Simulation representation ambiguity).
+- High-confidence agreement is only a candidate, not official classification approval. No L1 adoption or L2 content has occurred.
+- The default operator path is documented in `docs/AI_CLASSIFICATION_PILOT_RUNBOOK.md`, with no API key or API billing.
+- Next content task is reviewer decision on j606 and independent verified edge-case Candidates for these problems; never label ChatGPT-inferred expected output `OFFICIAL`.
 ## Release / C8 safety
 
 - Do not merge this pilot branch without passing CI and confirming data authority.
