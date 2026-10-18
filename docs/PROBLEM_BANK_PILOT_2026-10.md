@@ -62,7 +62,7 @@ Based on publicly retrievable ZeroJudge problem-page snapshots checked on 2026-1
 | PB-9 | [j606](https://zerojudge.tw/ShowProblem?problemid=j606) | 2 | Official page snapshot reviewed |
 | PB-182 | [d067](https://zerojudge.tw/ShowProblem?problemid=d067) | 4 | Official page snapshot reviewed |
 
-Assets reside in `data/problem_enrichment/zerojudge/<id>/tests.json`, total **8 official sample cases**.
+Assets reside in `data/problem_enrichment/zerojudge/<id>/tests.json`, total **8 official sample cases**. Four corresponding source-backed **L0_INDEXED** metadata profiles also live in `data/problem_intelligence/zerojudge/<id>.json`; they reference the existing Published PB UID, remain `UNCLASSIFIED` and `runtime_eligible=false`, and do not modify Notion or Published Curriculum.
 
 - All testcases are `provenance=OFFICIAL`, `trust=OFFICIAL`, `suite=fast`, `visibility=official`, and can be used by Test Center after local refresh.
 - These are source-page samples, **not hidden Judge cases**, an accepted learner solution, an AI-generated oracle, an L1/L2 enrichment package, or proof of OJ correctness.
