@@ -15,6 +15,46 @@
       "trust": "OFFICIAL",
       "suite": "fast",
       "visibility": "official"
+    },
+    {
+      "id": "E1",
+      "name": "加強測資 1",
+      "input": "1 7\n2 -3 -2\n2 6 6\n",
+      "expected_output": "Jolly\nJolly\nNot jolly\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
+    },
+    {
+      "id": "E2",
+      "name": "加強測資 2",
+      "input": "4 0 1 2 4\n4 4 1 -1 0\n",
+      "expected_output": "Not jolly\nJolly\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
+    },
+    {
+      "id": "E3",
+      "name": "加強測資 3",
+      "input": "5 -5 -1 -6 -4 0\n5 -10 -6 -3 -1 0\n",
+      "expected_output": "Not jolly\nJolly\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
+    },
+    {
+      "id": "E4",
+      "name": "加強測資 4",
+      "input": "3 1 2 4\n3 1 2 3\n",
+      "expected_output": "Jolly\nNot jolly\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
     }
   ]
 }
