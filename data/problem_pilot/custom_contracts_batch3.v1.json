@@ -1,0 +1,250 @@
+{
+  "schema_version": "apcs-pilot-custom-contracts-v1",
+  "as_of": "2026-10-18",
+  "provenance": "CANONICAL_NOTION_LESSON_AND_COACH_CONTRACT",
+  "scope": "Five existing Published Custom PB references; source-backed practice/evidence contract only; no canonical task packet or hosted runtime import",
+  "status": "LESSON_CONTRACT_REVIEWED_TASK_INSTANCE_PENDING",
+  "learner_visibility": "STAGING_ONLY_NOT_IN_TEST_CENTER",
+  "publication_authority": "NONE",
+  "entries": [
+    {
+      "pb_uid": "PB-160",
+      "lesson_uid": "L-PSV-02",
+      "lesson_url": "https://app.notion.com/p/3c743be958cd8136b049f1ca91269687",
+      "coach_url": "https://app.notion.com/p/3c943be958cd810fa1effe30cbe5570a",
+      "task_type": "REASONING_GUIDED",
+      "track": "Reading",
+      "role": "Guided Drill",
+      "gate_candidate": false,
+      "assessment": "LEARNING_ONLY",
+      "grade_route": "SEMANTIC_HUMAN_REVIEW",
+      "required_artifacts": [
+        "repeated_operation",
+        "iteration_bounds",
+        "time_complexity",
+        "extra_space",
+        "constraint_feasibility"
+      ],
+      "timebox_minutes": 12,
+      "a0_cold_minutes": [
+        5,
+        8
+      ],
+      "pre_attempt_disclosure": [
+        "source_task",
+        "constraints",
+        "input_size_variables"
+      ],
+      "pre_attempt_forbidden": [
+        "final_big_o",
+        "iteration_space_solution",
+        "feasibility_conclusion"
+      ],
+      "a1_policy": "Only ask which operation repeats most and what bounds control its repetition",
+      "independent_rule": "Guided practice cannot serve as independent Gate-grade mastery evidence",
+      "content_note": "Includes vector::push_back amortized intuition without allocator internals",
+      "primary_skill": "S30_Complexity",
+      "placement_uid": "PL-PB-160-L-PSV-02",
+      "source_review_status": "LESSON_CONTRACT_REVIEWED_TASK_INSTANCE_PENDING",
+      "task_statement_retrieved": false,
+      "testcases_status": "NOT_CURATED",
+      "local_test_center_eligible": false,
+      "ai_approved": false,
+      "learner_attempt_observed": false,
+      "learner_evidence_written": false
+    },
+    {
+      "pb_uid": "PB-161",
+      "lesson_uid": "L-PSV-02",
+      "lesson_url": "https://app.notion.com/p/3c743be958cd8136b049f1ca91269687",
+      "coach_url": "https://app.notion.com/p/3c943be958cd810fa1effe30cbe5570a",
+      "task_type": "REASONING_CORE",
+      "track": "Reading",
+      "role": "Core Independent",
+      "gate_candidate": true,
+      "assessment": "GATE_CANDIDATE_CONDITIONAL",
+      "grade_route": "SEMANTIC_HUMAN_REVIEW",
+      "required_artifacts": [
+        "repeated_operation",
+        "operation_count_rationale",
+        "time_complexity",
+        "extra_space",
+        "constraint_feasibility",
+        "bottleneck_identification"
+      ],
+      "timebox_minutes": 15,
+      "a0_cold_minutes": [
+        8,
+        12
+      ],
+      "pre_attempt_disclosure": [
+        "unfamiliar_code",
+        "constraints"
+      ],
+      "pre_attempt_forbidden": [
+        "complexity_table",
+        "dominant_term_answer",
+        "final_big_o"
+      ],
+      "a1_policy": "Only diagnose iteration count or which input dimension governs the loops",
+      "independent_rule": "A2+ assistance forces independent=false; Big-O labels alone cannot be Gate-grade",
+      "content_note": "Reason from unknown code and constraints; distinguish O(n), O(n^2), and amortized vector growth",
+      "primary_skill": "S30_Complexity",
+      "placement_uid": "PL-PB-161-L-PSV-02",
+      "source_review_status": "LESSON_CONTRACT_REVIEWED_TASK_INSTANCE_PENDING",
+      "task_statement_retrieved": false,
+      "testcases_status": "NOT_CURATED",
+      "local_test_center_eligible": false,
+      "ai_approved": false,
+      "learner_attempt_observed": false,
+      "learner_evidence_written": false
+    },
+    {
+      "pb_uid": "PB-164",
+      "lesson_uid": "L-PSV-03",
+      "lesson_url": "https://app.notion.com/p/3c743be958cd81a8a0bbdc932ae7dd13",
+      "coach_url": "https://app.notion.com/p/3c943be958cd81379cc1cd578e272344",
+      "task_type": "TRACE_COMPLETION_CORE",
+      "track": "Reading",
+      "role": "Core Independent",
+      "gate_candidate": true,
+      "assessment": "GATE_CANDIDATE_CONDITIONAL",
+      "grade_route": "RESPONSE_FIRST_READING_RUBRIC",
+      "required_artifacts": [
+        "trace",
+        "output_prediction",
+        "minimal_completion",
+        "completion_rationale",
+        "second_testcase_validation"
+      ],
+      "timebox_minutes": 15,
+      "a0_cold_minutes": [
+        8,
+        12
+      ],
+      "pre_attempt_disclosure": [
+        "unfamiliar_code",
+        "output_contract"
+      ],
+      "pre_attempt_forbidden": [
+        "trace_table_scaffold",
+        "invariant_conclusion",
+        "missing_line_pattern",
+        "reference_solution"
+      ],
+      "a1_policy": "Only ask what state meaning must hold immediately before and after a chosen line",
+      "independent_rule": "A2+ assistance forces independent=false; response saved before reference/verification",
+      "content_note": "Must not substitute auto-run or test output for genuine pre-execution prediction",
+      "primary_skill": "S39_Code_Reasoning",
+      "placement_uid": "PL-PB-164-L-PSV-03",
+      "source_review_status": "LESSON_CONTRACT_REVIEWED_TASK_INSTANCE_PENDING",
+      "task_statement_retrieved": false,
+      "testcases_status": "NOT_CURATED",
+      "local_test_center_eligible": false,
+      "ai_approved": false,
+      "learner_attempt_observed": false,
+      "learner_evidence_written": false
+    },
+    {
+      "pb_uid": "PB-165",
+      "lesson_uid": "L-PSV-03",
+      "lesson_url": "https://app.notion.com/p/3c743be958cd81a8a0bbdc932ae7dd13",
+      "coach_url": "https://app.notion.com/p/3c943be958cd81379cc1cd578e272344",
+      "task_type": "DEBUG_TESTING_CORE",
+      "track": "Implementation",
+      "role": "Core Independent",
+      "gate_candidate": true,
+      "assessment": "GATE_CANDIDATE_CONDITIONAL",
+      "grade_route": "BUG_REPAIR_RUBRIC",
+      "required_artifacts": [
+        "minimal_counterexample",
+        "expected_trace",
+        "actual_trace",
+        "first_divergence",
+        "single_root_cause",
+        "minimal_patch",
+        "regression_tests_at_least_3"
+      ],
+      "timebox_minutes": 15,
+      "a0_cold_minutes": [
+        8,
+        12
+      ],
+      "pre_attempt_disclosure": [
+        "buggy_code",
+        "expected_behavior_contract"
+      ],
+      "pre_attempt_forbidden": [
+        "bug_category",
+        "bug_location",
+        "failing_dimension",
+        "full_rewrite",
+        "reference_solution"
+      ],
+      "a1_policy": "Only ask which input dimension has not yet been tested",
+      "independent_rule": "A2+ assistance forces independent=false; no full rewrite credited as independent debug",
+      "content_note": "Record error_class, counterexample, first divergence, root cause, patch scope, regression",
+      "primary_skill": "S39_Code_Reasoning",
+      "placement_uid": "PL-PB-165-L-PSV-03",
+      "source_review_status": "LESSON_CONTRACT_REVIEWED_TASK_INSTANCE_PENDING",
+      "task_statement_retrieved": false,
+      "testcases_status": "NOT_CURATED",
+      "local_test_center_eligible": false,
+      "ai_approved": false,
+      "learner_attempt_observed": false,
+      "learner_evidence_written": false
+    },
+    {
+      "pb_uid": "PB-169",
+      "lesson_uid": "L-ORD-02",
+      "lesson_url": "https://app.notion.com/p/3c743be958cd81ad903ff74ea4899a61",
+      "coach_url": null,
+      "task_type": "MULTIKEY_RECORD_SORT_CORE",
+      "track": "Implementation",
+      "role": "Core Independent",
+      "gate_candidate": true,
+      "assessment": "GATE_CANDIDATE_CONDITIONAL",
+      "grade_route": "HOSTED_CUSTOM_OJ_PLUS_METHOD_REVIEW",
+      "required_artifacts": [
+        "record_representation",
+        "score_descending",
+        "penalty_ascending",
+        "exact_tie_input_order",
+        "comparator_reasoning",
+        "time_complexity_nlogn",
+        "original_field_identity"
+      ],
+      "timebox_minutes": 15,
+      "a0_cold_minutes": [
+        8,
+        12
+      ],
+      "pre_attempt_disclosure": [
+        "canonical_statement",
+        "input_output",
+        "constraints",
+        "official_sample",
+        "data_relationships"
+      ],
+      "pre_attempt_forbidden": [
+        "comparator_code",
+        "stable_sort_choice",
+        "original_index_strategy",
+        "complete_tiebreak_case_split",
+        "reference_solution"
+      ],
+      "a1_policy": "Only diagnostic questions after genuine A0 attempt, without choosing representation",
+      "independent_rule": "A2+ assistance forces independent=false; Custom OJ correctness alone never proves S08 Gate",
+      "content_note": "Official lesson: score descending, penalty ascending; exact tie preserves input order (not ID ascending). Hosted Custom OJ per-case checking declared production active in Notion lesson",
+      "primary_skill": "S08_Struct",
+      "placement_uid": "PL-PB-169-L-ORD-02",
+      "source_review_status": "LESSON_CONTRACT_REVIEWED_TASK_INSTANCE_PENDING",
+      "task_statement_retrieved": false,
+      "testcases_status": "NOT_CURATED",
+      "local_test_center_eligible": false,
+      "ai_approved": false,
+      "learner_attempt_observed": false,
+      "learner_evidence_written": false
+    }
+  ]
+}
