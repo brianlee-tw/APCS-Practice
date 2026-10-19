@@ -38,6 +38,9 @@ class PilotReleasePreflightTest(unittest.TestCase):
             "final_four_reviewed_official": 3,
             "final_four_pending_official": 1,
             "final_four_official_samples_staged": 4,
+            "workbench_official_preview_problems": 4,
+            "workbench_official_preview_samples": 5,
+            "workbench_total_official_samples": 13,
         })
 
     def test_staged_multisource_review_cannot_enable_exact_checker_for_977c(self):
@@ -82,6 +85,27 @@ class PilotReleasePreflightTest(unittest.TestCase):
         self.assertEqual(report["engineering_checks"], "FAIL")
         self.assertEqual(report["release_gate"], "BLOCKED_MANUAL")
         self.assertTrue(any("PB-10" in x for x in report["errors"]))
+
+    def test_unapproved_preview_or_main_publication_claim_fails(self):
+        with tempfile.TemporaryDirectory() as td:
+            output = Path(td) / "preview.json"
+            forged = copy.deepcopy(gate.load_json(gate.WORKBENCH_PREVIEW))
+            forged["is_main_published"] = True
+            forged["entries"][0]["non_official_cases_allowed"] = True
+            output.write_text(json.dumps(forged), encoding="utf-8")
+            with patch.object(gate, "WORKBENCH_PREVIEW", output):
+                report = gate.preflight()
+        self.assertEqual(report["engineering_checks"], "FAIL")
+        self.assertEqual(report["release_gate"], "BLOCKED_MANUAL")
+        self.assertFalse(report["auto_merge_permitted"])
+        self.assertTrue(
+            any("publication" in msg for msg in report["errors"]),
+            report["errors"],
+        )
+        self.assertTrue(
+            any("non_official_cases_allowed" in msg for msg in report["errors"]),
+            report["errors"],
+        )
 
     def test_publication_claim_or_authority_override_fails(self):
         original = gate.load_json(gate.POLICY)
