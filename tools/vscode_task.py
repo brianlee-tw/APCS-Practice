@@ -362,16 +362,16 @@ def _post_attempt(
 # judge-local IDs retain the official platform spelling.
 PILOT_PREVIEW_IDENTITIES = {
     ("cses", "cses-1069"): (
-        "cses", "1069", "https://cses.fi/problemset/task/1069",
+        "PB-42", "cses", "1069", "https://cses.fi/problemset/task/1069",
     ),
     ("cses", "cses-1094"): (
-        "cses", "1094", "https://cses.fi/problemset/task/1094",
+        "PB-150", "cses", "1094", "https://cses.fi/problemset/task/1094",
     ),
     ("codeforces", "cf-71a"): (
-        "codeforces", "71A", "https://codeforces.com/problemset/problem/71/A",
+        "PB-97", "codeforces", "71A", "https://codeforces.com/problemset/problem/71/A",
     ),
     ("apcs", "apcs-zj-q836"): (
-        "zerojudge", "q836",
+        "PB-120", "zerojudge", "q836",
         "https://zerojudge.tw/ShowProblem?problemid=q836",
     ),
 }
@@ -410,8 +410,12 @@ def _test_bundle(
         enrolled = PILOT_PREVIEW_IDENTITIES.get((source, problem_id))
         if enrolled is None or not context.canonical_url:
             return None
-        bundle_source, external_id, trusted_url = enrolled
-        if context.canonical_url.rstrip("/") != trusted_url.rstrip("/"):
+        pb_uid, bundle_source, external_id, trusted_url = enrolled
+        if (
+            context.identity_origin != "published_placement"
+            or context.pb_uid != pb_uid
+            or context.canonical_url.rstrip("/") != trusted_url.rstrip("/")
+        ):
             return None
         bundle = TEST_ASSETS.load(
             bundle_source,
