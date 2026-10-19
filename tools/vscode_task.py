@@ -355,6 +355,28 @@ def _post_attempt(
     )
 
 
+# These four exact-source references have independently checked official
+# examples. This branch preview is intentionally *not* a generic CSES /
+# Codeforces importer and it does not alter Published Curriculum authority.
+# Identifiers are casefolded only on the Published-side lookup; filesystem
+# judge-local IDs retain the official platform spelling.
+PILOT_PREVIEW_IDENTITIES = {
+    ("cses", "cses-1069"): (
+        "cses", "1069", "https://cses.fi/problemset/task/1069",
+    ),
+    ("cses", "cses-1094"): (
+        "cses", "1094", "https://cses.fi/problemset/task/1094",
+    ),
+    ("codeforces", "cf-71a"): (
+        "codeforces", "71A", "https://codeforces.com/problemset/problem/71/A",
+    ),
+    ("apcs", "apcs-zj-q836"): (
+        "zerojudge", "q836",
+        "https://zerojudge.tw/ShowProblem?problemid=q836",
+    ),
+}
+
+
 def _test_bundle(
     context: ProblemContext | None,
 ) -> TestBundle | None:
@@ -382,6 +404,29 @@ def _test_bundle(
             # A namespaced Published ID without a canonical URL has
             # insufficient authority to derive a judge-local identity.
             return None
+    if source in {"cses", "codeforces", "apcs"}:
+        # Fail closed on unreviewed non-ZeroJudge Published references.
+        # No generic URL parsing or blind prefix stripping is allowed.
+        enrolled = PILOT_PREVIEW_IDENTITIES.get((source, problem_id))
+        if enrolled is None or not context.canonical_url:
+            return None
+        bundle_source, external_id, trusted_url = enrolled
+        if context.canonical_url.rstrip("/") != trusted_url.rstrip("/"):
+            return None
+        bundle = TEST_ASSETS.load(
+            bundle_source,
+            external_id,
+            include_candidates=True,
+        )
+        if (
+            bundle is None
+            or bundle.source != bundle_source
+            or bundle.external_id != external_id
+            or bundle.canonical_url.rstrip("/") != trusted_url.rstrip("/")
+        ):
+            return None
+        return bundle
+
     bundle = TEST_ASSETS.load(
         source or None,
         problem_id,
