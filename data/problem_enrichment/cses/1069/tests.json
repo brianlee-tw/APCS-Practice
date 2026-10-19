@@ -1,0 +1,20 @@
+{
+  "schema_version": "apcs-test-bundle-v1",
+  "identity": {
+    "source": "cses",
+    "external_id": "1069",
+    "canonical_url": "https://cses.fi/problemset/task/1069"
+  },
+  "cases": [
+    {
+      "id": "S1",
+      "name": "官方範例 1",
+      "input": "ATTCGGGA\n",
+      "expected_output": "3\n",
+      "provenance": "OFFICIAL",
+      "trust": "OFFICIAL",
+      "suite": "fast",
+      "visibility": "official"
+    }
+  ]
+}
