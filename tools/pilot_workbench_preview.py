@@ -162,7 +162,11 @@ def validate(
         ):
             errors.append(f"{uid}: Test Center preview bundle missing/identity mismatch")
             continue
-        for index, (case, sample) in enumerate(zip(bundle.cases, sample_list), start=1):
+        official = [x for x in bundle.cases if x.provenance == "OFFICIAL"]
+        edges = [x for x in bundle.cases if x.provenance == "AI_GENERATED"]
+        if len(official) != case_count or len(edges) != edge_count:
+            errors.append(f"{uid}: official / verified edge counts changed")
+        for index, (case, sample) in enumerate(zip(official, sample_list), start=1):
             if (
                 case.case_id != f"S{index}"
                 or case.provenance != "OFFICIAL"
@@ -174,6 +178,29 @@ def validate(
                 or case.expected_output != sample.get("output")
             ):
                 errors.append(f"{uid}: preview source sample {index} mismatch/unsafe trust")
+        for index, edge in enumerate(edges, start=1):
+            if (
+                edge.case_id != f"E{index}"
+                or edge.trust != "DIFFERENTIAL_VERIFIED"
+                or edge.suite != "full"
+                or edge.visibility != "practice"
+                or edge.expected_output is None
+            ):
+                errors.append(f"{uid}: differential edge {index} is unsafe")
+        fast = store.visible_cases(
+            bundle, mode="practice", activity="Core Independent",
+            post_attempt=False, suite="fast",
+        )
+        full = store.visible_cases(
+            bundle, mode="practice", activity="Core Independent",
+            post_attempt=False, suite="full",
+        )
+        if (
+            len(fast) != case_count
+            or len(full) != case_count + edge_count
+            or any(x.provenance != "OFFICIAL" for x in fast)
+        ):
+            errors.append(f"{uid}: Fast/Full test isolation failed")
         before_exam = store.visible_cases(
             bundle, mode="exam", activity="Mock",
             post_attempt=False, suite="full",
@@ -196,7 +223,7 @@ def main() -> int:
     if errors:
         return 1
     print("WORKBENCH PREVIEW PASS | 4 Published PB identities | "
-          "5 official Fast samples | 0 non-official | release BLOCKED_MANUAL")
+          "5 official Fast / 17 differential Full | release BLOCKED_MANUAL")
     return 0
 
 
