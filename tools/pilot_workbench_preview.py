@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Fail-closed four-problem official-only Test Center branch preview QA.
+"""Fail-closed four-problem official Fast and verified Full Test Center branch preview QA.
 
 Checks Published identifiers and source-reviewed official samples against the
 actual TestAssetStore artifacts. It NEVER publishes into Notion/Curriculum,
@@ -23,10 +23,10 @@ BATCH2 = ROOT / "data/problem_pilot/source_reviews_batch2.v1.json"
 BATCH4 = ROOT / "data/problem_pilot/source_reviews_batch4.v1.json"
 TESTS = ROOT / "data/problem_enrichment"
 EXPECTED = {
-    "PB-42": ("CSES", "CSES-1069", "cses", "1069", 1, "Core Independent"),
-    "PB-150": ("CSES", "CSES-1094", "cses", "1094", 1, "Core Independent"),
-    "PB-97": ("Codeforces", "CF-71A", "codeforces", "71A", 1, "Worked Example"),
-    "PB-120": ("APCS", "APCS-ZJ-q836", "zerojudge", "q836", 2, "Core Independent"),
+    "PB-42": ("CSES", "CSES-1069", "cses", "1069", 1, 4, "Core Independent"),
+    "PB-150": ("CSES", "CSES-1094", "cses", "1094", 1, 5, "Core Independent"),
+    "PB-97": ("Codeforces", "CF-71A", "codeforces", "71A", 1, 3, "Worked Example"),
+    "PB-120": ("APCS", "APCS-ZJ-q836", "zerojudge", "q836", 2, 5, "Core Independent"),
 }
 
 
@@ -47,7 +47,7 @@ def validate(
     errors = []
     if manifest.get("schema_version") != "apcs-pilot-workbench-preview-v1":
         errors.append("preview schema mismatch")
-    if manifest.get("stage") != "SOURCE_BACKED_OFFICIAL_FAST_PREVIEW":
+    if manifest.get("stage") != "SOURCE_BACKED_VERIFIED_FULL_PREVIEW":
         errors.append("preview scope enlarged without review")
     if (
         manifest.get("is_main_published") is not False
@@ -82,7 +82,7 @@ def validate(
         if known is None:
             errors.append(f"{uid}: not enrolled for official preview")
             continue
-        published_source, pid, source, external_id, case_count, role = known
+        published_source, pid, source, external_id, case_count, edge_count, role = known
         p, pl = problems.get(uid), placements.get(uid)
         review = source2.get(uid) or source4.get(uid)
         if p is None or pl is None or review is None:
@@ -105,8 +105,14 @@ def validate(
             "suite": "fast",
             "visibility": "official",
             "source_status": "OFFICIAL_PAGE_REVIEWED",
-            "task_qa_status": "PREVIEW_CASES_VERIFIED_ONLY",
-            "non_official_cases_allowed": False,
+            "task_qa_status": "PREVIEW_OFFICIAL_PLUS_DIFFERENTIAL",
+            "unverified_candidates_allowed": False,
+            "differential_verified_full_edges_allowed": True,
+            "verified_edge_count": edge_count,
+            "verified_edge_provenance": "AI_GENERATED",
+            "verified_edge_trust": "DIFFERENTIAL_VERIFIED",
+            "verified_edge_suite": "full",
+            "verified_edge_visibility": "practice",
             "candidate_classification_adopted": False,
             "official_page_bytes_sha256": "NOT_CAPTURED",
             "source_review": (
@@ -152,7 +158,7 @@ def validate(
             or bundle.source != source
             or bundle.external_id != external_id
             or bundle.canonical_url.rstrip("/") != p["url"].rstrip("/")
-            or len(bundle.cases) != case_count
+            or len(bundle.cases) != case_count + edge_count
         ):
             errors.append(f"{uid}: Test Center preview bundle missing/identity mismatch")
             continue
