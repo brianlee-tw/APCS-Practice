@@ -38,6 +38,9 @@ class PilotWorkbenchManifestTest(unittest.TestCase):
         self.assertEqual(
             sum(e["official_count"] for e in self.manifest["entries"]), 5,
         )
+        self.assertEqual(
+            sum(e["verified_edge_count"] for e in self.manifest["entries"]), 17,
+        )
 
     def test_extra_problem_or_changed_published_identity_rejected(self):
         copy_manifest = copy.deepcopy(self.manifest)
@@ -64,12 +67,12 @@ class PilotWorkbenchManifestTest(unittest.TestCase):
             any("source sample" in x for x in self.check(self.manifest, batch2=b2))
         )
 
-    def test_no_generated_or_oracle_cases_in_preview_manifest(self):
+    def test_no_unverified_or_official_relabelled_edges_in_preview_manifest(self):
         bad = copy.deepcopy(self.manifest)
         row = next(e for e in bad["entries"] if e["pb_uid"] == "PB-120")
-        row["non_official_cases_allowed"] = True
-        row["suite"] = "full"
-        row["trust"] = "DIFFERENTIAL_VERIFIED"
+        row["unverified_candidates_allowed"] = True
+        row["verified_edge_count"] = 999
+        row["verified_edge_trust"] = "OFFICIAL"
         errors = self.check(bad)
         self.assertGreaterEqual(len(errors), 3)
 
