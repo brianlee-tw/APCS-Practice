@@ -338,6 +338,13 @@ def preflight(root: Path = ROOT) -> dict[str, Any]:
             "workbench_official_preview_samples": sum(
                 row["official_count"] for row in preview["entries"]
             ),
+            "workbench_differential_full_edges": sum(
+                row["verified_edge_count"] for row in preview["entries"]
+            ),
+            "all_pilot_differential_full_edges": (
+                total_edge
+                + sum(row["verified_edge_count"] for row in preview["entries"])
+            ),
             "workbench_total_official_samples": (
                 total_official
                 + sum(row["official_count"] for row in preview["entries"])
