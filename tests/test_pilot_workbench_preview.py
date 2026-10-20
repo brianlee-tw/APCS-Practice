@@ -25,10 +25,10 @@ from tools.test_assets import SUITE_FAST, SUITE_FULL, TestAssetStore
 
 # Exact Published PB identities and judge-local external IDs.
 PREVIEW = {
-    "PB-42": ("cses", "1069", 1),
-    "PB-150": ("cses", "1094", 1),
-    "PB-97": ("codeforces", "71A", 1),
-    "PB-120": ("zerojudge", "q836", 2),
+    "PB-42": ("cses", "1069", 1, 4),
+    "PB-150": ("cses", "1094", 1, 5),
+    "PB-97": ("codeforces", "71A", 1, 3),
+    "PB-120": ("zerojudge", "q836", 2, 5),
 }
 UNENROLLED = {"PB-40", "PB-103", "PB-109", "PB-10", "PB-32"}
 
@@ -61,7 +61,7 @@ class PilotPublishedWorkbenchPreviewTest(unittest.TestCase):
         return context, str(scratch), placement
 
     def test_four_published_scratch_contexts_load_exact_official_bundles(self):
-        for uid, (source, external_id, n) in PREVIEW.items():
+        for uid, (source, external_id, n, edges) in PREVIEW.items():
             with self.subTest(pb_uid=uid):
                 context, filename, placement = self.context(uid)
                 self.assertFalse(vscode_task.Path(filename).exists())
@@ -77,13 +77,22 @@ class PilotPublishedWorkbenchPreviewTest(unittest.TestCase):
                 self.assertEqual(bundle.external_id, external_id)
                 self.assertEqual(bundle.canonical_url.rstrip("/"), placement.url.rstrip("/"))
                 self.assertEqual(bundle.official_count, n)
-                self.assertEqual(bundle.verified_count, n)
-                self.assertEqual(len(bundle.cases), n)
+                self.assertEqual(bundle.verified_count, n + edges)
+                self.assertEqual(len(bundle.cases), n + edges)
+                self.assertEqual(
+                    sum(c.provenance == "AI_GENERATED" for c in bundle.cases),
+                    edges,
+                )
                 for case in bundle.cases:
-                    self.assertEqual(case.provenance, "OFFICIAL")
-                    self.assertEqual(case.trust, "OFFICIAL")
-                    self.assertEqual(case.suite, SUITE_FAST)
-                    self.assertEqual(case.visibility, "official")
+                    if case.provenance == "OFFICIAL":
+                        self.assertEqual(case.trust, "OFFICIAL")
+                        self.assertEqual(case.suite, SUITE_FAST)
+                        self.assertEqual(case.visibility, "official")
+                    else:
+                        self.assertEqual(case.provenance, "AI_GENERATED")
+                        self.assertEqual(case.trust, "DIFFERENTIAL_VERIFIED")
+                        self.assertEqual(case.suite, SUITE_FULL)
+                        self.assertEqual(case.visibility, "practice")
 
                 with (
                     patch.object(vscode_task.control, "selection_mode", return_value="practice"),
@@ -96,7 +105,7 @@ class PilotPublishedWorkbenchPreviewTest(unittest.TestCase):
                         bundle, context, filename, suite=SUITE_FULL
                     )
                 self.assertEqual(len(fast), n)
-                self.assertEqual(len(full), n)
+                self.assertEqual(len(full), n + edges)
                 with (
                     patch.object(vscode_task.control, "selection_mode", return_value="exam"),
                     patch.object(vscode_task, "_post_attempt", return_value=False),
@@ -116,13 +125,16 @@ class PilotPublishedWorkbenchPreviewTest(unittest.TestCase):
                 self.assertEqual(len(transfer), n)
 
     def test_every_preview_case_matches_staged_official_source_sample(self):
-        for uid, (source, external_id, _) in PREVIEW.items():
+        for uid, (source, external_id, _, edges) in PREVIEW.items():
             bundle = vscode_task._test_bundle(self.context(uid)[0])
             assert bundle is not None
             record = self.batch2.get(uid) or self.batch4.get(uid)
             source_cases = record.get("official_samples", record.get("samples"))
-            self.assertEqual(len(source_cases), len(bundle.cases))
-            for case, sample in zip(bundle.cases, source_cases):
+            official = [
+                c for c in bundle.cases if c.provenance == "OFFICIAL"
+            ]
+            self.assertEqual(len(source_cases), len(official))
+            for case, sample in zip(official, source_cases):
                 with self.subTest(pb_uid=uid, case=case.case_id):
                     self.assertEqual(case.input_text, sample["input"])
                     self.assertEqual(case.expected_output, (
