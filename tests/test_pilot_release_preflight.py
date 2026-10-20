@@ -40,6 +40,8 @@ class PilotReleasePreflightTest(unittest.TestCase):
             "final_four_official_samples_staged": 4,
             "workbench_official_preview_problems": 4,
             "workbench_official_preview_samples": 5,
+            "workbench_differential_full_edges": 17,
+            "all_pilot_differential_full_edges": 34,
             "workbench_total_official_samples": 13,
         })
 
