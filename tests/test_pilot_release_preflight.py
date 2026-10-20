@@ -91,7 +91,7 @@ class PilotReleasePreflightTest(unittest.TestCase):
             output = Path(td) / "preview.json"
             forged = copy.deepcopy(gate.load_json(gate.WORKBENCH_PREVIEW))
             forged["is_main_published"] = True
-            forged["entries"][0]["non_official_cases_allowed"] = True
+            forged["entries"][0]["unverified_candidates_allowed"] = True
             output.write_text(json.dumps(forged), encoding="utf-8")
             with patch.object(gate, "WORKBENCH_PREVIEW", output):
                 report = gate.preflight()
@@ -103,7 +103,7 @@ class PilotReleasePreflightTest(unittest.TestCase):
             report["errors"],
         )
         self.assertTrue(
-            any("non_official_cases_allowed" in msg for msg in report["errors"]),
+            any("unverified_candidates_allowed" in msg for msg in report["errors"]),
             report["errors"],
         )
 
