@@ -38,11 +38,11 @@ class PilotReleasePreflightTest(unittest.TestCase):
             "final_four_reviewed_official": 3,
             "final_four_pending_official": 1,
             "final_four_official_samples_staged": 4,
-            "workbench_official_preview_problems": 4,
-            "workbench_official_preview_samples": 5,
-            "workbench_differential_full_edges": 17,
-            "all_pilot_differential_full_edges": 34,
-            "workbench_total_official_samples": 13,
+            "workbench_official_preview_problems": 5,
+            "workbench_official_preview_samples": 7,
+            "workbench_differential_full_edges": 24,
+            "all_pilot_differential_full_edges": 41,
+            "workbench_total_official_samples": 15,
         })
 
     def test_staged_multisource_review_cannot_enable_exact_checker_for_977c(self):
