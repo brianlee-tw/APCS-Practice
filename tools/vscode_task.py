@@ -43,6 +43,7 @@ try:
     from .test_assets import (
         SUITE_FAST,
         SUITE_FULL,
+        CHECKER_CF_977C,
         TestAssetStore,
         TestBundle,
     )
@@ -104,6 +105,7 @@ except ImportError:
     from test_assets import (
         SUITE_FAST,
         SUITE_FULL,
+        CHECKER_CF_977C,
         TestAssetStore,
         TestBundle,
     )
@@ -369,6 +371,10 @@ PILOT_PREVIEW_IDENTITIES = {
     ),
     ("codeforces", "cf-71a"): (
         "PB-97", "codeforces", "71A", "https://codeforces.com/problemset/problem/71/A",
+    ),
+    ("codeforces", "cf-977c"): (
+        "PB-109", "codeforces", "977C",
+        "https://codeforces.com/problemset/problem/977/C",
     ),
     ("apcs", "apcs-zj-q836"): (
         "PB-120", "zerojudge", "q836",
@@ -804,19 +810,26 @@ def _case_detail_lines(
         )
         return result_lines
 
+    expected_label = (
+        "合法輸出規則（官方範例答案非唯一）"
+        if case.checker == CHECKER_CF_977C
+        else "Expected"
+    )
+    expected_text = (
+        "任一 1..10^9 整數 x，恰有 k 項 <= x；無解時 -1"
+        if case.checker == CHECKER_CF_977C
+        else case.expected_output
+        if case.expected_output is not None
+        else "(未驗證)"
+    )
     result_lines.extend(
         [
             "",
-            "Expected",
+            expected_label,
             *[
                 "  " + line
                 for line in wrap(
-                    (
-                        case.expected_output
-                        if case.expected_output
-                        is not None
-                        else "(未驗證)"
-                    ),
+                    expected_text,
                     max(8, width - 2),
                 )[:6]
             ],
@@ -838,6 +851,7 @@ def _case_detail_lines(
         == WRONG_OUTPUT
         and case.expected_output
         is not None
+        and case.checker != CHECKER_CF_977C
     ):
         result_lines.extend(
             [
