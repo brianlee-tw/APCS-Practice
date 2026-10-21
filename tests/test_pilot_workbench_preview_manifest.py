@@ -31,22 +31,22 @@ class PilotWorkbenchManifestTest(unittest.TestCase):
 
     def test_all_four_official_only_assets_and_staged_authority(self):
         self.assertEqual(self.check(self.manifest), [])
-        self.assertEqual(len(self.manifest["entries"]), 4)
+        self.assertEqual(len(self.manifest["entries"]), 5)
         self.assertFalse(self.manifest["is_main_published"])
         self.assertFalse(self.manifest["automated_evidence_writeback"])
         self.assertEqual(self.manifest["release_gate"], "BLOCKED_MANUAL")
         self.assertEqual(
-            sum(e["official_count"] for e in self.manifest["entries"]), 5,
+            sum(e["official_count"] for e in self.manifest["entries"]), 7,
         )
         self.assertEqual(
-            sum(e["verified_edge_count"] for e in self.manifest["entries"]), 17,
+            sum(e["verified_edge_count"] for e in self.manifest["entries"]), 24,
         )
 
     def test_extra_problem_or_changed_published_identity_rejected(self):
         copy_manifest = copy.deepcopy(self.manifest)
         copy_manifest["entries"].append({
             **copy_manifest["entries"][0],
-            "pb_uid": "PB-109",
+            "pb_uid": "PB-103",
         })
         self.assertTrue(
             any("allowlist" in x for x in self.check(copy_manifest))
