@@ -13,8 +13,14 @@ from typing import Any
 
 try:
     from .test_assets import TestAssetStore
+    from .semantic_checkers import (
+        CHECKER_EXACT, CHECKER_CF_977C, check_cf_977c,
+    )
 except ImportError:
     from test_assets import TestAssetStore
+    from semantic_checkers import (
+        CHECKER_EXACT, CHECKER_CF_977C, check_cf_977c,
+    )
 
 ROOT = Path(__file__).resolve().parents[1]
 MANIFEST = ROOT / "data/problem_pilot/workbench_preview.v1.json"
@@ -23,10 +29,11 @@ BATCH2 = ROOT / "data/problem_pilot/source_reviews_batch2.v1.json"
 BATCH4 = ROOT / "data/problem_pilot/source_reviews_batch4.v1.json"
 TESTS = ROOT / "data/problem_enrichment"
 EXPECTED = {
-    "PB-42": ("CSES", "CSES-1069", "cses", "1069", 1, 4, "Core Independent"),
-    "PB-150": ("CSES", "CSES-1094", "cses", "1094", 1, 5, "Core Independent"),
-    "PB-97": ("Codeforces", "CF-71A", "codeforces", "71A", 1, 3, "Worked Example"),
-    "PB-120": ("APCS", "APCS-ZJ-q836", "zerojudge", "q836", 2, 5, "Core Independent"),
+    "PB-42": ("CSES", "CSES-1069", "cses", "1069", 1, 4, "Core Independent", CHECKER_EXACT),
+    "PB-150": ("CSES", "CSES-1094", "cses", "1094", 1, 5, "Core Independent", CHECKER_EXACT),
+    "PB-97": ("Codeforces", "CF-71A", "codeforces", "71A", 1, 3, "Worked Example", CHECKER_EXACT),
+    "PB-120": ("APCS", "APCS-ZJ-q836", "zerojudge", "q836", 2, 5, "Core Independent", CHECKER_EXACT),
+    "PB-109": ("Codeforces", "CF-977C", "codeforces", "977C", 2, 7, "Core Independent", CHECKER_CF_977C),
 }
 
 
@@ -47,7 +54,7 @@ def validate(
     errors = []
     if manifest.get("schema_version") != "apcs-pilot-workbench-preview-v1":
         errors.append("preview schema mismatch")
-    if manifest.get("stage") != "SOURCE_BACKED_VERIFIED_FULL_PREVIEW":
+    if manifest.get("stage") != "SOURCE_BACKED_MIXED_OUTPUT_CHECKER_PREVIEW":
         errors.append("preview scope enlarged without review")
     if (
         manifest.get("is_main_published") is not False
@@ -82,7 +89,7 @@ def validate(
         if known is None:
             errors.append(f"{uid}: not enrolled for official preview")
             continue
-        published_source, pid, source, external_id, case_count, edge_count, role = known
+        published_source, pid, source, external_id, case_count, edge_count, role, checker = known
         p, pl = problems.get(uid), placements.get(uid)
         review = source2.get(uid) or source4.get(uid)
         if p is None or pl is None or review is None:
@@ -113,6 +120,7 @@ def validate(
             "verified_edge_trust": "DIFFERENTIAL_VERIFIED",
             "verified_edge_suite": "full",
             "verified_edge_visibility": "practice",
+            "output_checker": checker,
             "candidate_classification_adopted": False,
             "official_page_bytes_sha256": "NOT_CAPTURED",
             "source_review": (
@@ -176,6 +184,11 @@ def validate(
                 or not isinstance(sample, dict)
                 or case.input_text != sample.get("input")
                 or case.expected_output != sample.get("output")
+                or case.checker != checker
+                or (
+                    checker == CHECKER_CF_977C
+                    and not check_cf_977c(case.input_text, case.expected_output)
+                )
             ):
                 errors.append(f"{uid}: preview source sample {index} mismatch/unsafe trust")
         for index, edge in enumerate(edges, start=1):
@@ -185,6 +198,11 @@ def validate(
                 or edge.suite != "full"
                 or edge.visibility != "practice"
                 or edge.expected_output is None
+                or edge.checker != checker
+                or (
+                    checker == CHECKER_CF_977C
+                    and not check_cf_977c(edge.input_text, edge.expected_output)
+                )
             ):
                 errors.append(f"{uid}: differential edge {index} is unsafe")
         fast = store.visible_cases(
@@ -222,8 +240,8 @@ def main() -> int:
         print("FAIL:", error)
     if errors:
         return 1
-    print("WORKBENCH PREVIEW PASS | 4 Published PB identities | "
-          "5 official Fast / 17 differential Full | release BLOCKED_MANUAL")
+    print("WORKBENCH PREVIEW PASS | 5 Published PB identities | "
+          "7 official Fast / 24 differential Full | semantic 977C enabled | release BLOCKED_MANUAL")
     return 0
 
 
