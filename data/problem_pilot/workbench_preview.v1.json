@@ -1,13 +1,13 @@
 {
   "schema_version": "apcs-pilot-workbench-preview-v1",
   "as_of": "2026-10-20",
-  "stage": "SOURCE_BACKED_VERIFIED_FULL_PREVIEW",
+  "stage": "SOURCE_BACKED_MIXED_OUTPUT_CHECKER_PREVIEW",
   "is_main_published": false,
   "is_notion_approved": false,
   "requires_genuine_learner_acceptance": true,
   "automated_evidence_writeback": false,
   "release_gate": "BLOCKED_MANUAL",
-  "scope": "Strict Published preview allowlist: official Fast samples plus independently differential-checked AI_GENERATED Full-only edges; never publish learner mastery or treat generated cases as OFFICIAL.",
+  "scope": "Pinned Published identities: 4 exact-output exercises plus CF 977C semantic output checker. Only official Fast samples and independently validated AI Full edges are enabled, without publishing learner Evidence.",
   "entries": [
     {
       "pb_uid": "PB-42",
@@ -34,7 +34,8 @@
       "verified_edge_provenance": "AI_GENERATED",
       "verified_edge_trust": "DIFFERENTIAL_VERIFIED",
       "verified_edge_suite": "full",
-      "verified_edge_visibility": "practice"
+      "verified_edge_visibility": "practice",
+      "output_checker": "EXACT"
     },
     {
       "pb_uid": "PB-150",
@@ -61,7 +62,8 @@
       "verified_edge_provenance": "AI_GENERATED",
       "verified_edge_trust": "DIFFERENTIAL_VERIFIED",
       "verified_edge_suite": "full",
-      "verified_edge_visibility": "practice"
+      "verified_edge_visibility": "practice",
+      "output_checker": "EXACT"
     },
     {
       "pb_uid": "PB-97",
@@ -88,7 +90,8 @@
       "verified_edge_provenance": "AI_GENERATED",
       "verified_edge_trust": "DIFFERENTIAL_VERIFIED",
       "verified_edge_suite": "full",
-      "verified_edge_visibility": "practice"
+      "verified_edge_visibility": "practice",
+      "output_checker": "EXACT"
     },
     {
       "pb_uid": "PB-120",
@@ -115,7 +118,36 @@
       "verified_edge_provenance": "AI_GENERATED",
       "verified_edge_trust": "DIFFERENTIAL_VERIFIED",
       "verified_edge_suite": "full",
-      "verified_edge_visibility": "practice"
+      "verified_edge_visibility": "practice",
+      "output_checker": "EXACT"
+    },
+    {
+      "pb_uid": "PB-109",
+      "problem_id": "CF-977C",
+      "published_source": "Codeforces",
+      "source": "codeforces",
+      "external_id": "977C",
+      "canonical_url": "https://codeforces.com/problemset/problem/977/C",
+      "role": "Core Independent",
+      "official_count": 2,
+      "source_review": "data/problem_pilot/source_reviews_batch2.v1.json",
+      "test_asset": "data/problem_enrichment/codeforces/977C/tests.json",
+      "provenance": "OFFICIAL",
+      "trust": "OFFICIAL",
+      "suite": "fast",
+      "visibility": "official",
+      "source_status": "OFFICIAL_PAGE_REVIEWED",
+      "task_qa_status": "PREVIEW_OFFICIAL_PLUS_DIFFERENTIAL",
+      "unverified_candidates_allowed": false,
+      "differential_verified_full_edges_allowed": true,
+      "verified_edge_count": 7,
+      "verified_edge_provenance": "AI_GENERATED",
+      "verified_edge_trust": "DIFFERENTIAL_VERIFIED",
+      "verified_edge_suite": "full",
+      "verified_edge_visibility": "practice",
+      "candidate_classification_adopted": false,
+      "official_page_bytes_sha256": "NOT_CAPTURED",
+      "output_checker": "CF_977C_ANY_X"
     }
   ]
 }
