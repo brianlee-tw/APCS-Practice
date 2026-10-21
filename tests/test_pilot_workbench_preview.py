@@ -22,6 +22,7 @@ from tools.pilot_final_four_source import (
     expected_output as final_four_expected,
 )
 from tools.test_assets import SUITE_FAST, SUITE_FULL, TestAssetStore
+from tools.semantic_checkers import check_cf_977c, CHECKER_CF_977C
 
 # Exact Published PB identities and judge-local external IDs.
 PREVIEW = {
@@ -29,8 +30,9 @@ PREVIEW = {
     "PB-150": ("cses", "1094", 1, 5),
     "PB-97": ("codeforces", "71A", 1, 3),
     "PB-120": ("zerojudge", "q836", 2, 5),
+    "PB-109": ("codeforces", "977C", 2, 7),
 }
-UNENROLLED = {"PB-40", "PB-103", "PB-109", "PB-10", "PB-32"}
+UNENROLLED = {"PB-40", "PB-103", "PB-10", "PB-32"}
 
 
 class PilotPublishedWorkbenchPreviewTest(unittest.TestCase):
@@ -140,12 +142,16 @@ class PilotPublishedWorkbenchPreviewTest(unittest.TestCase):
                     self.assertEqual(case.expected_output, (
                         sample.get("output") or sample.get("expected_output")
                     ))
-                    oracle = (
-                        expected_exact_output(uid, case.input_text)
-                        if uid in self.batch2
-                        else final_four_expected(uid, case.input_text)
-                    )
-                    self.assertEqual(oracle.split(), case.expected_output.split())
+                    if uid == "PB-109":
+                        self.assertEqual(case.checker, CHECKER_CF_977C)
+                        self.assertTrue(check_cf_977c(case.input_text, case.expected_output))
+                    else:
+                        oracle = (
+                            expected_exact_output(uid, case.input_text)
+                            if uid in self.batch2
+                            else final_four_expected(uid, case.input_text)
+                        )
+                        self.assertEqual(oracle.split(), case.expected_output.split())
 
     def test_unreviewed_or_multianswer_records_do_not_autoload(self):
         for uid in UNENROLLED:
@@ -158,6 +164,7 @@ class PilotPublishedWorkbenchPreviewTest(unittest.TestCase):
                 ("cses", "cses-1069"),
                 ("cses", "cses-1094"),
                 ("codeforces", "cf-71a"),
+                ("codeforces", "cf-977c"),
                 ("apcs", "apcs-zj-q836"),
             }
         )
