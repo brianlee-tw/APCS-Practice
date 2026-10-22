@@ -187,6 +187,14 @@ class AttemptFacts:
                 "assistance must be A0-A5 / integer 0-5"
             )
 
+        # Defense in depth: the menu never offers A2+ independent, but
+        # external/replayed envelopes must obey the same learning contract.
+        # Retain unknown facts as unknown; do not manufacture A0.
+        if self.independent is True and self.assistance is not None and self.assistance >= 2:
+            raise EvidenceOutboxError(
+                "A2+ assistance cannot be marked independent"
+            )
+
         if self.attempt_count is not None and self.attempt_count <= 0:
             raise EvidenceOutboxError(
                 "attempt_count must be positive"
@@ -425,6 +433,22 @@ def memory_evidence(
             "adaptive memory requires explicit "
             + ", ".join(missing)
         )
+
+    for claim in envelope.evidence:
+        if claim.track == "Implementation":
+            # Local Test Center uses PASS/WRONG_OUTPUT (not AC/WA).
+            # A PASS evidence claim requires an explicitly recorded OJ AC.
+            if (
+                (claim.outcome == "PASS" and attempt.judge_result != "AC")
+                or (claim.outcome == "FAIL" and attempt.judge_result == "AC")
+            ):
+                raise EvidenceOutboxError(
+                    "Implementation Evidence contradicts recorded OJ verdict"
+                )
+        elif claim.track == "Reading" and attempt.judge_result != "N/A":
+            raise EvidenceOutboxError(
+                "Reading Evidence cannot be represented as OJ AC"
+            )
 
     occurred_on = _parse_aware_iso(
         attempt.finished_at
