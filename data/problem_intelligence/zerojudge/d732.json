@@ -1,0 +1,38 @@
+{
+  "schema_version": "apcs-problem-intelligence-v1",
+  "identity": {
+    "source": "zerojudge",
+    "external_id": "d732",
+    "canonical_url": "https://zerojudge.tw/ShowProblem?problemid=d732"
+  },
+  "lifecycle": "L0_INDEXED",
+  "source_metadata": {
+    "title": "二分搜尋法",
+    "statement_summary": "對一個嚴格遞增整數數列回答多筆整數查詢；找到時輸出 1-based 位置，否則輸出 0。",
+    "constraints": [
+      "1 <= N <= 100000",
+      "1 <= K <= 100000",
+      "查詢 X 為有號 32-bit 整數"
+    ],
+    "metadata_source": "SOURCE_PAGE"
+  },
+  "classification": {
+    "status": "UNCLASSIFIED",
+    "confidence": null,
+    "primary_skill_candidate": null,
+    "supporting_skill_candidates": [],
+    "difficulty_candidate": null,
+    "prerequisite_candidates": [],
+    "expected_complexity_candidate": null,
+    "role_candidate": null,
+    "alternate_solution_risk_candidate": null,
+    "evidence_suitability_candidate": null,
+    "rationale": "",
+    "qa_reasons": [],
+    "classification_source": null
+  },
+  "integration": {
+    "pb_uid": "PB-27",
+    "runtime_eligible": false
+  }
+}

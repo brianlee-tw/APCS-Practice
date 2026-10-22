@@ -1,0 +1,228 @@
+{
+  "schema_version": "apcs-pilot-source-review-v1",
+  "as_of": "2026-10-18",
+  "source_authority": "OFFICIAL_PROBLEM_PAGES_RETRIEVED",
+  "reviewer": "ChatGPT conversation, candidate only",
+  "scope": "Five of 14 previously unreviewed seed references, source metadata / samples staged; no L0 promotion, no Runtime Test Center integration, no human learner acceptance",
+  "outcome": "SOURCE_REVIEW_STAGED_NOT_PUBLISHED",
+  "l0_import_supported": false,
+  "test_center_status": "STAGED_DO_NOT_LOAD",
+  "entries": [
+    {
+      "pb_uid": "PB-42",
+      "source": "CSES",
+      "external_id": "1069",
+      "url": "https://cses.fi/problemset/task/1069",
+      "title": "Repetitions",
+      "expected_problem_id": "CSES-1069",
+      "summary": "Find the maximum consecutive run length of an identical DNA base in a string.",
+      "constraints": [
+        "input length 1 <= n <= 1000000",
+        "alphabet is A/C/G/T",
+        "time limit 1 s",
+        "memory limit 512 MB"
+      ],
+      "official_samples": [
+        {
+          "input": "ATTCGGGA\n",
+          "output": "3\n"
+        }
+      ],
+      "judge_mode": "EXACT_OUTPUT",
+      "candidate": {
+        "primary_skill": "S07_String",
+        "supporting_skills": [
+          "S03_Loops"
+        ],
+        "expected_complexity": "Time O(n), extra space O(1) if streaming chars; O(n) if storing string",
+        "difficulty": "D2",
+        "role": "Core Independent",
+        "confidence": 0.97,
+        "qa_reasons": []
+      },
+      "source_review_status": "OFFICIAL_PAGE_REVIEWED",
+      "sample_type": "ILLUSTRATIVE_OFFICIAL_OUTPUT",
+      "classification_source": "AI_CANDIDATE",
+      "ai_approved": false,
+      "published_mutation": false,
+      "source_page_fingerprint": "NOT_CAPTURED",
+      "caveat": "Official source page read by ChatGPT on 2026-10-18; no source page bytes/checksum were archived. Not hidden OJ correctness."
+    },
+    {
+      "pb_uid": "PB-150",
+      "source": "CSES",
+      "external_id": "1094",
+      "url": "https://cses.fi/problemset/task/1094",
+      "title": "Increasing Array",
+      "expected_problem_id": "CSES-1094",
+      "summary": "Minimize increments required to make a sequence nondecreasing, allowing only +1 operations.",
+      "constraints": [
+        "1 <= n <= 200000",
+        "1 <= x_i <= 1000000000",
+        "time limit 1 s",
+        "memory limit 512 MB"
+      ],
+      "official_samples": [
+        {
+          "input": "5\n3 2 5 1 7\n",
+          "output": "5\n"
+        }
+      ],
+      "judge_mode": "EXACT_OUTPUT",
+      "candidate": {
+        "primary_skill": "S01_IO",
+        "supporting_skills": [
+          "S03_Loops",
+          "S11_Greedy"
+        ],
+        "expected_complexity": "Time O(n), auxiliary O(1) when streamed; result needs 64-bit integer",
+        "difficulty": "D2",
+        "role": "Core Independent",
+        "confidence": 0.86,
+        "qa_reasons": [
+          "Primary S01_IO follows Published L-FND-04 streaming/long-long objective; algorithmic secondary S11_Greedy; do not auto-reclassify to Greedy."
+        ]
+      },
+      "source_review_status": "OFFICIAL_PAGE_REVIEWED",
+      "sample_type": "ILLUSTRATIVE_OFFICIAL_OUTPUT",
+      "classification_source": "AI_CANDIDATE",
+      "ai_approved": false,
+      "published_mutation": false,
+      "source_page_fingerprint": "NOT_CAPTURED",
+      "caveat": "Official source page read by ChatGPT on 2026-10-18; no source page bytes/checksum were archived. Not hidden OJ correctness."
+    },
+    {
+      "pb_uid": "PB-40",
+      "source": "CSES",
+      "external_id": "1068",
+      "url": "https://cses.fi/problemset/task/1068",
+      "title": "Weird Algorithm",
+      "expected_problem_id": "CSES-1068",
+      "summary": "Emit each Collatz sequence value beginning with n until reaching 1; even n/2; odd 3n+1.",
+      "constraints": [
+        "1 <= input n <= 1000000",
+        "intermediate state may exceed 32-bit; use 64-bit",
+        "time limit 1 s",
+        "memory limit 512 MB"
+      ],
+      "official_samples": [
+        {
+          "input": "3\n",
+          "output": "3 10 5 16 8 4 2 1\n"
+        }
+      ],
+      "judge_mode": "EXACT_OUTPUT",
+      "candidate": {
+        "primary_skill": "S03_Loops",
+        "supporting_skills": [
+          "S02_Conditionals",
+          "S01_IO"
+        ],
+        "expected_complexity": "Time O(T), extra space O(1) excluding output, where T is the number of simulated transitions; no proven simple uniform O(log n) bound",
+        "difficulty": "D2",
+        "role": "Guided Drill",
+        "confidence": 0.93,
+        "qa_reasons": []
+      },
+      "source_review_status": "OFFICIAL_PAGE_REVIEWED",
+      "sample_type": "ILLUSTRATIVE_OFFICIAL_OUTPUT",
+      "classification_source": "AI_CANDIDATE",
+      "ai_approved": false,
+      "published_mutation": false,
+      "source_page_fingerprint": "NOT_CAPTURED",
+      "caveat": "Official source page read by ChatGPT on 2026-10-18; no source page bytes/checksum were archived. Not hidden OJ correctness."
+    },
+    {
+      "pb_uid": "PB-103",
+      "source": "Codeforces",
+      "external_id": "706B",
+      "url": "https://codeforces.com/problemset/problem/706/B",
+      "title": "Interesting drink",
+      "expected_problem_id": "CF-706B",
+      "summary": "For q budgets, count shop prices no greater than the daily budget.",
+      "constraints": [
+        "1 <= n,q <= 100000",
+        "1 <= price <= 100000",
+        "1 <= budget <= 1000000000",
+        "time limit 2 s",
+        "memory limit 256 MB"
+      ],
+      "official_samples": [
+        {
+          "input": "5\n3 10 8 6 11\n4\n1\n10\n3\n11\n",
+          "output": "0\n4\n1\n5\n"
+        }
+      ],
+      "judge_mode": "EXACT_OUTPUT",
+      "candidate": {
+        "primary_skill": "S10_Binary_Search",
+        "supporting_skills": [
+          "S09_Sorting",
+          "S37_Offline_Order"
+        ],
+        "expected_complexity": "Sorting+per-query upper_bound O(n log n + q log n), or bounded frequency/prefix alternatives; space O(n)",
+        "difficulty": "D2",
+        "role": "Guided Drill",
+        "confidence": 0.84,
+        "qa_reasons": [
+          "Source permits alternative prefix-frequency approach; Published placement describes Primary U-BIN as provisional. Preserve classification as AI candidate."
+        ]
+      },
+      "source_review_status": "OFFICIAL_PAGE_REVIEWED",
+      "sample_type": "ILLUSTRATIVE_OFFICIAL_OUTPUT",
+      "classification_source": "AI_CANDIDATE",
+      "ai_approved": false,
+      "published_mutation": false,
+      "source_page_fingerprint": "NOT_CAPTURED",
+      "caveat": "Official source page read by ChatGPT on 2026-10-18; no source page bytes/checksum were archived. Not hidden OJ correctness."
+    },
+    {
+      "pb_uid": "PB-109",
+      "source": "Codeforces",
+      "external_id": "977C",
+      "url": "https://codeforces.com/problemset/problem/977/C",
+      "title": "Less or Equal",
+      "expected_problem_id": "CF-977C",
+      "summary": "Produce any 1<=x<=1e9 for which exactly k array elements are <= x; output -1 iff impossible.",
+      "constraints": [
+        "1 <= n <= 200000",
+        "0 <= k <= n",
+        "1 <= a_i <= 1000000000",
+        "duplicates permitted",
+        "time limit 2 s",
+        "memory limit 256 MB"
+      ],
+      "official_samples": [
+        {
+          "input": "7 4\n3 7 5 1 10 3 20\n",
+          "output": "6\n"
+        },
+        {
+          "input": "7 2\n3 7 5 1 10 3 20\n",
+          "output": "-1\n"
+        }
+      ],
+      "judge_mode": "VALIDATE_ANY_CORRECT_X",
+      "candidate": {
+        "primary_skill": "S09_Sorting",
+        "supporting_skills": [
+          "S02_Conditionals"
+        ],
+        "expected_complexity": "Time O(n log n) for sorting; auxiliary space depends on implementation",
+        "difficulty": "D2",
+        "role": "Core Independent",
+        "confidence": 0.96,
+        "qa_reasons": [
+          "MULTIPLE_VALID_OUTPUTS: official sample is illustrative, not an exact-output oracle. Test Center must not use equality comparison for this task."
+        ]
+      },
+      "source_review_status": "OFFICIAL_PAGE_REVIEWED",
+      "sample_type": "ILLUSTRATIVE_OFFICIAL_OUTPUT",
+      "classification_source": "AI_CANDIDATE",
+      "ai_approved": false,
+      "published_mutation": false,
+      "source_page_fingerprint": "NOT_CAPTURED",
+      "caveat": "Official source page read by ChatGPT on 2026-10-18; no source page bytes/checksum were archived. Not hidden OJ correctness."
+    }
+  ]
+}

@@ -36,9 +36,14 @@ try:
         unified_diff,
     )
     from .runtime_curriculum import RuntimeCurriculum
+    from .problem_intelligence import (
+        normalize_problem_url,
+        ProblemIntelligenceError,
+    )
     from .test_assets import (
         SUITE_FAST,
         SUITE_FULL,
+        CHECKER_CF_977C,
         TestAssetStore,
         TestBundle,
     )
@@ -93,9 +98,14 @@ except ImportError:
         unified_diff,
     )
     from runtime_curriculum import RuntimeCurriculum
+    from problem_intelligence import (
+        normalize_problem_url,
+        ProblemIntelligenceError,
+    )
     from test_assets import (
         SUITE_FAST,
         SUITE_FULL,
+        CHECKER_CF_977C,
         TestAssetStore,
         TestBundle,
     )
@@ -347,17 +357,99 @@ def _post_attempt(
     )
 
 
+# These four exact-source references have independently checked official
+# examples. This branch preview is intentionally *not* a generic CSES /
+# Codeforces importer and it does not alter Published Curriculum authority.
+# Identifiers are casefolded only on the Published-side lookup; filesystem
+# judge-local IDs retain the official platform spelling.
+PILOT_PREVIEW_IDENTITIES = {
+    ("cses", "cses-1069"): (
+        "PB-42", "cses", "1069", "https://cses.fi/problemset/task/1069",
+    ),
+    ("cses", "cses-1094"): (
+        "PB-150", "cses", "1094", "https://cses.fi/problemset/task/1094",
+    ),
+    ("codeforces", "cf-71a"): (
+        "PB-97", "codeforces", "71A", "https://codeforces.com/problemset/problem/71/A",
+    ),
+    ("codeforces", "cf-977c"): (
+        "PB-109", "codeforces", "977C",
+        "https://codeforces.com/problemset/problem/977/C",
+    ),
+    ("apcs", "apcs-zj-q836"): (
+        "PB-120", "zerojudge", "q836",
+        "https://zerojudge.tw/ShowProblem?problemid=q836",
+    ),
+}
+
+
 def _test_bundle(
     context: ProblemContext | None,
 ) -> TestBundle | None:
     if context is None:
         return None
 
-    return TEST_ASSETS.load(
-        context.source,
-        context.problem_id,
+    # Published problem IDs are globally namespaced (ZJ-d732), but
+    # TestAssetStore uses the judge's exact external ID (zerojudge/d732).
+    # Never strip a prefix without reconciling the canonical source URL.
+    source = str(context.source or "").strip().casefold()
+    problem_id = str(context.problem_id or "").strip().casefold()
+    if source == "zerojudge":
+        if context.canonical_url:
+            try:
+                identity = normalize_problem_url(context.canonical_url)
+            except ProblemIntelligenceError:
+                return None
+            if problem_id not in {
+                identity.external_id,
+                f"zj-{identity.external_id}",
+            }:
+                return None
+            problem_id = identity.external_id
+        elif problem_id.startswith("zj-"):
+            # A namespaced Published ID without a canonical URL has
+            # insufficient authority to derive a judge-local identity.
+            return None
+    if source in {"cses", "codeforces", "apcs"}:
+        # Fail closed on unreviewed non-ZeroJudge Published references.
+        # No generic URL parsing or blind prefix stripping is allowed.
+        enrolled = PILOT_PREVIEW_IDENTITIES.get((source, problem_id))
+        if enrolled is None or not context.canonical_url:
+            return None
+        pb_uid, bundle_source, external_id, trusted_url = enrolled
+        if (
+            context.identity_origin != "published_placement"
+            or context.pb_uid != pb_uid
+            or context.canonical_url.rstrip("/") != trusted_url.rstrip("/")
+        ):
+            return None
+        bundle = TEST_ASSETS.load(
+            bundle_source,
+            external_id,
+            include_candidates=True,
+        )
+        if (
+            bundle is None
+            or bundle.source != bundle_source
+            or bundle.external_id != external_id
+            or bundle.canonical_url.rstrip("/") != trusted_url.rstrip("/")
+        ):
+            return None
+        return bundle
+
+    bundle = TEST_ASSETS.load(
+        source or None,
+        problem_id,
         include_candidates=True,
     )
+    if (
+        bundle is not None
+        and source == "zerojudge"
+        and context.canonical_url
+        and bundle.canonical_url != identity.canonical_url
+    ):
+        return None
+    return bundle
 
 
 def _visible_cases(
@@ -718,19 +810,26 @@ def _case_detail_lines(
         )
         return result_lines
 
+    expected_label = (
+        "合法輸出規則（官方範例答案非唯一）"
+        if case.checker == CHECKER_CF_977C
+        else "Expected"
+    )
+    expected_text = (
+        "任一 1..10^9 整數 x，恰有 k 項 <= x；無解時 -1"
+        if case.checker == CHECKER_CF_977C
+        else case.expected_output
+        if case.expected_output is not None
+        else "(未驗證)"
+    )
     result_lines.extend(
         [
             "",
-            "Expected",
+            expected_label,
             *[
                 "  " + line
                 for line in wrap(
-                    (
-                        case.expected_output
-                        if case.expected_output
-                        is not None
-                        else "(未驗證)"
-                    ),
+                    expected_text,
                     max(8, width - 2),
                 )[:6]
             ],
@@ -752,6 +851,7 @@ def _case_detail_lines(
         == WRONG_OUTPUT
         and case.expected_output
         is not None
+        and case.checker != CHECKER_CF_977C
     ):
         result_lines.extend(
             [

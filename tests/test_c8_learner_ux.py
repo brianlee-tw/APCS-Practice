@@ -119,6 +119,10 @@ class C8LearnerUxTest(unittest.TestCase):
             "selected_problem_id": "d050",
             "events": [
                 {
+                    "type": "SELECT",
+                    "problem_id": "d050",
+                },
+                {
                     "type": "SUBMIT",
                     "problem_id": "d050",
                     "result": "WA",
@@ -137,7 +141,7 @@ class C8LearnerUxTest(unittest.TestCase):
                 "WA",
             )
 
-        session["events"][0]["result"] = "N/A"
+        session["events"][1]["result"] = "N/A"
         with patch.object(
             control.EXAM,
             "active",

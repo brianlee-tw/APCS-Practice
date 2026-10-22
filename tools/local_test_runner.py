@@ -17,10 +17,18 @@ try:
         TestCase,
         same_output,
     )
+    from .semantic_checkers import (
+        CHECKER_EXACT,
+        check_semantic_output,
+    )
 except ImportError:
     from test_assets import (
         TestCase,
         same_output,
+    )
+    from semantic_checkers import (
+        CHECKER_EXACT,
+        check_semantic_output,
     )
 
 
@@ -294,9 +302,12 @@ def run_case(
             status = OUTPUT_LIMIT
         elif process.returncode != 0:
             status = RUNTIME_ERROR
-        elif same_output(
-            actual,
-            case.expected_output,
+        elif (
+            same_output(actual, case.expected_output)
+            if case.checker == CHECKER_EXACT
+            else check_semantic_output(
+                case.checker, case.input_text, actual,
+            )
         ):
             status = PASS
         else:

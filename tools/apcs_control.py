@@ -601,7 +601,7 @@ def current_problem(filename: str | None):
     )
 
     legacy_placement_match = re.search(
-        r"__([A-Za-z0-9_.:-]+)$",
+        r"__([A-Za-z0-9_.:-]+(?:-[A-Za-z0-9_.:-]+)*)$",
         Path(filename).stem,
     )
     placement_uid = (
@@ -3199,10 +3199,55 @@ def inferred_published_novelty(
     return None
 
 
+def exam_verdict_for_current_selection(
+    session: dict,
+    problem_id: str,
+) -> str | None:
+    """Only a SUBMIT since the last explicit SELECT/SWITCH is reusable.
+
+    A previously recorded AC for a problem must not leak into a fresh
+    selection of the same problem following a switch-away / switch-back.
+    This is only Exam Runtime telemetry; it never imports Local Test Center
+    PASS or creates learner Evidence on its own.
+    """
+    target = str(problem_id or "").strip().casefold()
+    selected = str(session.get("selected_problem_id") or "").strip().casefold()
+    if not target or selected != target:
+        return None
+
+    events = session.get("events")
+    if not isinstance(events, list):
+        return None
+
+    last_selection = None
+    for index, event in enumerate(events):
+        if not isinstance(event, dict):
+            return None
+        if event.get("type") in {"SELECT", "SWITCH"}:
+            last_selection = index
+
+    if last_selection is None:
+        return None
+
+    selecting = events[last_selection]
+    if str(selecting.get("problem_id") or "").strip().casefold() != target:
+        return None
+
+    for event in reversed(events[last_selection + 1:]):
+        if event.get("type") != "SUBMIT":
+            continue
+        if str(event.get("problem_id") or "").strip().casefold() != target:
+            return None
+        verdict = str(event.get("result") or "").strip().upper()
+        return verdict if verdict in {"AC", "WA", "TLE", "RE", "MLE", "CE"} else None
+
+    return None
+
+
 def inferred_published_result(
     problem,
 ) -> str | None:
-    """Reuse an explicit Exam Runtime OJ verdict; never infer from local tests."""
+    """Reuse explicit current-selection Exam OJ telemetry, never local tests."""
 
     try:
         session = EXAM.active()
@@ -3212,58 +3257,7 @@ def inferred_published_result(
     if session is None:
         return None
 
-    problem_id = (
-        str(problem.get("id") or "")
-        .strip()
-        .casefold()
-    )
-    if not problem_id:
-        return None
-
-    selected_id = (
-        str(
-            session.get(
-                "selected_problem_id"
-            )
-            or ""
-        )
-        .strip()
-        .casefold()
-    )
-    if selected_id != problem_id:
-        # A prior submit for another/switch-away problem is Exam telemetry,
-        # not authoritative outcome for this current Finish attempt.
-        return None
-
-    for event in reversed(
-        session.get("events", [])
-    ):
-        if (
-            event.get("type") != "SUBMIT"
-            or str(
-                event.get("problem_id") or ""
-            ).strip().casefold()
-            != problem_id
-        ):
-            continue
-
-        result = str(
-            event.get("result") or ""
-        ).strip().upper()
-
-        if result in {
-            "AC",
-            "WA",
-            "TLE",
-            "RE",
-            "MLE",
-            "CE",
-        }:
-            return result
-
-        return None
-
-    return None
+    return exam_verdict_for_current_selection(session, problem.get("id"))
 
 
 def inferred_published_timed(problem) -> bool | None:

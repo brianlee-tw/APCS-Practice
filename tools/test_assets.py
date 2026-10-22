@@ -6,6 +6,17 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+try:
+    from .semantic_checkers import (
+        CHECKER_EXACT, CHECKER_CF_977C,
+        CF_977C_SOURCE, CF_977C_EXTERNAL_ID, CF_977C_URL,
+    )
+except ImportError:
+    from semantic_checkers import (
+        CHECKER_EXACT, CHECKER_CF_977C,
+        CF_977C_SOURCE, CF_977C_EXTERNAL_ID, CF_977C_URL,
+    )
+
 
 SCHEMA_VERSION = "apcs-test-bundle-v1"
 
@@ -63,6 +74,7 @@ class TestCase:
     trust: str
     suite: str
     visibility: str
+    checker: str = CHECKER_EXACT
 
     @property
     def runnable(self) -> bool:
@@ -220,6 +232,7 @@ class TestAssetStore:
         payload: dict[str, Any],
         *,
         index: int,
+        checker: str = CHECKER_EXACT,
     ) -> TestCase:
         if not isinstance(payload, dict):
             raise TestAssetError(
@@ -300,6 +313,7 @@ class TestAssetStore:
             trust=trust,
             suite=suite,
             visibility=visibility,
+            checker=checker,
         )
 
     def _load_dedicated(
@@ -351,6 +365,24 @@ class TestAssetStore:
                 f"{path}: identity.external_id 與路徑不一致"
             )
 
+        checker = payload.get("checker", CHECKER_EXACT)
+        bound_cf_977c = (
+            source.casefold() == CF_977C_SOURCE
+            and external_id == CF_977C_EXTERNAL_ID
+            and declared_source == CF_977C_SOURCE
+            and declared_external_id == CF_977C_EXTERNAL_ID
+            and identity.get("canonical_url") == CF_977C_URL
+        )
+        if bound_cf_977c:
+            if checker != CHECKER_CF_977C:
+                raise TestAssetError(
+                    f"{path}: CF 977C 必須使用限定的 semantic checker"
+                )
+        elif checker != CHECKER_EXACT:
+            raise TestAssetError(
+                f"{path}: 此題來源無權使用 semantic checker"
+            )
+
         cases_payload = payload.get("cases")
         if not isinstance(cases_payload, list):
             raise TestAssetError(
@@ -361,6 +393,7 @@ class TestAssetStore:
             self._case_from_payload(
                 item,
                 index=index,
+                checker=checker,
             )
             for index, item
             in enumerate(

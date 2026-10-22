@@ -1,0 +1,60 @@
+{
+  "schema_version": "apcs-test-bundle-v1",
+  "identity": {
+    "source": "cses",
+    "external_id": "1069",
+    "canonical_url": "https://cses.fi/problemset/task/1069"
+  },
+  "cases": [
+    {
+      "id": "S1",
+      "name": "官方範例 1",
+      "input": "ATTCGGGA\n",
+      "expected_output": "3\n",
+      "provenance": "OFFICIAL",
+      "trust": "OFFICIAL",
+      "suite": "fast",
+      "visibility": "official"
+    },
+    {
+      "id": "E1",
+      "name": "加強測資 1",
+      "input": "A\n",
+      "expected_output": "1\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
+    },
+    {
+      "id": "E2",
+      "name": "加強測資 2",
+      "input": "ACGT\n",
+      "expected_output": "1\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
+    },
+    {
+      "id": "E3",
+      "name": "加強測資 3",
+      "input": "ACGTGGGGGG\n",
+      "expected_output": "6\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
+    },
+    {
+      "id": "E4",
+      "name": "加強測資 4",
+      "input": "AAAACCCCGGGGTTTT\n",
+      "expected_output": "4\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
+    }
+  ]
+}

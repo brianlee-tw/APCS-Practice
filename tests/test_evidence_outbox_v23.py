@@ -108,8 +108,10 @@ class EvidenceOutboxV23Test(unittest.TestCase):
 
     def test_conflicting_writeback_id_is_rejected(self):
         first = sample_envelope()
+        # A different but still internally valid envelope must fail on
+        # writeback_id collision, not fail earlier due to OJ/claim conflict.
         second = sample_envelope(
-            judge_result="WA",
+            note="different valid attempt note",
         )
 
         self.store.enqueue(first)

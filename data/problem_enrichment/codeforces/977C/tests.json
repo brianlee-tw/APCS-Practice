@@ -1,0 +1,101 @@
+{
+  "schema_version": "apcs-test-bundle-v1",
+  "checker": "CF_977C_ANY_X",
+  "identity": {
+    "source": "codeforces",
+    "external_id": "977C",
+    "canonical_url": "https://codeforces.com/problemset/problem/977/C"
+  },
+  "cases": [
+    {
+      "id": "S1",
+      "name": "官方範例 1",
+      "input": "7 4\n3 7 5 1 10 3 20\n",
+      "expected_output": "6\n",
+      "provenance": "OFFICIAL",
+      "trust": "OFFICIAL",
+      "suite": "fast",
+      "visibility": "official"
+    },
+    {
+      "id": "S2",
+      "name": "官方範例 2",
+      "input": "7 2\n3 7 5 1 10 3 20\n",
+      "expected_output": "-1\n",
+      "provenance": "OFFICIAL",
+      "trust": "OFFICIAL",
+      "suite": "fast",
+      "visibility": "official"
+    },
+    {
+      "id": "E1",
+      "name": "加強測資 1",
+      "input": "3 0\n2 3 4\n",
+      "expected_output": "1\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
+    },
+    {
+      "id": "E2",
+      "name": "加強測資 2",
+      "input": "3 0\n1 3 4\n",
+      "expected_output": "-1\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
+    },
+    {
+      "id": "E3",
+      "name": "加強測資 3",
+      "input": "4 4\n1 4 4 1000000000\n",
+      "expected_output": "1000000000\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
+    },
+    {
+      "id": "E4",
+      "name": "加強測資 4",
+      "input": "5 2\n2 2 2 7 8\n",
+      "expected_output": "-1\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
+    },
+    {
+      "id": "E5",
+      "name": "加強測資 5",
+      "input": "6 3\n1 2 2 9 9 10\n",
+      "expected_output": "5\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
+    },
+    {
+      "id": "E6",
+      "name": "加強測資 6",
+      "input": "5 5\n1 2 3 4 5\n",
+      "expected_output": "5\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
+    },
+    {
+      "id": "E7",
+      "name": "加強測資 7",
+      "input": "3 1\n1 1 2\n",
+      "expected_output": "-1\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
+    }
+  ]
+}

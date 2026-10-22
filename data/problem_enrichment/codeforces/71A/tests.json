@@ -1,0 +1,50 @@
+{
+  "schema_version": "apcs-test-bundle-v1",
+  "identity": {
+    "source": "codeforces",
+    "external_id": "71A",
+    "canonical_url": "https://codeforces.com/problemset/problem/71/A"
+  },
+  "cases": [
+    {
+      "id": "S1",
+      "name": "官方範例 1",
+      "input": "4\nword\nlocalization\ninternationalization\npneumonoultramicroscopicsilicovolcanoconiosis\n",
+      "expected_output": "word\nl10n\ni18n\np43s\n",
+      "provenance": "OFFICIAL",
+      "trust": "OFFICIAL",
+      "suite": "fast",
+      "visibility": "official"
+    },
+    {
+      "id": "E1",
+      "name": "加強測資 1",
+      "input": "3\nabcdefghij\nabcdefghijk\nabcdefghijkl\n",
+      "expected_output": "abcdefghij\na9k\na10l\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
+    },
+    {
+      "id": "E2",
+      "name": "加強測資 2",
+      "input": "4\na\nab\nabc\nabcdefghij\n",
+      "expected_output": "a\nab\nabc\nabcdefghij\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
+    },
+    {
+      "id": "E3",
+      "name": "加強測資 3",
+      "input": "1\naaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n",
+      "expected_output": "a98a\n",
+      "provenance": "AI_GENERATED",
+      "trust": "DIFFERENTIAL_VERIFIED",
+      "suite": "full",
+      "visibility": "practice"
+    }
+  ]
+}

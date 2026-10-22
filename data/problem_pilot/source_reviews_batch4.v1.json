@@ -1,0 +1,198 @@
+{
+  "schema_version": "apcs-pilot-source-review-batch4-v1",
+  "as_of": "2026-10-18",
+  "scope": "Remaining four Published PB seed references; reviewed as ChatGPT candidates only, not OJ acceptance or learner evidence",
+  "status": "MIXED_OFFICIAL_AND_PENDING",
+  "publication_authority": "NONE",
+  "test_center_status": "STAGED_DO_NOT_LOAD",
+  "official_page_bytes_sha256": "NOT_CAPTURED",
+  "records": [
+    {
+      "pb_uid": "PB-120",
+      "problem_id": "APCS-ZJ-q836",
+      "canonical_url": "https://zerojudge.tw/ShowProblem?problemid=q836",
+      "source_platform": "APCS",
+      "judge_platform": "ZeroJudge",
+      "external_id": "q836",
+      "title": "q836 小心陷阱",
+      "review_status": "OFFICIAL_PAGE_REVIEWED",
+      "source_evidence": [
+        {
+          "url": "https://www.zerojudge.tw/ShowProblem?problemid=q836",
+          "type": "OFFICIAL_SOURCE_INDEXED_PAGE"
+        }
+      ],
+      "official_statement_verified": true,
+      "official_samples_verified": true,
+      "task_summary": "Start position 0 with life k; move forward by current positive life, then independently deduct y1 and y2 when the new position is divisible by x1 and x2; stop at life <= 0 and output the final position.",
+      "constraints": [
+        "1 <= k <= 20",
+        "1 <= x1,x2 <= 10",
+        "1 <= y1,y2 <= 20"
+      ],
+      "samples": [
+        {
+          "input": "1\n3 1\n4 1\n",
+          "output": "3\n"
+        },
+        {
+          "input": "7\n3 2\n2 3\n",
+          "output": "18\n"
+        }
+      ],
+      "output_mode": "EXACT_OUTPUT_CANDIDATE",
+      "qa_flags": [],
+      "source_note": "2025-06 APCS problem #1; evidence from official ZeroJudge indexed page; no official OJ execution in this pilot.",
+      "candidate": {
+        "primary_skill": "S23_Simulation",
+        "difficulty": "D2",
+        "role": "Core Independent",
+        "expected_complexity": "O(T) transitions / O(1) extra memory, T is number of jumps until death; no uniform fixed T bound inferred",
+        "supporting_skills": [
+          "S02_Conditionals",
+          "S03_Loops"
+        ],
+        "confidence": 0.95,
+        "classification_source": "AI_CANDIDATE"
+      }
+    },
+    {
+      "pb_uid": "PB-97",
+      "problem_id": "CF-71A",
+      "canonical_url": "https://codeforces.com/problemset/problem/71/A",
+      "source_platform": "Codeforces",
+      "judge_platform": "Codeforces",
+      "external_id": "71A",
+      "title": "Way Too Long Words",
+      "review_status": "OFFICIAL_PAGE_REVIEWED",
+      "source_evidence": [
+        {
+          "url": "https://codeforces.com/problemset/problem/71/A",
+          "type": "OFFICIAL_PROBLEM_PAGE"
+        }
+      ],
+      "official_statement_verified": true,
+      "official_samples_verified": true,
+      "task_summary": "For each of n lowercase words, abbreviate only when length > 10, using first char + decimal (length-2) + last char; otherwise output unchanged.",
+      "constraints": [
+        "1 <= n <= 100",
+        "1 <= word length <= 100",
+        "lowercase Latin letters",
+        "strict threshold length > 10"
+      ],
+      "samples": [
+        {
+          "input": "4\nword\nlocalization\ninternationalization\npneumonoultramicroscopicsilicovolcanoconiosis\n",
+          "output": "word\nl10n\ni18n\np43s\n"
+        }
+      ],
+      "output_mode": "EXACT_OUTPUT_CANDIDATE",
+      "qa_flags": [],
+      "source_note": "Official Codeforces 71A fixed-output sample; no Codeforces importer enabled.",
+      "candidate": {
+        "primary_skill": "S07_String",
+        "difficulty": "D1",
+        "role": "Worked Example",
+        "expected_complexity": "O(sum of word lengths) time; O(max length) per word, excluding I/O storage",
+        "supporting_skills": [
+          "S02_Conditionals"
+        ],
+        "confidence": 0.98,
+        "classification_source": "AI_CANDIDATE"
+      }
+    },
+    {
+      "pb_uid": "PB-32",
+      "problem_id": "ZJ-a233",
+      "canonical_url": "https://zerojudge.tw/ShowProblem?problemid=a233",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "external_id": "a233",
+      "title": "a233 排序法",
+      "review_status": "OFFICIAL_PAGE_REVIEWED_WITH_QA_FLAG",
+      "source_evidence": [
+        {
+          "url": "https://zerojudge.tw/ShowProblem?problemid=a233",
+          "type": "OFFICIAL_PROBLEM_PAGE"
+        }
+      ],
+      "official_statement_verified": true,
+      "official_samples_verified": true,
+      "task_summary": "Given N integer values (up to 1000000), output them in ascending order; performance-sensitive sorting.",
+      "constraints": [
+        "N is described as positive, N <= 1000000",
+        "numeric values described as positive but official sample contains 0",
+        "3 s per public test; 512 MB"
+      ],
+      "samples": [
+        {
+          "input": "5\n1 3 7 0 4\n",
+          "output": "0 1 3 4 7\n"
+        }
+      ],
+      "output_mode": "EXACT_OUTPUT_CANDIDATE",
+      "qa_flags": [
+        "SOURCE_POSITIVE_INTEGER_VS_ZERO_SAMPLE",
+        "VALUE_RANGE_NOT_SPECIFIED"
+      ],
+      "source_note": "Do not silently infer strict positivity for values; official sample demonstrates zero.",
+      "candidate": {
+        "primary_skill": "S09_Sorting",
+        "difficulty": "D2",
+        "role": "Guided Drill",
+        "expected_complexity": "Comparison sort O(N log N) worst-case target; O(N^2) risks TLE at N=1e6",
+        "supporting_skills": [
+          "S30_Complexity"
+        ],
+        "confidence": 0.88,
+        "classification_source": "AI_CANDIDATE"
+      }
+    },
+    {
+      "pb_uid": "PB-10",
+      "problem_id": "ZJ-q182",
+      "canonical_url": "https://zerojudge.tw/ShowProblem?problemid=q182",
+      "source_platform": "ZeroJudge",
+      "judge_platform": "ZeroJudge",
+      "external_id": "q182",
+      "title": "q182 字串操作",
+      "review_status": "SECONDARY_DESCRIPTION_OFFICIAL_SAMPLE_PENDING",
+      "source_evidence": [
+        {
+          "url": "https://zerojudge.tw/Problems?tag=2025%E5%B9%B41%E6%9C%88",
+          "type": "OFFICIAL_INDEX_IDENTITY_ONLY"
+        },
+        {
+          "url": "https://hackmd.io/%40HyC-1029/r1p2knkTxg",
+          "type": "SECONDARY_WRITEUP_NOT_OFFICIAL"
+        }
+      ],
+      "official_statement_verified": false,
+      "official_samples_verified": false,
+      "task_summary": "Secondary description: perform sequence of pairwise swap, pairwise lexicographic ordering and half-string perfect-interleave transforms on even-length string; exact official spec still pending.",
+      "constraints": [
+        "Secondary source describes even string length 2..100",
+        "Secondary source describes operations 0,1,2"
+      ],
+      "samples": [],
+      "output_mode": "NO_VERIFIED_SAMPLE",
+      "qa_flags": [
+        "OFFICIAL_STATEMENT_UNAVAILABLE",
+        "OFFICIAL_SAMPLE_UNAVAILABLE",
+        "SECONDARY_SOURCE_ONLY"
+      ],
+      "source_note": "Official index confirms q182 identity in 2025-01 APCS, but direct official ShowProblem retrieval gave a login-form shell; do not promote secondary statements or examples to official.",
+      "candidate": {
+        "primary_skill": "S07_String",
+        "difficulty": "D2",
+        "role": "Guided Drill",
+        "expected_complexity": "Candidate O(k*|S|) time; not source-verified",
+        "supporting_skills": [
+          "S23_Simulation"
+        ],
+        "confidence": 0.56,
+        "classification_source": "AI_CANDIDATE"
+      }
+    }
+  ]
+}
