@@ -161,27 +161,22 @@ class PilotEvidenceTrustBoundaryTest(unittest.TestCase):
         self.assertFalse(allowed.attempt.independent)
         self.assertEqual(memory_evidence(allowed)[0].assistance, 3)
 
-    def test_local_or_unknown_result_cannot_create_implementation_pass_memory(self):
-        envelope = fresh_envelope(result="WA")
-        with self.assertRaisesRegex(
-            EvidenceOutboxError, "contradicts recorded OJ",
-        ):
-            memory_evidence(envelope)
-        missing = fresh_envelope(result="N/A")
-        with self.assertRaisesRegex(
-            EvidenceOutboxError, "contradicts recorded OJ",
-        ):
-            memory_evidence(missing)
+    def test_local_or_unknown_result_is_rejected_before_outbox_persistence(self):
+        for result in ("WA", "N/A"):
+            with self.subTest(result=result):
+                with self.assertRaisesRegex(
+                    EvidenceOutboxError, "contradicts recorded OJ",
+                ):
+                    fresh_envelope(result=result)
 
     def test_raw_ac_cannot_back_an_implementation_fail_claim(self):
-        attempt = fresh_envelope(
-            result="AC",
-            claims=[("S09_Sorting", "Implementation", "FAIL", "mismatch")],
-        )
         with self.assertRaisesRegex(
             EvidenceOutboxError, "contradicts recorded OJ",
         ):
-            memory_evidence(attempt)
+            fresh_envelope(
+                result="AC",
+                claims=[("S09_Sorting", "Implementation", "FAIL", "mismatch")],
+            )
 
     def test_mixed_reading_claim_remains_allowed_with_explicit_oj_ac(self):
         attempt = fresh_envelope(
@@ -199,6 +194,16 @@ class PilotEvidenceTrustBoundaryTest(unittest.TestCase):
             evidence = memory_evidence(attempt)
             self.assertFalse(evidence[0].independent)
             self.assertEqual(evidence[0].assistance, assistance)
+
+    def test_replayed_oj_verdict_tampering_fails_before_sync(self):
+        from tools.evidence_outbox import OutboxEnvelope
+        good = fresh_envelope()
+        tampered = good.to_dict()
+        tampered["attempt"]["judge_result"] = "WA"
+        with self.assertRaisesRegex(
+            EvidenceOutboxError, "contradicts recorded OJ",
+        ):
+            OutboxEnvelope.from_dict(tampered)
 
     def test_tampered_replayed_data_rejected_during_deserialization(self):
         from tools.evidence_outbox import OutboxEnvelope
