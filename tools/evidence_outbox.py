@@ -243,6 +243,18 @@ class OutboxEnvelope:
         event_ids: set[str] = set()
 
         for claim in self.evidence:
+            # Validate before persistence/sync, not only during adaptive
+            # memory reconciliation. A local PASS cannot be laundered into an
+            # Implementation Skill PASS through a forged OJ verdict field.
+            if claim.track == "Implementation":
+                if (
+                    (claim.outcome == "PASS" and self.attempt.judge_result != "AC")
+                    or (claim.outcome == "FAIL" and self.attempt.judge_result == "AC")
+                ):
+                    raise EvidenceOutboxError(
+                        "Implementation Evidence contradicts recorded OJ verdict"
+                    )
+
             key = (
                 claim.skill_uid,
                 claim.track,
