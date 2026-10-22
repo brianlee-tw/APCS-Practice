@@ -445,11 +445,6 @@ def memory_evidence(
                 raise EvidenceOutboxError(
                     "Implementation Evidence contradicts recorded OJ verdict"
                 )
-        elif claim.track == "Reading" and attempt.judge_result != "N/A":
-            raise EvidenceOutboxError(
-                "Reading Evidence cannot be represented as OJ AC"
-            )
-
     occurred_on = _parse_aware_iso(
         attempt.finished_at
     ).date()
