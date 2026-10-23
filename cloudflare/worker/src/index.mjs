@@ -1,3 +1,4 @@
+import { DP03_SLUG, DP03_REVISION, curateDp03Iteration } from "./lab-curation/dp03-iteration.mjs";
 var __defProp = Object.defineProperty;
 var __name = (target, value) => __defProp(target, "name", { value, configurable: true });
 
@@ -816,11 +817,19 @@ async function serveSemanticLesson(env, request, lesson, url) {
 }
 __name(serveSemanticLesson, "serveSemanticLesson");
 async function serveSemanticLab(env, request, lesson, labSlug) {
-  return serveAsset(env, request, `/labs/${labSlug}.html`, {
+  const response = await serveAsset(env, request, `/labs/${labSlug}.html`, {
     "X-APCS-Unit": lesson.unitId,
     "X-APCS-Lesson": lesson.lessonId,
     "X-APCS-Lab": labSlug
   });
+  if (labSlug !== DP03_SLUG || response.status !== 200) return response;
+  const headers = new Headers(response.headers);
+  headers.set("X-APCS-Lab-Content-Revision", DP03_REVISION);
+  headers.set("Cache-Control", "no-store");
+  headers.delete("Content-Length");
+  headers.delete("ETag");
+  if (request.method === "HEAD") return new Response(null, { status: 200, headers });
+  return new Response(curateDp03Iteration(await response.text()), { status: 200, headers });
 }
 __name(serveSemanticLab, "serveSemanticLab");
 var API_HEADERS = {
